@@ -51,4 +51,4 @@ git subtree add --prefix=repos/<name> <repo-url> <branch> --squash
 git subtree pull --prefix=repos/<name> <repo-url> <branch> --squash
 ```
 
-Editor/agent config: exclude `repos/**` from auto-import, file watcher, search, and file explorer (see `.vscode/settings.json`). AGENTS.md should name each vendored repo and its intended usage.
+Editor/agent config: exclude `repos/**` from auto-import, file watcher, search, and file explorer (see `.vscode/settings.json`). AGENTS.md should name each vendored repo and its intended usage
