@@ -15,26 +15,26 @@ import java.io.File;
 public class VanGoghApp extends Application {
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(final Stage primaryStage) {
         primaryStage.setTitle("Van Gogh");
 
-        WebView webView = new WebView();
-        WebEngine engine = webView.getEngine();
+        final WebView webView = new WebView();
+        final WebEngine engine = webView.getEngine();
 
         // Load the local movie page HTML
-        File htmlFile = new File("src/main/resources/movie-page/index.html");
+        final File htmlFile = new File("src/main/resources/movie-page/index.html");
         if (htmlFile.exists()) {
             engine.load(htmlFile.toURI().toString());
         } else {
             System.err.println("HTML file not found: " + htmlFile.getAbsolutePath());
         }
 
-        Scene scene = new Scene(webView, 1200, 800);
+        final Scene scene = new Scene(webView, 1200, 800);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         launch(args);
     }
 }
