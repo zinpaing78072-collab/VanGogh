@@ -44,6 +44,6 @@ if [ -z "$CP" ] || [ -z "$MAIN" ]; then
 fi
 
 # JavaFX modules required by the application.
-MODULES="javafx.controls,javafx.fxml,javafx.web"
+MODULES="javafx.controls,javafx.web"
 
 exec java --module-path "$CP" --add-modules "$MODULES" -classpath "$CP" $MAIN $APP_ARGS

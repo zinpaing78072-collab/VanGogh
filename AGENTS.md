@@ -24,7 +24,7 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
 
 ## Build / run
 
-- Java 17, JavaFX 21.0.2 (mac classifier), Gson 2.10.1
+- Java 17, JavaFX 21.0.2
 - `mvn exec:exec` (forked JVM) to run the app
 - Main class: `vangogh.VanGoghApp`
 
