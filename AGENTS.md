@@ -15,6 +15,7 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
 
 - Remote: `https://github.com/zinpaing78072-collab/VanGogh.git` (origin)
 - Default branch: `main` (protected — never commit directly to `main`)
+- Sync with main before every coding sessions
 - Workflow: create a feature/fix branch (`feat/<short-name>`, `fix/<short-name>`), commit there, open a PR, merge after review. Keep `main` green.
 - Commit messages: short, imperative, lowercase first word (e.g. `add .pen file`, `Fix JavaFX runtime missing error and add run wrapper`). Use conventional-ish style; no strict prefix required.
 - Build artifacts (`target/`, `.class`, `.log`, `.DS_Store`) are gitignored — never commit them.
