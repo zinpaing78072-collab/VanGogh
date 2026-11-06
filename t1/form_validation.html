@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>JavaScript Form Validation</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+        <style>
+            .error-message {
+                color: #ca1124;
+                font-size: 0.875rem;
+                text-align: left;
+                margin-top: 5px;
+                min-height: 1rem;
+            }
+            div.registration-form {
+                max-width: 50%;
+                margin: auto;
+            }
+            div.login-form{
+                max-width: 50%;
+                margin: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container mt-3">            
+            <h1 class="text-center">JavaScript Form Validation</h1> 
+            
+            <div id="form_choose" class="container-fluid" >
+                <select class="form-select btn btn-secondary" name="" id="form-select" onchange="showform()">
+                    <option value="1" selected>login</option>
+                    <option value="2">Register</option>
+                </select>
+            </div>
+            
+
+            <div class="registration-form" style="display: none;">                    
+                <div class="bg-light border border-success border-2 rounded-4 my-5 p-3"> 
+                    <p class="text-primary text-center fs-4 fw-bold">Registration Form</p><br> 
+                    <form name="registration-form" id="registration-form" action="index.html" method="get"  onsubmit="return validateRegistrationForm()">
+                        <div class="row mb-3">
+                            <div class="col-lg-4 ps-5">
+                                <label for="fname">First Name:</label>
+                            </div>
+                            <div class="col-lg-8">
+                                <input type="text" id="fname" class="border-primary rounded-5 p-1">
+                                <div id="fname-error" class="error-message"></div>
+                            </div> 
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-lg-4 ps-5">
+                                <label for="lname">Lirst Name:</label>
+                            </div>
+                            <div class="col-lg-8">
+                                <input type="text" id="lname" class="border-primary rounded-5 p-1">
+                                <div id="lname-error" class="error-message"></div>
+                            </div> 
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-lg-4 ps-5">
+                                <label for="email">Email:</label>
+                            </div>
+                            <div class="col-lg-8">
+                                <input type="text" id="email" class="border-warning rounded-5 p-1">
+                                <div id="email-error" class="error-message"></div>
+                            </div> 
+                        </div>                        
+                        <div class="row mb-3">
+                            <div class="col-lg-4 ps-5">
+                                <label for="password">Password:</label>
+                            </div>
+                            <div class="col-lg-8">
+                                <input type="password" id="password" class="border-success rounded-5 p-1">
+                                <div id="password-error" class="error-message"></div>
+                            </div> 
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-4 ps-5">                               
+                            </div>
+                            <div class="col-lg-8">
+                                <input type="reset" class="btn btn-danger me-5" value="Clear">
+                                <input type="submit" class="btn btn-primary" value="Register">
+                            </div> 
+                        </div>                        
+                    </form> 
+                </div>
+            </div>           
+
+            <div class="login-form" style="display: block;">                
+                <div class="bg-light border border-success border-2 rounded-4 my-5 p-3">
+                    <p class="text-primary text-center fs-4 fw-bold">Login Form</p><br>  
+                    <form name="login-form" id="login-form" action="index.html">
+                        <div class="row mb-3">
+                            <div class="col-lg-4 ps-5">
+                                <label for="email">Email:</label>
+                            </div>
+                            <div class="col-lg-8">
+                                <input type="email" id="email" class="border-success rounded-5 p-1">
+                            </div> 
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-lg-4 ps-5">
+                                <label for="password">Password:</label>
+                            </div>
+                            <div class="col-lg-8">
+                                <input type="password" id="password" class="border-primary rounded-5 p-1">
+                            </div> 
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-4">                               
+                            </div>
+                            <div class="col-lg-8">
+                                <input type="reset" class="btn btn-danger me-5" value="Clear">
+                                <input type="submit" class="btn btn-primary" value="Login">
+                            </div> 
+                        </div> 
+                    </form> 
+                </div>
+            </div> 
+        </div>
+        
+        <script>
+            function validateRegistrationForm()
+            {
+                let invalid = true;
+
+                const fname = document.getElementById('fname').value;
+                const lname = document.getElementById('lname').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                const fnameError = document.getElementById('fname-error');
+                fnameError.innerText = '';
+                const lnameError = document.getElementById('lname-error');
+                lnameError.innerText = '';
+                const emailError = document.getElementById('email-error');
+                emailError.innerText = '';   
+                const passwordError = document.getElementById('password-error');
+                passwordError.innerText = '';   
+
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+                const nameRegex = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/;
+
+                if (!nameRegex.test(fname) || fname === '')
+                {
+                    fnameError.innerText = "first name required";
+                    invalid = false;
+                }
+                
+                if (!nameRegex.test(fname) || lname === '')
+                {
+                    lnameError.innerText = "last name required";
+                    invalid = false;
+                }
+                if (!emailRegex.test(email) || email === '')
+                {
+                    emailError.innerText = "email required";
+                    invalid = false;
+                }
+                if (!passwordRegex.test(password) || password === '')
+                {
+                    passwordError.innerText = "password required";
+                    invalid = false;
+                }
+
+                return invalid;
+            }
+
+            function showform()
+            {
+                let s = document.querySelector("#form-select");
+
+                switch(s.value)
+                {
+                    case '1' : document.querySelector('.registration-form').style.display = 'none';
+                    document.querySelector('.login-form').style.display = 'block';break;
+
+
+                    case '2' : document.querySelector('.registration-form').style.display = 'block';
+                    document.querySelector('.login-form').style.display = 'none';break;
+                }
+            }
+        </script>
+    </body>
+</html>
