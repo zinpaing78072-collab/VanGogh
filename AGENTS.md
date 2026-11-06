@@ -32,3 +32,23 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
 
 - JavaFX: see vault `Agent Docs — javafx.md` if present; shared agent docs under `/Users/macbookpro/Documents/Notes/agent-docs/javafx/`
 - VS Code workspace setup: `/Users/macbookpro/Documents/school-project/AGENTS.md`
+
+
+## Vendored repositories (git subtree)
+
+External library source may be vendored under `repos/` via `git subtree` so agents can read real implementation/tests as reference (not `node_modules`/compiled jars).
+
+- Use vendored repos as **read-only reference material** when working with related libraries.
+- Prefer examples and patterns from vendored source over generated guesses or web search.
+- Do **not** edit files under `repos/` unless explicitly asked.
+- Do **not** import from `repos/` — application code imports from normal Maven dependencies.
+
+Setup (when adding a new subtree):
+
+```sh
+git subtree add --prefix=repos/<name> <repo-url> <branch> --squash
+# update later:
+git subtree pull --prefix=repos/<name> <repo-url> <branch> --squash
+```
+
+Editor/agent config: exclude `repos/**` from auto-import, file watcher, search, and file explorer (see `.vscode/settings.json`). AGENTS.md should name each vendored repo and its intended usage
