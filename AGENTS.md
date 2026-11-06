@@ -43,6 +43,12 @@ External library source may be vendored under `repos/` via `git subtree` so agen
 - Do **not** edit files under `repos/` unless explicitly asked.
 - Do **not** import from `repos/` — application code imports from normal Maven dependencies.
 
+### Currently vendored
+
+| Path | Purpose | Status |
+|---|---|---|
+| `repos/javafx-web` | JavaFX Web (`javafx.web`) reference source (WebView, WebEngine, etc.) | Placeholder repo initialized locally; populate via `git subtree add` when a source URL is chosen |
+
 Setup (when adding a new subtree):
 
 ```sh
