@@ -1,0 +1,8 @@
+{
+  "typescript.preferences.autoImportFileExcludePatterns": ["repos/**"],
+  "javascript.preferences.autoImportFileExcludePatterns": ["repos/**"],
+  "files.exclude": { "repos/**": true },
+  "files.watcherExclude": { "repos/**": true },
+  "search.exclude": { "repos/**": true },
+  "java.jdt.ls.vmargs": "-Xmx512m -XX:+UseStringDeduplication -XX:+UseG1GC"
+}
