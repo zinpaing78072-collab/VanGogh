@@ -1,27 +1,31 @@
 # javafx-web (vendored reference)
 
-Placeholder repository for vendored JavaFX Web (`javafx.web`) reference source.
+Reference repository for JavaFX Web (`javafx.web`): a minimal, runnable example of `WebView` /
+`WebEngine` usage, including JavaScript <-> Java interop.
+
+## Contents
+
+- `src/main/java/vangoogh/webview/WebViewDemoApp.java` — JavaFX app demonstrating load state,
+  exposing a Java object to JS via `JSObject`, and calling JS from Java.
+- `src/main/resources/web/index.html` + `app.js` — page loaded by the WebEngine.
 
 ## Purpose
 
-Provide real implementation/tests for `javafx.web` (WebView, WebEngine, etc.) that agents can read
-as reference. Do **not** import from this folder in application code — VanGogh imports JavaFX via
-normal Maven dependencies (`org.openjfx:javafx-web`).
+Provide real, readable implementation that coding agents can learn from when working with
+JavaFX Web in the VanGogh project. Read-only reference material — do not import from this
+folder in application code; VanGogh imports JavaFX via normal Maven dependencies.
 
-## How to populate
-
-Follow the subtree workflow documented in the project `AGENTS.md`:
+## Build / run (standalone)
 
 ```sh
-# from the van-gogh repo root
-git subtree add --prefix=repos/javafx-web <repo-url> <branch> --squash
+mvn -q javafx:run
 ```
 
-Replace `<repo-url>` with the source repository you want to vendor (e.g. an OpenJFX fork or a
-JavaFX WebView example project) and `<branch>` with its default branch.
+## Syncing into VanGogh
 
-## Notes
+This repo is vendored into VanGogh under `repos/javafx-web` via `git subtree`:
 
-- This folder is excluded from VS Code auto-import, file watcher, search, and explorer (see
-  `.vscode/settings.json`).
-- Treat contents as read-only reference material.
+```sh
+# from the VanGogh repo root
+git subtree pull --prefix=repos/javafx-web https://github.com/zinpaing78072-collab/javafx-web.git main --squash
+```
