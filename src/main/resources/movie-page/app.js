@@ -13,6 +13,32 @@ document.addEventListener("DOMContentLoaded", () => {
         return div.innerHTML;
     }
 
+    // Posters are streamed in by Java as data: URIs (VanGoghApp#streamPosters),
+    // so <img> elements start with no src and the placeholder is visible. If an
+    // img carrying a real src fails to load, fall back to the placeholder.
+    function posterFailed(img) {
+        img.removeAttribute("src");
+        img.classList.add("hidden");
+        const placeholder = img.parentElement.querySelector(".poster-placeholder");
+        if (placeholder) {
+            placeholder.classList.remove("hidden");
+        }
+    }
+
+    // Push target called by Java (FX thread) once one poster finishes loading.
+    window.setPoster = function (movieId, dataUri) {
+        const card = grid.querySelector(`.movie-card[data-movie-id="${movieId}"]`);
+        if (!card || !dataUri) return;
+        const img = card.querySelector(".poster-img");
+        const placeholder = card.querySelector(".poster-placeholder");
+        if (!img) return;
+        img.src = dataUri;
+        img.classList.remove("hidden");
+        if (placeholder) {
+            placeholder.classList.add("hidden");
+        }
+    };
+
     function renderMovies(movies) {
         grid.innerHTML = "";
 
@@ -32,17 +58,13 @@ document.addEventListener("DOMContentLoaded", () => {
         movies.forEach(movie => {
             const card = document.createElement("div");
             card.className = "movie-card";
+            card.dataset.movieId = movie.id;
 
-            const posterUrl = movie.posterUrl;
-            const posterHtml = posterUrl
-                ? `<img src="${escapeHtml(posterUrl)}" alt="${escapeHtml(movie.title)} poster" onerror="this.style.display='none'; this.parentElement.querySelector('.poster-placeholder').style.display='flex';">`
-                : `<div class="poster-placeholder">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            const placeholderSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                             <line x1="3" y1="12" x2="21" y2="12"></line>
                         </svg>
-                        <span>Poster</span>
-                   </div>`;
+                        <span>Poster</span>`;
 
             const rating = movie.rating ? movie.rating.toFixed(1) : "–";
             const year = movie.year || "–";
@@ -50,7 +72,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             card.innerHTML = `
                 <div class="card-poster">
-                    ${posterHtml}
+                    <img class="poster-img hidden" alt="${escapeHtml(movie.title)} poster">
+                    <div class="poster-placeholder">${placeholderSvg}</div>
                 </div>
                 <div class="card-info">
                     <div class="card-title">${escapeHtml(movie.title)}</div>
@@ -61,6 +84,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 </div>
             `;
+
+            card.querySelector(".poster-img").addEventListener("error", function () {
+                posterFailed(this);
+            });
 
             card.addEventListener("click", () => {
                 alert(`Selected: ${movie.title} (${year})\n\n${escapeHtml(movie.overview || "")}`);
@@ -78,7 +105,15 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
-    // Exposed target called by Java (VanGoghApp) once the TMDB bridge is ready.
+    function requestPageMovies(kind, term) {
+        if (!window.javaBridge) {
+            showError("API bridge not ready yet. Please wait a moment and try again.");
+            return;
+        }
+        window.javaBridge.requestMovies(kind, term);
+    }
+
+    // Exposed target called by Java (VanGoghApp) with the movie list JSON.
     window.renderMoviesFromJava = function (jsonString) {
         try {
             const movies = JSON.parse(jsonString);
@@ -93,18 +128,12 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     function search() {
-        const term = searchInput.value.toLowerCase().trim();
-        if (!window.javaBridge) {
-            showError("API bridge not ready yet. Please wait a moment and try again.");
-            return;
-        }
+        const term = searchInput.value.trim();
         if (term === "") {
-            const json = window.javaBridge.fetchTrending();
-            window.renderMoviesFromJava(json);
+            requestPageMovies("trending", "");
             return;
         }
-        const json = window.javaBridge.searchMovies(term);
-        window.renderMoviesFromJava(json);
+        requestPageMovies("search", term);
     }
 
     searchBtn.addEventListener("click", search);
@@ -114,10 +143,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     contentFilter.addEventListener("change", () => {
         // Only Movie is wired to TMDB for now.
-        if (contentFilter.value === "movie" && window.javaBridge) {
-            const json = window.javaBridge.fetchTrending();
-            window.renderMoviesFromJava(json);
-        } else if (contentFilter.value !== "movie") {
+        if (contentFilter.value === "movie") {
+            requestPageMovies("trending", "");
+        } else {
             grid.innerHTML = `
                 <div class="empty-state">
                     <p>${escapeHtml(contentFilter.value.charAt(0).toUpperCase() + contentFilter.value.slice(1))} results are not yet connected to the API.</p>

@@ -8,10 +8,16 @@ import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TmdbMovieService {
 
     private final TmdbClient client;
+
+    // Poster data URIs by poster URL, so re-renders (search, filter toggles)
+    // don't re-download the same images. Bounded so long sessions don't grow it.
+    private final Map<String, String> posterCache = new ConcurrentHashMap<>();
 
     public TmdbMovieService(String apiKey) {
         this.client = new TmdbClient(apiKey);
@@ -34,6 +40,29 @@ public class TmdbMovieService {
             throw new RuntimeException("TMDB search failed: HTTP " + res.statusCode + " " + truncate(res.body, 300));
         }
         return parseMovies(res.body);
+    }
+
+    /**
+     * Loads one poster as a data: URI (never the direct URL — the WebView must
+     * not talk to image.tmdb.org itself, see TmdbClient). Cached so switching
+     * between trending and past searches is instant.
+     */
+    public String posterDataUri(String posterUrl) {
+        if (posterUrl == null || posterUrl.isEmpty()) {
+            return null;
+        }
+        String cached = posterCache.get(posterUrl);
+        if (cached != null) {
+            return cached;
+        }
+        String uri = client.loadPosterDataUri(posterUrl);
+        if (uri != null) {
+            if (posterCache.size() >= 512) {
+                posterCache.clear();
+            }
+            posterCache.put(posterUrl, uri);
+        }
+        return uri;
     }
 
     public List<Movie> parseMovies(String json) {
