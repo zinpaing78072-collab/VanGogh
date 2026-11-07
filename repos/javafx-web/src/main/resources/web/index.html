@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JavaFX WebView Reference</title>
+    <style>
+        body { font-family: sans-serif; margin: 24px; }
+        button { margin: 4px; padding: 8px 12px; }
+        #log { white-space: pre-wrap; background: #f4f4f4; padding: 12px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <h1>JavaFX WebView Reference</h1>
+    <p>This page is loaded by the JavaFX WebEngine.</p>
+
+    <button onclick="callJava()">Call Java from JS</button>
+    <button onclick="log('button clicked')">Log to Java console</button>
+
+    <div id="log"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
