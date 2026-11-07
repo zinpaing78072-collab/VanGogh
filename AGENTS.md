@@ -28,12 +28,6 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
 - `mvn exec:exec` (forked JVM) to run the app
 - Main class: `vangogh.VanGoghApp`
 
-## Shared references
-
-- JavaFX: see vault `Agent Docs — javafx.md` if present; shared agent docs under `/Users/macbookpro/Documents/Notes/agent-docs/javafx/`
-- VS Code workspace setup: `/Users/macbookpro/Documents/school-project/AGENTS.md`
-
-
 ## Vendored repositories (git subtree)
 
 External library source may be vendored under `repos/` via `git subtree` so agents can read real implementation/tests as reference (not `node_modules`/compiled jars).
@@ -41,13 +35,7 @@ External library source may be vendored under `repos/` via `git subtree` so agen
 - Use vendored repos as **read-only reference material** when working with related libraries.
 - Prefer examples and patterns from vendored source over generated guesses or web search.
 - Do **not** edit files under `repos/` unless explicitly asked.
-- Do **not** import from `repos/` — application code imports from normal Maven dependencies.
-
-### Currently vendored
-
-| Path | Purpose | Status |
-|---|---|---|
-| `repos/javafx-web` | JavaFX Web (`javafx.web`) reference source (WebView, WebEngine, etc.) | Placeholder repo initialized locally; populate via `git subtree add` when a source URL is chosen |
+- Do **not** import from `repos/` — application code imports from normal Maven dependencies.|
 
 Setup (when adding a new subtree):
 
