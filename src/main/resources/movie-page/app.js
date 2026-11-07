@@ -1,71 +1,4 @@
-/* Van Gogh — Movie Page JavaScript */
-
-const TRENDING_MOVIES = [
-    {
-        title: "Forrest Gump",
-        year: 1994,
-        rating: 8.8,
-        genre: "Drama · Romance",
-        poster: "posters/forrest_gump.jpg",
-        overview: "A man with a low IQ has accomplished great things in his life and been present during significant historic events."
-    },
-    {
-        title: "Inception",
-        year: 2010,
-        rating: 8.8,
-        genre: "Action · Sci-Fi · Thriller",
-        poster: "posters/inception.jpg",
-        overview: "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea."
-    },
-    {
-        title: "Interstellar",
-        year: 2014,
-        rating: 8.6,
-        genre: "Adventure · Drama · Sci-Fi",
-        poster: "posters/interstellar.jpg",
-        overview: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival."
-    },
-    {
-        title: "Pulp Fiction",
-        year: 1994,
-        rating: 8.9,
-        genre: "Crime · Drama",
-        poster: "posters/pulp_fiction.jpg",
-        overview: "The lives of two mob hitmen, a boxer, a gangster and his wife intertwine in four tales of violence."
-    },
-    {
-        title: "The Shawshank Redemption",
-        year: 1994,
-        rating: 9.3,
-        genre: "Drama",
-        poster: "posters/shawshank.jpg",
-        overview: "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency."
-    },
-    {
-        title: "The Godfather",
-        year: 1972,
-        rating: 9.2,
-        genre: "Crime · Drama",
-        poster: "posters/godfather.jpg",
-        overview: "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son."
-    },
-    {
-        title: "The Dark Knight",
-        year: 2008,
-        rating: 9.0,
-        genre: "Action · Crime · Drama",
-        poster: "posters/dark_knight.jpg",
-        overview: "When the menace known as the Joker wreaks havoc on Gotham, Batman must accept one of the greatest psychological tests."
-    },
-    {
-        title: "The Matrix",
-        year: 1999,
-        rating: 8.7,
-        genre: "Action · Sci-Fi",
-        poster: null,
-        overview: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers."
-    }
-];
+/* Van Gogh — Movie Page JavaScript (TMDB-backed) */
 
 document.addEventListener("DOMContentLoaded", () => {
     const grid = document.getElementById("movieGrid");
@@ -73,10 +6,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchBtn = document.getElementById("searchBtn");
     const contentFilter = document.getElementById("contentFilter");
 
+    function escapeHtml(text) {
+        if (text == null) return "";
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     function renderMovies(movies) {
         grid.innerHTML = "";
 
-        if (movies.length === 0) {
+        if (!movies || movies.length === 0) {
             grid.innerHTML = `
                 <div class="empty-state">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -93,8 +33,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement("div");
             card.className = "movie-card";
 
-            const posterHtml = movie.poster
-                ? `<img src="${movie.poster}" alt="${movie.title} poster" onerror="this.style.display='none'; this.parentElement.querySelector('.poster-placeholder').style.display='flex';">`
+            const posterUrl = movie.posterUrl;
+            const posterHtml = posterUrl
+                ? `<img src="${escapeHtml(posterUrl)}" alt="${escapeHtml(movie.title)} poster" onerror="this.style.display='none'; this.parentElement.querySelector('.poster-placeholder').style.display='flex';">`
                 : `<div class="poster-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -103,6 +44,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span>Poster</span>
                    </div>`;
 
+            const rating = movie.rating ? movie.rating.toFixed(1) : "–";
+            const year = movie.year || "–";
+            const genre = movie.genre || "";
+
             card.innerHTML = `
                 <div class="card-poster">
                     ${posterHtml}
@@ -110,40 +55,56 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="card-info">
                     <div class="card-title">${escapeHtml(movie.title)}</div>
                     <div class="card-meta">
-                        <span class="card-meta-item">${movie.year}</span>
-                        <span class="card-meta-item">${movie.genre}</span>
-                        <span class="card-meta-item card-rating">★ ${movie.rating}</span>
+                        <span class="card-meta-item">${escapeHtml(year)}</span>
+                        <span class="card-meta-item">${escapeHtml(genre)}</span>
+                        <span class="card-meta-item card-rating">★ ${rating}</span>
                     </div>
                 </div>
             `;
 
             card.addEventListener("click", () => {
-                alert(`Selected: ${movie.title} (${movie.year})\n\n${movie.overview}`);
+                alert(`Selected: ${movie.title} (${year})\n\n${escapeHtml(movie.overview || "")}`);
             });
 
             grid.appendChild(card);
         });
     }
 
-    function escapeHtml(text) {
-        const div = document.createElement("div");
-        div.textContent = text;
-        return div.innerHTML;
+    function showError(message) {
+        grid.innerHTML = `
+            <div class="empty-state">
+                <p style="color:#ff6b6b; margin:0;">${escapeHtml(message)}</p>
+            </div>
+        `;
     }
+
+    // Exposed target called by Java (VanGoghApp) once the TMDB bridge is ready.
+    window.renderMoviesFromJava = function (jsonString) {
+        try {
+            const movies = JSON.parse(jsonString);
+            if (movies && movies.error) {
+                showError(movies.error);
+                return;
+            }
+            renderMovies(movies);
+        } catch (e) {
+            showError("Failed to load movie data: " + escapeHtml(e.message));
+        }
+    };
 
     function search() {
         const term = searchInput.value.toLowerCase().trim();
-        const filter = contentFilter.value;
-
-        if (term === "") {
-            renderMovies(TRENDING_MOVIES);
+        if (!window.javaBridge) {
+            showError("API bridge not ready yet. Please wait a moment and try again.");
             return;
         }
-
-        const filtered = TRENDING_MOVIES.filter(m =>
-            m.title.toLowerCase().includes(term)
-        );
-        renderMovies(filtered);
+        if (term === "") {
+            const json = window.javaBridge.fetchTrending();
+            window.renderMoviesFromJava(json);
+            return;
+        }
+        const json = window.javaBridge.searchMovies(term);
+        window.renderMoviesFromJava(json);
     }
 
     searchBtn.addEventListener("click", search);
@@ -152,10 +113,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     contentFilter.addEventListener("change", () => {
-        // Switch content type — for now just re-render trending
-        renderMovies(TRENDING_MOVIES);
+        // Only Movie is wired to TMDB for now.
+        if (contentFilter.value === "movie" && window.javaBridge) {
+            const json = window.javaBridge.fetchTrending();
+            window.renderMoviesFromJava(json);
+        } else if (contentFilter.value !== "movie") {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <p>${escapeHtml(contentFilter.value.charAt(0).toUpperCase() + contentFilter.value.slice(1))} results are not yet connected to the API.</p>
+                </div>
+            `;
+        }
     });
-
-    // Initial render: trending movies
-    renderMovies(TRENDING_MOVIES);
 });
