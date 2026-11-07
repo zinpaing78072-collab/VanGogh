@@ -101,7 +101,7 @@ public class VanGoghApp extends Application {
         engine.executeScript("window.__API_ERROR__ = " + gson.toJson(message) + ";");
     }
 
-    private static String escapeJson(String s) {
+    static String escapeJson(String s) {
         if (s == null) {
             return "";
         }

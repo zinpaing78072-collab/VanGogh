@@ -36,7 +36,7 @@ public class TmdbMovieService {
         return parseMovies(res.body);
     }
 
-    private List<Movie> parseMovies(String json) {
+    public List<Movie> parseMovies(String json) {
         List<Movie> movies = new ArrayList<>();
         try {
             JsonObject root = JsonParser.parseString(json).getAsJsonObject();
