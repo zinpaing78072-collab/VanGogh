@@ -57,7 +57,6 @@ public class VanGoghApp extends Application {
         String apiKey = System.getenv("TMDB_API_KEY");
         if (apiKey == null || apiKey.isEmpty()) {
             apiKey = DEFAULT_TMDB_API_KEY;
-            System.out.println("TMDB_API_KEY not set — using built-in fallback key.");
         }
 
         TmdbMovieService service = new TmdbMovieService(apiKey);
