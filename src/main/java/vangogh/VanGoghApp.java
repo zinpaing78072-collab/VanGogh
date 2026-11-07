@@ -1,40 +1,25 @@
 package vangogh;
 
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
-import javafx.stage.Stage;
-
-import java.io.File;
-
 /**
- * Van Gogh — Entertainment Content Recommendation Desktop App
- * Movie Page Prototype (Dark Mode)
+ * Plain launcher for the JavaFX app. Deliberately does NOT extend
+ * {@link javafx.application.Application}: classpath-based launches (VS Code's
+ * Run/Debug task via exec-maven-plugin, or a bare {@code java -classpath})
+ * refuse to start a main class that extends Application with
+ * "JavaFX runtime components are missing, and are required to run this
+ * application" because no --module-path/--add-modules flags reach the JVM
+ * there. The real Application lives in {@link VanGoghBootstrap}; keeping this
+ * class's name/module path unchanged keeps both launchers working.
  */
-public class VanGoghApp extends Application {
+public class VanGoghApp {
 
-    @Override
-    public void start(final Stage primaryStage) {
-        primaryStage.setTitle("Van Gogh");
-
-        final WebView webView = new WebView();
-        final WebEngine engine = webView.getEngine();
-
-        // Load the local movie page HTML
-        final File htmlFile = new File("src/main/resources/movie-page/index.html");
-        if (htmlFile.exists()) {
-            engine.load(htmlFile.toURI().toString());
-        } else {
-            System.err.println("HTML file not found: " + htmlFile.getAbsolutePath());
-        }
-
-        final Scene scene = new Scene(webView, 1200, 800);
-        primaryStage.setScene(scene);
-        primaryStage.show();
+    public static void main(String[] args) {
+        VanGoghBootstrap.bootstrap(args);
     }
 
-    public static void main(final String[] args) {
-        launch(args);
+    static String escapeJson(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

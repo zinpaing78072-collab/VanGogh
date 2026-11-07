@@ -25,7 +25,15 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
 ## Build / run
 
 - Java 17, JavaFX 21.0.2
-- `mvn exec:exec` (forked JVM) to run the app
+- `mvn javafx:run` to run the app (official openjfx plugin; handles module path itself)
+- VS Code's Run/Debug Java tasks also work as-is: `vangogh.VanGoghApp` is a plain
+  launcher (no `extends Application`) that delegates to `VanGoghBootstrap`, so
+  classpath launches bypass the JDK "JavaFX runtime components are missing"
+  check. Keep that split in mind when touching either class.
+- Do not use `mvn exec:exec` here: exec-maven-plugin 3.x does not expand the old
+  `%classpath` token in pom `<argument>` elements (it dies with
+  "Module javafx.web not found" via the old wrapper). The VS Code extension's
+  CLI form `-Dexec.args="-classpath %classpath …"` is fine.
 - Main class: `vangogh.VanGoghApp`
 
 ## Vendored repositories (git subtree)
