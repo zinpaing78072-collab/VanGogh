@@ -22,6 +22,12 @@ public class VanGoghApp extends Application {
 
     private static final String HTML_PATH = "src/main/resources/movie-page/index.html";
 
+    // Built-in fallback key so the app works out of the box.
+    // Prefer the TMDB_API_KEY environment variable; it takes precedence over this value.
+    // ⚠️  Hard-coding an API key in source is a security risk — for production, load it from
+    //     an env var or config file and never commit the real key to version control.
+    private static final String DEFAULT_TMDB_API_KEY = "d0269af3b7b5a40e157c5e8ae28ff0a3";
+
     @Override
     public void start(final Stage primaryStage) {
         primaryStage.setTitle("Van Gogh");
@@ -50,9 +56,8 @@ public class VanGoghApp extends Application {
     private void installBridge(WebEngine engine) {
         String apiKey = System.getenv("TMDB_API_KEY");
         if (apiKey == null || apiKey.isEmpty()) {
-            System.err.println("TMDB_API_KEY not set — movie data will not load.");
-            injectError(engine, "API key not configured: set TMDB_API_KEY and restart the app.");
-            return;
+            apiKey = DEFAULT_TMDB_API_KEY;
+            System.out.println("TMDB_API_KEY not set — using built-in fallback key.");
         }
 
         TmdbMovieService service = new TmdbMovieService(apiKey);
