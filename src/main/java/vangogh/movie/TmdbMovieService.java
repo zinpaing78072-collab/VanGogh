@@ -43,14 +43,21 @@ public class TmdbMovieService {
             JsonArray results = root.getAsJsonArray("results");
             for (int i = 0; i < results.size(); i++) {
                 JsonObject m = results.get(i).getAsJsonObject();
-                int id = m.has("id") ? m.get("id").getAsInt() : 0;
-                String title = m.has("title") ? m.get("title").getAsString() : "Untitled";
-                String release = m.has("release_date") ? m.get("release_date").getAsString() : "";
+                int id = m.has("id") && !m.get("id").isJsonNull() ? m.get("id").getAsInt() : 0;
+                String title = optString(m, "title");
+                if (title.isEmpty()) {
+                    title = "Untitled";
+                }
+                String release = optString(m, "release_date");
                 int year = parseYear(release);
-                double rating = m.has("vote_average") ? m.get("vote_average").getAsDouble() : 0.0;
-                String genre = m.has("genre_ids") ? genreLabel(m.getAsJsonArray("genre_ids")) : "";
-                String overview = m.has("overview") ? m.get("overview").getAsString() : "";
-                String posterPath = m.has("poster_path") ? m.get("poster_path").getAsString() : null;
+                double rating = m.has("vote_average") && !m.get("vote_average").isJsonNull()
+                        ? m.get("vote_average").getAsDouble() : 0.0;
+                String genre = "";
+                if (m.has("genre_ids") && !m.get("genre_ids").isJsonNull()) {
+                    genre = genreLabel(m.getAsJsonArray("genre_ids"));
+                }
+                String overview = optString(m, "overview");
+                String posterPath = optString(m, "poster_path");
                 String posterUrl = TmdbClient.posterPath(posterPath);
                 movies.add(new Movie(id, title, year, rating, genre, overview, posterUrl));
             }
@@ -58,6 +65,13 @@ public class TmdbMovieService {
             System.err.println("TMDB parse error: " + e.getMessage());
         }
         return movies;
+    }
+
+    private static String optString(JsonObject m, String key) {
+        if (!m.has(key) || m.get(key).isJsonNull()) {
+            return "";
+        }
+        return m.get(key).getAsString();
     }
 
     private static int parseYear(String release) {
