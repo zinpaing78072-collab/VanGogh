@@ -54,18 +54,11 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.6.4</version>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
                 <configuration>
-                    <executable>${project.basedir}/src/main/scripts/run-javafx.sh</executable>
-                    <classpathScope>runtime</classpathScope>
-                    <longClasspath>true</longClasspath>
-                    <arguments>
-                        <argument>-classpath</argument>
-                        <argument>%classpath</argument>
-                        <argument>vangogh.VanGoghApp</argument>
-                    </arguments>
+                    <mainClass>vangogh.VanGoghApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>

@@ -25,7 +25,10 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
 ## Build / run
 
 - Java 17, JavaFX 21.0.2
-- `mvn exec:exec` (forked JVM) to run the app
+- `mvn javafx:run` to run the app (official openjfx plugin; handles module path
+  itself — do not use `mvn exec:exec` here, exec-maven-plugin 3.x does not
+  expand the old `%classpath` token and the launch dies with
+  "Module javafx.web not found")
 - Main class: `vangogh.VanGoghApp`
 
 ## Shared references
