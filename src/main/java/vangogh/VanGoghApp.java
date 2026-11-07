@@ -86,10 +86,11 @@ public class VanGoghApp extends Application {
         });
 
         // Seed the page with trending movies immediately by calling the JS renderer.
+        // gson.toJson(json) quotes the JSON string so JS receives a string, not a raw object.
         try {
             List<Movie> movies = service.fetchTrending();
             String json = gson.toJson(movies);
-            engine.executeScript("window.renderMoviesFromJava(" + json + ");");
+            engine.executeScript("window.renderMoviesFromJava(" + gson.toJson(json) + ");");
         } catch (Exception e) {
             System.err.println("Failed to seed initial movies: " + e.getMessage());
         }
