@@ -11,7 +11,7 @@ import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import netscape.javascript.JSObject;
 
-import java.io.File;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class VanGoghApp extends Application {
 
-    private static final String HTML_PATH = "src/main/resources/movie-page/index.html";
+    private static final String HTML_RESOURCE = "movie-page/index.html";
 
     // Built-in fallback key so the app works out of the box.
     // Prefer the TMDB_API_KEY environment variable; it takes precedence over this value.
@@ -35,11 +35,13 @@ public class VanGoghApp extends Application {
         final WebView webView = new WebView();
         final WebEngine engine = webView.getEngine();
 
-        final File htmlFile = new File(HTML_PATH);
-        if (!htmlFile.exists()) {
-            System.err.println("HTML file not found: " + htmlFile.getAbsolutePath());
+        // Load the movie page HTML from the classpath so the working directory doesn't matter.
+        final URL htmlUrl = getClass().getClassLoader().getResource(HTML_RESOURCE);
+        if (htmlUrl == null) {
+            System.err.println("HTML resource not found on classpath: " + HTML_RESOURCE);
+        } else {
+            engine.load(htmlUrl.toString());
         }
-        engine.load(htmlFile.toURI().toString());
 
         // Expose the TMDB-backed movie service to the page's JavaScript once loaded.
         engine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
@@ -83,11 +85,11 @@ public class VanGoghApp extends Application {
             }
         });
 
-        // Seed the page with trending movies immediately.
+        // Seed the page with trending movies immediately by calling the JS renderer.
         try {
             List<Movie> movies = service.fetchTrending();
             String json = gson.toJson(movies);
-            engine.executeScript("window.__INITIAL_MOVIES__ = " + json + ";");
+            engine.executeScript("window.renderMoviesFromJava(" + json + ");");
         } catch (Exception e) {
             System.err.println("Failed to seed initial movies: " + e.getMessage());
         }
