@@ -62,4 +62,8 @@ git subtree add --prefix=repos/<name> <repo-url> <branch> --squash
 git subtree pull --prefix=repos/<name> <repo-url> <branch> --squash
 ```
 
-Editor/agent config: exclude `repos/**` from auto-import, file watcher, search, and file explorer (see `.vscode/settings.json`). AGENTS.md should name each vendored repo and its intended usage
+Editor/agent config: exclude `repos/**` from auto-import, file watcher, search, and file explorer (see `.vscode/settings.json`). AGENTS.md should name each vendored repo and its intended usage.
+
+| Vendored repo | Intended usage |
+|---|---|
+| `repos/krema` (https://github.com/krema-build/krema, `master`) | Read-only reference for `build.krema:krema-core:0.3.2` — inspect real `Krema`, `KremaCommand`, `EventEmitter`, `WebViewCLibEngine` implementations and tests when working with Krema IPC/events/threading. |
