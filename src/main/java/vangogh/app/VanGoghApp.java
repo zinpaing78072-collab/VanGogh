@@ -1,4 +1,4 @@
-package vangogh;
+package vangogh.app;
 
 /**
  * Plain launcher for the JavaFX app. Deliberately does NOT extend

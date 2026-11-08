@@ -1,4 +1,4 @@
-package com.entertainment.tester;
+package vangogh.net;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -21,20 +21,14 @@ import java.util.List;
 public class TmdbClient {
     private static final String BASE = "https://api.themoviedb.org/3";
     private static final String IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
-    // Poster size used for list cards; smaller/faster than w500 and still sharp at card size.
     static final String POSTER_SIZE = "w342";
-    // Free image proxy: fetches TMDB images from its own servers and serves the bytes.
-    // Fallback for networks that block image.tmdb.org (e.g. some ISPs reset its TLS).
     static final String IMAGE_PROXY = "https://wsrv.nl/?url=";
-    // Per-poster source timeout: fail fast so the fallback source gets a turn.
     private static final Duration POSTER_TIMEOUT = Duration.ofSeconds(5);
-    // Remembers across launches whether the direct image host was reachable here.
     private static final Path PROXY_MARKER = Path.of(System.getProperty("user.home"), ".van-gogh", "poster-proxy.conf");
 
     private final String apiKey;
     private final HttpClient http = HttpClient.newHttpClient();
 
-    // Once the direct image host fails here, later posters skip straight to the proxy.
     private volatile boolean preferProxy = posterProxyPreferred();
 
     public TmdbClient(String apiKey) {
@@ -75,55 +69,35 @@ public class TmdbClient {
         return IMAGE_BASE + path;
     }
 
-    /**
-     * Ordered candidate URLs that can serve the raw bytes for this poster
-     * (direct image host and/or the wsrv.nl proxy). posterUrl is the canonical
-     * w500 direct URL as stored on Movie. Unknown hosts are not guessed at.
-     */
     static List<String> posterSources(String posterUrl, boolean proxyFirst) {
         List<String> sources = new ArrayList<>();
         if (posterUrl == null || !posterUrl.startsWith(IMAGE_BASE + "/")) {
             return sources;
         }
-        String filename = posterUrl.substring(IMAGE_BASE.length());
-        String direct = "https://image.tmdb.org/t/p/" + POSTER_SIZE + filename;
-        String proxied = IMAGE_PROXY + URLEncoder.encode(direct, StandardCharsets.UTF_8);
+        String directUrl = posterUrl.replace("w500/", POSTER_SIZE + "/");
+        String encoded = URLEncoder.encode(directUrl, StandardCharsets.UTF_8);
+        String proxyUrl = IMAGE_PROXY + encoded;
         if (proxyFirst) {
-            sources.add(proxied);
-            sources.add(direct);
+            sources.add(proxyUrl);
+            sources.add(directUrl);
         } else {
-            sources.add(direct);
-            sources.add(proxied);
+            sources.add(directUrl);
+            sources.add(proxyUrl);
         }
         return sources;
     }
 
-    /**
-     * Converts raw image bytes into a data: URI the WebView can use as an
-     * &lt;img&gt; src with no network access at render time. Returns null for
-     * empty input so callers can keep the placeholder.
-     */
     static String toDataUri(byte[] bytes, String contentType) {
         if (bytes == null || bytes.length == 0) {
             return null;
         }
-        String mime = contentType == null || contentType.isBlank() ? "image/jpeg" : contentType;
-        int semi = mime.indexOf(';');
-        if (semi >= 0) {
-            mime = mime.substring(0, semi).trim();
-        }
+        String mime = contentType != null ? contentType.split(";")[0].trim() : "image/jpeg";
         if (!mime.startsWith("image/")) {
             mime = "image/jpeg";
         }
         return "data:" + mime + ";base64," + Base64.getEncoder().encodeToString(bytes);
     }
 
-    /**
-     * Downloads one poster and returns it as a data: URI, or null when every
-     * candidate source fails (the page then keeps its placeholder). Direct host
-     * is tried first; on total failure the preference sticks and is remembered
-     * for the next launch so later posters and app starts pay no 5s toll.
-     */
     public String loadPosterDataUri(String posterUrl) {
         for (String source : posterSources(posterUrl, preferProxy)) {
             try {
@@ -141,7 +115,6 @@ public class TmdbClient {
                     }
                 }
             } catch (IOException | InterruptedException e) {
-                // Try the next source; null is returned if none of them work.
                 if (e instanceof InterruptedException) {
                     Thread.currentThread().interrupt();
                     return null;
@@ -151,7 +124,6 @@ public class TmdbClient {
         return null;
     }
 
-    /** Applies and persists a source preference; only writes when it flips. */
     private void rememberPosterSource(boolean proxied) {
         if (preferProxy != proxied) {
             preferProxy = proxied;
@@ -159,7 +131,6 @@ public class TmdbClient {
         }
     }
 
-    /** True when a previous launch found the direct image host unreachable here. */
     static boolean posterProxyPreferred() {
         try {
             return Files.isRegularFile(PROXY_MARKER);

@@ -1,4 +1,4 @@
-package com.entertainment.tester;
+package vangogh.net;
 
 import org.junit.jupiter.api.Test;
 import java.util.List;
