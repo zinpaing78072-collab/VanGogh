@@ -1,0 +1,33 @@
+// Zed task runner for the van-gogh workspace.
+// Tasks here are the SUPPORTED way to run JavaFX/Krema apps from Zed: they go
+// through the pom, which is where the load-bearing JVM flags live.
+//
+// ❗ Do NOT use Zed's gutter "Run" button on Krema main classes: its Java
+// extension launches `mvn exec:exec -Dexec.executable=java -Dexec.args="…"`,
+// and -Dexec.args *replaces* the pom's <arguments> list — dropping
+// -XstartOnFirstThread (macOS: window never appears; run "looks" healthy) and
+// --enable-native-access (FFM warnings/blocks).
+[
+  {
+    "label": "run krema spike (mvn exec:exec)",
+    "command": "mvn",
+    "args": ["compile", "exec:exec"],
+    "cwd": "/Users/macbookpro/Documents/school-project/van-gogh",
+    "env": {
+      "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home"
+    },
+    "use_new_terminal": false,
+    "reveal": "no"
+  },
+  {
+    "label": "run van-gogh (JavaFX, mvn javafx:run)",
+    "command": "mvn",
+    "args": ["javafx:run"],
+    "cwd": "/Users/macbookpro/Documents/school-project/van-gogh",
+    "env": {
+      "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home"
+    },
+    "use_new_terminal": false,
+    "reveal": "no"
+  }
+]
