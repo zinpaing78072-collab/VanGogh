@@ -36,9 +36,8 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
 - macOS launch rule: `-XstartOnFirstThread` must be the **first** JVM argument.
   Without it the process runs cleanly but no window ever appears.
 - VS Code's Run/Debug Java tasks work as-is: `vangogh.VanGoghApp` is a plain
-  launcher that delegates to `VanGoghBootstrap`, which builds the Krema window
-  and runs the system-webview event loop. Add `-XstartOnFirstThread` and
-  `--enable-native-access=ALL-UNNAMED` to the launch task's `vmArgs`.
+  launcher that builds the Krema window and runs the system-webview event loop.
+  Add `-XstartOnFirstThread` and `--enable-native-access=ALL-UNNAMED` to the launch task's `vmArgs`.
 - Main class: `vangogh.app.VanGoghApp`
 - IPC: frontend calls `await window.krema.invoke("requestMovies", { kind, query })`;
   handlers are `@KremaCommand` methods on `MovieController` and require
