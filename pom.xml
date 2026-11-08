@@ -11,33 +11,18 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <javafx.version>25.0.5</javafx.version>
-        <javafx.modules>javafx.controls,javafx.web</javafx.modules>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>${javafx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-web</artifactId>
-            <version>${javafx.version}</version>
+            <groupId>build.krema</groupId>
+            <artifactId>krema-core</artifactId>
+            <version>0.3.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
-        </dependency>
-        <!-- PROTOTYPE (krema spike): system-webview shell. Throwaway; the JavaFX
-             path above remains the shipping UI. 0.3.4 does not exist on Maven
-             Central — stay on 0.3.2. -->
-        <dependency>
-            <groupId>build.krema</groupId>
-            <artifactId>krema-core</artifactId>
-            <version>0.3.2</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -60,23 +45,12 @@
                     <parameters>true</parameters>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version>
-                <configuration>
-                    <mainClass>vangogh.app.VanGoghApp</mainClass>
-                    <options>
-                        <option>--enable-native-access=javafx.graphics,javafx.web</option>
-                    </options>
-                </configuration>
-            </plugin>
-            <!-- PROTOTYPE (krema spike) launcher. Run with (JDK 25 required so
-                 ${java.home} resolves to it — Maven itself may default to Temurin 21):
-                 JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home mvn compile exec:exec
-                 Arguments carried over verbatim from the working krema demo pom;
-                 order matters. exec:java is the wrong tool on macOS — it reuses
-                 Maven's JVM with none of these flags and the window never appears. -->
+            <!-- Krema launcher. Run with JDK 25 (Maven may default to Temurin 21):
+                 JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home
+                     mvn compile exec:exec
+                 exec:exec forks ${java.home}/bin/java so the pom JVM flags apply.
+                 exec:java is the wrong tool on macOS — it reuses Maven's JVM and
+                 drops the flags, so the window never appears. -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -99,7 +73,7 @@
                         <argument>-Xmx512m</argument>
                         <argument>-classpath</argument>
                         <classpath/>
-                        <argument>vangogh.spike.KremaShellSpike</argument>
+                        <argument>vangogh.app.VanGoghApp</argument>
                     </arguments>
                 </configuration>
             </plugin>

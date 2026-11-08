@@ -1,25 +1,16 @@
 package vangogh.app;
 
 /**
- * Plain launcher for the JavaFX app. Deliberately does NOT extend
- * {@link javafx.application.Application}: classpath-based launches (VS Code's
- * Run/Debug task via exec-maven-plugin, or a bare {@code java -classpath})
- * refuse to start a main class that extends Application with
- * "JavaFX runtime components are missing, and are required to run this
- * application" because no --module-path/--add-modules flags reach the JVM
- * there. The real Application lives in {@link VanGoghBootstrap}; keeping this
- * class's name/module path unchanged keeps both launchers working.
+ * Plain launcher for the Krema app. Deliberately does NOT extend any
+ * JavaFX class: classpath-based launches (VS Code's Run/Debug task,
+ * exec-maven-plugin, or a bare {@code java -classpath}) work without
+ * --module-path/--add-modules flags. The real UI lifecycle lives in
+ * {@link VanGoghBootstrap}, which builds the Krema window and runs the
+ * system-webview event loop.
  */
 public class VanGoghApp {
 
     public static void main(String[] args) {
         VanGoghBootstrap.bootstrap(args);
-    }
-
-    static String escapeJson(String s) {
-        if (s == null) {
-            return "";
-        }
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

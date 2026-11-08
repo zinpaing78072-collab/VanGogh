@@ -1,47 +1,12 @@
-/* Van Gogh — Movie Page JavaScript (TMDB-backed) */
+/* Van Gogh — Movie Page JavaScript (TMDB-backed, Krema system-webview shell) */
 
-/* PROTOTYPE (krema spike) — bridge shim so the SAME page runs under both shells:
-   the JavaFX WebView exposes window.javaBridge; the Krema system-webview shell
-   exposes window.krema (invoke returns a Promise, posters arrive via events).
-   Remove once the spike verdict is captured. Commands resolve to WebKit's
-   main-event-macrotask loop below — untouched outside this block. */
-(function () {
-    if (!window.krema) return; // JavaFX shell: nothing to shim
+/* The page talks to Java through window.krema:
+   - await window.krema.invoke("requestMovies", { kind, query }) → movie list
+   - window.krema.on("poster", data) → poster data URIs streamed in
+   No JavaFX bridge shim needed anymore — Krema is the sole UI shell.
+*/
 
-    // Posters stream in from Java's IO pool as "poster" events; the payload
-    // arrives wrapped as { payload, timestamp } by the krema-bridge script.
-    window.krema.on("poster", function (data) {
-        if (data && data.payload) {
-            window.setPoster(data.payload.id, data.payload.dataUri);
-        }
-    });
-
-    window.javaBridge = {
-        requestMovies: async function (kind, term) {
-            try {
-                // Resolves with the parsed movies array directly (async IPC path).
-                // Routed through renderMoviesFromJava so the shared render code
-                // and its error handling stay the only render path.
-                const movies = await window.krema.invoke("requestMovies", { kind: kind, query: term });
-                window.renderMoviesFromJava(JSON.stringify(movies));
-            } catch (e) {
-                const message = e && e.message ? e.message : String(e);
-                window.renderMoviesFromJava(JSON.stringify({ error: message }));
-            }
-        },
-    };
-
-    // Seed the initial trending render (the JavaFX shell calls seedTrending() from Java).
-    const seed = () => window.javaBridge.requestMovies("trending", "");
-    if (document.readyState !== "loading") {
-        seed();
-    } else {
-        document.addEventListener("DOMContentLoaded", seed);
-    }
-})();
-
-
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const grid = document.getElementById("movieGrid");
     const searchInput = document.getElementById("searchInput");
     const searchBtn = document.getElementById("searchBtn");
@@ -54,9 +19,17 @@ document.addEventListener("DOMContentLoaded", () => {
         return div.innerHTML;
     }
 
-    // Posters are streamed in by Java as data: URIs (VanGoghApp#streamPosters),
-    // so <img> elements start with no src and the placeholder is visible. If an
-    // img carrying a real src fails to load, fall back to the placeholder.
+    // Posters are streamed in from Java's IO pool as "poster" events;
+    // the payload arrives wrapped as { payload, timestamp } by Krema's bridge.
+    window.krema.on("poster", function (data) {
+        if (data && data.payload) {
+            window.setPoster(data.payload.id, data.payload.dataUri);
+        }
+    });
+
+    // Posters stream in as data: URIs, so  elements start with no src
+    // and the placeholder is visible. If an img carrying a real src fails,
+    // fall back to the placeholder.
     function posterFailed(img) {
         img.removeAttribute("src");
         img.classList.add("hidden");
@@ -66,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Push target called by Java (FX thread) once one poster finishes loading.
+    // Push target called by Java (Krema events) once one poster finishes loading.
     window.setPoster = function (movieId, dataUri) {
         const card = grid.querySelector(`.movie-card[data-movie-id="${movieId}"]`);
         if (!card || !dataUri) return;
@@ -82,30 +55,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderMovies(movies) {
         grid.innerHTML = "";
-
         if (!movies || movies.length === 0) {
             grid.innerHTML = `
                 <div class="empty-state">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="8" r="7"></circle>
-                        <path d="M21 21l-4.35-4.35A8 8 0 1 0 3 3l4.35 4.35"></path>
-                    </svg>
-                    <p>No results found</p>
-                </div>
-            `;
+                    <p style="color:#ff6b6b; margin:0;">No movies found.</p>
+                </div>`;
             return;
         }
-
         movies.forEach(movie => {
             const card = document.createElement("div");
             card.className = "movie-card";
             card.dataset.movieId = movie.id;
 
-            const placeholderSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                        </svg>
-                        <span>Poster</span>`;
+            const placeholderSvg = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+            </svg>`;
 
             const rating = movie.rating ? movie.rating.toFixed(1) : "–";
             const year = movie.year || "–";
@@ -142,44 +107,47 @@ document.addEventListener("DOMContentLoaded", () => {
         grid.innerHTML = `
             <div class="empty-state">
                 <p style="color:#ff6b6b; margin:0;">${escapeHtml(message)}</p>
-            </div>
-        `;
+            </div>`;
     }
 
-    function requestPageMovies(kind, term) {
-        if (!window.javaBridge) {
+    async function requestPageMovies(kind, term) {
+        if (!window.krema) {
             showError("API bridge not ready yet. Please wait a moment and try again.");
             return;
         }
-        window.javaBridge.requestMovies(kind, term);
-    }
-
-    // Exposed target called by Java (VanGoghApp) with the movie list JSON.
-    window.renderMoviesFromJava = function (jsonString) {
         try {
-            const movies = JSON.parse(jsonString);
+            const movies = await window.krema.invoke("requestMovies", { kind: kind, query: term });
             if (movies && movies.error) {
                 showError(movies.error);
                 return;
             }
             renderMovies(movies);
         } catch (e) {
-            showError("Failed to load movie data: " + escapeHtml(e.message));
+            const message = e && e.message ? e.message : String(e);
+            showError("Failed to load movie data: " + escapeHtml(message));
         }
-    };
+    }
 
-    function search() {
+    // Seed the initial trending render.
+    await requestPageMovies("trending", "");
+
+    searchBtn.addEventListener("click", () => {
         const term = searchInput.value.trim();
         if (term === "") {
             requestPageMovies("trending", "");
-            return;
+        } else {
+            requestPageMovies("search", term);
         }
-        requestPageMovies("search", term);
-    }
-
-    searchBtn.addEventListener("click", search);
+    });
     searchInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") search();
+        if (e.key === "Enter") {
+            const term = searchInput.value.trim();
+            if (term === "") {
+                requestPageMovies("trending", "");
+            } else {
+                requestPageMovies("search", term);
+            }
+        }
     });
 
     contentFilter.addEventListener("change", () => {
@@ -190,8 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
             grid.innerHTML = `
                 <div class="empty-state">
                     <p>${escapeHtml(contentFilter.value.charAt(0).toUpperCase() + contentFilter.value.slice(1))} results are not yet connected to the API.</p>
-                </div>
-            `;
+                </div>`;
         }
     });
 });
