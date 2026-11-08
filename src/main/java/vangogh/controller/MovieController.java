@@ -29,7 +29,10 @@ public class MovieController {
 
     private static final int IO_THREADS = 6;
 
-    private final EventEmitter events;
+    // volatile: written once from the startup thread via {@link #setEventEmitter}
+    // (runs inside Krema's run(), before any page can invoke commands), then
+    // read from the IO pool threads that stream posters.
+    private volatile EventEmitter events;
     private final TmdbMovieService service;
     private final ExecutorService io;
     private final Gson gson = new Gson();
@@ -38,14 +41,24 @@ public class MovieController {
     // current, so a slow fetch can never overwrite a newer render's posters.
     private final AtomicInteger generation = new AtomicInteger();
 
-    public MovieController(EventEmitter events) {
-        this.events = events;
+    public MovieController() {
         this.service = new TmdbMovieService(resolveApiKey());
         this.io = Executors.newFixedThreadPool(IO_THREADS, runnable -> {
             Thread thread = new Thread(runnable, "van-gogh-io");
             thread.setDaemon(true);
             return thread;
         });
+    }
+
+    /**
+     * Krema calls the {@code .events(...)} consumer inside {@code run()} once the
+     * {@link EventEmitter} exists — before the window navigates to the page, so
+     * before any JS can invoke {@code requestMovies}. Wire the emitter there
+     * instead of constructing this class inside the builder chain, where the
+     * emitter cannot exist yet (capturing it eagerly yields a permanent {@code null}).
+     */
+    public void setEventEmitter(EventEmitter events) {
+        this.events = events;
     }
 
     /**

@@ -2,7 +2,6 @@ package vangogh.app;
 
 import vangogh.controller.MovieController;
 import build.krema.core.Krema;
-import build.krema.core.event.EventEmitter;
 
 /**
  * Krema entry point. Responsible only for the UI lifecycle: creating the
@@ -19,22 +18,26 @@ import build.krema.core.event.EventEmitter;
  */
 public class VanGoghBootstrap {
 
-    /** Captured once at startup via {@code .events(...)}; used later from
-     *  background threads to stream poster events into the page. */
-    static EventEmitter events;
-
     private static final String ASSET_PREFIX = "/movie-page";
 
     /** Entry point used by {@link VanGoghApp} and by modular runs. */
     static void bootstrap(String[] args) {
+        // Constructed BEFORE the builder chain: new MovieController() inside
+        // .commands(...) runs while the .events(...) consumer is still unread
+        // (KremaBuilder only stores it; KremaApplication.run() invokes it),
+        // so an eagerly-captured EventEmitter can only be null and posters
+        // would never emit. Instead the controller receives the emitter via
+        // setEventEmitter, which Krema calls inside run() — before the webview
+        // navigates to the page, and therefore before any JS can request movies.
+        MovieController controller = new MovieController();
         Krema.app()
                 .title("Van Gogh")
                 .identifier("van-gogh.krema")
                 .size(1200, 800)
                 .debug() // right-click → Inspect in the system webview to watch events
                 .prodAssets(ASSET_PREFIX) // serves src/main/resources/movie-page/index.html
-                .events(ee -> events = ee)
-                .commands(new MovieController(events))
+                .events(controller::setEventEmitter)
+                .commands(controller)
                 .run(); // blocks until the window closes
     }
 
