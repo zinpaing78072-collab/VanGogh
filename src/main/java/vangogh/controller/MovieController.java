@@ -42,7 +42,12 @@ public class MovieController {
     private final AtomicInteger generation = new AtomicInteger();
 
     public MovieController() {
-        this.service = new TmdbMovieService(resolveApiKey());
+        this(new TmdbMovieService(resolveApiKey()));
+    }
+
+    /** Package-private seam for tests: inject a stubbed {@link TmdbMovieService}. */
+    MovieController(TmdbMovieService service) {
+        this.service = service;
         this.io = Executors.newFixedThreadPool(IO_THREADS, runnable -> {
             Thread thread = new Thread(runnable, "van-gogh-io");
             thread.setDaemon(true);

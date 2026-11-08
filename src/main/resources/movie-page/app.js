@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const searchInput = document.getElementById("searchInput");
     const searchBtn = document.getElementById("searchBtn");
     const contentFilter = document.getElementById("contentFilter");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
 
     function escapeHtml(text) {
         if (text == null) return "";
@@ -161,4 +162,29 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>`;
         }
     });
+    // ---- Fullscreen toggle ----
+    // macOS native fullscreen hides the window title bar / traffic lights and
+    // they don't reliably reappear on hover (AppKit/WebKit limitation).
+    // This in-app button lets users enter/exit fullscreen without the title bar.
+    async function updateFullscreenButton() {
+        if (!window.krema || !fullscreenBtn) return;
+        try {
+            const fs = await window.krema.invoke("window:isFullscreen");
+            fullscreenBtn.textContent = fs ? "⊘" : "⛶";
+            fullscreenBtn.title = fs ? "Exit fullscreen (Esc)" : "Enter fullscreen";
+            fullscreenBtn.ariaLabel = fs ? "Exit fullscreen" : "Enter fullscreen";
+        } catch (e) {}
+    }
+
+    fullscreenBtn.addEventListener("click", async () => {
+        if (!window.krema) return;
+        try {
+            await window.krema.invoke("window:toggleFullscreen");
+            setTimeout(updateFullscreenButton, 300);
+        } catch (e) {
+            showError("Failed to toggle fullscreen: " + escapeHtml(String(e.message || e)));
+        }
+    });
+
+    await updateFullscreenButton();
 });
