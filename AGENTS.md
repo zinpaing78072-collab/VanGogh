@@ -1,6 +1,6 @@
 # AGENTS.md — VanGogh
 
-Project rules for VanGogh — entertainment content recommendation desktop app (Java 17 + JavaFX 21 WebView).
+Project rules for VanGogh — entertainment content recommendation desktop app (Java 25 + JavaFX 25 WebView).
 
 ## Project management (Obsidian vault)
 
@@ -24,7 +24,8 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
 
 ## Build / run
 
-- Java 17, JavaFX 21.0.2
+- Java 25 (LTS), JavaFX 25.0.5. Compiling requires a JDK 25+ install (pom compiles
+  with `--release 25`); runtime is macOS default JAVA_HOME.
 - `mvn javafx:run` to run the app (official openjfx plugin; handles module path itself)
 - VS Code's Run/Debug Java tasks also work as-is: `vangogh.VanGoghApp` is a plain
   launcher (no `extends Application`) that delegates to `VanGoghBootstrap`, so
@@ -43,7 +44,7 @@ External library source may be vendored under `repos/` via `git subtree` so agen
 - Use vendored repos as **read-only reference material** when working with related libraries.
 - Prefer examples and patterns from vendored source over generated guesses or web search.
 - Do **not** edit files under `repos/` unless explicitly asked.
-- Do **not** import from `repos/` — application code imports from normal Maven dependencies.|
+- Do **not** import from `repos/` — application code imports from normal Maven dependencies.
 
 Setup (when adding a new subtree):
 
