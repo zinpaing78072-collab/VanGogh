@@ -11,20 +11,13 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <javafx.version>25.0.5</javafx.version>
-        <javafx.modules>javafx.controls,javafx.web</javafx.modules>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>${javafx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-web</artifactId>
-            <version>${javafx.version}</version>
+            <groupId>build.krema</groupId>
+            <artifactId>krema-core</artifactId>
+            <version>0.3.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -47,17 +40,41 @@
                 <version>3.11.0</version>
                 <configuration>
                     <release>25</release>
+                    <!-- Krema IPC binds @KremaCommand arguments by parameter name;
+                         without this they arrive null with no error. -->
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
+            <!-- Krema launcher. Run with JDK 25 (Maven may default to Temurin 21):
+                 JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home
+                     mvn compile exec:exec
+                 exec:exec forks ${java.home}/bin/java so the pom JVM flags apply.
+                 exec:java is the wrong tool on macOS — it reuses Maven's JVM and
+                 drops the flags, so the window never appears. -->
             <plugin>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
                 <configuration>
-                    <mainClass>vangogh.app.VanGoghApp</mainClass>
-                    <options>
-                        <option>--enable-native-access=javafx.graphics,javafx.web</option>
-                    </options>
+                    <!-- ${java.home} is the JDK that Maven itself runs on -->
+                    <executable>${java.home}/bin/java</executable>
+                    <arguments>
+                        <!-- macOS: libwebview.dylib drives NSApp (webview_run) on the
+                             calling thread, and AppKit only permits its event loop on
+                             the process's FIRST thread. Without this flag macOS kills
+                             the event loop ("nextEventMatchingMask should only be called
+                             from the Main Thread!") and no window appears. Mirrors
+                             krema-core's own pom. macOS-only HotSpot flag. -->
+                        <argument>-XstartOnFirstThread</argument>
+                        <!-- Panama FFM: silence restricted-method warnings -->
+                        <argument>--enable-native-access=ALL-UNNAMED</argument>
+                        <!-- Heap cap: default max heap is 1/4 of RAM (~2 GB) on this
+                             8 GB machine. RSS still includes WebKit. -->
+                        <argument>-Xmx512m</argument>
+                        <argument>-classpath</argument>
+                        <classpath/>
+                        <argument>vangogh.app.VanGoghApp</argument>
+                    </arguments>
                 </configuration>
             </plugin>
         </plugins>

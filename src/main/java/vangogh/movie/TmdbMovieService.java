@@ -20,7 +20,16 @@ public class TmdbMovieService {
     private final Map<String, String> posterCache = new ConcurrentHashMap<>();
 
     public TmdbMovieService(String apiKey) {
-        this.client = new TmdbClient(apiKey);
+        this(new TmdbClient(apiKey));
+    }
+
+    /**
+     * Constructs the service with an injected {@link TmdbClient}. Public so
+     * tests (and other packages) can supply a stubbed client instead of hitting
+     * the real TMDB network.
+     */
+    public TmdbMovieService(TmdbClient client) {
+        this.client = client;
     }
 
     public List<Movie> fetchTrending() throws Exception {

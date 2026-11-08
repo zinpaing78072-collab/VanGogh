@@ -6,6 +6,10 @@ import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import vangogh.net.TmdbClient;
+
 class TmdbMovieServiceTest {
 
     private static final String VALID_TRENDING_JSON = """
@@ -177,5 +181,47 @@ class TmdbMovieServiceTest {
             {"page":1,"total_results":1,"results":[{"id":1,"title":"T","release_date":""}]}
             """);
         assertEquals(0, result.get(0).year());
+    }
+
+    /** Stub client for poster tests: records loadPosterDataUri calls, returns a fake data URI. */
+    static class PosterStubClient extends TmdbClient {
+        final List<String> calls = new ArrayList<>();
+
+        PosterStubClient() {
+            super("test-key");
+        }
+
+        @Override
+        public String loadPosterDataUri(String posterUrl) {
+            calls.add(posterUrl);
+            return "data:image/jpeg;base64,stubbed";
+        }
+    }
+
+    @Test
+    void posterDataUriWithNullReturnsNull() {
+        TmdbMovieService service = new TmdbMovieService(new PosterStubClient());
+        assertNull(service.posterDataUri(null));
+    }
+
+    @Test
+    void posterDataUriWithEmptyStringReturnsNull() {
+        TmdbMovieService service = new TmdbMovieService(new PosterStubClient());
+        assertNull(service.posterDataUri(""));
+    }
+
+    @Test
+    void posterDataUriCachesResultAndCallsClientOnce() {
+        PosterStubClient client = new PosterStubClient();
+        TmdbMovieService service = new TmdbMovieService(client);
+        String url = "https://image.tmdb.org/t/p/w500/abc.jpg";
+
+        String uri1 = service.posterDataUri(url);
+        String uri2 = service.posterDataUri(url);
+
+        assertEquals("data:image/jpeg;base64,stubbed", uri1);
+        assertEquals(uri1, uri2);
+        assertEquals(1, client.calls.size());
+        assertEquals(url, client.calls.get(0));
     }
 }

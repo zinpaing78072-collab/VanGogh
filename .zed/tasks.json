@@ -1,0 +1,33 @@
+// Zed task runner for the van-gogh workspace.
+// Krema is now the sole UI shell (JavaFX removed). The gutter "Run" (▶)
+// indicator for a Java main method is handled by the java-main task below,
+// which launches via mvn compile exec:exec so the pom's JVM flags
+// (-XstartOnFirstThread, --enable-native-access=ALL-UNNAMED) stay intact.
+// Do NOT use -Dexec.args=... — that replaces the pom's <arguments> list and
+// drops the flags, so the Krema window never appears on macOS.
+[
+  {
+    "label": "run van-gogh (Krema, mvn exec:exec)",
+    "command": "mvn compile exec:exec",
+    "cwd": "/Users/macbookpro/Documents/school-project/van-gogh",
+    "env": {
+      "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home"
+    },
+    "use_new_terminal": false,
+    "reveal": "never"
+  },
+  // This task holds the `java-main` tag, so the ▶ indicator next to a main
+  // method spawns it directly instead of the extension's default (which would
+  // drop the pom's flags). Good indicator spawn = one click, correct launcher.
+  {
+    "label": "java run (VanGoghApp via exec:exec)",
+    "command": "mvn compile exec:exec",
+    "cwd": "/Users/macbookpro/Documents/school-project/van-gogh",
+    "env": {
+      "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home"
+    },
+    "use_new_terminal": false,
+    "reveal": "always",
+    "tags": ["java-main"]
+  }
+]
