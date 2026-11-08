@@ -1,5 +1,46 @@
 /* Van Gogh — Movie Page JavaScript (TMDB-backed) */
 
+/* PROTOTYPE (krema spike) — bridge shim so the SAME page runs under both shells:
+   the JavaFX WebView exposes window.javaBridge; the Krema system-webview shell
+   exposes window.krema (invoke returns a Promise, posters arrive via events).
+   Remove once the spike verdict is captured. Commands resolve to WebKit's
+   main-event-macrotask loop below — untouched outside this block. */
+(function () {
+    if (!window.krema) return; // JavaFX shell: nothing to shim
+
+    // Posters stream in from Java's IO pool as "poster" events; the payload
+    // arrives wrapped as { payload, timestamp } by the krema-bridge script.
+    window.krema.on("poster", function (data) {
+        if (data && data.payload) {
+            window.setPoster(data.payload.id, data.payload.dataUri);
+        }
+    });
+
+    window.javaBridge = {
+        requestMovies: async function (kind, term) {
+            try {
+                // Resolves with the parsed movies array directly (async IPC path).
+                // Routed through renderMoviesFromJava so the shared render code
+                // and its error handling stay the only render path.
+                const movies = await window.krema.invoke("requestMovies", { kind: kind, query: term });
+                window.renderMoviesFromJava(JSON.stringify(movies));
+            } catch (e) {
+                const message = e && e.message ? e.message : String(e);
+                window.renderMoviesFromJava(JSON.stringify({ error: message }));
+            }
+        },
+    };
+
+    // Seed the initial trending render (the JavaFX shell calls seedTrending() from Java).
+    const seed = () => window.javaBridge.requestMovies("trending", "");
+    if (document.readyState !== "loading") {
+        seed();
+    } else {
+        document.addEventListener("DOMContentLoaded", seed);
+    }
+})();
+
+
 document.addEventListener("DOMContentLoaded", () => {
     const grid = document.getElementById("movieGrid");
     const searchInput = document.getElementById("searchInput");
