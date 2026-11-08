@@ -1,0 +1,77 @@
+{
+  "code": 200,
+  "status": "Success",
+  "data": {
+    "count": 1,
+    "games": [
+      {
+        "id": 42387,
+        "game_title": "Yakuza 0",
+        "release_date": "2017-01-24",
+        "platform": 4919,
+        "region_id": 1,
+        "country_id": 50,
+        "overview": "Yakuza 0 is a classic 3D brawler, where players roaming the streets of Tokyo or Osaka will encounter all manners of goons, thugs, hoodlums, and lowlifes to beat up. Featuring an engaging combat system allowing players to switch between 3 different fighting styles instantaneously, Yakuza 0 gives players fluid, free-flowing fights that are easily learned and a joy to master. Take combat up a notch by using environmental objects such as bicycles, sign posts, and car doors for bone-crunching combos and savage take-downs.",
+        "rating": "M - Mature 17+",
+        "players": 1,
+        "developers": [
+          7362
+        ],
+        "genres": [
+          1,
+          2,
+          4,
+          5,
+          10,
+          17
+        ],
+        "publishers": [
+          15
+        ]
+      }
+    ]
+  },
+  "include": {
+    "boxart": {
+      "base_url": {
+        "original": "https://cdn.thegamesdb.net/images/original/",
+        "small": "https://cdn.thegamesdb.net/images/small/",
+        "thumb": "https://cdn.thegamesdb.net/images/thumb/",
+        "cropped_center_thumb": "https://cdn.thegamesdb.net/images/cropped_center_thumb/",
+        "medium": "https://cdn.thegamesdb.net/images/medium/",
+        "large": "https://cdn.thegamesdb.net/images/large/"
+      },
+      "data": {
+        "42387": [
+          {
+            "id": 265185,
+            "type": "boxart",
+            "side": "front",
+            "filename": "boxart/front/42387-1.jpg"
+          },
+          {
+            "id": 265186,
+            "type": "boxart",
+            "side": "back",
+            "filename": "boxart/back/42387-1.jpg"
+          }
+        ]
+      }
+    },
+    "platform": {
+      "data": {
+        "4919": {
+          "id": 4919,
+          "name": "Sony Playstation 4",
+          "alias": "sony-playstation-4"
+        }
+      }
+    }
+  },
+  "pages": {
+    "current": "https://api.thegamesdb.net/v1/Games/ByGameID?apikey\u003dbfd1d68433f6086d6cf88eab01be2aa610b50fc932d8cd19fd4965e3e29d5af9\u0026id\u003d42387\u0026fields\u003doverview%2Crating%2Cgenres%2Cpublishers%2Cplayers\u0026include\u003dboxart%2Cplatform\u0026page\u003d1"
+  },
+  "remaining_monthly_allowance": 990,
+  "extra_allowance": 0,
+  "allowance_refresh_timer": 2640256
+}

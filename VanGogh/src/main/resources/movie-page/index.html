@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Van Gogh — Movies</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+    <div class="brand">Van Gogh</div>
+    <div class="search-bar">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search movies, books, music, games…">
+        <button id="searchBtn" class="search-btn">Search</button>
+    </div>
+    <div class="filter-wrapper">
+        <select id="contentFilter" class="filter-select">
+            <option value="movie" selected>Movie</option>
+            <option value="music">Music</option>
+            <option value="book">Book</option>
+            <option value="game">Game</option>
+        </select>
+    </div>
+</header>
+
+<main class="container">
+    <section class="trending-section">
+        <h2 class="section-title">Trending Movies</h2>
+        <div class="card-grid" id="movieGrid">
+            <!-- Movie cards injected by JS -->
+        </div>
+    </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
