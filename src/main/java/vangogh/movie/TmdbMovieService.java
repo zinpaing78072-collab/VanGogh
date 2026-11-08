@@ -1,7 +1,7 @@
 package vangogh.movie;
 
-import com.entertainment.tester.ApiResponse;
-import com.entertainment.tester.TmdbClient;
+import vangogh.net.ApiResponse;
+import vangogh.net.TmdbClient;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;

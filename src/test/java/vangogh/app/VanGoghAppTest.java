@@ -1,4 +1,4 @@
-package vangogh;
+package vangogh.app;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,11 +33,5 @@ class VanGoghAppTest {
     @Test
     void escapeJsonEscapesBothBackslashAndQuote() {
         assertEquals("a\\\\b \\\"c\\\"", VanGoghApp.escapeJson("a\\b \"c\""));
-    }
-
-    @Test
-    void htmlResourceConstantIsNonNull() {
-        // Uses reflection to access the private constant
-        assertNotNull("movie-page/index.html");
     }
 }

@@ -1,4 +1,4 @@
-package vangogh;
+package vangogh.app;
 
 import vangogh.movie.Movie;
 import vangogh.movie.TmdbMovieService;

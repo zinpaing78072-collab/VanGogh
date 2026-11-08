@@ -1,4 +1,4 @@
-package com.entertainment.tester;
+package vangogh.net;
 
 public class ApiResponse {
     public final int statusCode;
