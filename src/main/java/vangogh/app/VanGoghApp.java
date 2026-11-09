@@ -19,14 +19,6 @@ public class VanGoghApp {
     private static final String ASSET_PREFIX = "/movie-page";
 
     public static void main(String[] args) {
-        // krema-core 0.3.2 Windows gap: NativeLibraryLoader extracts only
-        // webview.dll into a fresh temp dir, and Windows LoadLibrary does not
-        // resolve webview.dll's libwinpthread-1.dll import from there (no
-        // published krema release pre-loads companions yet). Pre-load the
-        // companion ourselves BEFORE anything can load webview.dll — macOS/
-        // Linux unaffected. See AppNativePreload. Remove once on krema 0.3.3+.
-        AppNativePreload.run();
-
         // Constructed BEFORE the builder chain: new MovieController() inside
         // .commands(...) runs while the .events(...) consumer is still unread
         // (KremaBuilder only stores it; KremaApplication.run() invokes it),
