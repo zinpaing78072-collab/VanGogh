@@ -1,0 +1,44 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run VanGoghApp",
+            "type": "shell",
+            "command": "mvn",
+            "args": [
+                "-q",
+                "compile",
+                "exec:exec"
+            ],
+            "options": {
+                "env": {
+                    "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run ConnectionTester",
+            "type": "shell",
+            "command": "mvn",
+            "args": [
+                "-q",
+                "compile",
+                "exec:exec",
+                "-Dexec.mainClass=vangogh.net.ConnectionTester"
+            ],
+            "options": {
+                "env": {
+                    "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home",
+                    "TMDB_API_KEY": "${env:TMDB_API_KEY}"
+                }
+            },
+            "group": "build",
+            "problemMatcher": []
+        }
+    ]
+}

@@ -11,6 +11,9 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Main class for `mvn compile exec:exec`. Override with
+             -Dexec.mainClass=vangogh.net.ConnectionTester to run the tester. -->
+        <exec.mainClass>vangogh.app.VanGoghApp</exec.mainClass>
     </properties>
 
     <dependencies>
@@ -66,7 +69,7 @@
                         <argument>-Xmx512m</argument>
                         <argument>-classpath</argument>
                         <classpath/>
-                        <argument>vangogh.app.VanGoghApp</argument>
+                        <argument>${exec.mainClass}</argument>
                     </arguments>
                 </configuration>
             </plugin>
@@ -101,7 +104,7 @@
                                 <argument>-Xmx512m</argument>
                                 <argument>-classpath</argument>
                                 <classpath/>
-                                <argument>vangogh.app.VanGoghApp</argument>
+                                <argument>${exec.mainClass}</argument>
                             </arguments>
                         </configuration>
                     </plugin>
