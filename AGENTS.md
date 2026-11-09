@@ -38,6 +38,9 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
 - VS Code's Run/Debug Java tasks work as-is: `vangogh.VanGoghApp` is a plain
   launcher that builds the Krema window and runs the system-webview event loop.
   Add `-XstartOnFirstThread` and `--enable-native-access=ALL-UNNAMED` to the launch task's `vmArgs`.
+- The workspace config routes Code Runner's Java Run Code action through
+  `mvn compile exec:exec`; do not run `javac VanGoghApp.java` directly, since
+  that omits the other project classes and Maven dependencies.
 - Main class: `vangogh.app.VanGoghApp`
 - IPC: frontend calls `await window.krema.invoke("requestMovies", { kind, query })`;
   handlers are `@KremaCommand` methods on `MovieController` and require

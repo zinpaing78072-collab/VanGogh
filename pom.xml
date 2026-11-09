@@ -59,13 +59,6 @@
                     <!-- ${java.home} is the JDK that Maven itself runs on -->
                     <executable>${java.home}/bin/java</executable>
                     <arguments>
-                        <!-- macOS: libwebview.dylib drives NSApp (webview_run) on the
-                             calling thread, and AppKit only permits its event loop on
-                             the process's FIRST thread. Without this flag macOS kills
-                             the event loop ("nextEventMatchingMask should only be called
-                             from the Main Thread!") and no window appears. Mirrors
-                             krema-core's own pom. macOS-only HotSpot flag. -->
-                        <argument>-XstartOnFirstThread</argument>
                         <!-- Panama FFM: silence restricted-method warnings -->
                         <argument>--enable-native-access=ALL-UNNAMED</argument>
                         <!-- Heap cap: default max heap is 1/4 of RAM (~2 GB) on this
@@ -79,4 +72,41 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>macos</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <configuration>
+                            <executable>${java.home}/bin/java</executable>
+                            <arguments>
+                                <!-- macOS: libwebview.dylib drives NSApp (webview_run) on the
+                                     calling thread, and AppKit only permits its event loop on
+                                     the process's FIRST thread. Without this flag macOS kills
+                                     the event loop ("nextEventMatchingMask should only be called
+                                     from the Main Thread!") and no window appears. Mirrors
+                                     krema-core's own pom. macOS-only HotSpot flag. -->
+                                <argument>-XstartOnFirstThread</argument>
+                                <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                <argument>-Xmx512m</argument>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>vangogh.app.VanGoghApp</argument>
+                            </arguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
