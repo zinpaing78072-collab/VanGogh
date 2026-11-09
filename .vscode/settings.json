@@ -4,6 +4,10 @@
   "files.exclude": { "repos/**": true },
   "files.watcherExclude": { "repos/**": true },
   "search.exclude": { "repos/**": true },
+  "code-runner.executorMap": {
+    "java": "cd \"$workspaceRoot\" && mvn compile exec:exec"
+  },
+  "code-runner.runInTerminal": true,
   "java.configuration.runtimes": [
     {
       "name": "JavaSE-25",
