@@ -163,9 +163,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
     // ---- Fullscreen toggle ----
-    // macOS native fullscreen hides the window title bar / traffic lights and
-    // they don't reliably reappear on hover (AppKit/WebKit limitation).
-    // This in-app button lets users enter/exit fullscreen without the title bar.
+    // In-app enter/exit fullscreen control. Note: the missing menu bar also broke
+    // the macOS top-edge hover reveal in fullscreen (it draws the app's menu bar
+    // + traffic lights); that lives in MacMenubarPlugin (Java side), which
+    // restored the native chrome. This button remains a handy page-level control.
     async function updateFullscreenButton() {
         if (!window.krema || !fullscreenBtn) return;
         try {
