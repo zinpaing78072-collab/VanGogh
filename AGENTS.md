@@ -35,6 +35,16 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
   first thread).
 - macOS launch rule: `-XstartOnFirstThread` must be the **first** JVM argument.
   Without it the process runs cleanly but no window ever appears.
+- Windows: krema-core 0.3.2's `NativeLibraryLoader` extracts only `webview.dll` (a
+  MinGW build that imports `libwinpthread-1.dll`) into a fresh temp dir, and Windows
+  `LoadLibrary` does not search the DLL's own directory — startup died with
+  `Cannot open library: ...\webview.dll`. `vangogh.app.AppNativePreload` (called first
+  in `VanGoghApp.main`) pre-loads `/native/windows/x86_64/libwinpthread-1.dll` from the
+  krema-core JAR via `System.load`, so the loader binds the dependency by base name.
+  No-op on macOS/Linux. Drop the class once a krema release that pre-loads companions
+  is published (0.3.3+ — the fix exists on krema master). On Windows run via VS Code's
+  Run/Debug task (the debugger launcher), not `mvn exec:exec` — `-XstartOnFirstThread`
+  is a macOS-only flag a Windows JVM rejects.
 - VS Code's Run/Debug Java tasks work as-is: `vangogh.VanGoghApp` is a plain
   launcher that builds the Krema window and runs the system-webview event loop.
   Add `-XstartOnFirstThread` and `--enable-native-access=ALL-UNNAMED` to the launch task's `vmArgs`.
