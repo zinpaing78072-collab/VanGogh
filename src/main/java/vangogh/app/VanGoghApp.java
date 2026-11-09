@@ -35,6 +35,13 @@ public class VanGoghApp {
                 .prodAssets(ASSET_PREFIX) // serves src/main/resources/movie-page/index.html
                 .events(controller::setEventEmitter)
                 .commands(controller)
+                // Installs the macOS menu bar (App/Edit/View/Window with real
+                // actions) before the event loop starts. NSApp ships without any
+                // menu in this stack, and native fullscreen's top-edge reveal
+                // draws the app's menu bar + traffic lights — without a menu the
+                // reveal shows nothing. plugin() init runs pre-loop on the first
+                // thread, the only safe point for Cocoa calls from app code.
+                .plugin(new MacMenubarPlugin())
                 .run(); // blocks until the window closes
     }
 }
