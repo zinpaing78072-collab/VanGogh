@@ -35,8 +35,6 @@ public class MovieController {
     private volatile EventEmitter events;
     private final TmdbMovieService service;
     private final ExecutorService io;
-    private final Gson gson = new Gson();
-
     // Bumped on every render request; poster pushes only apply when still
     // current, so a slow fetch can never overwrite a newer render's posters.
     private final AtomicInteger generation = new AtomicInteger();
