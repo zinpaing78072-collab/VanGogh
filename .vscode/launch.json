@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch VanGoghApp",
+            "request": "launch",
+            "mainClass": "vangogh.app.VanGoghApp",
+            "vmArgs": "-XstartOnFirstThread --enable-native-access=ALL-UNNAMED -Xmx512m"
+        },
+        {
+            "type": "java",
+            "name": "Launch ConnectionTester",
+            "request": "launch",
+            "mainClass": "vangogh.net.ConnectionTester",
+            "vmArgs": "-Xmx512m",
+            "env": {
+                "TMDB_API_KEY": "${env:TMDB_API_KEY}"
+            }
+        }
+    ]
+}
