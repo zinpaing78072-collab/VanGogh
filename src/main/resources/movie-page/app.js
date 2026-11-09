@@ -12,56 +12,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const searchBtn = document.getElementById("searchBtn");
     const contentFilter = document.getElementById("contentFilter");
 
-    // ⚗️ TEMPORARY EXPERIMENT (fullscreen chrome): NSApp has no main menu in this
-    // stack, so in native fullscreen the top-edge reveal (menu bar + traffic
-    // lights) shows nothing. Install a menu bar and have the user retest.
-    // Krema 0.3.2 installs it via NSApp.setMainMenu: (items will look disabled —
-    // that's expected; this run only tests whether the bar appears on hover).
-    try {
-        if (window.krema) {
-            await window.krema.invoke("menu:setApplicationMenu", {
-                menu: [
-                    {
-                        label: "Van Gogh",
-                        items: [
-                            { role: "about" },
-                            { type: "separator" },
-                            { role: "hide" },
-                            { role: "hide-others" },
-                            { role: "unhide" },
-                            { type: "separator" },
-                            { role: "quit" },
-                        ],
-                    },
-                    {
-                        label: "Edit",
-                        items: [
-                            { role: "undo" },
-                            { role: "redo" },
-                            { type: "separator" },
-                            { role: "cut" },
-                            { role: "copy" },
-                            { role: "paste" },
-                            { role: "select-all" },
-                        ],
-                    },
-                    {
-                        label: "View",
-                        items: [{ role: "toggle-fullscreen" }],
-                    },
-                    {
-                        label: "Window",
-                        items: [{ role: "minimize" }, { role: "zoom" }],
-                    },
-                ],
-            });
-        }
-    } catch (e) {
-        console.error("[Van Gogh] temporary menu experiment failed:", e);
-    }
-    // ⚗️ END TEMPORARY EXPERIMENT
-    const fullscreenBtn = document.getElementById("fullscreenBtn");
-
     function escapeHtml(text) {
         if (text == null) return "";
         const div = document.createElement("div");
@@ -211,29 +161,4 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>`;
         }
     });
-    // ---- Fullscreen toggle ----
-    // macOS native fullscreen hides the window title bar / traffic lights and
-    // they don't reliably reappear on hover (AppKit/WebKit limitation).
-    // This in-app button lets users enter/exit fullscreen without the title bar.
-    async function updateFullscreenButton() {
-        if (!window.krema || !fullscreenBtn) return;
-        try {
-            const fs = await window.krema.invoke("window:isFullscreen");
-            fullscreenBtn.textContent = fs ? "⊘" : "⛶";
-            fullscreenBtn.title = fs ? "Exit fullscreen (Esc)" : "Enter fullscreen";
-            fullscreenBtn.ariaLabel = fs ? "Exit fullscreen" : "Enter fullscreen";
-        } catch (e) {}
-    }
-
-    fullscreenBtn.addEventListener("click", async () => {
-        if (!window.krema) return;
-        try {
-            await window.krema.invoke("window:toggleFullscreen");
-            setTimeout(updateFullscreenButton, 300);
-        } catch (e) {
-            showError("Failed to toggle fullscreen: " + escapeHtml(String(e.message || e)));
-        }
-    });
-
-    await updateFullscreenButton();
 });
