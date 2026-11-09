@@ -3,6 +3,8 @@ package vangogh.controller;
 import build.krema.core.KremaCommand;
 import build.krema.core.event.EventEmitter;
 import com.google.gson.Gson;
+import vangogh.llm.LlmService;
+import vangogh.llm.Recommendation;
 import vangogh.movie.Movie;
 import vangogh.movie.TmdbMovieService;
 
@@ -34,18 +36,25 @@ public class MovieController {
     // read from the IO pool threads that stream posters.
     private volatile EventEmitter events;
     private final TmdbMovieService service;
+    private final LlmService llmService;
     private final ExecutorService io;
     // Bumped on every render request; poster pushes only apply when still
     // current, so a slow fetch can never overwrite a newer render's posters.
     private final AtomicInteger generation = new AtomicInteger();
 
     public MovieController() {
-        this(new TmdbMovieService(resolveApiKey()));
+        this(new TmdbMovieService(resolveApiKey()), new LlmService());
     }
 
     /** Package-private seam for tests: inject a stubbed {@link TmdbMovieService}. */
     MovieController(TmdbMovieService service) {
+        this(service, new LlmService());
+    }
+
+    /** Package-private seam for tests: inject stubbed services. */
+    MovieController(TmdbMovieService service, LlmService llmService) {
         this.service = service;
+        this.llmService = llmService;
         this.io = Executors.newFixedThreadPool(IO_THREADS, runnable -> {
             Thread thread = new Thread(runnable, "van-gogh-io");
             thread.setDaemon(true);
@@ -85,6 +94,31 @@ public class MovieController {
                         : service.fetchTrending();
                 future.complete(movies);
                 streamPosters(movies, gen);
+            } catch (Exception e) {
+                future.completeExceptionally(e);
+            }
+        });
+        return future;
+    }
+
+    /**
+     * Krema IPC command. Called from JS via
+     * {@code await window.krema.invoke("recommend", { query })}.
+     * Delegates to the {@link LlmService}, which asks the OpenAI-compatible LLM for
+     * cross-media recommendations related to the query and parses them into
+     * {@link Recommendation} records. Degrades gracefully to an empty list when the
+     * LLM is unconfigured or unavailable, so the UI never breaks because of AI.
+     *
+     * <p>Runs on the IO pool so the blocking LLM HTTP call never blocks the webview
+     * event loop.
+     */
+    @KremaCommand
+    public CompletableFuture<List<Recommendation>> recommend(String query) {
+        CompletableFuture<List<Recommendation>> future = new CompletableFuture<>();
+        io.submit(() -> {
+            try {
+                List<Recommendation> recommendations = llmService.recommend(query);
+                future.complete(recommendations);
             } catch (Exception e) {
                 future.completeExceptionally(e);
             }
