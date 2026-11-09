@@ -2,6 +2,7 @@
 
 /* The page talks to Java through window.krema:
    - await window.krema.invoke("requestMovies", { kind, query }) → movie list
+   - await window.krema.invoke("recommend", { query }) → LLM recommendations
    - window.krema.on("poster", data) → poster data URIs streamed in
    No JavaFX bridge shim needed anymore — Krema is the sole UI shell.
 */
@@ -11,6 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const searchInput = document.getElementById("searchInput");
     const searchBtn = document.getElementById("searchBtn");
     const contentFilter = document.getElementById("contentFilter");
+    const recommendBtn = document.getElementById("recommendBtn");
     const fullscreenBtn = document.getElementById("fullscreenBtn");
 
     function escapeHtml(text) {
@@ -111,6 +113,43 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>`;
     }
 
+
+    function renderRecommendations(recommendations) {
+        grid.innerHTML = "";
+        if (!recommendations || recommendations.length === 0) {
+            grid.innerHTML = `\n                <div class="empty-state">\n                    <p style="color:#ff6b6b; margin:0;">No AI recommendations available.</p>\n                    <p style="color:#a3a3a3; margin:4px 0 0 0;">Set LLM_API_KEY (and optionally LLM_BASE_URL, LLM_MODEL) to enable AI recommendations.</p>\n                </div>`;
+            return;
+        }
+        recommendations.forEach(rec => {
+            const card = document.createElement("div");
+            card.className = "movie-card";
+
+            const kindLabel = (rec.kind || "content").charAt(0).toUpperCase() + (rec.kind || "content").slice(1);
+
+            card.innerHTML = `\n                <div class="card-poster">\n                    <div class="poster-placeholder">\n                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>\n                            <path d="M2 17l10 5 10-5"></path>\n                            <path d="M2 12l10 5 10-5"></path>\n                        </svg>\n                        <div style="margin-top:8px; font-size:11px; opacity:0.7;">${escapeHtml(kindLabel)}</div>\n                    </div>\n                </div>\n                <div class="card-info">\n                    <div class="card-title">${escapeHtml(rec.title)}</div>\n                    <div class="card-meta">\n                        <span style="color:#e50914; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">AI · ${kindLabel}</span>\n                    </div>\n                    <div style="font-size:13px; color:#a3a3a3; margin-top:6px; line-height:1.4;">${escapeHtml(rec.reason || "")}</div>\n                </div>`;
+
+            card.addEventListener("click", () => {
+                alert(`AI Recommendation: ${rec.title}\\n\\n${escapeHtml(rec.reason || "")}\\n\\nKind: ${kindLabel}`);
+            });
+
+            grid.appendChild(card);
+        });
+    }
+
+    async function requestRecommendations(query) {
+        if (!window.krema) {
+            showError("API bridge not ready yet. Please wait a moment and try again.");
+            return;
+        }
+        try {
+            const recommendations = await window.krema.invoke("recommend", { query });
+            renderRecommendations(recommendations);
+        } catch (e) {
+            const message = e && e.message ? e.message : String(e);
+            showError("Failed to get AI recommendations: " + escapeHtml(message));
+        }
+    }
+
     async function requestPageMovies(kind, term) {
         if (!window.krema) {
             showError("API bridge not ready yet. Please wait a moment and try again.");
@@ -161,6 +200,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <p>${escapeHtml(contentFilter.value.charAt(0).toUpperCase() + contentFilter.value.slice(1))} results are not yet connected to the API.</p>
                 </div>`;
         }
+    });
+    // ---- AI recommendations ----
+    recommendBtn.addEventListener("click", () => {
+        const term = searchInput.value.trim();
+        if (term === "") {
+            showError("Type a movie, book, music, or game name, then click AI Recommendations.");
+            return;
+        }
+        requestRecommendations(term);
     });
     // ---- Fullscreen toggle ----
     // macOS native fullscreen hides the window title bar / traffic lights and

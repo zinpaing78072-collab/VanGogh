@@ -136,6 +136,30 @@ body {
     transform: scale(0.95);
 }
 
+/* AI recommendations button */
+.recommend-btn {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.recommend-btn:hover {
+    background-color: var(--panel-hover);
+    border-color: var(--accent);
+}
+.recommend-btn:active {
+    transform: scale(0.95);
+}
+
 /* Main container */
 .container {
     padding: 24px;

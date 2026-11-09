@@ -44,7 +44,24 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
   `<parameters>true</parameters>` in maven-compiler-plugin (args bind by
   parameter name). Posters stream as `window.krema.on("poster", …)` events.
 
-## Vendored repositories (git subtree)
+## LLM engine
+
+- Package `vangogh.llm` — OpenAI-compatible chat-completion engine.
+- `LlmConfig` reads `LLM_API_KEY` (required), `LLM_BASE_URL` (default
+  `https://api.openai.com/v1`), `LLM_MODEL` (default `gpt-3.5-turbo`),
+  `LLM_SYSTEM_PROMPT`, `LLM_TIMEOUT_SECONDS` (default 30) from the environment.
+- `LlmClient` POSTs `{baseUrl}/chat/completions` over `java.net.http.HttpClient`;
+  returns the assistant message content, or `null` if unconfigured or the call
+  fails. Never touches the network when `LLM_API_KEY` is unset.
+- `LlmService#recommend(query)` wraps `LlmClient` and parses the LLM's JSON array
+  into `Recommendation` records (kind, title, reason). Gracefully degrades to an
+  empty list on bad input / LLM unavailable — the UI never breaks because of the AI layer.
+- Frontend: `window.krema.invoke("recommend", { query })` returns
+  `List<Recommendation>`. UI component is the "✨ AI Recommendations" button in the
+  header; Ctrl+Enter on the search input also triggers it.
+- No new external dependencies: the engine reuses the existing
+  `java.net.http.HttpClient` + Gson only.
+- Build: `mvn -q clean compile` and `mvn test` must stay green.
 
 External library source may be vendored under `repos/` via `git subtree` so agents can read real implementation/tests as reference (not `node_modules`/compiled jars).
 
