@@ -13,11 +13,11 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 
 The application is **not** a JavaFX standalone bundle — it runs inside Krema's system webview (Panama FFM), which means:
 
-- The JVM forks with `-XstartOnFirstThread` and `--enable-native-access=ALL-UNNAMED` so macOS AppKit's event loop works.
-- UI is rendered by a system webview (WebKit on macOS), not a bundled Chromium.
+- The JVM forks with platform-specific flags so the event loop works on each supported OS.
+- UI is rendered by a system webview (WebKit on macOS, WebView2 on Windows, WebKitGTK on Linux), not a bundled Chromium.
 - Frontend is a single-page app (HTML/CSS/JS) served from the classpath.
 - IPC: `window.krema.invoke("requestMovies", {kind, query})` → Java `MovieController` → `CompletableFuture<List<Movie>>`; posters stream as `"poster"` events.
-- No `exec:java` on macOS (use `mvn compile exec:exec`).
+- Do not use `mvn exec:java` — it reuses Maven's JVM and drops the required flags.
 
 ## Core behavior
 
@@ -29,12 +29,12 @@ The application is **not** a JavaFX standalone bundle — it runs inside Krema's
 ## Tech stack
 
 - **Language**: Java 25 (LTS), compiled with `--release 25`
-- **UI framework**: Krema 0.3.2 (system webview via Panama FFM, WebKit on macOS)
+- **UI framework**: Krema 0.3.2 (system webview via Panama FFM, system webview on each OS)
 - **Frontend**: HTML/CSS/JS served from classpath (`src/main/resources/movie-page/`)
 - **HTTP client**: Java 17+ `java.net.http.HttpClient` (Gson for JSON parsing)
 - **Data source**: TMDB (The Movie Database) for movies; other domains not yet wired
 - **Poster proxy**: `wsrv.nl` with persistent user preference stored in `~/.van-gogh/poster-proxy.conf`
-- **Build**: Maven (`pom.xml`), compile+run via `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home mvn compile exec:exec`
+- **Build**: Maven (`pom.xml`), compile+run with appropriate JDK and flags for the OS
 - **Tests**: JUnit 5; all network calls stubbed (no real TMDB API keys needed)
 - **IPC**: `@KremaCommand` methods on controllers; `<parameters>true</parameters>` in maven-compiler-plugin for arg binding by name
 
@@ -62,7 +62,7 @@ The application is **not** a JavaFX standalone bundle — it runs inside Krema's
 
 ## Related notes
 
-- `AGENTS.md` — IPC contract, build/run rules, Krema 0.3.2, macOS launch flags
+- `AGENTS.md` — IPC contract, build/run rules, Krema 0.3.2
 - `architecture.md` — how to add new content domains (Music, Book, Game, TV)
 - `design-system.pen` — Figma design system source
 - `repos/krema/` — vendored Krema source (read-only reference)
