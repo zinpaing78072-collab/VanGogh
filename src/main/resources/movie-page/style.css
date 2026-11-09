@@ -112,30 +112,6 @@ body {
     border-color: var(--accent);
 }
 
-/* Fullscreen toggle (window chrome is inaccessible in macOS native fullscreen) */
-.fullscreen-btn {
-    background-color: var(--panel);
-    border: 1px solid var(--border);
-    color: var(--text);
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius);
-    font-size: 16px;
-    cursor: pointer;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-}
-.fullscreen-btn:hover {
-    background-color: var(--panel-hover);
-    border-color: var(--accent);
-}
-.fullscreen-btn:active {
-    transform: scale(0.95);
-}
-
 /* Main container */
 .container {
     padding: 24px;
