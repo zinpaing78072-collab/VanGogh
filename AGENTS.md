@@ -17,7 +17,7 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
 - Default branch: `main` (protected — never commit directly to `main`)
 - Sync with main before every coding sessions
 - Workflow: create a feature/fix branch (`feat/<short-name>`, `fix/<short-name>`), commit there, open a PR, merge after review. Keep `main` green.
-- Commit messages: short, imperative, lowercase first word (e.g. `add .pen file`, `Fix JavaFX runtime missing error and add run wrapper`). Use conventional-ish style; no strict prefix required.
+- Commit messages: short, imperative, lowercase first word (e.g. `add .pen file`, `switch ui shell to krema webview`). Use conventional-ish style; no strict prefix required.
 - Build artifacts (`target/`, `.class`, `.log`, `.DS_Store`) are gitignored — never commit them.
 - Run `mvn -q clean compile` (or `mvn test`) before committing; keep the build green.
 - Push branches to `origin`; merge into `main` via PR only. Do not rewrite published history on `main` or any shared branch.
@@ -35,7 +35,7 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
   first thread).
 - macOS launch rule: `-XstartOnFirstThread` must be the **first** JVM argument.
   Without it the process runs cleanly but no window ever appears.
-- VS Code's Run/Debug Java tasks work as-is: `vangogh.VanGoghApp` is a plain
+- VS Code's Run/Debug Java tasks work as-is: `vangogh.app.VanGoghApp` is a plain
   launcher that builds the Krema window and runs the system-webview event loop.
   Add `-XstartOnFirstThread` and `--enable-native-access=ALL-UNNAMED` to the launch task's `vmArgs`.
 - The workspace config routes Code Runner's Java Run Code action through
