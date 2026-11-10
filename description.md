@@ -46,7 +46,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 - Remote: `https://github.com/zinpaing78072-collab/VanGogh.git` (origin)
 - Default branch: `main` (protected — never commit directly)
 - Workflow: `feat/<short-name>` / `fix/<short-name>` branches, PR, merge after review
-- Commit messages: short, imperative, lowercase first word (e.g. `add .pen file`, `Fix JavaFX runtime missing error and add run wrapper`)
+- Commit messages: short, imperative, lowercase first word (e.g. `add .pen file`, `switch ui shell to krema webview`)
 - Build artifacts (`target/`, `.class`, `.log`, `.DS_Store`) are gitignored
 - Run `mvn -q clean compile` (or `mvn test`) before committing; keep the build green
 - Push branches to `origin`; merge into `main` via PR only
