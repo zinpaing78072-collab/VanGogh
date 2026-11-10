@@ -30,11 +30,64 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
   - Frontend: card grid, search bar, content filter dropdown, fullscreen toggle, poster rendering
-- **Features pending**: Music / Book / Game domain wiring (filter dropdown options exist but show stub); movie detail view; loading/retry states; local persistence (watchlist, settings)
+- **Features pending**: see "Presentation build — decided feature set" below. Loading/retry states are backlog (see below).
+
+### Presentation build — decided feature set (2026-11-10 brainstorm)
+
+Main goal: **the course presentation**, not production. These decisions are
+settled — agents follow them. Implementation details (API providers, LLM
+models, prompt design) are left to each builder slice.
+
+- **Recommendation engine core: LLM API.** The LLM *composes* the picks for a
+  query; the wired content sources (TMDB now; Music/Book/Game to be wired)
+  *resolve* each pick into a real card (artwork, year, etc.). Do not build a
+  deterministic API search as the result source — it would contradict the
+  re-run behavior below.
+- **One query, four content forms.** A single search yields recommendation
+  cards in Movies, Music, Books, and Games; each form comes from a source slice
+  (one form per slice — see "Build one thing at a time").
+- **Search box accepts titles or vibes**, plus preset **tag chips** and
+  fill-in **templates** (e.g. "albums that sound like ___, but for ___").
+- **Re-running a search gives a fresh recommendation set** — the headline
+  demo moment ("it thinks, it is not a database").
+- **Favorites feed the engine.** Saved items influence later recommendations,
+  across all four forms.
+- **Detail view from every card**, everywhere cards appear (results, My Lists,
+  My Searches, recommendations) — implemented per content form, one form at a
+  time.
+- **Saving model.** A card saves into **My Lists** (Watchlist + Favorites,
+  across all four content forms). A whole query's saved results go into
+  **My Searches** — a separate top-level area, *not* a My Lists item.
+- **Storage: SQLite from day one.** Single database file under `~/.van-gogh/`
+  (decided over flat files so the later database + login requirement rides on
+  real tables).
+- **Parked until their requirements land:** user accounts / login. Storage is
+  designed so profiles slide on top without a rewrite.
+- **Backlog (not in the presentation build):** trending-on-launch,
+  recent-search chips, list export, "already enjoyed" marks, loading/empty
+  polish. The LLM engine slice is the riskiest — schedule it early.
 
 ### Related project notes
 - `architecture.md` — how to add new content domains (Music, Book, Game, TV)
 - `repos/krema/` — vendored Krema source (read-only reference)
+- Vault counterpart of this description: `10 Projects/VanGogh/description.md`
+  (keep in sync when this section changes)
+
+## Build one thing at a time
+
+Agent work happens in **single-feature slices**. One slice per branch and PR.
+Finish a slice (build green, tests pass, feature demonstrably works in the app)
+before starting the next. Never expand scope mid-slice.
+
+- **Content sources:** one content form per slice. Movies are wired; the next
+  slice adds exactly one of Music / Books / Games (propose which in the PR).
+- **Detail view:** implement for one content form at a time (Movies first);
+  roll to the next form only when the first is complete.
+- **My Lists / My Searches:** one view per slice — building the Favorites page
+  i.e. Watchlist/Favorites does not jump onto My Searches, tags/templates, or
+  any other feature.
+- If a slice turns out to need changes outside its scope, stop and note it in
+  the PR description; do not expand silently.
 
 ## Project management (Obsidian vault)
 
@@ -42,8 +95,6 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 - Key files inside the vault (paths relative to vault root):
   - `00 Meta/conventions.md` — naming, linking (`[[...]]`), YAML frontmatter, tasks, Google Drive sync rules
 - The project description now lives in this `AGENTS.md` (see "Project description" above); the vault copy `10 Projects/VanGogh/description.md` is the team's Google Drive-synced counterpart.
-- Follow the vault conventions for note naming, linking, and YAML properties.
-- One person at a time per note (Google Drive does not merge Markdown). Wait for sync before switching machines.
 - Follow the vault conventions for note naming, linking, and YAML properties.
 - One person at a time per note (Google Drive does not merge Markdown). Wait for sync before switching machines.
 
