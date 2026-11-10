@@ -2,12 +2,48 @@
 
 Project rules for VanGogh — entertainment content recommendation desktop app (Java 25 + Krema 0.3.2 system webview).
 
+## Project description
+
+VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that recommends entertainment content (movies, music, books, games) from a single user query. The app displays results in a dark-themed card grid with poster artwork, and streams posters into the UI as native `"poster"` events from the Java backend via Krema's IPC system.
+
+### Core behavior
+- **Input**: A keyword or content name (e.g. `"Inception"`, `"Taylor Swift"`, `"Minecraft"`)
+- **Output**: Related content names, titles, and references across Movies, Music, Books, and Games (currently only Movies are fully wired; other domains show a stub)
+- **Mechanism**: Frontend calls `await window.krema.invoke("requestMovies", {kind, query})`; Java `MovieController.requestMovies()` dispatches to `TmdbMovieService` → `TmdbClient` (TMDB API + wsrv.nl poster proxy); posters stream as `"poster"` events into the webview
+- **Filter**: Dropdown offers Movie / Music / Book / Game — only Movie connects to a real API (TMDB); others display a "not yet connected" message
+
+### Tech stack
+- **Language**: Java 25 (LTS), compiled with `--release 25`
+- **UI framework**: Krema 0.3.2 (system webview)
+- **Frontend**: HTML/CSS/JS served from classpath (`src/main/resources/movie-page/`)
+- **HTTP client**: Java 17+ `java.net.http.HttpClient` (Gson for JSON parsing)
+- **Data source**: TMDB (The Movie Database) for movies; other domains not yet wired
+- **Poster proxy**: `wsrv.nl` with persistent user preference stored in `~/.van-gogh/poster-proxy.conf`
+- **Tests**: JUnit 5; all network calls stubbed (no real TMDB API keys needed)
+- **IPC**: `@KremaCommand` methods on controllers; `<parameters>true</parameters>` in maven-compiler-plugin for arg binding by name
+
+### Project state
+- **Branch**: `fix/agents-krema-only` (project description consolidated into AGENTS.md)
+- **Features wired**:
+  - `VanGoghApp` — Krema window builder (title, identifier, size, debug mode, assets, events, commands)
+  - `MovieController` — `@KremaCommand requestMovies(kind, query)`, generation-counted poster streaming via `events.emit("poster", ...)`
+  - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
+  - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
+  - Frontend: card grid, search bar, content filter dropdown, fullscreen toggle, poster rendering
+- **Features pending**: Music / Book / Game domain wiring (filter dropdown options exist but show stub); movie detail view; loading/retry states; local persistence (watchlist, settings)
+
+### Related project notes
+- `architecture.md` — how to add new content domains (Music, Book, Game, TV)
+- `repos/krema/` — vendored Krema source (read-only reference)
+
 ## Project management (Obsidian vault)
 
 - The team's shared project-management vault is synced via Google Drive. On any machine, locate it by searching for a folder named `team-obsidian-vault` (look under the Google Drive sync folder first).
 - Key files inside the vault (paths relative to vault root):
-  - `10 Projects/VanGogh/description.md` — this project's description
   - `00 Meta/conventions.md` — naming, linking (`[[...]]`), YAML frontmatter, tasks, Google Drive sync rules
+- The project description now lives in this `AGENTS.md` (see "Project description" above); the vault copy `10 Projects/VanGogh/description.md` is the team's Google Drive-synced counterpart.
+- Follow the vault conventions for note naming, linking, and YAML properties.
+- One person at a time per note (Google Drive does not merge Markdown). Wait for sync before switching machines.
 - Follow the vault conventions for note naming, linking, and YAML properties.
 - One person at a time per note (Google Drive does not merge Markdown). Wait for sync before switching machines.
 
