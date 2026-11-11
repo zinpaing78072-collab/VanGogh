@@ -23,7 +23,6 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 - **IPC**: `@KremaCommand` methods on controllers; `<parameters>true</parameters>` in maven-compiler-plugin for arg binding by name
 
 ### Project state
-- **Branch**: `fix/agents-krema-only` (project description consolidated into AGENTS.md)
 - **Features wired**:
   - `VanGoghApp` — Krema window builder (title, identifier, size, debug mode, assets, events, commands)
   - `MovieController` — `@KremaCommand requestMovies(kind, query)`, generation-counted poster streaming via `events.emit("poster", ...)`
@@ -43,9 +42,9 @@ models, prompt design) are left to each builder slice.
   *resolve* each pick into a real card (artwork, year, etc.). Do not build a
   deterministic API search as the result source — it would contradict the
   re-run behavior below.
-- **One query, four content forms.** A single search yields recommendation
+- **One query, four content forms.** A single search can yield recommendation
   cards in Movies, Music, Books, and Games; each form comes from a source slice
-  (one form per slice — see "Build one thing at a time").
+  (one form per slice — see "Build one thing at a time"); the recommandation is lazy, only when the drop bar get toggle.
 - **Search box accepts titles or vibes**, plus preset **tag chips** and
   fill-in **templates** (e.g. "albums that sound like ___, but for ___").
 - **Re-running a search gives a fresh recommendation set** — the headline
