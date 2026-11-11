@@ -15,5 +15,6 @@
       "default": true
     }
   ],
-  "java.jdt.ls.vmargs": "-Xmx512m -XX:+UseStringDeduplication -XX:+UseG1GC"
+  "java.jdt.ls.vmargs": "-Xmx512m -XX:+UseStringDeduplication -XX:+UseG1GC",
+  "java.configuration.updateBuildConfiguration": "interactive"
 }
