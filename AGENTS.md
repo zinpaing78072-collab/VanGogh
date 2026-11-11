@@ -133,6 +133,14 @@ before starting the next. Never expand scope mid-slice.
   handlers are `@KremaCommand` methods on `MovieController` and require
   `<parameters>true</parameters>` in maven-compiler-plugin (args bind by
   parameter name). Posters stream as `window.krema.on("poster", …)` events.
+- Windows constraint (krema-core 0.3.2, same family as the `AppNativePreload`
+  workaround): `engine.eval` is silently dropped when called off the UI thread,
+  so async command replies and backend events never reach the page. Rule:
+  every command that touches the page must be synchronous (handlers run on the
+  UI thread), and background work delivers through a polled drain command —
+  currently `pollPosters`. Drop the dance when the project can move to a Krema
+  release whose eval is thread-safe on Windows (0.3.3+ source does not fix it
+  either; nothing newer is published on Maven Central).
 
 ## Vendored repositories (git subtree)
 

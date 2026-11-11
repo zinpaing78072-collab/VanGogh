@@ -12,11 +12,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Unit tests for MovieController — the Krema IPC command handler that backs
- * {@code window.krema.invoke("requestMovies", ...)}.
+ * {@code window.krema.invoke("requestMovies", ...)} and
+ * {@code window.krema.invoke("pollPosters", ...)}.
  *
  * Uses stubbed {@link TmdbClient}/{@link TmdbMovieService} injected via the
  * package-private constructors, so no real TMDB network calls are made.
@@ -90,8 +90,7 @@ class MovieControllerTest {
         client.searchResponse = new ApiResponse(200, VALID_JSON, null);
         MovieController controller = controllerWith(serviceWith(client));
 
-        var future = controller.requestMovies("search", "Inception");
-        List<Movie> movies = future.get();
+        List<Movie> movies = controller.requestMovies("search", "Inception");
 
         assertEquals(1, movies.size());
         assertEquals("Inception", movies.get(0).title());
@@ -104,8 +103,7 @@ class MovieControllerTest {
         client.trendingResponse = new ApiResponse(200, VALID_JSON, null);
         MovieController controller = controllerWith(serviceWith(client));
 
-        var future = controller.requestMovies("trending", "ignored");
-        List<Movie> movies = future.get();
+        List<Movie> movies = controller.requestMovies("trending", "ignored");
 
         assertEquals(1, movies.size());
         assertEquals("Inception", movies.get(0).title());
@@ -117,25 +115,34 @@ class MovieControllerTest {
         client.trendingResponse = new ApiResponse(200, VALID_JSON, null);
         MovieController controller = controllerWith(serviceWith(client));
 
-        var future = controller.requestMovies("search", "");
-        List<Movie> movies = future.get();
+        List<Movie> movies = controller.requestMovies("search", "");
 
         assertEquals(1, movies.size());
         assertEquals("Inception", movies.get(0).title());
     }
 
     @Test
-    void requestMoviesWhenServiceThrowsCompletesExceptionally() throws Exception {
+    void requestMoviesWhenServiceThrowsRethrowsWithServiceMessage() {
         StubClient client = new StubClient();
         client.trendingResponse = new ApiResponse(500, "boom", "server error");
         MovieController controller = controllerWith(serviceWith(client));
 
-        var future = controller.requestMovies("trending", "x");
-        assertThrows(ExecutionException.class, future::get);
+        // The UI thread joins the IO future; the fetch failure's own message
+        // must surface (it becomes Krema's error reply to the page).
+        RuntimeException e = assertThrows(RuntimeException.class,
+                () -> controller.requestMovies("trending", "x"));
+        assertTrue(e.getMessage().contains("TMDB trending failed: HTTP 500"));
     }
 
     @Test
-    void setEventEmitterEmitsPosterEventForMovieWithPoster() throws Exception {
+    void pollPostersReportsDoneWhenNothingWasRequested() {
+        MovieController controller = controllerWith(serviceWith(new StubClient()));
+
+        assertEquals(-1, controller.pollPosters());
+    }
+
+    @Test
+    void pollPostersDrainsQueuedPostersAndEmitsPosterEvents() throws Exception {
         StubClient client = new StubClient();
         client.trendingResponse = new ApiResponse(200, VALID_JSON, null);
         MovieController controller = controllerWith(serviceWith(client));
@@ -143,16 +150,21 @@ class MovieControllerTest {
         TestEventEmitter emitter = new TestEventEmitter();
         controller.setEventEmitter(emitter);
 
-        var future = controller.requestMovies("trending", "x");
-        future.get(); // service result is ready
+        controller.requestMovies("trending", "x"); // kicks off poster prefetch
 
-        // streamPosters runs on the io pool right after future.complete; wait
-        // briefly for the first (synchronous) poster emission to be observed.
+        // pollPosters is the UI-thread drain point; posters land on the queue
+        // from the io pool, so poll until the backend reports completion.
         long deadline = System.currentTimeMillis() + 2000;
-        while (emitter.emitted.isEmpty() && System.currentTimeMillis() < deadline) {
+        int pending = -2;
+        while (System.currentTimeMillis() < deadline) {
+            pending = controller.pollPosters();
+            if (pending < 0) {
+                break;
+            }
             Thread.sleep(10);
         }
 
+        assertEquals(-1, pending);
         assertEquals(1, emitter.emitted.size());
         KremaEvent e = emitter.emitted.get(0);
         assertEquals("poster", e.name());
@@ -160,5 +172,34 @@ class MovieControllerTest {
         Map<String, Object> payload = (Map<String, Object>) e.payload();
         assertEquals(27205, payload.get("id"));
         assertTrue(((String) payload.get("dataUri")).startsWith("data:image"));
+    }
+
+    @Test
+    void pollPostersSkippedPostersDoNotStallPolling() throws Exception {
+        StubClient client = new StubClient() {
+            @Override
+            public String loadPosterDataUri(String posterUrl) {
+                return null; // every poster fetch fails
+            }
+        };
+        client.trendingResponse = new ApiResponse(200, VALID_JSON, null);
+        MovieController controller = controllerWith(serviceWith(client));
+        controller.setEventEmitter(new TestEventEmitter());
+
+        controller.requestMovies("trending", "x");
+
+        // A failed poster fetch must be accounted as skipped so polling still
+        // terminates instead of waiting forever on a poster that never comes.
+        long deadline = System.currentTimeMillis() + 2000;
+        int pending = -2;
+        while (System.currentTimeMillis() < deadline) {
+            pending = controller.pollPosters();
+            if (pending < 0) {
+                break;
+            }
+            Thread.sleep(10);
+        }
+
+        assertEquals(-1, pending);
     }
 }

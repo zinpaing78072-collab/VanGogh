@@ -2,8 +2,15 @@
 
 /* The page talks to Java through window.krema:
    - await window.krema.invoke("requestMovies", { kind, query }) → movie list
+   - await window.krema.invoke("pollPosters", {}) → poster drain progress
    - window.krema.on("poster", data) → poster data URIs streamed in
    No JavaFX bridge shim needed anymore — Krema is the sole UI shell.
+
+   Windows note: krema-core 0.3.2 silently drops engine evals made off the UI
+   thread on Windows, so the backend can only touch this page from inside a
+   command handler (Krema runs those on the UI thread). That is why the movie
+   list comes back synchronously and posters are drained via pollPosters
+   instead of being pushed by background threads.
 */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -19,8 +26,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         return div.innerHTML;
     }
 
-    // Posters are streamed in from Java's IO pool as "poster" events;
-    // the payload arrives wrapped as { payload, timestamp } by Krema's bridge.
+    // Posters arrive as "poster" events drained by Java's pollPosters command
+    // (one per prefetched poster); the payload arrives wrapped as
+    // { payload, timestamp } by Krema's bridge.
     window.krema.on("poster", function (data) {
         if (data && data.payload) {
             window.setPoster(data.payload.id, data.payload.dataUri);
@@ -52,6 +60,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             placeholder.classList.add("hidden");
         }
     };
+
+    // Posters are prefetched on Java's IO pool and drained into the page by
+    // the pollPosters command (one "poster" event per poster, emitted on the
+    // UI thread — see the Windows note at the top of this file). Poll until
+    // the backend reports -1: nothing pending, nothing more can arrive.
+    let posterPollToken = 0;
+    async function pollPostersUntilDone() {
+        const token = ++posterPollToken;
+        while (window.krema) {
+            let pending;
+            try {
+                pending = await window.krema.invoke("pollPosters", {});
+            } catch (e) {
+                return;
+            }
+            if (pending == null || pending < 0 || token !== posterPollToken) {
+                return;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 150));
+        }
+    }
 
     function renderMovies(movies) {
         grid.innerHTML = "";
@@ -122,6 +151,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
             renderMovies(movies);
+            pollPostersUntilDone();
         } catch (e) {
             const message = e && e.message ? e.message : String(e);
             showError("Failed to load movie data: " + escapeHtml(message));
