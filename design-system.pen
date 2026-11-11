@@ -1953,7 +1953,7 @@
                   "ref": "AUn9I",
                   "name": "Movie Card — Pulp Fiction",
                   "width": "fill_container",
-                  "x": 469.59999999999997,
+                  "x": 469.5999999999999,
                   "y": 0,
                   "descendants": {
                     "lp7sW": {
@@ -2116,6 +2116,2677 @@
                   "ref": "TVgfE",
                   "name": "Poster Placeholder",
                   "width": 219
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "G2yJC2",
+      "x": 4300,
+      "y": -416,
+      "name": "Album Card",
+      "reusable": true,
+      "width": 240,
+      "fill": "$surface",
+      "cornerRadius": "$radius-md",
+      "layout": "vertical",
+      "gap": 10,
+      "padding": 12,
+      "children": [
+        {
+          "type": "frame",
+          "id": "n0Rz8p",
+          "name": "Poster",
+          "clip": true,
+          "width": "fill_container",
+          "height": 216,
+          "fill": "$surface-2",
+          "cornerRadius": "$radius-sm"
+        },
+        {
+          "type": "text",
+          "id": "NQs6o",
+          "name": "Title",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Album Title",
+          "fontFamily": "$font-body",
+          "fontSize": 17,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "xl6uB",
+          "name": "Meta List",
+          "slot": [
+            "dLRea",
+            "Soxvq"
+          ],
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 4,
+          "children": [
+            {
+              "id": "L1cqFL",
+              "type": "ref",
+              "ref": "dLRea",
+              "name": "Meta Row",
+              "width": "fill_container",
+              "descendants": {
+                "QkXrj": {
+                  "content": "2024"
+                },
+                "HFAWk": {
+                  "content": "Artist · Album"
+                }
+              }
+            },
+            {
+              "id": "xK04f",
+              "type": "ref",
+              "ref": "Soxvq",
+              "name": "Rating",
+              "descendants": {
+                "EESr3": {
+                  "content": "8.8"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "glqZ7",
+      "x": 4580,
+      "y": -416,
+      "name": "Book Card",
+      "reusable": true,
+      "width": 240,
+      "fill": "$surface",
+      "cornerRadius": "$radius-md",
+      "layout": "vertical",
+      "gap": 10,
+      "padding": 12,
+      "children": [
+        {
+          "type": "frame",
+          "id": "UQjZB",
+          "name": "Poster",
+          "clip": true,
+          "width": "fill_container",
+          "height": 300,
+          "fill": "$surface-2",
+          "cornerRadius": "$radius-sm"
+        },
+        {
+          "type": "text",
+          "id": "BVTnY",
+          "name": "Title",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Book Title",
+          "fontFamily": "$font-body",
+          "fontSize": 17,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "OZBi7",
+          "name": "Meta List",
+          "slot": [
+            "dLRea",
+            "Soxvq"
+          ],
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 4,
+          "children": [
+            {
+              "id": "BrP4J",
+              "type": "ref",
+              "ref": "dLRea",
+              "name": "Meta Row",
+              "width": "fill_container",
+              "descendants": {
+                "QkXrj": {
+                  "content": "1965"
+                },
+                "HFAWk": {
+                  "content": "Author · 412 pages"
+                }
+              }
+            },
+            {
+              "id": "Ac9ha",
+              "type": "ref",
+              "ref": "Soxvq",
+              "name": "Rating",
+              "descendants": {
+                "EESr3": {
+                  "content": "9.1"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "brZIO",
+      "x": 4860,
+      "y": -416,
+      "name": "Game Card",
+      "reusable": true,
+      "width": 240,
+      "fill": "$surface",
+      "cornerRadius": "$radius-md",
+      "layout": "vertical",
+      "gap": 10,
+      "padding": 12,
+      "children": [
+        {
+          "type": "frame",
+          "id": "iLUAb",
+          "name": "Poster",
+          "clip": true,
+          "width": "fill_container",
+          "height": 260,
+          "fill": "$surface-2",
+          "cornerRadius": "$radius-sm"
+        },
+        {
+          "type": "text",
+          "id": "vzIUy",
+          "name": "Title",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Game Title",
+          "fontFamily": "$font-body",
+          "fontSize": 17,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "fxCyK",
+          "name": "Meta List",
+          "slot": [
+            "dLRea",
+            "Soxvq"
+          ],
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 4,
+          "children": [
+            {
+              "id": "Qulyu",
+              "type": "ref",
+              "ref": "dLRea",
+              "name": "Meta Row",
+              "width": "fill_container",
+              "descendants": {
+                "QkXrj": {
+                  "content": "2019"
+                },
+                "HFAWk": {
+                  "content": "Exploration · Mystery"
+                }
+              }
+            },
+            {
+              "id": "D1WM8B",
+              "type": "ref",
+              "ref": "Soxvq",
+              "name": "Rating",
+              "descendants": {
+                "EESr3": {
+                  "content": "9.1"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "r4Lxsw",
+      "x": 5200,
+      "y": -416,
+      "name": "Vibe Chip",
+      "reusable": true,
+      "fill": "$surface",
+      "cornerRadius": 999,
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "padding": [
+        7,
+        14
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "NZp5x",
+          "name": "Label",
+          "fill": "$text-secondary",
+          "content": "Mind-bending",
+          "fontFamily": "$font-body",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Iqqk2",
+      "x": 5200,
+      "y": -320,
+      "name": "Form Badge",
+      "reusable": true,
+      "fill": "$surface-2",
+      "cornerRadius": 999,
+      "padding": [
+        4,
+        10
+      ],
+      "children": [
+        {
+          "type": "text",
+          "id": "RiiUr",
+          "name": "Label",
+          "fill": "$text-secondary",
+          "content": "Movie",
+          "fontFamily": "$font-body",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "VkbZI",
+      "x": 2800,
+      "y": 1200,
+      "name": "Prototype — 01 Search (titles or vibes)",
+      "clip": true,
+      "width": 1440,
+      "height": 960,
+      "fill": "$bg",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "jmyNK",
+          "type": "ref",
+          "ref": "BpQaN",
+          "name": "App Header",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "TsrlS",
+          "name": "Content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            48,
+            120,
+            40,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "r8Bz3w",
+              "name": "Headline",
+              "fill": "$text-primary",
+              "content": "What are you in the mood for?",
+              "fontFamily": "$font-body",
+              "fontSize": 38,
+              "fontWeight": "700",
+              "letterSpacing": -0.5
+            },
+            {
+              "type": "text",
+              "id": "n0gAZz",
+              "name": "Sub",
+              "fill": "$text-secondary",
+              "content": "Type a title or describe a vibe — the engine composes picks for Movies, Music, Books and Games.",
+              "fontFamily": "$font-body",
+              "fontSize": 15,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "yYSXS",
+              "name": "Search Field Big",
+              "width": 920,
+              "height": 56,
+              "fill": "$surface",
+              "cornerRadius": "$radius-md",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "gap": 12,
+              "padding": [
+                0,
+                10,
+                0,
+                20
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "kBX1Z",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "search",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "m9rHeC",
+                  "name": "Placeholder",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Try “Dune” — or “cozy mystery games”",
+                  "fontFamily": "$font-body",
+                  "fontSize": 16,
+                  "fontWeight": "normal"
+                },
+                {
+                  "id": "y6Lia",
+                  "type": "ref",
+                  "ref": "lvgbU",
+                  "name": "Search Button"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "m83a3",
+              "name": "Chips Label",
+              "fill": "$muted",
+              "content": "OR TAP A VIBE",
+              "fontFamily": "$font-body",
+              "fontSize": 12,
+              "fontWeight": "normal",
+              "letterSpacing": 1.2
+            },
+            {
+              "type": "frame",
+              "id": "Xsfpb",
+              "name": "Chips",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "hsLtH",
+                  "type": "ref",
+                  "ref": "r4Lxsw",
+                  "name": "Vibe Chip · Mind-bending",
+                  "descendants": {
+                    "NZp5x": {
+                      "content": "Mind-bending"
+                    }
+                  }
+                },
+                {
+                  "id": "O5tAUZ",
+                  "type": "ref",
+                  "ref": "r4Lxsw",
+                  "name": "Vibe Chip · Cozy",
+                  "descendants": {
+                    "NZp5x": {
+                      "content": "Cozy"
+                    }
+                  }
+                },
+                {
+                  "id": "WKMyO",
+                  "type": "ref",
+                  "ref": "r4Lxsw",
+                  "name": "Vibe Chip · Rainy day",
+                  "descendants": {
+                    "NZp5x": {
+                      "content": "Rainy day"
+                    }
+                  }
+                },
+                {
+                  "id": "H6nKAK",
+                  "type": "ref",
+                  "ref": "r4Lxsw",
+                  "name": "Vibe Chip · Feel-good",
+                  "descendants": {
+                    "NZp5x": {
+                      "content": "Feel-good"
+                    }
+                  }
+                },
+                {
+                  "id": "eUnSy",
+                  "type": "ref",
+                  "ref": "r4Lxsw",
+                  "name": "Vibe Chip · True story",
+                  "descendants": {
+                    "NZp5x": {
+                      "content": "True story"
+                    }
+                  }
+                },
+                {
+                  "id": "tY9je",
+                  "type": "ref",
+                  "ref": "r4Lxsw",
+                  "name": "Vibe Chip · Slow burn",
+                  "descendants": {
+                    "NZp5x": {
+                      "content": "Slow burn"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "wS7e2",
+              "name": "Templates Label",
+              "fill": "$muted",
+              "content": "OR START FROM A TEMPLATE",
+              "fontFamily": "$font-body",
+              "fontSize": 12,
+              "fontWeight": "normal",
+              "letterSpacing": 1.2
+            },
+            {
+              "type": "frame",
+              "id": "mvtSZ",
+              "name": "Templates",
+              "layout": "vertical",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "fQGaI",
+                  "name": "Template · albums that sound ",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "gap": 10,
+                  "padding": [
+                    12,
+                    18
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "o56C5a",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "sparkles",
+                      "library": "lucide",
+                      "fill": "$accent"
+                    },
+                    {
+                      "type": "text",
+                      "id": "i7k4aX",
+                      "name": "Prompt",
+                      "fill": "$text-secondary",
+                      "content": "“albums that sound like ___, but for ___”",
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "VbPRi",
+                  "name": "Template · games like ___, bu",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "gap": 10,
+                  "padding": [
+                    12,
+                    18
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "pYSxr",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "sparkles",
+                      "library": "lucide",
+                      "fill": "$accent"
+                    },
+                    {
+                      "type": "text",
+                      "id": "OgbWY",
+                      "name": "Prompt",
+                      "fill": "$text-secondary",
+                      "content": "“games like ___, but cozier”",
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yEhp0",
+                  "name": "Template · books as gripping ",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "gap": 10,
+                  "padding": [
+                    12,
+                    18
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "G7Dgrj",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "sparkles",
+                      "library": "lucide",
+                      "fill": "$accent"
+                    },
+                    {
+                      "type": "text",
+                      "id": "PRmhw",
+                      "name": "Prompt",
+                      "fill": "$text-secondary",
+                      "content": "“books as gripping as ___”",
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "hqjwL",
+              "name": "Hint",
+              "fill": "$muted",
+              "content": "Recommendations load per content form — pick a form in the filter above.",
+              "fontFamily": "$font-body",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "NBlka",
+      "x": 4320,
+      "y": 1200,
+      "name": "Prototype — 02 Results · dropdown (decided)",
+      "clip": true,
+      "width": 1440,
+      "height": 1140,
+      "fill": "$bg",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "APX4F",
+          "type": "ref",
+          "ref": "BpQaN",
+          "name": "App Header",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "WQdgs",
+          "name": "Content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            32,
+            24,
+            48,
+            24
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "I25TpT",
+              "name": "Results Header",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "D9YwZo",
+                  "name": "Titles",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "sKPOO",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "Recommendations for “Dune”",
+                      "fontFamily": "$font-body",
+                      "fontSize": 26,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "DtddI",
+                      "name": "Sub",
+                      "fill": "$muted",
+                      "content": "Fresh set · the engine composes a new take each search",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "XaGFw",
+                  "name": "Actions",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "savz1",
+                      "type": "ref",
+                      "ref": "p6C4EH",
+                      "name": "Save Search",
+                      "descendants": {
+                        "Akr2G": {
+                          "content": "Save search"
+                        }
+                      }
+                    },
+                    {
+                      "id": "TiqGS",
+                      "type": "ref",
+                      "ref": "lvgbU",
+                      "name": "Rerun",
+                      "descendants": {
+                        "fd0wr": {
+                          "content": "New picks ↻"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "N4DdX",
+              "name": "Row 1",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "id": "Y1w7TP",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Movie Card · Dune: Part Two",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1612899326681-66508905b4ce?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NDZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Dune: Part Two"
+                    }
+                  }
+                },
+                {
+                  "id": "zRynO",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Movie Card · Arrival",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1598733047539-b5241e7bf0cb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NDZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Arrival"
+                    }
+                  }
+                },
+                {
+                  "id": "iICLq",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Movie Card · Blade Runner 2049",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1633520987812-e0ce10455728?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NDZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Blade Runner 2049"
+                    }
+                  }
+                },
+                {
+                  "id": "Y3diPW",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Movie Card · Sicario",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1778110859434-a4067a193b12?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NDZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Sicario"
+                    }
+                  }
+                },
+                {
+                  "id": "CqYZi",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Movie Card · Enemy",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1778163898987-fd9e1c93e9d4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NDZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Enemy"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zPoSW",
+              "name": "Row 2",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "id": "XI2DG",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Movie Card · Ex Machina",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1776492909032-56f5c2fdd05b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NDZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Ex Machina"
+                    }
+                  }
+                },
+                {
+                  "id": "Tkhcc",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Movie Card · Annihilation",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Annihilation"
+                    }
+                  }
+                },
+                {
+                  "id": "Fk20V",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Movie Card · Moon",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Moon"
+                    }
+                  }
+                },
+                {
+                  "id": "Db3Qf",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Movie Card · Prisoners",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1645352809168-be1d1ef6d31c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NDZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Prisoners"
+                    }
+                  }
+                },
+                {
+                  "id": "Jli7y",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Movie Card · Memento",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1453828423292-392a660a502f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NDZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Memento"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "HHILE",
+              "name": "Hint",
+              "fill": "$muted",
+              "content": "Music, Books and Games compose their sets when you toggle the filter above.",
+              "fontFamily": "$font-body",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "M7StIi",
+      "x": 5840,
+      "y": 1200,
+      "name": "Prototype — 02-B Results · stacked rows (alternative)",
+      "clip": true,
+      "width": 1440,
+      "height": 2080,
+      "fill": "$bg",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "AOMBN",
+          "type": "ref",
+          "ref": "BpQaN",
+          "name": "App Header",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "oXRl0",
+          "name": "Content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            32,
+            24,
+            48,
+            24
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "tf1da",
+              "name": "Results Header",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "aSXnZ",
+                  "name": "Titles",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Vj7A6",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "Recommendations for “Dune”",
+                      "fontFamily": "$font-body",
+                      "fontSize": 26,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "GbF4K",
+                      "name": "Sub",
+                      "fill": "$muted",
+                      "content": "One query · four kinds of art, composed at once",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Y7thL5",
+                  "name": "Actions",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "FF9Wo",
+                      "type": "ref",
+                      "ref": "p6C4EH",
+                      "name": "Save Search",
+                      "descendants": {
+                        "Akr2G": {
+                          "content": "Save search"
+                        }
+                      }
+                    },
+                    {
+                      "id": "uMLbd",
+                      "type": "ref",
+                      "ref": "lvgbU",
+                      "name": "Rerun",
+                      "descendants": {
+                        "fd0wr": {
+                          "content": "New picks ↻"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "c1zvi",
+              "type": "ref",
+              "ref": "qrRLm",
+              "name": "Section · Movies",
+              "width": "fill_container",
+              "descendants": {
+                "bXEeE": {
+                  "content": "Movies"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "IHSHA",
+              "name": "Movies Row",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "id": "TNB4c",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Dune: Part Two",
+                  "width": "fill_container",
+                  "descendants": {
+                    "qc0oL": {
+                      "content": "Dune: Part Two"
+                    }
+                  }
+                },
+                {
+                  "id": "l3Cdl",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Arrival",
+                  "width": "fill_container",
+                  "descendants": {
+                    "qc0oL": {
+                      "content": "Arrival"
+                    }
+                  }
+                },
+                {
+                  "id": "I3XsNk",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Blade Runner 2049",
+                  "width": "fill_container",
+                  "descendants": {
+                    "qc0oL": {
+                      "content": "Blade Runner 2049"
+                    }
+                  }
+                },
+                {
+                  "id": "Nigkz",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Sicario",
+                  "width": "fill_container",
+                  "descendants": {
+                    "qc0oL": {
+                      "content": "Sicario"
+                    }
+                  }
+                },
+                {
+                  "id": "a8mjRH",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "Enemy",
+                  "width": "fill_container",
+                  "descendants": {
+                    "qc0oL": {
+                      "content": "Enemy"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "nxQGd",
+              "type": "ref",
+              "ref": "qrRLm",
+              "name": "Section · Music",
+              "width": "fill_container",
+              "descendants": {
+                "bXEeE": {
+                  "content": "Music"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "LMH3r",
+              "name": "Music Row",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "id": "jKv2R",
+                  "type": "ref",
+                  "ref": "G2yJC2",
+                  "name": "For Emma, Forever Ago",
+                  "width": "fill_container",
+                  "descendants": {
+                    "NQs6o": {
+                      "content": "For Emma, Forever Ago"
+                    }
+                  }
+                },
+                {
+                  "id": "kChPr",
+                  "type": "ref",
+                  "ref": "G2yJC2",
+                  "name": "A Crow Looked at Me",
+                  "width": "fill_container",
+                  "descendants": {
+                    "NQs6o": {
+                      "content": "A Crow Looked at Me"
+                    }
+                  }
+                },
+                {
+                  "id": "xKLQO",
+                  "type": "ref",
+                  "ref": "G2yJC2",
+                  "name": "Carrie & Lowell",
+                  "width": "fill_container",
+                  "descendants": {
+                    "NQs6o": {
+                      "content": "Carrie & Lowell"
+                    }
+                  }
+                },
+                {
+                  "id": "T0mhd",
+                  "type": "ref",
+                  "ref": "G2yJC2",
+                  "name": "Come Away With Me",
+                  "width": "fill_container",
+                  "descendants": {
+                    "NQs6o": {
+                      "content": "Come Away With Me"
+                    }
+                  }
+                },
+                {
+                  "id": "XsLvZ",
+                  "type": "ref",
+                  "ref": "G2yJC2",
+                  "name": "In the Aeroplane Over the Sea",
+                  "width": "fill_container",
+                  "descendants": {
+                    "NQs6o": {
+                      "content": "In the Aeroplane Over the Sea"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "r73Xf2",
+              "type": "ref",
+              "ref": "qrRLm",
+              "name": "Section · Books",
+              "width": "fill_container",
+              "descendants": {
+                "bXEeE": {
+                  "content": "Books"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "zIspu",
+              "name": "Books Row",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "id": "I3cLl",
+                  "type": "ref",
+                  "ref": "glqZ7",
+                  "name": "Dune",
+                  "width": "fill_container",
+                  "descendants": {
+                    "BVTnY": {
+                      "content": "Dune"
+                    }
+                  }
+                },
+                {
+                  "id": "A1Wdsj",
+                  "type": "ref",
+                  "ref": "glqZ7",
+                  "name": "Hyperion",
+                  "width": "fill_container",
+                  "descendants": {
+                    "BVTnY": {
+                      "content": "Hyperion"
+                    }
+                  }
+                },
+                {
+                  "id": "UlRLk",
+                  "type": "ref",
+                  "ref": "glqZ7",
+                  "name": "A Memory Called Empire",
+                  "width": "fill_container",
+                  "descendants": {
+                    "BVTnY": {
+                      "content": "A Memory Called Empire"
+                    }
+                  }
+                },
+                {
+                  "id": "wQl9a",
+                  "type": "ref",
+                  "ref": "glqZ7",
+                  "name": "The Left Hand of Darkness",
+                  "width": "fill_container",
+                  "descendants": {
+                    "BVTnY": {
+                      "content": "The Left Hand of Darkness"
+                    }
+                  }
+                },
+                {
+                  "id": "wIOEU",
+                  "type": "ref",
+                  "ref": "glqZ7",
+                  "name": "Red Rising",
+                  "width": "fill_container",
+                  "descendants": {
+                    "BVTnY": {
+                      "content": "Red Rising"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "ANv5K",
+              "type": "ref",
+              "ref": "qrRLm",
+              "name": "Section · Games",
+              "width": "fill_container",
+              "descendants": {
+                "bXEeE": {
+                  "content": "Games"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "ldmS2",
+              "name": "Games Row",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "id": "Tfxm0",
+                  "type": "ref",
+                  "ref": "brZIO",
+                  "name": "Outer Wilds",
+                  "width": "fill_container",
+                  "descendants": {
+                    "vzIUy": {
+                      "content": "Outer Wilds"
+                    }
+                  }
+                },
+                {
+                  "id": "nGBiv",
+                  "type": "ref",
+                  "ref": "brZIO",
+                  "name": "Return of the Obra Dinn",
+                  "width": "fill_container",
+                  "descendants": {
+                    "vzIUy": {
+                      "content": "Return of the Obra Dinn"
+                    }
+                  }
+                },
+                {
+                  "id": "bcp2C",
+                  "type": "ref",
+                  "ref": "brZIO",
+                  "name": "Firewatch",
+                  "width": "fill_container",
+                  "descendants": {
+                    "vzIUy": {
+                      "content": "Firewatch"
+                    }
+                  }
+                },
+                {
+                  "id": "GgeR7",
+                  "type": "ref",
+                  "ref": "brZIO",
+                  "name": "Disco Elysium",
+                  "width": "fill_container",
+                  "descendants": {
+                    "vzIUy": {
+                      "content": "Disco Elysium"
+                    }
+                  }
+                },
+                {
+                  "id": "lrRkG",
+                  "type": "ref",
+                  "ref": "brZIO",
+                  "name": "Chicory: A Colorful Tale",
+                  "width": "fill_container",
+                  "descendants": {
+                    "vzIUy": {
+                      "content": "Chicory: A Colorful Tale"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "DGgTH",
+      "x": 2800,
+      "y": 3400,
+      "name": "Prototype — 03 Detail · Movie (first form)",
+      "clip": true,
+      "width": 1440,
+      "height": 1180,
+      "fill": "$bg",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "oSxVz",
+          "type": "ref",
+          "ref": "BpQaN",
+          "name": "App Header",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "d233zU",
+          "name": "Content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            32,
+            24,
+            48,
+            24
+          ],
+          "children": [
+            {
+              "id": "JWwwi",
+              "type": "ref",
+              "ref": "ozxHv",
+              "name": "Back Link",
+              "descendants": {
+                "lQXTm": {
+                  "content": "← Back to results"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "l1ZWxx",
+              "name": "Hero",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "zDGNJ",
+                  "name": "Poster",
+                  "metadata": {
+                    "type": "unsplash",
+                    "username": "miyatankun",
+                    "link": "https://unsplash.com/@miyatankun",
+                    "author": "Takashi Miyazaki"
+                  },
+                  "clip": true,
+                  "width": 340,
+                  "height": 500,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "https://images.unsplash.com/photo-1629819583219-f71e1f235ddc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                    "mode": "cover"
+                  },
+                  "cornerRadius": "$radius-md"
+                },
+                {
+                  "type": "frame",
+                  "id": "Amr0g",
+                  "name": "Info",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 14,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "mrryt",
+                      "name": "Badges",
+                      "gap": 10,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "OLxYA",
+                          "type": "ref",
+                          "ref": "Iqqk2",
+                          "name": "Form Badge",
+                          "descendants": {
+                            "RiiUr": {
+                              "content": "Movie"
+                            }
+                          }
+                        },
+                        {
+                          "type": "text",
+                          "id": "yJNyk",
+                          "name": "Engine Note",
+                          "fill": "$muted",
+                          "content": "Composed by the engine · fresh on re-run",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "imoAt",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "Dune: Part Two",
+                      "fontFamily": "$font-body",
+                      "fontSize": 34,
+                      "fontWeight": "700",
+                      "letterSpacing": -0.5
+                    },
+                    {
+                      "id": "e8cLpe",
+                      "type": "ref",
+                      "ref": "dLRea",
+                      "name": "Meta Row",
+                      "descendants": {
+                        "QkXrj": {
+                          "content": "2024"
+                        },
+                        "HFAWk": {
+                          "content": "Sci-Fi · Adventure · 2h 46m"
+                        }
+                      }
+                    },
+                    {
+                      "id": "YFJYz",
+                      "type": "ref",
+                      "ref": "Soxvq",
+                      "name": "Rating",
+                      "descendants": {
+                        "EESr3": {
+                          "content": "8.5"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "v6dTTb",
+                      "name": "Synopsis",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family. Torn between the love of his life and the fate of the known universe, he must choose his path — and it leads to a war the desert has been waiting for.",
+                      "lineHeight": 1.55,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "w7rgs",
+                      "name": "Actions",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "id": "SU6kg",
+                          "type": "ref",
+                          "ref": "lvgbU",
+                          "name": "Watchlist",
+                          "descendants": {
+                            "fd0wr": {
+                              "content": "＋ Add to Watchlist"
+                            }
+                          }
+                        },
+                        {
+                          "id": "kkVmA",
+                          "type": "ref",
+                          "ref": "p6C4EH",
+                          "name": "Favorite",
+                          "descendants": {
+                            "Akr2G": {
+                              "content": "♥ Add to Favorites"
+                            }
+                          }
+                        },
+                        {
+                          "id": "EmIHW",
+                          "type": "ref",
+                          "ref": "ozxHv",
+                          "name": "New Picks",
+                          "descendants": {
+                            "lQXTm": {
+                              "content": "More like this ↻"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "nK5Da",
+              "name": "Because Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "id": "n3zpn",
+                  "type": "ref",
+                  "ref": "qrRLm",
+                  "name": "Section · Because",
+                  "width": "fill_container",
+                  "descendants": {
+                    "bXEeE": {
+                      "content": "Because you favorited Interstellar"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "poQAn",
+                  "name": "Because Row",
+                  "width": "fill_container",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "id": "n09WH",
+                      "type": "ref",
+                      "ref": "AUn9I",
+                      "name": "Movie Card · Children of Men",
+                      "width": "fill_container",
+                      "descendants": {
+                        "qc0oL": {
+                          "content": "Children of Men"
+                        }
+                      }
+                    },
+                    {
+                      "id": "ZrcBf",
+                      "type": "ref",
+                      "ref": "AUn9I",
+                      "name": "Movie Card · District 9",
+                      "width": "fill_container",
+                      "descendants": {
+                        "qc0oL": {
+                          "content": "District 9"
+                        }
+                      }
+                    },
+                    {
+                      "id": "iztsC",
+                      "type": "ref",
+                      "ref": "AUn9I",
+                      "name": "Movie Card · Snowpiercer",
+                      "width": "fill_container",
+                      "descendants": {
+                        "qc0oL": {
+                          "content": "Snowpiercer"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "egiZQ",
+      "x": 4320,
+      "y": 3400,
+      "name": "Prototype — 04 My Lists",
+      "clip": true,
+      "width": 1440,
+      "height": 1150,
+      "fill": "$bg",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "NKRBJ",
+          "type": "ref",
+          "ref": "BpQaN",
+          "name": "App Header",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "HUm1B",
+          "name": "Content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            32,
+            24,
+            48,
+            24
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "bP5Cl",
+              "name": "Title Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "OEhqq",
+                  "name": "Titles",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "GHZy7",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "My Lists",
+                      "fontFamily": "$font-body",
+                      "fontSize": 26,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "PSR7B",
+                      "name": "Sub",
+                      "fill": "$muted",
+                      "content": "Everything you kept — Watchlist and Favorites, all four forms, survives a restart",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "id": "jByqT",
+                  "type": "ref",
+                  "ref": "Jjgo5",
+                  "name": "Form Filter",
+                  "descendants": {
+                    "tKk9N": {
+                      "content": "All forms"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jCKTV",
+              "name": "Tabs",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Dt5yF",
+                  "name": "Tab · Watchlist",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-md",
+                  "gap": 8,
+                  "padding": [
+                    10,
+                    18
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "VjbhX",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "Watchlist",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "GvXeH",
+                      "name": "Count",
+                      "fill": "$muted",
+                      "content": "8",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OK0Yw",
+                  "name": "Tab · Favorites",
+                  "gap": 8,
+                  "padding": [
+                    10,
+                    18
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "UfKZH",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "Favorites",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "IfbQW",
+                      "name": "Count",
+                      "fill": "$muted",
+                      "content": "4",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "MUxmz",
+              "name": "Row 1",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "id": "gyJdn",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "movie · Past Lives",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1774028156556-c73dc02a61b7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Past Lives"
+                    }
+                  }
+                },
+                {
+                  "id": "k0JpZ",
+                  "type": "ref",
+                  "ref": "G2yJC2",
+                  "name": "album · Blue Train",
+                  "width": "fill_container",
+                  "descendants": {
+                    "n0Rz8p": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1628065747479-6477cf609eba?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "NQs6o": {
+                      "content": "Blue Train"
+                    }
+                  }
+                },
+                {
+                  "id": "UZnhX",
+                  "type": "ref",
+                  "ref": "glqZ7",
+                  "name": "book · The Remains of the Day",
+                  "width": "fill_container",
+                  "descendants": {
+                    "UQjZB": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1784239640777-270b7ff8ed43?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "BVTnY": {
+                      "content": "The Remains of the Day"
+                    }
+                  }
+                },
+                {
+                  "id": "l7SE0",
+                  "type": "ref",
+                  "ref": "brZIO",
+                  "name": "game · Chicory: A Colorful Tale",
+                  "width": "fill_container",
+                  "descendants": {
+                    "iLUAb": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1688589012465-e3c853da8a42?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "vzIUy": {
+                      "content": "Chicory: A Colorful Tale"
+                    }
+                  }
+                },
+                {
+                  "id": "R9T49",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "movie · Perfect Days",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1621881498648-6d44dd8325d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Perfect Days"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "G0ZNcE",
+              "name": "Row 2",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "id": "OaGoT",
+                  "type": "ref",
+                  "ref": "AUn9I",
+                  "name": "movie · Aftersun",
+                  "width": "fill_container",
+                  "descendants": {
+                    "lp7sW": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1539797340023-93b7e5fd2ebd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "qc0oL": {
+                      "content": "Aftersun"
+                    }
+                  }
+                },
+                {
+                  "id": "MmrvC",
+                  "type": "ref",
+                  "ref": "glqZ7",
+                  "name": "book · Piranesi",
+                  "width": "fill_container",
+                  "descendants": {
+                    "UQjZB": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1786169259787-aa8802ccc95b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "BVTnY": {
+                      "content": "Piranesi"
+                    }
+                  }
+                },
+                {
+                  "id": "q292o",
+                  "type": "ref",
+                  "ref": "G2yJC2",
+                  "name": "album · Unknown Pleasures",
+                  "width": "fill_container",
+                  "descendants": {
+                    "n0Rz8p": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1738005787913-3a51f95507a7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQzODc0NjV8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      }
+                    },
+                    "NQs6o": {
+                      "content": "Unknown Pleasures"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "hCfXm",
+      "x": 5840,
+      "y": 3400,
+      "name": "Prototype — 05 My Searches",
+      "clip": true,
+      "width": 1440,
+      "height": 700,
+      "fill": "$bg",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Mz9Ye",
+          "type": "ref",
+          "ref": "BpQaN",
+          "name": "App Header",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "fvGXM",
+          "name": "Content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            32,
+            24,
+            48,
+            24
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "DRoYb",
+              "name": "Titles",
+              "layout": "vertical",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "bhFQN",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "My Searches",
+                  "fontFamily": "$font-body",
+                  "fontSize": 26,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "LK0po",
+                  "name": "Sub",
+                  "fill": "$muted",
+                  "content": "Whole result sets, kept — re-run any of them for a fresh take",
+                  "fontFamily": "$font-body",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PNRxs",
+              "name": "Grid",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "NSHb4",
+                  "name": "Search Row 1",
+                  "width": "fill_container",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "HGFzm",
+                      "name": "Saved Search · cozy mystery games”",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "w4Y8Ef",
+                          "name": "Query Row",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ykbX6",
+                              "name": "Query",
+                              "fill": "$text-primary",
+                              "content": "“cozy mystery games”",
+                              "fontFamily": "$font-body",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "MUk03",
+                              "name": "Forms",
+                              "gap": 6,
+                              "children": [
+                                {
+                                  "id": "J4cXW",
+                                  "type": "ref",
+                                  "ref": "Iqqk2",
+                                  "name": "Form Badge · Games",
+                                  "descendants": {
+                                    "RiiUr": {
+                                      "content": "Games"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yzOH4",
+                          "name": "Meta Row Line",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "W7yzNd",
+                              "name": "Meta",
+                              "fill": "$muted",
+                              "content": "12 items · saved Nov 9",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "f8QqyG",
+                              "name": "Actions",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "jwZZw",
+                                  "type": "ref",
+                                  "ref": "ozxHv",
+                                  "name": "Rerun",
+                                  "descendants": {
+                                    "lQXTm": {
+                                      "content": "Re-run ↻"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "a6DQt",
+                                  "type": "ref",
+                                  "ref": "ozxHv",
+                                  "name": "Open",
+                                  "descendants": {
+                                    "lQXTm": {
+                                      "content": "Open →"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "HLYUZ",
+                          "name": "Thumbs",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "uK2EW",
+                              "name": "Thumb 1",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "cmijP",
+                              "name": "Thumb 2",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "naXEY",
+                              "name": "Thumb 3",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BwduJ",
+                      "name": "Saved Search · albums that sound l",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "xnEV4",
+                          "name": "Query Row",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "M7MOk",
+                              "name": "Query",
+                              "fill": "$text-primary",
+                              "content": "“albums that sound like rain, but hopeful”",
+                              "fontFamily": "$font-body",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ymDXQ",
+                              "name": "Forms",
+                              "gap": 6,
+                              "children": [
+                                {
+                                  "id": "rNnbn",
+                                  "type": "ref",
+                                  "ref": "Iqqk2",
+                                  "name": "Form Badge · Music",
+                                  "descendants": {
+                                    "RiiUr": {
+                                      "content": "Music"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Jt5Ws",
+                          "name": "Meta Row Line",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QCS72",
+                              "name": "Meta",
+                              "fill": "$muted",
+                              "content": "8 items · saved Nov 10",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "mhJfj",
+                              "name": "Actions",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "ILNvM",
+                                  "type": "ref",
+                                  "ref": "ozxHv",
+                                  "name": "Rerun",
+                                  "descendants": {
+                                    "lQXTm": {
+                                      "content": "Re-run ↻"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "I22Qd",
+                                  "type": "ref",
+                                  "ref": "ozxHv",
+                                  "name": "Open",
+                                  "descendants": {
+                                    "lQXTm": {
+                                      "content": "Open →"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Apc54",
+                          "name": "Thumbs",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "KhO37",
+                              "name": "Thumb 1",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "rh5w5",
+                              "name": "Thumb 2",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "RNd5L",
+                              "name": "Thumb 3",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ZoZ0n",
+                  "name": "Search Row 2",
+                  "width": "fill_container",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "qt1Hi",
+                      "name": "Saved Search · books as gripping a",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "qYgDy",
+                          "name": "Query Row",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "OAY2t",
+                              "name": "Query",
+                              "fill": "$text-primary",
+                              "content": "“books as gripping as Gone Girl”",
+                              "fontFamily": "$font-body",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "oXsRF",
+                              "name": "Forms",
+                              "gap": 6,
+                              "children": [
+                                {
+                                  "id": "rBBqV",
+                                  "type": "ref",
+                                  "ref": "Iqqk2",
+                                  "name": "Form Badge · Books",
+                                  "descendants": {
+                                    "RiiUr": {
+                                      "content": "Books"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "olLsb",
+                          "name": "Meta Row Line",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "MB5ks",
+                              "name": "Meta",
+                              "fill": "$muted",
+                              "content": "10 items · saved Nov 8",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "RfX1K",
+                              "name": "Actions",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "HwTGE",
+                                  "type": "ref",
+                                  "ref": "ozxHv",
+                                  "name": "Rerun",
+                                  "descendants": {
+                                    "lQXTm": {
+                                      "content": "Re-run ↻"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "rAUSd",
+                                  "type": "ref",
+                                  "ref": "ozxHv",
+                                  "name": "Open",
+                                  "descendants": {
+                                    "lQXTm": {
+                                      "content": "Open →"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yvrwJ",
+                          "name": "Thumbs",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "l4xp5",
+                              "name": "Thumb 1",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "BZ2Z5",
+                              "name": "Thumb 2",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "fDtjn",
+                              "name": "Thumb 3",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "S4zs8R",
+                      "name": "Saved Search · Dune”",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "LGelH",
+                          "name": "Query Row",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "fAFfs",
+                              "name": "Query",
+                              "fill": "$text-primary",
+                              "content": "“Dune”",
+                              "fontFamily": "$font-body",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "PrtHN",
+                              "name": "Forms",
+                              "gap": 6,
+                              "children": [
+                                {
+                                  "id": "mhyyk",
+                                  "type": "ref",
+                                  "ref": "Iqqk2",
+                                  "name": "Form Badge · Movie",
+                                  "descendants": {
+                                    "RiiUr": {
+                                      "content": "Movie"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "R8rtbJ",
+                                  "type": "ref",
+                                  "ref": "Iqqk2",
+                                  "name": "Form Badge · Book",
+                                  "descendants": {
+                                    "RiiUr": {
+                                      "content": "Book"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "LAQm0",
+                          "name": "Meta Row Line",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "hnKAN",
+                              "name": "Meta",
+                              "fill": "$muted",
+                              "content": "15 items · saved Nov 10",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "BQ8qJ",
+                              "name": "Actions",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "E1cE9",
+                                  "type": "ref",
+                                  "ref": "ozxHv",
+                                  "name": "Rerun",
+                                  "descendants": {
+                                    "lQXTm": {
+                                      "content": "Re-run ↻"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "vDwZ7",
+                                  "type": "ref",
+                                  "ref": "ozxHv",
+                                  "name": "Open",
+                                  "descendants": {
+                                    "lQXTm": {
+                                      "content": "Open →"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "l0wbg1",
+                          "name": "Thumbs",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "UdPim",
+                              "name": "Thumb 1",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "epo2i",
+                              "name": "Thumb 2",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "JjeBJ",
+                              "name": "Thumb 3",
+                              "clip": true,
+                              "width": 64,
+                              "height": 64,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-sm"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
