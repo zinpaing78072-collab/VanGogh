@@ -228,8 +228,6 @@ public class MovieController {
 
     /** Same key resolution as the old {@code VanGoghApp#resolveApiKey}. */
     private static String resolveApiKey() {
-        // ⚠️  Hard-coding an API key in source is a security risk — for production,
-        //     load it from an env var or config file and never commit the real key.
         String apiKey = System.getenv("TMDB_API_KEY");
         if (apiKey == null || apiKey.isEmpty()) {
             apiKey = "d0269af3b7b5a40e157c5e8ae28ff0a3";

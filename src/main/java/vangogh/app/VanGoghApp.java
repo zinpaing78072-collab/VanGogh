@@ -39,8 +39,8 @@ public class VanGoghApp {
                 .title("Van Gogh")
                 .identifier("van-gogh.krema")
                 .size(1200, 800)
-                .debug() // right-click → Inspect in the system webview to watch events
-                .prodAssets(ASSET_PREFIX) // serves src/main/resources/movie-page/index.html
+                .debug()
+                .prodAssets(ASSET_PREFIX)
                 .events(controller::setEventEmitter)
                 .commands(controller)
                 // Installs the macOS menu bar (App/Edit/View/Window with real
@@ -50,6 +50,6 @@ public class VanGoghApp {
                 // reveal shows nothing. plugin() init runs pre-loop on the first
                 // thread, the only safe point for Cocoa calls from app code.
                 .plugin(new MacMenubarPlugin())
-                .run(); // blocks until the window closes
+                .run();
     }
 }
