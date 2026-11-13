@@ -29,6 +29,13 @@
             <artifactId>vavr</artifactId>
             <version>1.0.1</version>
         </dependency>
+        <!-- JCEF experiment: Chromium Embedded Framework shell (swap for Krema system webview).
+             Natives are downloaded automatically on first run (~100 MB per platform). -->
+        <dependency>
+            <groupId>me.friwi</groupId>
+            <artifactId>jcefmaven</artifactId>
+            <version>152.0.6</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -103,6 +110,10 @@
                                      krema-core's own pom. macOS-only HotSpot flag. -->
                                 <argument>-XstartOnFirstThread</argument>
                                 <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                <!-- JCEF macOS requirements (jcefmaven README): harmless for Krema too. -->
+                                <argument>--add-opens=java.desktop/sun.awt=ALL-UNNAMED</argument>
+                                <argument>--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED</argument>
+                                <argument>--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED</argument>
                                 <argument>-Xmx512m</argument>
                                 <argument>-classpath</argument>
                                 <classpath/>

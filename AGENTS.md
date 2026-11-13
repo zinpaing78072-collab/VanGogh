@@ -139,11 +139,41 @@ before starting the next. Never expand scope mid-slice.
 - The workspace config routes Code Runner's Java Run Code action through
   `mvn compile exec:exec`; do not run `javac VanGoghApp.java` directly, since
   that omits the other project classes and Maven dependencies.
-- Main class: `vangogh.app.VanGoghApp`
+- Main class: `vangogh.app.VanGoghApp` (Krema shell) or
+  `vangogh.app.jcef.JcefVanGoghApp` (JCEF experiment shell — see below).
 - IPC: frontend calls `await window.krema.invoke("requestMovies", { kind, query })`;
   handlers are `@KremaCommand` methods on `MovieController` and require
   `<parameters>true</parameters>` in maven-compiler-plugin (args bind by
   parameter name). Posters stream as `window.krema.on("poster", …)` events.
+
+### JCEF experiment (branch `feat/jcef-experiment`)
+
+A standalone shell swap that replaces Krema's OS system webview with a bundled
+Chromium engine via `me.friwi:jcefmaven:152.0.6`. The existing controllers
+(`MovieController`, `GameController`) are shell-agnostic — they receive a
+`JcefEventEmitter` (a Krema `EventEmitter` subclass) via `setEventEmitter()`
+and their `@KremaCommand` methods are called directly by the JCEF bridge.
+
+Files:
+- `src/main/java/vangogh/app/jcef/JcefVanGoghApp.java` — `main()`: boots
+  `CefApp`, extracts classpath HTML to a temp dir, creates a Swing `JFrame`
+  hosting an OSR-rendered `CefBrowser`.
+- `src/main/java/vangogh/app/jcef/JcefBridge.java` — `CefMessageRouter`
+  handler for JS→Java (`window.krema.invoke` → controller methods) plus
+  `JcefEventEmitter` wiring for Java→JS poster events.
+- `src/main/java/vangogh/app/jcef/JcefEventEmitter.java` — extends Krema's
+  `EventEmitter`, overrides `emit()` to post via `executeJavaScript` on the
+  Swing EDT.
+- `src/main/resources/jcef/krema-shim.js` — implements `window.krema.invoke/on`
+  on top of `cefQuery` and `window.__krema_emit`, compatible with the existing
+  `app.js` (zero frontend changes).
+- `pom.xml` — adds `me.friwi:jcefmaven` dependency and macOS
+  `--add-opens java.desktop/...=ALL-UNNAMED` flags (required by jcefmaven;
+  harmless for Krema).
+
+To run: change the exec `main` argument from `vangogh.app.VanGoghApp` to
+`vangogh.app.jcef.JcefVanGoghApp` and launch with `mvn exec:exec`. First run
+downloads CEF natives (~100 MB).
 - Windows constraint (krema-core 0.3.2, same family as the `AppNativePreload`
   workaround): `engine.eval` is silently dropped when called off the UI thread,
   so async command replies and backend events never reach the page. Rule:
