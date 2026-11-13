@@ -1953,7 +1953,7 @@
                   "ref": "AUn9I",
                   "name": "Movie Card — Pulp Fiction",
                   "width": "fill_container",
-                  "x": 469.5999999999999,
+                  "x": 469.6,
                   "y": 0,
                   "descendants": {
                     "lp7sW": {
@@ -1984,7 +1984,7 @@
                   "ref": "AUn9I",
                   "name": "Movie Card — The Shawshank Redemption",
                   "width": "fill_container",
-                  "x": 704.3999999999999,
+                  "x": 704.4,
                   "y": 0,
                   "descendants": {
                     "lp7sW": {
@@ -2018,7 +2018,7 @@
                   "height": "fit_content",
                   "flipX": false,
                   "flipY": false,
-                  "x": 939.1999999999998,
+                  "x": 939.1999999999999,
                   "y": 0,
                   "descendants": {
                     "lp7sW": {
@@ -4793,11 +4793,4261 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "eqS4v",
+      "x": 7360,
+      "y": -600,
+      "name": "Prototype — 06 Music Discovery",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$bg",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "GlcKH",
+          "name": "App Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ypxyC",
+              "name": "Sidebar",
+              "width": 260,
+              "height": "fill_container",
+              "fill": "$surface",
+              "stroke": "$border",
+              "strokeWidth": {
+                "right": 1
+              },
+              "strokeAlignment": "inner",
+              "layout": "vertical",
+              "padding": [
+                24,
+                14,
+                18,
+                14
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "E0ouIm",
+                  "name": "Brand",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "padding": [
+                    0,
+                    8,
+                    22,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "xhtLn",
+                      "name": "Logo Mark",
+                      "width": 40,
+                      "height": 40,
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 135,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "$accent",
+                            "position": 0
+                          },
+                          {
+                            "color": "$accent-deep",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "cornerRadius": 12,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#D0342C40",
+                        "offset": {
+                          "x": 0,
+                          "y": 6
+                        },
+                        "blur": 16
+                      },
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "FEGK4",
+                          "name": "Logo Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "palette",
+                          "library": "lucide",
+                          "fill": "$text-on-accent"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Qrtnn",
+                      "name": "Brand Text",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "OEDDx",
+                          "name": "Brand Name",
+                          "fill": "$text-primary",
+                          "content": "Van Gogh",
+                          "fontFamily": "$font-body",
+                          "fontSize": 19,
+                          "fontWeight": "800"
+                        },
+                        {
+                          "type": "text",
+                          "id": "FxhHw",
+                          "name": "Brand Tagline",
+                          "fill": "$muted",
+                          "content": "Movies · Music · Books · Games",
+                          "fontFamily": "$font-body",
+                          "fontSize": 10,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "j2030r",
+                  "name": "Menu Label",
+                  "width": "fill_container",
+                  "padding": [
+                    0,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "UR0OT",
+                      "name": "Menu Label Text",
+                      "fill": "$muted",
+                      "content": "MENU",
+                      "fontFamily": "$font-body",
+                      "fontSize": 10.5,
+                      "fontWeight": "600",
+                      "letterSpacing": 1.6
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bNhyM",
+                  "name": "Main Nav",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "fzEoC",
+                      "name": "Search",
+                      "width": "fill_container",
+                      "height": 42,
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "ennn9",
+                          "name": "Search Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "search",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "d9erHc",
+                          "name": "Search Label",
+                          "fill": "$text-secondary",
+                          "content": "Search",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13.5,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LvSlB",
+                      "name": "Discover",
+                      "width": "fill_container",
+                      "height": 42,
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "qhWCX",
+                          "name": "Discover Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "compass",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ctx8E",
+                          "name": "Discover Label",
+                          "fill": "$text-secondary",
+                          "content": "Discover",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13.5,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "n5tKFj",
+                      "name": "Music",
+                      "width": "fill_container",
+                      "height": 42,
+                      "fill": "$accent-soft",
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "Buc1o",
+                          "name": "Music Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "music",
+                          "library": "lucide",
+                          "fill": "$accent"
+                        },
+                        {
+                          "type": "text",
+                          "id": "HFlyA",
+                          "name": "Music Label",
+                          "fill": "$text-primary",
+                          "content": "Music",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13.5,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "cJU88",
+                      "name": "Movies",
+                      "width": "fill_container",
+                      "height": 42,
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "t3IyQ",
+                          "name": "Movies Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "film",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "G7t5s",
+                          "name": "Movies Label",
+                          "fill": "$text-secondary",
+                          "content": "Movies",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13.5,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "KuK6n",
+                      "name": "Books",
+                      "width": "fill_container",
+                      "height": 42,
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "qHuxv",
+                          "name": "Books Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "book-open",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "NwSeX",
+                          "name": "Books Label",
+                          "fill": "$text-secondary",
+                          "content": "Books",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13.5,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "F0Vro",
+                      "name": "Games",
+                      "width": "fill_container",
+                      "height": 42,
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "edJMu",
+                          "name": "Games Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "gamepad-2",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "H5Lmd1",
+                          "name": "Games Label",
+                          "fill": "$text-secondary",
+                          "content": "Games",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13.5,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OA1N0",
+                  "name": "Library Label",
+                  "width": "fill_container",
+                  "padding": [
+                    20,
+                    10,
+                    8,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QMu6S",
+                      "name": "Library Label Text",
+                      "fill": "$muted",
+                      "content": "LIBRARY",
+                      "fontFamily": "$font-body",
+                      "fontSize": 10.5,
+                      "fontWeight": "600",
+                      "letterSpacing": 1.6
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "okhoy",
+                  "name": "Library Nav",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Y4lVOB",
+                      "name": "Recently Played",
+                      "width": "fill_container",
+                      "height": 42,
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "NeG76",
+                          "name": "Recently Played Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "history",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "N50yl",
+                          "name": "Recently Played Label",
+                          "fill": "$text-secondary",
+                          "content": "Recently Played",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13.5,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "K59h4",
+                      "name": "My Playlists",
+                      "width": "fill_container",
+                      "height": 42,
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "uTg2I",
+                          "name": "My Playlists Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "list-music",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "QXoK1",
+                          "name": "My Playlists Label",
+                          "fill": "$text-secondary",
+                          "content": "My Playlists",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13.5,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "rNRSC",
+                      "name": "Favorite Songs",
+                      "width": "fill_container",
+                      "height": 42,
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "lkN4F",
+                          "name": "Favorite Songs Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "heart",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "gT6w0",
+                          "name": "Favorite Songs Label",
+                          "fill": "$text-secondary",
+                          "content": "Favorite Songs",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13.5,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "p6WuOB",
+                      "name": "Favorite Artists",
+                      "width": "fill_container",
+                      "height": 42,
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "VucXr",
+                          "name": "Favorite Artists Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "star",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "JXuGt",
+                          "name": "Favorite Artists Label",
+                          "fill": "$text-secondary",
+                          "content": "Favorite Artists",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13.5,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SeIr0",
+                      "name": "My Albums",
+                      "width": "fill_container",
+                      "height": 42,
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "ecxCV",
+                          "name": "My Albums Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "disc-3",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "UgNCJ",
+                          "name": "My Albums Label",
+                          "fill": "$text-secondary",
+                          "content": "My Albums",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13.5,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hnkXe",
+                  "name": "Sidebar Spacer",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical"
+                },
+                {
+                  "type": "rectangle",
+                  "id": "Rq1Pb",
+                  "name": "Divider",
+                  "fill": "$line",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "YFogK",
+                  "name": "Settings",
+                  "width": "fill_container",
+                  "height": 42,
+                  "cornerRadius": 10,
+                  "gap": 12,
+                  "padding": [
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "H7Msm",
+                      "name": "Settings Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "settings",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "kER01",
+                      "name": "Settings Label",
+                      "fill": "$text-secondary",
+                      "content": "Settings",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13.5,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "iDHMw",
+                  "name": "Profile Wrap",
+                  "width": "fill_container",
+                  "padding": [
+                    14,
+                    4,
+                    0,
+                    4
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "jjjjj",
+                      "name": "Profile Card",
+                      "width": "fill_container",
+                      "fill": "$surface-2",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        10,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "DPgIU",
+                          "name": "Profile Avatar",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1606898089449-f811a830091f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQ1NTM0MjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "cover"
+                          },
+                          "width": 34,
+                          "height": 34,
+                          "stroke": "#FFFFFF14",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "w3pVX8",
+                          "name": "Profile Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "PfwDl",
+                              "name": "Profile Name",
+                              "fill": "$text-primary",
+                              "content": "Kayla Reyes",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "W0sgV5",
+                              "name": "Profile Plan",
+                              "fill": "$muted",
+                              "content": "Local Profile",
+                              "fontFamily": "$font-body",
+                              "fontSize": 10.5,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "BIYso",
+                          "name": "Profile More",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "ellipsis",
+                          "library": "lucide",
+                          "fill": "$muted"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VlznQ",
+              "name": "Main Content",
+              "clip": true,
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "$bg",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "pJMMF",
+                  "name": "Top Header",
+                  "width": "fill_container",
+                  "gap": 20,
+                  "padding": [
+                    20,
+                    32,
+                    14,
+                    32
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "A5GrYA",
+                      "name": "Header Title",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "d4sB40",
+                          "name": "Page Title",
+                          "fill": "$text-primary",
+                          "content": "Music",
+                          "fontFamily": "$font-body",
+                          "fontSize": 26,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "eJSYo",
+                          "name": "Page Subtitle",
+                          "fill": "$text-secondary",
+                          "content": "Discover sounds that match your universe.",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "R9qch",
+                      "type": "ref",
+                      "ref": "GrVP3",
+                      "name": "Header Search",
+                      "width": "fill_container",
+                      "descendants": {
+                        "ebtOR": {
+                          "width": "fill_container"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kS2mZ",
+                      "name": "Notifications",
+                      "width": 42,
+                      "height": 42,
+                      "fill": "$surface",
+                      "cornerRadius": 21,
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "IVrpg",
+                          "name": "Bell Icon",
+                          "width": 19,
+                          "height": 19,
+                          "icon": "bell",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "ellipse",
+                          "id": "vjOg0",
+                          "layoutPosition": "absolute",
+                          "x": 26,
+                          "y": 9,
+                          "name": "Notification Dot",
+                          "fill": "$accent",
+                          "width": 8,
+                          "height": 8
+                        }
+                      ]
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "NBZQO",
+                      "name": "Header Avatar",
+                      "metadata": {
+                        "type": "unsplash",
+                        "username": "arnoldobizzy",
+                        "link": "https://unsplash.com/@arnoldobizzy",
+                        "author": "Arnold Obizzy"
+                      },
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1606898089449-f811a830091f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQ1NTM0MjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      },
+                      "width": 38,
+                      "height": 38,
+                      "stroke": "#FFFFFF14",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "mhR2L",
+                  "name": "Scroll Content",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 28,
+                  "padding": [
+                    10,
+                    32,
+                    32,
+                    32
+                  ],
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "Sxtds",
+                      "layoutPosition": "absolute",
+                      "x": 1582,
+                      "y": 10,
+                      "name": "Scrollbar Track",
+                      "fill": "#FFFFFF12",
+                      "width": 4,
+                      "height": 892
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "KGbAu",
+                      "layoutPosition": "absolute",
+                      "x": 1582,
+                      "y": 10,
+                      "name": "Scrollbar Thumb",
+                      "fill": "#FFFFFF2E",
+                      "width": 4,
+                      "height": 300
+                    },
+                    {
+                      "type": "frame",
+                      "id": "e6RIlA",
+                      "name": "Hero Banner",
+                      "clip": true,
+                      "width": "fill_container",
+                      "height": 268,
+                      "fill": [
+                        {
+                          "type": "image",
+                          "enabled": true,
+                          "url": "generated.png",
+                          "mode": "cover"
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "linear",
+                          "enabled": true,
+                          "rotation": 90,
+                          "size": {
+                            "height": 1
+                          },
+                          "colors": [
+                            {
+                              "color": "#141414F0",
+                              "position": 0
+                            },
+                            {
+                              "color": "#14141400",
+                              "position": 0.62
+                            }
+                          ]
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "linear",
+                          "enabled": true,
+                          "rotation": 180,
+                          "size": {
+                            "height": 1
+                          },
+                          "colors": [
+                            {
+                              "color": "#D0342C26",
+                              "position": 0
+                            },
+                            {
+                              "color": "#00000000",
+                              "position": 0.5
+                            }
+                          ]
+                        }
+                      ],
+                      "cornerRadius": 16,
+                      "layout": "vertical",
+                      "gap": 14,
+                      "padding": 36,
+                      "justifyContent": "end",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "gFA6z",
+                          "name": "Hero Chip",
+                          "fill": "#141414A6",
+                          "cornerRadius": 999,
+                          "stroke": "#FFFFFF1A",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "peBiY",
+                              "name": "Hero Chip Label",
+                              "fill": "$text-primary",
+                              "content": "CURATED FOR YOU",
+                              "fontFamily": "$font-body",
+                              "fontSize": 10.5,
+                              "fontWeight": "600",
+                              "letterSpacing": 1.4
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "rBPDP",
+                          "name": "Hero Heading",
+                          "fill": "$text-primary",
+                          "content": "Find Your Rhythm",
+                          "fontFamily": "$font-body",
+                          "fontSize": 42,
+                          "fontWeight": "800"
+                        },
+                        {
+                          "type": "text",
+                          "id": "RTElD",
+                          "name": "Hero Subtitle",
+                          "fill": "#D7D9DE",
+                          "content": "Explore music that speaks to your mood.",
+                          "fontFamily": "$font-body",
+                          "fontSize": 15,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xrjoL",
+                          "name": "Hero CTA Row",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "TqqTt",
+                              "name": "Explore Music Button",
+                              "height": 48,
+                              "fill": {
+                                "type": "gradient",
+                                "gradientType": "linear",
+                                "enabled": true,
+                                "rotation": 135,
+                                "size": {
+                                  "height": 1
+                                },
+                                "colors": [
+                                  {
+                                    "color": "$accent",
+                                    "position": 0
+                                  },
+                                  {
+                                    "color": "$accent-deep",
+                                    "position": 1
+                                  }
+                                ]
+                              },
+                              "cornerRadius": 24,
+                              "effect": {
+                                "type": "shadow",
+                                "shadowType": "outer",
+                                "color": "#D0342C59",
+                                "offset": {
+                                  "x": 0,
+                                  "y": 6
+                                },
+                                "blur": 16
+                              },
+                              "gap": 10,
+                              "padding": [
+                                0,
+                                24
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "kXEYt",
+                                  "name": "CTA Play Icon",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "play",
+                                  "library": "lucide",
+                                  "fill": "$text-on-accent"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "mpXcW",
+                                  "name": "CTA Label",
+                                  "fill": "$text-on-accent",
+                                  "content": "Explore Music",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14.5,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YW89f",
+                      "name": "Quick Access",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "D30tA",
+                          "name": "Quick — Recently Played",
+                          "width": "fill_container",
+                          "height": 92,
+                          "fill": "$surface",
+                          "cornerRadius": 12,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": 14,
+                          "padding": [
+                            0,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ditQU",
+                              "name": "Quick Tile — Recently Played",
+                              "width": 56,
+                              "height": 56,
+                              "fill": {
+                                "type": "gradient",
+                                "gradientType": "linear",
+                                "enabled": true,
+                                "rotation": 135,
+                                "size": {
+                                  "height": 1
+                                },
+                                "colors": [
+                                  {
+                                    "color": "#D0342C",
+                                    "position": 0
+                                  },
+                                  {
+                                    "color": "#932119",
+                                    "position": 1
+                                  }
+                                ]
+                              },
+                              "cornerRadius": 10,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "kUhwf",
+                                  "name": "Quick Icon — Recently Played",
+                                  "width": 23,
+                                  "height": 23,
+                                  "icon": "history",
+                                  "library": "lucide",
+                                  "fill": "$text-on-accent"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "cy7p2",
+                              "name": "Quick Text — Recently Played",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 3,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "e7fuMB",
+                                  "name": "Quick Title — Recently Played",
+                                  "fill": "$text-primary",
+                                  "content": "Recently Played",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "v1f7uk",
+                                  "name": "Quick Sub — Recently Played",
+                                  "fill": "$muted",
+                                  "content": "Pick up where you left off",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wkx2Q",
+                          "name": "Quick — Made For You",
+                          "width": "fill_container",
+                          "height": 92,
+                          "fill": "$surface",
+                          "cornerRadius": 12,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": 14,
+                          "padding": [
+                            0,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "GENeX",
+                              "name": "Quick Tile — Made For You",
+                              "width": 56,
+                              "height": 56,
+                              "fill": {
+                                "type": "gradient",
+                                "gradientType": "linear",
+                                "enabled": true,
+                                "rotation": 135,
+                                "size": {
+                                  "height": 1
+                                },
+                                "colors": [
+                                  {
+                                    "color": "#E0563C",
+                                    "position": 0
+                                  },
+                                  {
+                                    "color": "#B0271E",
+                                    "position": 1
+                                  }
+                                ]
+                              },
+                              "cornerRadius": 10,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "abYst",
+                                  "name": "Quick Icon — Made For You",
+                                  "width": 23,
+                                  "height": 23,
+                                  "icon": "sparkles",
+                                  "library": "lucide",
+                                  "fill": "$text-on-accent"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "oVkyq",
+                              "name": "Quick Text — Made For You",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 3,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "K1ZPW",
+                                  "name": "Quick Title — Made For You",
+                                  "fill": "$text-primary",
+                                  "content": "Made For You",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "PmsSN",
+                                  "name": "Quick Sub — Made For You",
+                                  "fill": "$muted",
+                                  "content": "Fresh picks every Friday",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "nqODi",
+                          "name": "Quick — Daily Mix",
+                          "width": "fill_container",
+                          "height": 92,
+                          "fill": "$surface",
+                          "cornerRadius": 12,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": 14,
+                          "padding": [
+                            0,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Th61w",
+                              "name": "Quick Tile — Daily Mix",
+                              "width": 56,
+                              "height": 56,
+                              "fill": {
+                                "type": "gradient",
+                                "gradientType": "linear",
+                                "enabled": true,
+                                "rotation": 135,
+                                "size": {
+                                  "height": 1
+                                },
+                                "colors": [
+                                  {
+                                    "color": "#B8322A",
+                                    "position": 0
+                                  },
+                                  {
+                                    "color": "#7E1F18",
+                                    "position": 1
+                                  }
+                                ]
+                              },
+                              "cornerRadius": 10,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "s6ZPI",
+                                  "name": "Quick Icon — Daily Mix",
+                                  "width": 23,
+                                  "height": 23,
+                                  "icon": "radio",
+                                  "library": "lucide",
+                                  "fill": "$text-on-accent"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "TnowV",
+                              "name": "Quick Text — Daily Mix",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 3,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "z47oBe",
+                                  "name": "Quick Title — Daily Mix",
+                                  "fill": "$text-primary",
+                                  "content": "Daily Mix",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "PA98T",
+                                  "name": "Quick Sub — Daily Mix",
+                                  "fill": "$muted",
+                                  "content": "Mix 01 · 50 tracks",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "zasQ1",
+                          "name": "Quick — Top Charts",
+                          "width": "fill_container",
+                          "height": 92,
+                          "fill": "$surface",
+                          "cornerRadius": 12,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": 14,
+                          "padding": [
+                            0,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "to57y",
+                              "name": "Quick Tile — Top Charts",
+                              "width": 56,
+                              "height": 56,
+                              "fill": {
+                                "type": "gradient",
+                                "gradientType": "linear",
+                                "enabled": true,
+                                "rotation": 135,
+                                "size": {
+                                  "height": 1
+                                },
+                                "colors": [
+                                  {
+                                    "color": "#D9684F",
+                                    "position": 0
+                                  },
+                                  {
+                                    "color": "#A03126",
+                                    "position": 1
+                                  }
+                                ]
+                              },
+                              "cornerRadius": 10,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "uJfwL",
+                                  "name": "Quick Icon — Top Charts",
+                                  "width": 23,
+                                  "height": 23,
+                                  "icon": "trending-up",
+                                  "library": "lucide",
+                                  "fill": "$text-on-accent"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "YZn2n",
+                              "name": "Quick Text — Top Charts",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 3,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "WhgQa",
+                                  "name": "Quick Title — Top Charts",
+                                  "fill": "$text-primary",
+                                  "content": "Top Charts",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "iiuoh",
+                                  "name": "Quick Sub — Top Charts",
+                                  "fill": "$muted",
+                                  "content": "Global · Updated today",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pfb0K",
+                      "name": "Picked For Your Vibe",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 14,
+                      "children": [
+                        {
+                          "id": "FiHjm",
+                          "type": "ref",
+                          "ref": "qrRLm",
+                          "name": "Section Header — Picked",
+                          "width": "fill_container",
+                          "descendants": {
+                            "bXEeE": {
+                              "content": "Picked For Your Vibe"
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "e32tEe",
+                          "name": "Picked Cards Row",
+                          "width": "fill_container",
+                          "gap": 20,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "uW3WL",
+                              "name": "Album Card — After Hours",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "qj7Ns",
+                                  "name": "Cover — After Hours",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 232,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-6.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 12,
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "x05DmU",
+                                      "layoutPosition": "absolute",
+                                      "x": 197,
+                                      "y": 180,
+                                      "name": "Play Overlay — After Hours",
+                                      "width": 44,
+                                      "height": 44,
+                                      "fill": {
+                                        "type": "gradient",
+                                        "gradientType": "linear",
+                                        "enabled": true,
+                                        "rotation": 135,
+                                        "size": {
+                                          "height": 1
+                                        },
+                                        "colors": [
+                                          {
+                                            "color": "$accent",
+                                            "position": 0
+                                          },
+                                          {
+                                            "color": "$accent-deep",
+                                            "position": 1
+                                          }
+                                        ]
+                                      },
+                                      "cornerRadius": 22,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#D0342C66",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 4
+                                        },
+                                        "blur": 12
+                                      },
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "Q7Ykc6",
+                                          "name": "Play Icon — After Hours",
+                                          "width": 17,
+                                          "height": 17,
+                                          "icon": "play",
+                                          "library": "lucide",
+                                          "fill": "$text-on-accent"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "eKDAf",
+                                  "name": "Album Title — After Hours",
+                                  "fill": "$text-primary",
+                                  "content": "After Hours",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "E9t5Z",
+                                  "name": "Album Artist — After Hours",
+                                  "fill": "$text-secondary",
+                                  "content": "The Weeknd",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Shgt0",
+                              "name": "Album Card — Harry's House",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "C8t37s",
+                                  "name": "Cover — Harry's House",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 232,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-4.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 12,
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "Ph7Jg",
+                                      "layoutPosition": "absolute",
+                                      "x": 197,
+                                      "y": 180,
+                                      "name": "Play Overlay — Harry's House",
+                                      "width": 44,
+                                      "height": 44,
+                                      "fill": {
+                                        "type": "gradient",
+                                        "gradientType": "linear",
+                                        "enabled": true,
+                                        "rotation": 135,
+                                        "size": {
+                                          "height": 1
+                                        },
+                                        "colors": [
+                                          {
+                                            "color": "$accent",
+                                            "position": 0
+                                          },
+                                          {
+                                            "color": "$accent-deep",
+                                            "position": 1
+                                          }
+                                        ]
+                                      },
+                                      "cornerRadius": 22,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#D0342C66",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 4
+                                        },
+                                        "blur": 12
+                                      },
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "nRnfz",
+                                          "name": "Play Icon — Harry's House",
+                                          "width": 17,
+                                          "height": 17,
+                                          "icon": "play",
+                                          "library": "lucide",
+                                          "fill": "$text-on-accent"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "T2iR8",
+                                  "name": "Album Title — Harry's House",
+                                  "fill": "$text-primary",
+                                  "content": "Harry's House",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Q19MBU",
+                                  "name": "Album Artist — Harry's House",
+                                  "fill": "$text-secondary",
+                                  "content": "Harry Styles",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "QBt0t",
+                              "name": "Album Card — Midnights",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "BXVZX",
+                                  "name": "Cover — Midnights",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 232,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-3.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 12,
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "Zq5M1",
+                                      "layoutPosition": "absolute",
+                                      "x": 197,
+                                      "y": 180,
+                                      "name": "Play Overlay — Midnights",
+                                      "width": 44,
+                                      "height": 44,
+                                      "fill": {
+                                        "type": "gradient",
+                                        "gradientType": "linear",
+                                        "enabled": true,
+                                        "rotation": 135,
+                                        "size": {
+                                          "height": 1
+                                        },
+                                        "colors": [
+                                          {
+                                            "color": "$accent",
+                                            "position": 0
+                                          },
+                                          {
+                                            "color": "$accent-deep",
+                                            "position": 1
+                                          }
+                                        ]
+                                      },
+                                      "cornerRadius": 22,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#D0342C66",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 4
+                                        },
+                                        "blur": 12
+                                      },
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "j9sPQ",
+                                          "name": "Play Icon — Midnights",
+                                          "width": 17,
+                                          "height": 17,
+                                          "icon": "play",
+                                          "library": "lucide",
+                                          "fill": "$text-on-accent"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "D55lY",
+                                  "name": "Album Title — Midnights",
+                                  "fill": "$text-primary",
+                                  "content": "Midnights",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "jlCnC",
+                                  "name": "Album Artist — Midnights",
+                                  "fill": "$text-secondary",
+                                  "content": "Taylor Swift",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "pDUc6",
+                              "name": "Album Card — Endless Summer Vacation",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "fwmB4",
+                                  "name": "Cover — Endless Summer Vacation",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 232,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-1.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 12,
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "r0z7SJ",
+                                      "layoutPosition": "absolute",
+                                      "x": 197,
+                                      "y": 180,
+                                      "name": "Play Overlay — Endless Summer Vacation",
+                                      "width": 44,
+                                      "height": 44,
+                                      "fill": {
+                                        "type": "gradient",
+                                        "gradientType": "linear",
+                                        "enabled": true,
+                                        "rotation": 135,
+                                        "size": {
+                                          "height": 1
+                                        },
+                                        "colors": [
+                                          {
+                                            "color": "$accent",
+                                            "position": 0
+                                          },
+                                          {
+                                            "color": "$accent-deep",
+                                            "position": 1
+                                          }
+                                        ]
+                                      },
+                                      "cornerRadius": 22,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#D0342C66",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 4
+                                        },
+                                        "blur": 12
+                                      },
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "x8Ohxp",
+                                          "name": "Play Icon — Endless Summer Vacation",
+                                          "width": 17,
+                                          "height": 17,
+                                          "icon": "play",
+                                          "library": "lucide",
+                                          "fill": "$text-on-accent"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "s0ud0",
+                                  "name": "Album Title — Endless Summer Vacation",
+                                  "fill": "$text-primary",
+                                  "content": "Endless Summer Vacation",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "fCgFp",
+                                  "name": "Album Artist — Endless Summer Vacation",
+                                  "fill": "$text-secondary",
+                                  "content": "Miley Cyrus",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "l3o2xa",
+                              "name": "Album Card — Future Nostalgia",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "ldW69",
+                                  "name": "Cover — Future Nostalgia",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 232,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-5.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 12,
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "I32PG",
+                                      "layoutPosition": "absolute",
+                                      "x": 197,
+                                      "y": 180,
+                                      "name": "Play Overlay — Future Nostalgia",
+                                      "width": 44,
+                                      "height": 44,
+                                      "fill": {
+                                        "type": "gradient",
+                                        "gradientType": "linear",
+                                        "enabled": true,
+                                        "rotation": 135,
+                                        "size": {
+                                          "height": 1
+                                        },
+                                        "colors": [
+                                          {
+                                            "color": "$accent",
+                                            "position": 0
+                                          },
+                                          {
+                                            "color": "$accent-deep",
+                                            "position": 1
+                                          }
+                                        ]
+                                      },
+                                      "cornerRadius": 22,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#D0342C66",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 4
+                                        },
+                                        "blur": 12
+                                      },
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "VEHAT",
+                                          "name": "Play Icon — Future Nostalgia",
+                                          "width": 17,
+                                          "height": 17,
+                                          "icon": "play",
+                                          "library": "lucide",
+                                          "fill": "$text-on-accent"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Ql8o6",
+                                  "name": "Album Title — Future Nostalgia",
+                                  "fill": "$text-primary",
+                                  "content": "Future Nostalgia",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "H2QEqo",
+                                  "name": "Album Artist — Future Nostalgia",
+                                  "fill": "$text-secondary",
+                                  "content": "Dua Lipa",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "CPrde",
+                              "name": "Album Card — SOS",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "A7TTp7",
+                                  "name": "Cover — SOS",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 232,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-2.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 12,
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "k9zCL3",
+                                      "layoutPosition": "absolute",
+                                      "x": 197,
+                                      "y": 180,
+                                      "name": "Play Overlay — SOS",
+                                      "width": 44,
+                                      "height": 44,
+                                      "fill": {
+                                        "type": "gradient",
+                                        "gradientType": "linear",
+                                        "enabled": true,
+                                        "rotation": 135,
+                                        "size": {
+                                          "height": 1
+                                        },
+                                        "colors": [
+                                          {
+                                            "color": "$accent",
+                                            "position": 0
+                                          },
+                                          {
+                                            "color": "$accent-deep",
+                                            "position": 1
+                                          }
+                                        ]
+                                      },
+                                      "cornerRadius": 22,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#D0342C66",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 4
+                                        },
+                                        "blur": 12
+                                      },
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "cdp8T",
+                                          "name": "Play Icon — SOS",
+                                          "width": 17,
+                                          "height": 17,
+                                          "icon": "play",
+                                          "library": "lucide",
+                                          "fill": "$text-on-accent"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "YiTWO",
+                                  "name": "Album Title — SOS",
+                                  "fill": "$text-primary",
+                                  "content": "SOS",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "x11dKO",
+                                  "name": "Album Artist — SOS",
+                                  "fill": "$text-secondary",
+                                  "content": "SZA",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vxMKY",
+                      "name": "Browse By Mood",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 14,
+                      "children": [
+                        {
+                          "id": "lXAfL",
+                          "type": "ref",
+                          "ref": "qrRLm",
+                          "name": "Section Header — Mood",
+                          "width": "fill_container",
+                          "descendants": {
+                            "bXEeE": {
+                              "content": "Browse By Mood"
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "gz4mM",
+                          "name": "Mood Cards Row",
+                          "width": "fill_container",
+                          "gap": 16,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "K6epL",
+                              "name": "Mood — Happy",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 118,
+                              "fill": "$surface-2",
+                              "cornerRadius": 12,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "fSacO",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Art — Happy",
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-7.png",
+                                    "mode": "cover"
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "M2lH7",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Tint — Happy",
+                                  "fill": "#FFC53D40",
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "cSNS6",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Shade — Happy",
+                                  "fill": {
+                                    "type": "gradient",
+                                    "gradientType": "linear",
+                                    "enabled": true,
+                                    "rotation": 180,
+                                    "size": {
+                                      "height": 1
+                                    },
+                                    "colors": [
+                                      {
+                                        "color": "#141414CC",
+                                        "position": 0
+                                      },
+                                      {
+                                        "color": "#00000000",
+                                        "position": 0.6
+                                      }
+                                    ]
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "q4Ebd",
+                                  "layoutPosition": "absolute",
+                                  "x": 16,
+                                  "y": 62,
+                                  "name": "Mood Label — Happy",
+                                  "layout": "vertical",
+                                  "gap": 1,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "iN3tp",
+                                      "name": "Mood Name — Happy",
+                                      "fill": "$text-primary",
+                                      "content": "Happy",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 15,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Hub6l",
+                                      "name": "Mood Count — Happy",
+                                      "fill": "#FFFFFFB3",
+                                      "content": "48 playlists",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "E1lBs",
+                              "name": "Mood — Relaxing",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 118,
+                              "fill": "$surface-2",
+                              "cornerRadius": 12,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "zirpG",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Art — Relaxing",
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-8.png",
+                                    "mode": "cover"
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "R6r7pu",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Tint — Relaxing",
+                                  "fill": "#5FA86440",
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "A3QBO",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Shade — Relaxing",
+                                  "fill": {
+                                    "type": "gradient",
+                                    "gradientType": "linear",
+                                    "enabled": true,
+                                    "rotation": 180,
+                                    "size": {
+                                      "height": 1
+                                    },
+                                    "colors": [
+                                      {
+                                        "color": "#141414CC",
+                                        "position": 0
+                                      },
+                                      {
+                                        "color": "#00000000",
+                                        "position": 0.6
+                                      }
+                                    ]
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "Sdl59",
+                                  "layoutPosition": "absolute",
+                                  "x": 16,
+                                  "y": 62,
+                                  "name": "Mood Label — Relaxing",
+                                  "layout": "vertical",
+                                  "gap": 1,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "lDkNl",
+                                      "name": "Mood Name — Relaxing",
+                                      "fill": "$text-primary",
+                                      "content": "Relaxing",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 15,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "hAHor",
+                                      "name": "Mood Count — Relaxing",
+                                      "fill": "#FFFFFFB3",
+                                      "content": "36 playlists",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ltiuG",
+                              "name": "Mood — Focus",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 118,
+                              "fill": "$surface-2",
+                              "cornerRadius": 12,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "J0tKP",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Art — Focus",
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-12.png",
+                                    "mode": "cover"
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "M0nH8",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Tint — Focus",
+                                  "fill": "#4D7CFF40",
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "EA5Ob",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Shade — Focus",
+                                  "fill": {
+                                    "type": "gradient",
+                                    "gradientType": "linear",
+                                    "enabled": true,
+                                    "rotation": 180,
+                                    "size": {
+                                      "height": 1
+                                    },
+                                    "colors": [
+                                      {
+                                        "color": "#141414CC",
+                                        "position": 0
+                                      },
+                                      {
+                                        "color": "#00000000",
+                                        "position": 0.6
+                                      }
+                                    ]
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "tQc3J",
+                                  "layoutPosition": "absolute",
+                                  "x": 16,
+                                  "y": 62,
+                                  "name": "Mood Label — Focus",
+                                  "layout": "vertical",
+                                  "gap": 1,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "UeE5V",
+                                      "name": "Mood Name — Focus",
+                                      "fill": "$text-primary",
+                                      "content": "Focus",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 15,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "UcAGA",
+                                      "name": "Mood Count — Focus",
+                                      "fill": "#FFFFFFB3",
+                                      "content": "52 playlists",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "XrlyP",
+                              "name": "Mood — Sad",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 118,
+                              "fill": "$surface-2",
+                              "cornerRadius": 12,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "m1aVb6",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Art — Sad",
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-9.png",
+                                    "mode": "cover"
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "s8UsXv",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Tint — Sad",
+                                  "fill": "#5A6ACF66",
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "m3qRa",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Shade — Sad",
+                                  "fill": {
+                                    "type": "gradient",
+                                    "gradientType": "linear",
+                                    "enabled": true,
+                                    "rotation": 180,
+                                    "size": {
+                                      "height": 1
+                                    },
+                                    "colors": [
+                                      {
+                                        "color": "#141414CC",
+                                        "position": 0
+                                      },
+                                      {
+                                        "color": "#00000000",
+                                        "position": 0.6
+                                      }
+                                    ]
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "F1nyYP",
+                                  "layoutPosition": "absolute",
+                                  "x": 16,
+                                  "y": 62,
+                                  "name": "Mood Label — Sad",
+                                  "layout": "vertical",
+                                  "gap": 1,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "FBc2d",
+                                      "name": "Mood Name — Sad",
+                                      "fill": "$text-primary",
+                                      "content": "Sad",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 15,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "hRUZe",
+                                      "name": "Mood Count — Sad",
+                                      "fill": "#FFFFFFB3",
+                                      "content": "29 playlists",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "hiaZC",
+                              "name": "Mood — Romantic",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 118,
+                              "fill": "$surface-2",
+                              "cornerRadius": 12,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "tmGDu",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Art — Romantic",
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-10.png",
+                                    "mode": "cover"
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "f9fjgL",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Tint — Romantic",
+                                  "fill": "#FF6B9A40",
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "ozZdi",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Shade — Romantic",
+                                  "fill": {
+                                    "type": "gradient",
+                                    "gradientType": "linear",
+                                    "enabled": true,
+                                    "rotation": 180,
+                                    "size": {
+                                      "height": 1
+                                    },
+                                    "colors": [
+                                      {
+                                        "color": "#141414CC",
+                                        "position": 0
+                                      },
+                                      {
+                                        "color": "#00000000",
+                                        "position": 0.6
+                                      }
+                                    ]
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "IW80A",
+                                  "layoutPosition": "absolute",
+                                  "x": 16,
+                                  "y": 62,
+                                  "name": "Mood Label — Romantic",
+                                  "layout": "vertical",
+                                  "gap": 1,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "n5I8DV",
+                                      "name": "Mood Name — Romantic",
+                                      "fill": "$text-primary",
+                                      "content": "Romantic",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 15,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Kitnv",
+                                      "name": "Mood Count — Romantic",
+                                      "fill": "#FFFFFFB3",
+                                      "content": "41 playlists",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "nw3o0",
+                              "name": "Mood — Energetic",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 118,
+                              "fill": "$surface-2",
+                              "cornerRadius": 12,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "BSK6x",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Art — Energetic",
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-11.png",
+                                    "mode": "cover"
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "G6deoC",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Tint — Energetic",
+                                  "fill": "#FF4D4D40",
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "krM76",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Mood Shade — Energetic",
+                                  "fill": {
+                                    "type": "gradient",
+                                    "gradientType": "linear",
+                                    "enabled": true,
+                                    "rotation": 180,
+                                    "size": {
+                                      "height": 1
+                                    },
+                                    "colors": [
+                                      {
+                                        "color": "#141414CC",
+                                        "position": 0
+                                      },
+                                      {
+                                        "color": "#00000000",
+                                        "position": 0.6
+                                      }
+                                    ]
+                                  },
+                                  "width": 253,
+                                  "height": 118
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "Vq3z1",
+                                  "layoutPosition": "absolute",
+                                  "x": 16,
+                                  "y": 62,
+                                  "name": "Mood Label — Energetic",
+                                  "layout": "vertical",
+                                  "gap": 1,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "kcKoQ",
+                                      "name": "Mood Name — Energetic",
+                                      "fill": "$text-primary",
+                                      "content": "Energetic",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 15,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "k6xFPM",
+                                      "name": "Mood Count — Energetic",
+                                      "fill": "#FFFFFFB3",
+                                      "content": "57 playlists",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "qYD5i",
+                      "name": "Popular Artists",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 14,
+                      "children": [
+                        {
+                          "id": "H1lYV",
+                          "type": "ref",
+                          "ref": "qrRLm",
+                          "name": "Section Header — Artists",
+                          "width": "fill_container",
+                          "descendants": {
+                            "bXEeE": {
+                              "content": "Popular Artists"
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bgZ8i",
+                          "name": "Artist Cards Row",
+                          "width": "fill_container",
+                          "gap": 20,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "wGcG8",
+                              "name": "Artist — The Weeknd",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "cBCGI",
+                                  "name": "Artist Photo — The Weeknd",
+                                  "metadata": {
+                                    "type": "unsplash",
+                                    "username": "roadtripwithraj",
+                                    "link": "https://unsplash.com/@roadtripwithraj",
+                                    "author": "Road Trip with Raj"
+                                  },
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1517967763806-1d0a6cc4fce8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQ1NTM0MjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "cover"
+                                  },
+                                  "width": 110,
+                                  "height": 110
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "AP0bL",
+                                  "name": "Artist Name — The Weeknd",
+                                  "fill": "$text-primary",
+                                  "content": "The Weeknd",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "qkKLg",
+                                  "name": "Artist Followers — The Weeknd",
+                                  "fill": "$muted",
+                                  "content": "84.2M followers",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "NDGf6",
+                              "name": "Artist — Taylor Swift",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "qbQLx",
+                                  "name": "Artist Photo — Taylor Swift",
+                                  "metadata": {
+                                    "type": "unsplash",
+                                    "username": "waleij",
+                                    "link": "https://unsplash.com/@waleij",
+                                    "author": "Emma Waleij"
+                                  },
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1559665181-0415962203c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQ1NTM0MjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "cover"
+                                  },
+                                  "width": 110,
+                                  "height": 110
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "XgvYk",
+                                  "name": "Artist Name — Taylor Swift",
+                                  "fill": "$text-primary",
+                                  "content": "Taylor Swift",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "q6NMcy",
+                                  "name": "Artist Followers — Taylor Swift",
+                                  "fill": "$muted",
+                                  "content": "112.8M followers",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "jMqrS",
+                              "name": "Artist — Billie Eilish",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "laJ28",
+                                  "name": "Artist Photo — Billie Eilish",
+                                  "metadata": {
+                                    "type": "unsplash",
+                                    "username": "prithiviraj",
+                                    "link": "https://unsplash.com/@prithiviraj",
+                                    "author": "Prithiviraj A"
+                                  },
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1669122335217-227c11736584?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQ1NTM0MjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "cover"
+                                  },
+                                  "width": 110,
+                                  "height": 110
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "yfzdn",
+                                  "name": "Artist Name — Billie Eilish",
+                                  "fill": "$text-primary",
+                                  "content": "Billie Eilish",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "AWdMf",
+                                  "name": "Artist Followers — Billie Eilish",
+                                  "fill": "$muted",
+                                  "content": "94.1M followers",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "dyteZ",
+                              "name": "Artist — Drake",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "mGNrh",
+                                  "name": "Artist Photo — Drake",
+                                  "metadata": {
+                                    "type": "unsplash",
+                                    "username": "rubenev520",
+                                    "link": "https://unsplash.com/@rubenev520",
+                                    "author": "Ruben Valenzuela"
+                                  },
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1671695157166-c4bbd8e6e94e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQ1NTM0MjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "cover"
+                                  },
+                                  "width": 110,
+                                  "height": 110
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "TC72I",
+                                  "name": "Artist Name — Drake",
+                                  "fill": "$text-primary",
+                                  "content": "Drake",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "idBXS",
+                                  "name": "Artist Followers — Drake",
+                                  "fill": "$muted",
+                                  "content": "88.4M followers",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "n5oQd",
+                              "name": "Artist — Dua Lipa",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "LCXub",
+                                  "name": "Artist Photo — Dua Lipa",
+                                  "metadata": {
+                                    "type": "unsplash",
+                                    "username": "linneasbg",
+                                    "link": "https://unsplash.com/@linneasbg",
+                                    "author": "Linneas Boland - Godbey"
+                                  },
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1693930948232-94b6ee4b33ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQ1NTM0MjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "cover"
+                                  },
+                                  "width": 110,
+                                  "height": 110
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "W5WNL",
+                                  "name": "Artist Name — Dua Lipa",
+                                  "fill": "$text-primary",
+                                  "content": "Dua Lipa",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "uqPTs",
+                                  "name": "Artist Followers — Dua Lipa",
+                                  "fill": "$muted",
+                                  "content": "44.9M followers",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "WHGSn",
+                              "name": "Artist — SZA",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "G19x5",
+                                  "name": "Artist Photo — SZA",
+                                  "metadata": {
+                                    "type": "unsplash",
+                                    "username": "tonyluginsland",
+                                    "link": "https://unsplash.com/@tonyluginsland",
+                                    "author": "Tony Luginsland"
+                                  },
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1594761609337-afec3214be1e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQ1NTM0MjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "cover"
+                                  },
+                                  "width": 110,
+                                  "height": 110
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "kyk2b",
+                                  "name": "Artist Name — SZA",
+                                  "fill": "$text-primary",
+                                  "content": "SZA",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "QrAmU",
+                                  "name": "Artist Followers — SZA",
+                                  "fill": "$muted",
+                                  "content": "31.2M followers",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "oH6kX",
+                      "name": "Trending Now",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 14,
+                      "children": [
+                        {
+                          "id": "LiWPL",
+                          "type": "ref",
+                          "ref": "qrRLm",
+                          "name": "Section Header — Trending",
+                          "width": "fill_container",
+                          "descendants": {
+                            "bXEeE": {
+                              "content": "Trending Now"
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "m7VSS",
+                          "name": "Trending List",
+                          "clip": true,
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": 12,
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "XTe60",
+                              "name": "Trending Row 01",
+                              "width": "fill_container",
+                              "height": 64,
+                              "stroke": "$border",
+                              "strokeWidth": {
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "gap": 14,
+                              "padding": [
+                                0,
+                                16
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "s7U1S",
+                                  "name": "Rank 01",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 24,
+                                  "content": "01",
+                                  "textAlign": "center",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "HPCe4",
+                                  "name": "Row Cover 01",
+                                  "clip": true,
+                                  "width": 44,
+                                  "height": 44,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-6.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 8
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "Szuiy",
+                                  "name": "Song Cell 01",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "syBGz",
+                                      "name": "Song Title 01",
+                                      "fill": "$text-primary",
+                                      "content": "Blinding Lights",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13.5,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "RDxfx",
+                                      "name": "Song Artist 01",
+                                      "fill": "$muted",
+                                      "content": "The Weeknd",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "LTDzn",
+                                  "name": "Album Cell 01",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 180,
+                                  "content": "After Hours",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "vKiyW",
+                                  "name": "Duration 01",
+                                  "fill": "$text-secondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": 44,
+                                  "content": "3:20",
+                                  "textAlign": "right",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "n4Yh0",
+                                  "name": "Favorite 01",
+                                  "width": 15,
+                                  "height": 15,
+                                  "icon": "heart",
+                                  "library": "lucide",
+                                  "fill": "$accent"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "lBF2b",
+                                  "name": "Row Play 01",
+                                  "width": 30,
+                                  "height": 30,
+                                  "fill": "#FFFFFF0A",
+                                  "cornerRadius": 15,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "kEH7d",
+                                      "name": "Row Play Icon 01",
+                                      "width": 13,
+                                      "height": 13,
+                                      "icon": "play",
+                                      "library": "lucide",
+                                      "fill": "$text-primary"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "f8Un3",
+                              "name": "Trending Row 02",
+                              "width": "fill_container",
+                              "height": 64,
+                              "stroke": "$border",
+                              "strokeWidth": {
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "gap": 14,
+                              "padding": [
+                                0,
+                                16
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "NYIDt",
+                                  "name": "Rank 02",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 24,
+                                  "content": "02",
+                                  "textAlign": "center",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "ClW1u",
+                                  "name": "Row Cover 02",
+                                  "clip": true,
+                                  "width": 44,
+                                  "height": 44,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-4.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 8
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "xYrmN",
+                                  "name": "Song Cell 02",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "mrqyg",
+                                      "name": "Song Title 02",
+                                      "fill": "$text-primary",
+                                      "content": "As It Was",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13.5,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "y45OV",
+                                      "name": "Song Artist 02",
+                                      "fill": "$muted",
+                                      "content": "Harry Styles",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "xjCxI",
+                                  "name": "Album Cell 02",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 180,
+                                  "content": "Harry's House",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "U2lZSL",
+                                  "name": "Duration 02",
+                                  "fill": "$text-secondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": 44,
+                                  "content": "2:47",
+                                  "textAlign": "right",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "ECe2w",
+                                  "name": "Favorite 02",
+                                  "width": 15,
+                                  "height": 15,
+                                  "icon": "heart",
+                                  "library": "lucide",
+                                  "fill": "$muted"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "dNOgd",
+                                  "name": "Row Play 02",
+                                  "width": 30,
+                                  "height": 30,
+                                  "fill": "#FFFFFF0A",
+                                  "cornerRadius": 15,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "RkEJH",
+                                      "name": "Row Play Icon 02",
+                                      "width": 13,
+                                      "height": 13,
+                                      "icon": "play",
+                                      "library": "lucide",
+                                      "fill": "$text-primary"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "I73qB3",
+                              "name": "Trending Row 03",
+                              "width": "fill_container",
+                              "height": 64,
+                              "stroke": "$border",
+                              "strokeWidth": {
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "gap": 14,
+                              "padding": [
+                                0,
+                                16
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "k1N6qY",
+                                  "name": "Rank 03",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 24,
+                                  "content": "03",
+                                  "textAlign": "center",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "y71fzM",
+                                  "name": "Row Cover 03",
+                                  "clip": true,
+                                  "width": 44,
+                                  "height": 44,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-3.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 8
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "DOcTw",
+                                  "name": "Song Cell 03",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "ncgnu",
+                                      "name": "Song Title 03",
+                                      "fill": "$text-primary",
+                                      "content": "Anti-Hero",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13.5,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "hyLRe",
+                                      "name": "Song Artist 03",
+                                      "fill": "$muted",
+                                      "content": "Taylor Swift",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "no8hH",
+                                  "name": "Album Cell 03",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 180,
+                                  "content": "Midnights",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "jhC1n",
+                                  "name": "Duration 03",
+                                  "fill": "$text-secondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": 44,
+                                  "content": "3:21",
+                                  "textAlign": "right",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "QJOGi",
+                                  "name": "Favorite 03",
+                                  "width": 15,
+                                  "height": 15,
+                                  "icon": "heart",
+                                  "library": "lucide",
+                                  "fill": "$muted"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "Y7TPfm",
+                                  "name": "Row Play 03",
+                                  "width": 30,
+                                  "height": 30,
+                                  "fill": "#FFFFFF0A",
+                                  "cornerRadius": 15,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "KtaYy",
+                                      "name": "Row Play Icon 03",
+                                      "width": 13,
+                                      "height": 13,
+                                      "icon": "play",
+                                      "library": "lucide",
+                                      "fill": "$text-primary"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "IZpUf",
+                              "name": "Trending Row 04",
+                              "width": "fill_container",
+                              "height": 64,
+                              "stroke": "$border",
+                              "strokeWidth": {
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "gap": 14,
+                              "padding": [
+                                0,
+                                16
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "UuGQR",
+                                  "name": "Rank 04",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 24,
+                                  "content": "04",
+                                  "textAlign": "center",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "Rtmqr",
+                                  "name": "Row Cover 04",
+                                  "clip": true,
+                                  "width": 44,
+                                  "height": 44,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-1.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 8
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "gI60T",
+                                  "name": "Song Cell 04",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "uMY5X",
+                                      "name": "Song Title 04",
+                                      "fill": "$text-primary",
+                                      "content": "Flowers",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13.5,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "q96Oda",
+                                      "name": "Song Artist 04",
+                                      "fill": "$muted",
+                                      "content": "Miley Cyrus",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ydmUi",
+                                  "name": "Album Cell 04",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 180,
+                                  "content": "Endless Summer Vacation",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "y2i9mU",
+                                  "name": "Duration 04",
+                                  "fill": "$text-secondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": 44,
+                                  "content": "3:20",
+                                  "textAlign": "right",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "CTcEt",
+                                  "name": "Favorite 04",
+                                  "width": 15,
+                                  "height": 15,
+                                  "icon": "heart",
+                                  "library": "lucide",
+                                  "fill": "$muted"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "FK6Wg",
+                                  "name": "Row Play 04",
+                                  "width": 30,
+                                  "height": 30,
+                                  "fill": "#FFFFFF0A",
+                                  "cornerRadius": 15,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "J5FF5",
+                                      "name": "Row Play Icon 04",
+                                      "width": 13,
+                                      "height": 13,
+                                      "icon": "play",
+                                      "library": "lucide",
+                                      "fill": "$text-primary"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "LQymP",
+                              "name": "Trending Row 05",
+                              "width": "fill_container",
+                              "height": 64,
+                              "stroke": "$border",
+                              "strokeWidth": {
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "gap": 14,
+                              "padding": [
+                                0,
+                                16
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "H2tmDO",
+                                  "name": "Rank 05",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 24,
+                                  "content": "05",
+                                  "textAlign": "center",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "KmKCk",
+                                  "name": "Row Cover 05",
+                                  "clip": true,
+                                  "width": 44,
+                                  "height": 44,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-5.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 8
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "pDBRU",
+                                  "name": "Song Cell 05",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "tVgQe",
+                                      "name": "Song Title 05",
+                                      "fill": "$text-primary",
+                                      "content": "Future Nostalgia",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13.5,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "nH6Pe",
+                                      "name": "Song Artist 05",
+                                      "fill": "$muted",
+                                      "content": "Dua Lipa",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "bxhtZ",
+                                  "name": "Album Cell 05",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 180,
+                                  "content": "Future Nostalgia",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "AJm3a",
+                                  "name": "Duration 05",
+                                  "fill": "$text-secondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": 44,
+                                  "content": "3:04",
+                                  "textAlign": "right",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "YgeX0",
+                                  "name": "Favorite 05",
+                                  "width": 15,
+                                  "height": 15,
+                                  "icon": "heart",
+                                  "library": "lucide",
+                                  "fill": "$muted"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "u4YKL",
+                                  "name": "Row Play 05",
+                                  "width": 30,
+                                  "height": 30,
+                                  "fill": "#FFFFFF0A",
+                                  "cornerRadius": 15,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "K4kE9",
+                                      "name": "Row Play Icon 05",
+                                      "width": 13,
+                                      "height": 13,
+                                      "icon": "play",
+                                      "library": "lucide",
+                                      "fill": "$text-primary"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "D5yBx2",
+                              "name": "Trending Row 06",
+                              "width": "fill_container",
+                              "height": 64,
+                              "gap": 14,
+                              "padding": [
+                                0,
+                                16
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "y2mAfO",
+                                  "name": "Rank 06",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 24,
+                                  "content": "06",
+                                  "textAlign": "center",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "qjjED",
+                                  "name": "Row Cover 06",
+                                  "clip": true,
+                                  "width": 44,
+                                  "height": 44,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "generated-2.png",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 8
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "N2lNQ",
+                                  "name": "Song Cell 06",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "Z8tUON",
+                                      "name": "Song Title 06",
+                                      "fill": "$text-primary",
+                                      "content": "Kill Bill",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13.5,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "KSDoy",
+                                      "name": "Song Artist 06",
+                                      "fill": "$muted",
+                                      "content": "SZA",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "U74ER",
+                                  "name": "Album Cell 06",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": 180,
+                                  "content": "SOS",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "BtAvy",
+                                  "name": "Duration 06",
+                                  "fill": "$text-secondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": 44,
+                                  "content": "2:34",
+                                  "textAlign": "right",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "BKKE9",
+                                  "name": "Favorite 06",
+                                  "width": 15,
+                                  "height": 15,
+                                  "icon": "heart",
+                                  "library": "lucide",
+                                  "fill": "$muted"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "OvFcb",
+                                  "name": "Row Play 06",
+                                  "width": 30,
+                                  "height": 30,
+                                  "fill": "#FFFFFF0A",
+                                  "cornerRadius": 15,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "nSEfr",
+                                      "name": "Row Play Icon 06",
+                                      "width": 13,
+                                      "height": 13,
+                                      "icon": "play",
+                                      "library": "lucide",
+                                      "fill": "$text-primary"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "lMMk0",
+          "name": "Music Player",
+          "width": "fill_container",
+          "height": 96,
+          "fill": "$surface",
+          "stroke": "$border",
+          "strokeWidth": {
+            "top": 1
+          },
+          "strokeAlignment": "inner",
+          "gap": 20,
+          "padding": [
+            0,
+            20
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "SWyNt",
+              "name": "Now Playing",
+              "width": 320,
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "F6qdJ",
+                  "name": "Player Cover",
+                  "clip": true,
+                  "width": 56,
+                  "height": 56,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "generated-6.png",
+                    "mode": "cover"
+                  },
+                  "cornerRadius": 10
+                },
+                {
+                  "type": "frame",
+                  "id": "O4EVHG",
+                  "name": "Player Song",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 3,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "mfwMy",
+                      "name": "Player Title",
+                      "fill": "$text-primary",
+                      "content": "Blinding Lights",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13.5,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "YRZCF",
+                      "name": "Player Artist",
+                      "fill": "$text-secondary",
+                      "content": "The Weeknd",
+                      "fontFamily": "$font-body",
+                      "fontSize": 11.5,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "icon",
+                  "id": "xNKqL",
+                  "name": "Player Heart",
+                  "width": 17,
+                  "height": 17,
+                  "icon": "heart",
+                  "library": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FevSx",
+              "name": "Player Center",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "K6h8YD",
+                  "name": "Transport Controls",
+                  "gap": 20,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "mkrIt",
+                      "name": "Shuffle Icon",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "shuffle",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "fRFkN",
+                      "name": "Previous Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "skip-back",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nfobv",
+                      "name": "Play Button",
+                      "width": 48,
+                      "height": 48,
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 135,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "$accent",
+                            "position": 0
+                          },
+                          {
+                            "color": "$accent-deep",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "cornerRadius": 24,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#D0342C59",
+                        "offset": {
+                          "x": 0,
+                          "y": 6
+                        },
+                        "blur": 16
+                      },
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "sFozF",
+                          "name": "Play Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "play",
+                          "library": "lucide",
+                          "fill": "$text-on-accent"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "Py9XQ",
+                      "name": "Next Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "skip-forward",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "F4dewV",
+                      "name": "Repeat Icon",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "repeat",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Rv8nU",
+                  "name": "Progress Row",
+                  "width": "fill_container",
+                  "gap": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QRbEG",
+                      "name": "Current Time",
+                      "fill": "$text-secondary",
+                      "content": "1:47",
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "y1Heqg",
+                      "name": "Progress Track",
+                      "width": "fill_container",
+                      "height": 4,
+                      "fill": "#FFFFFF14",
+                      "cornerRadius": 2,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 2,
+                          "id": "AsAPk",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Progress Fill",
+                          "fill": "$accent",
+                          "width": 632,
+                          "height": 4
+                        },
+                        {
+                          "type": "ellipse",
+                          "id": "lCU4l",
+                          "x": 626,
+                          "y": -4,
+                          "name": "Progress Knob",
+                          "fill": "$text-on-accent",
+                          "width": 12,
+                          "height": 12
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "jrdEy",
+                      "name": "Total Time",
+                      "fill": "$text-secondary",
+                      "content": "3:20",
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "z4Frd2",
+              "name": "Player Extras",
+              "width": 260,
+              "gap": 14,
+              "justifyContent": "end",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "fgL1p",
+                  "name": "Queue Icon",
+                  "width": 17,
+                  "height": 17,
+                  "icon": "list-music",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "icon",
+                  "id": "yYzbP",
+                  "name": "Volume Icon",
+                  "width": 17,
+                  "height": 17,
+                  "icon": "volume-2",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "frame",
+                  "id": "y15Q7D",
+                  "name": "Volume Track",
+                  "width": 110,
+                  "height": 4,
+                  "fill": "#FFFFFF14",
+                  "cornerRadius": 2,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "Lkrh6",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Volume Fill",
+                      "fill": "$text-on-accent",
+                      "width": 77,
+                      "height": 4
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "ghdMD",
+                      "x": 72,
+                      "y": -4,
+                      "name": "Volume Knob",
+                      "fill": "$text-on-accent",
+                      "width": 12,
+                      "height": 12
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
     "Mode": [
-      "Light",
       "Dark"
     ]
   },
@@ -4805,9 +9055,6 @@
     "--background": {
       "type": "color",
       "value": [
-        {
-          "value": "#ffffff"
-        },
         {
           "value": "#0b1120",
           "theme": {
@@ -4820,9 +9067,6 @@
       "type": "color",
       "value": [
         {
-          "value": "#f2f3f0"
-        },
-        {
           "value": "#141b2d",
           "theme": {
             "Mode": "Dark"
@@ -4833,9 +9077,6 @@
     "--surface-elevated": {
       "type": "color",
       "value": [
-        {
-          "value": "#e8eaed"
-        },
         {
           "value": "#1c263c",
           "theme": {
@@ -4848,9 +9089,6 @@
       "type": "color",
       "value": [
         {
-          "value": "#111111"
-        },
-        {
           "value": "#e8eaf0",
           "theme": {
             "Mode": "Dark"
@@ -4861,9 +9099,6 @@
     "--text-secondary": {
       "type": "color",
       "value": [
-        {
-          "value": "#666666"
-        },
         {
           "value": "#94a3b8",
           "theme": {
@@ -4876,9 +9111,6 @@
       "type": "color",
       "value": [
         {
-          "value": "#888888"
-        },
-        {
           "value": "#475569",
           "theme": {
             "Mode": "Dark"
@@ -4889,9 +9121,6 @@
     "--border": {
       "type": "color",
       "value": [
-        {
-          "value": "#cbccc9"
-        },
         {
           "value": "#263248",
           "theme": {
@@ -4904,9 +9133,6 @@
       "type": "color",
       "value": [
         {
-          "value": "#d97706"
-        },
-        {
           "value": "#fbbf24",
           "theme": {
             "Mode": "Dark"
@@ -4917,9 +9143,6 @@
     "--accent-star-soft": {
       "type": "color",
       "value": [
-        {
-          "value": "#b45309"
-        },
         {
           "value": "#f59e0b",
           "theme": {
@@ -5011,6 +9234,18 @@
     "pad-card": {
       "type": "number",
       "value": 12
+    },
+    "accent-soft": {
+      "type": "color",
+      "value": "#D0342C1A"
+    },
+    "accent-deep": {
+      "type": "color",
+      "value": "#932119"
+    },
+    "line": {
+      "type": "color",
+      "value": "#FFFFFF0D"
     }
   },
   "fileToken": "8ae204f3-518d-444f-babc-a10f4eb225a0"
