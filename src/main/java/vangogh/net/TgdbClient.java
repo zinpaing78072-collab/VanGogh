@@ -20,8 +20,7 @@ import com.google.gson.JsonParser;
 
 public class TgdbClient {
 	private static final String BASE = "https://api.thegamesdb.net/v1/";
-    private static final String IMAGE_BASE = "https://cdn.thegamesdb.net/images/original/boxart/front/";
-    static final String POSTER_SIZE = "w342";
+    private static final String IMAGE_BASE = "https://cdn.thegamesdb.net/images/original/";
     static final String IMAGE_PROXY = "https://wsrv.nl/?url=";
     private static final Duration POSTER_TIMEOUT = Duration.ofSeconds(5);
     private static final Path PROXY_MARKER = Path.of(System.getProperty("user.home"), ".van-gogh", "poster-proxy.conf");
@@ -64,15 +63,15 @@ public class TgdbClient {
         if (game_id == null || game_id.isEmpty()) {
             return null;
         }
-        return IMAGE_BASE + game_id + "-1.jpg";
+        return IMAGE_BASE + game_id;
     }
     
     static List<String> posterSources(String posterUrl, boolean proxyFirst) {
         List<String> sources = new ArrayList<>();
-        if (posterUrl == null || !posterUrl.startsWith(IMAGE_BASE + "/")) {
+        if (posterUrl == null || !posterUrl.startsWith(IMAGE_BASE + "boxart/front/")) {
             return sources;
         }
-        String directUrl = posterUrl.replace("w500/", POSTER_SIZE + "/");
+        String directUrl = posterUrl;
         String encoded = URLEncoder.encode(directUrl, StandardCharsets.UTF_8);
         String proxyUrl = IMAGE_PROXY + encoded;
         if (proxyFirst) {

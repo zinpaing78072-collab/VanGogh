@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import build.krema.core.KremaCommand;
 import build.krema.core.event.EventEmitter;
 import vangogh.game.Game;
 import vangogh.game.TgdbGameService;
@@ -45,8 +46,8 @@ public class GameController {
     public void setEventEmitter(EventEmitter events) {
         this.events = events;
     }
-    
-    public List<Game> requestMovies(String kind, String query) {
+    @KremaCommand
+    public List<Game> requestGames(String kind, String query) {
         int gen = generation.incrementAndGet();
         resetPosterTracking();
 
@@ -61,9 +62,9 @@ public class GameController {
             }
         });
 
-        List<Game> Games;
+        List<Game> games;
         try {
-        	Games = future.join();
+            games = future.join();
         } catch (CompletionException e) {
             // Surface the fetch failure's message through Krema's error reply
             // instead of a bare "java.util.concurrent.CompletionException".
@@ -73,20 +74,20 @@ public class GameController {
 
         // Total is set on the UI thread BEFORE this command returns, so a
         // pollPosters issued for this request can never observe a stale count.
-        List<Game> posterable = Games.stream()
+        List<Game> posterable = games.stream()
                 .filter(m -> m.posterUrl() != null && !m.posterUrl().isEmpty())
                 .toList();
         posterTotal.set(posterable.size());
 
         io.submit(() -> prefetchPosters(posterable, gen));
-        return Games;
+        return games;
     }
-
-    public int pollPosters() {
+    @KremaCommand
+    public int pollGamePosters() {
         PendingPoster pending;
         while ((pending = posterQueue.poll()) != null) {
             if (events != null) {
-                events.emit("poster", Map.of("id", pending.id(), "dataUri", pending.dataUri()));
+                events.emit("gamePoster", Map.of("id", pending.id(), "dataUri", pending.dataUri()));
             }
             posterDelivered.incrementAndGet();
         }
@@ -105,9 +106,9 @@ public class GameController {
         posterSkipped.set(0);
     }
     
-    private void prefetchPosters(List<Game> Games, int gen) {
+    private void prefetchPosters(List<Game> games, int gen) {
         boolean first = true;
-        for (Game game : Games) {
+        for (Game game : games) {
             String posterUrl = game.posterUrl();
             if (posterUrl == null || posterUrl.isEmpty()) {
                 continue;

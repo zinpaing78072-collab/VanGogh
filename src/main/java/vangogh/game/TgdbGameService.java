@@ -28,7 +28,7 @@ public class TgdbGameService
 	public List<Game> fetchTrending() throws Exception {
         ApiResponse res = client.trending();
         if (!res.isSuccess()) {
-            throw new RuntimeException("TMDB trending failed: HTTP " + res.statusCode + " " + truncate(res.body, 300));
+            throw new RuntimeException("TheGamesDB trending failed: HTTP " + res.statusCode + " " + truncate(res.body, 300));
         }
         return parseGames(res.body);
     }
@@ -39,7 +39,7 @@ public class TgdbGameService
         }
         ApiResponse res = client.searchGame(query.trim());
         if (!res.isSuccess()) {
-            throw new RuntimeException("TMDB search failed: HTTP " + res.statusCode + " " + truncate(res.body, 300));
+            throw new RuntimeException("TheGamesDB search failed: HTTP " + res.statusCode + " " + truncate(res.body, 300));
         }
         return parseGames(res.body);
     }
@@ -53,6 +53,13 @@ public class TgdbGameService
 
 	        JsonObject data = root.getAsJsonObject("data");
 	        JsonArray results = data.getAsJsonArray("games");
+	        JsonObject boxartData = null;
+	        if (root.has("include") && root.getAsJsonObject("include").has("boxart")) {
+	            JsonObject boxart = root.getAsJsonObject("include").getAsJsonObject("boxart");
+	            if (boxart.has("data") && boxart.get("data").isJsonObject()) {
+	                boxartData = boxart.getAsJsonObject("data");
+	            }
+	        }
 
 	        for (int i = 0; i < results.size(); i++) {
 
@@ -82,8 +89,7 @@ public class TgdbGameService
 
 	            String overview = optString(g, "overview");
 
-	            // Add your poster URL method here when available
-	            String posterUrl = "";
+	            String posterUrl = findFrontBoxart(boxartData, id);
 
 	            games.add(new Game(
 	                    id,
@@ -101,6 +107,25 @@ public class TgdbGameService
 	    }
 
 	    return games;
+	}
+
+	private static String findFrontBoxart(JsonObject boxartData, int gameId) {
+	    if (boxartData == null || !boxartData.has(String.valueOf(gameId))
+	            || !boxartData.get(String.valueOf(gameId)).isJsonArray()) {
+	        return "";
+	    }
+	    JsonArray images = boxartData.getAsJsonArray(String.valueOf(gameId));
+	    for (int i = 0; i < images.size(); i++) {
+	        JsonObject image = images.get(i).getAsJsonObject();
+	        if ("boxart".equals(optString(image, "type"))
+	                && "front".equals(optString(image, "side"))) {
+	            String filename = optString(image, "filename");
+	            if (!filename.isEmpty()) {
+	                return TgdbClient.posterPath(filename);
+	            }
+	        }
+	    }
+	    return "";
 	}
 	
 	public String posterDataUri(String posterUrl) {
