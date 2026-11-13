@@ -14,8 +14,9 @@ Defines how VanGogh adds new content domains (Music, Book, Game, TV, …) beyond
 ## Current state
 
 - **Movie domain is fully wired**: `MovieController.requestMovies(kind, query)`, `TmdbMovieService`, `TmdbClient`, TMDB API, poster proxy/cache, frontend card grid.
-- **Filter dropdown** in `src/main/resources/movie-page/index.html` offers Movie / Music / Book / Game, but only Movie calls a real API; the others render a stub "not yet connected" message.
-- **IPC contract**: `await window.krema.invoke("requestMovies", { kind, query })` → `CompletableFuture<List<Movie>>`; posters stream as `"poster"` events via `EventEmitter`.
+- **Game domain is wired**: `GameController.requestGames(kind, query)`, `TgdbGameService`, `TgdbClient`, TheGamesDB, and front-boxart streaming.
+- **Filter dropdown** in `src/main/resources/movie-page/index.html` offers Movie / Music / Book / Game; Movie and Game call APIs while Music and Book render a stub "not yet connected" message.
+- **IPC contract**: `requestMovies` and `requestGames` return domain records synchronously; artwork streams through separate poster-drain commands and events.
 - **Build rules**: `pom.xml` compiles with `--release 25` and `<parameters>true</parameters>` (required so `@KremaCommand` arguments bind by parameter name). Run with `JAVA_HOME=jdk-25 mvn compile exec:exec` (never `exec:java` on macOS).
 
 ## Guiding principles
@@ -23,7 +24,7 @@ Defines how VanGogh adds new content domains (Music, Book, Game, TV, …) beyond
 1. **One `@KremaCommand` per domain action** — search, trending, detail. Keep command names explicit (`searchMovies`, `searchMusic`, …) or use a single dispatcher; decide once (see Open decisions).
 2. **Service layer per domain** — `TmdbMovieService` → `MusicService`, `BookService`, `GameService`; each constructed with an injected client so tests stub the network.
 3. **Client per upstream API** — `TmdbClient` talks TMDB; new clients wrap Open Library (books), MusicBrainz/iTunes (music), RAWG/IGDB (games), etc. No real network calls in unit tests.
-4. **Reuse the record + poster pattern** — `Movie` record → domain records (`MusicTrack`, `Book`, `Game`); cover art/posters stream as `"poster"` events via `events.emit("poster", Map.of("id", …, "dataUri", …))`.
+4. **Reuse the record + poster pattern** — `Movie` record → domain records (`MusicTrack`, `Book`, `Game`); movie posters use `"poster"` events, while game box art uses `"gamePoster"` to keep the separate controllers' commands and events unambiguous.
 5. **Generation counter for stale-render protection** — same `AtomicInteger` pattern as `MovieController` so a slow fetch never overwrites a newer render.
 6. **`<parameters>true</parameters>`** — mandatory in `maven-compiler-plugin` for IPC arg binding by name.
 7. **Stub-first testing** — inject stub clients via package-private constructors; assert dispatch, mapping, and event emission without touching the network.
@@ -117,7 +118,7 @@ Krema.app()
 ## Frontend integration
 
 - `src/main/resources/movie-page/index.html` — `<select id="contentFilter">` already lists movie/music/book/game.
-- `src/main/resources/movie-page/app.js` — `contentFilter.change` handler currently only wires `movie`. Extend it to call the domain-specific command and render into the same `#movieGrid` card grid.
+- `src/main/resources/movie-page/app.js` — `contentFilter.change` routes Movie and Game into their domain-specific commands and renders both in the shared `#movieGrid` card grid.
 - Cards use `data-movie-id` for poster lookup via `window.setPoster(id, dataUri)`. For multi-domain, consider `data-content-id` + a `data-domain` attribute so posters from one domain don't clobber cards from another.
 - Reuse `escapeHtml`, `renderMovies`, `showError`, poster placeholder, and fullscreen toggle patterns.
 

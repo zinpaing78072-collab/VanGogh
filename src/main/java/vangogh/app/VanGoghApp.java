@@ -1,5 +1,6 @@
 package vangogh.app;
 
+import vangogh.controller.GameController;
 import vangogh.controller.MovieController;
 import build.krema.core.Krema;
 
@@ -35,14 +36,18 @@ public class VanGoghApp {
         // setEventEmitter, which Krema calls inside run() — before the webview
         // navigates to the page, and therefore before any JS can request movies.
         MovieController controller = new MovieController();
+        GameController gameController = new GameController();
         Krema.app()
                 .title("Van Gogh")
                 .identifier("van-gogh.krema")
                 .size(1200, 800)
                 .debug() // right-click → Inspect in the system webview to watch events
                 .prodAssets(ASSET_PREFIX) // serves src/main/resources/movie-page/index.html
-                .events(controller::setEventEmitter)
-                .commands(controller)
+                .events(events -> {
+                    controller.setEventEmitter(events);
+                    gameController.setEventEmitter(events);
+                })
+                .commands(controller, gameController)
                 // Installs the macOS menu bar (App/Edit/View/Window with real
                 // actions) before the event loop starts. NSApp ships without any
                 // menu in this stack, and native fullscreen's top-edge reveal

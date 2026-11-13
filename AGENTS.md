@@ -4,20 +4,20 @@ Project rules for VanGogh — entertainment content recommendation desktop app (
 
 ## Project description
 
-VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that recommends entertainment content (movies, music, books, games) from a single user query. The app displays results in a dark-themed card grid with poster artwork, and streams posters into the UI as native `"poster"` events from the Java backend via Krema's IPC system.
+VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that recommends entertainment content (movies, music, books, games) from a single user query. The app displays results in a dark-themed card grid with poster artwork, and streams artwork through Krema IPC.
 
 ### Core behavior
 - **Input**: A keyword or content name (e.g. `"Inception"`, `"Taylor Swift"`, `"Minecraft"`)
-- **Output**: Related content names, titles, and references across Movies, Music, Books, and Games (currently only Movies are fully wired; other domains show a stub)
-- **Mechanism**: Frontend calls `await window.krema.invoke("requestMovies", {kind, query})`; Java `MovieController.requestMovies()` dispatches to `TmdbMovieService` → `TmdbClient` (TMDB API + wsrv.nl poster proxy); posters stream as `"poster"` events into the webview
-- **Filter**: Dropdown offers Movie / Music / Book / Game — only Movie connects to a real API (TMDB); others display a "not yet connected" message
+- **Output**: Related content across Movies and Games (Music and Books are not yet wired)
+- **Mechanism**: The frontend invokes `requestMovies` or `requestGames`; movie and game controllers query TMDB or TheGamesDB and drain artwork through Krema events.
+- **Filter**: Dropdown offers Movie / Music / Book / Game — Movie and Game connect to their APIs; Music and Book show a "not yet connected" message.
 
 ### Tech stack
 - **Language**: Java 25 (LTS), compiled with `--release 25`
 - **UI framework**: Krema 0.3.2 (system webview)
 - **Frontend**: HTML/CSS/JS served from classpath (`src/main/resources/movie-page/`)
 - **HTTP client**: Java 17+ `java.net.http.HttpClient` (Gson for JSON parsing)
-- **Data source**: TMDB (The Movie Database) for movies; other domains not yet wired
+- **Data sources**: TMDB (The Movie Database) for movies and TheGamesDB for games
 - **Poster proxy**: `wsrv.nl` with persistent user preference stored in `~/.van-gogh/poster-proxy.conf`
 - **Tests**: JUnit 5; all network calls stubbed (no real TMDB API keys needed)
 - **IPC**: `@KremaCommand` methods on controllers; `<parameters>true</parameters>` in maven-compiler-plugin for arg binding by name
@@ -28,8 +28,9 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
   - `MovieController` — `@KremaCommand requestMovies(kind, query)`, generation-counted poster streaming via `events.emit("poster", ...)`
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
-  - Frontend: card grid, search bar, content filter dropdown, fullscreen toggle, poster rendering
-- **Features pending**: see "Presentation build — decided feature set" below. Loading/retry states are backlog (see below).
+  - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming
+  - Frontend: shared movie/game card grid, search bar, content filter dropdown, poster rendering
+- **Features pending**: Music, Books, and the "Presentation build" features below. Loading/retry states are backlog.
 
 ### Presentation build — decided feature set (2026-11-10 brainstorm)
 
@@ -38,7 +39,7 @@ settled — agents follow them. Implementation details (API providers, LLM
 models, prompt design) are left to each builder slice.
 
 - **Recommendation engine core: LLM API.** The LLM *composes* the picks for a
-  query; the wired content sources (TMDB now; Music/Book/Game to be wired)
+  query; the wired content sources (TMDB and TheGamesDB; Music/Book to be wired)
   *resolve* each pick into a real card (artwork, year, etc.). Do not build a
   deterministic API search as the result source — it would contradict the
   re-run behavior below.
