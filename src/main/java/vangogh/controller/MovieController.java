@@ -23,9 +23,10 @@ public class MovieController {
 
     private volatile EventEmitter events;
     private final TmdbMovieService service;
-    private final ExecutorService io;
+    private final ExecutorService executor;
 
     private final AtomicInteger generation = new AtomicInteger();
+    private volatile Future<?> currentFetch;
 
     public MovieController() {
         this(new TmdbMovieService(resolveApiKey()));
@@ -33,13 +34,13 @@ public class MovieController {
 
     public MovieController(TmdbMovieService service) {
         this.service = service;
-        this.io = Executors.newFixedThreadPool(IO_THREADS);
+        this.executor = Executors.newFixedThreadPool(IO_THREADS);
     }
 
     /** Package-private constructor used by tests. */
-    MovieController(TmdbMovieService service, ExecutorService io) {
+    MovieController(TmdbMovieService service, ExecutorService executor) {
         this.service = service;
-        this.io = io;
+        this.executor = executor;
     }
 
     public void setEventEmitter(EventEmitter events) {
@@ -60,25 +61,30 @@ public class MovieController {
             throw new RuntimeException(e.getMessage(), e);
         }
 
-        // Fan out poster prefetch as Vavr Futures; emit directly on completion.
-        for (Movie movie : movies) {
-            String posterUrl = movie.posterUrl();
-            if (posterUrl == null || posterUrl.isEmpty()) {
-                continue;
-            }
-            Future.run(io, () -> {
-                if (generation.get() != gen) {
-                    return;
-                }
-                String uri = service.posterDataUri(posterUrl);
-                if (generation.get() != gen || uri == null) {
-                    return;
-                }
-                if (events != null) {
-                    events.emit("poster", Map.of("id", movie.id(), "dataUri", uri));
-                }
-            });
+        // Cancel any in-flight prefetch from a previous request.
+        if (currentFetch != null) {
+            currentFetch.cancel();
         }
+
+        // Fan-out composition: start all poster fetches in parallel via
+        // Future.traverse; each emits its "poster" event as it completes.
+        io.vavr.collection.List<Movie> posterable = io.vavr.collection.List.ofAll(movies)
+                .filter(m -> m.posterUrl() != null && !m.posterUrl().isEmpty());
+
+        currentFetch = Future.traverse(executor, posterable, movie ->
+                Future.run(executor, () -> {
+                    if (generation.get() != gen) {
+                        return;
+                    }
+                    String uri = service.posterDataUri(movie.posterUrl());
+                    if (generation.get() != gen || uri == null) {
+                        return;
+                    }
+                    if (events != null) {
+                        events.emit("poster", Map.of("id", movie.id(), "dataUri", uri));
+                    }
+                })
+        );
         return movies;
     }
 
