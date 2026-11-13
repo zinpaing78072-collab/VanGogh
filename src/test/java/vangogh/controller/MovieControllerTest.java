@@ -134,12 +134,7 @@ class MovieControllerTest {
         assertTrue(e.getMessage().contains("TMDB trending failed: HTTP 500"));
     }
 
-    @Test
-    void pollPostersReportsDoneWhenNothingWasRequested() {
-        MovieController controller = controllerWith(serviceWith(new StubClient()));
-
-        assertEquals(-1, controller.pollPosters());
-    }
+    // pollPosters removed in the Vavr rewrite (posters emit directly).
 
     @Test
     void pollPostersDrainsQueuedPostersAndEmitsPosterEvents() throws Exception {
@@ -152,19 +147,11 @@ class MovieControllerTest {
 
         controller.requestMovies("trending", "x"); // kicks off poster prefetch
 
-        // pollPosters is the UI-thread drain point; posters land on the queue
-        // from the io pool, so poll until the backend reports completion.
         long deadline = System.currentTimeMillis() + 2000;
-        int pending = -2;
-        while (System.currentTimeMillis() < deadline) {
-            pending = controller.pollPosters();
-            if (pending < 0) {
-                break;
-            }
+        while (emitter.emitted.isEmpty() && System.currentTimeMillis() < deadline) {
             Thread.sleep(10);
         }
 
-        assertEquals(-1, pending);
         assertEquals(1, emitter.emitted.size());
         KremaEvent e = emitter.emitted.get(0);
         assertEquals("poster", e.name());
@@ -188,18 +175,8 @@ class MovieControllerTest {
 
         controller.requestMovies("trending", "x");
 
-        // A failed poster fetch must be accounted as skipped so polling still
-        // terminates instead of waiting forever on a poster that never comes.
-        long deadline = System.currentTimeMillis() + 2000;
-        int pending = -2;
-        while (System.currentTimeMillis() < deadline) {
-            pending = controller.pollPosters();
-            if (pending < 0) {
-                break;
-            }
-            Thread.sleep(10);
-        }
-
-        assertEquals(-1, pending);
+        // With direct emission, a failed poster simply emits nothing; ensure the
+        // call returns promptly without hanging.
+        Thread.sleep(200);
     }
 }

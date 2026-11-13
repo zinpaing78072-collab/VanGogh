@@ -183,9 +183,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderContent(items, contentFilter.value);
             if (isGame) {
                 pollGamePostersUntilDone();
-            } else {
-                pollPostersUntilDone();
             }
+            // Movies now receive posters via direct "poster" events (Vavr Future).
         } catch (e) {
             const message = e && e.message ? e.message : String(e);
             showError("Failed to load content: " + escapeHtml(message));
