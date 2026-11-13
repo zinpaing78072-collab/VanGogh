@@ -99,29 +99,31 @@ public class TmdbClient {
     }
 
     public String loadPosterDataUri(String posterUrl) {
-        for (String source : posterSources(posterUrl, preferProxy)) {
-            try {
-                HttpRequest request = HttpRequest.newBuilder(URI.create(source))
-                        .timeout(POSTER_TIMEOUT)
-                        .GET()
-                        .build();
-                HttpResponse<byte[]> response = http.send(request, HttpResponse.BodyHandlers.ofByteArray());
-                if (response.statusCode() == 200) {
-                    String uri = toDataUri(response.body(),
-                            response.headers().firstValue("content-type").orElse(null));
-                    if (uri != null) {
-                        rememberPosterSource(source.startsWith(IMAGE_PROXY));
-                        return uri;
+        return io.vavr.control.Try.of(() -> {
+            for (String source : posterSources(posterUrl, preferProxy)) {
+                try {
+                    HttpRequest request = HttpRequest.newBuilder(URI.create(source))
+                            .timeout(POSTER_TIMEOUT)
+                            .GET()
+                            .build();
+                    HttpResponse<byte[]> response = http.send(request, HttpResponse.BodyHandlers.ofByteArray());
+                    if (response.statusCode() == 200) {
+                        String uri = toDataUri(response.body(),
+                                response.headers().firstValue("content-type").orElse(null));
+                        if (uri != null) {
+                            rememberPosterSource(source.startsWith(IMAGE_PROXY));
+                            return uri;
+                        }
+                    }
+                } catch (IOException | InterruptedException e) {
+                    if (e instanceof InterruptedException) {
+                        Thread.currentThread().interrupt();
+                        return null;
                     }
                 }
-            } catch (IOException | InterruptedException e) {
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                    return null;
-                }
             }
-        }
-        return null;
+            return null;
+        }).map(r -> r).getOrElse(null);
     }
 
     private void rememberPosterSource(boolean proxied) {

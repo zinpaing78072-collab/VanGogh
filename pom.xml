@@ -48,6 +48,10 @@
                     <!-- Krema IPC binds @KremaCommand arguments by parameter name;
                          without this they arrive null with no error. -->
                     <parameters>true</parameters>
+                    <!-- Fork the JDK's javac instead of the in-process compiler
+                         (which throws ConcurrentModificationException on this JDK). -->
+                    <fork>true</fork>
+                    <executable>${java.home}/bin/javac</executable>
                 </configuration>
             </plugin>
             <!-- Krema launcher. Run with JDK 25 (Maven may default to Temurin 21):
