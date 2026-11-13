@@ -146,6 +146,7 @@
                                 <argument>--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED</argument>
                                 <!-- Heap cap. -->
                                 <argument>-Xmx512m</argument>
+                                <argument>-Djava.library.path=/Users/macbookpro/Documents/school-project/van-gogh/jcef-bundle</argument>
                                 <argument>-classpath</argument>
                                 <classpath/>
                                 <argument>vangogh.app.jcef.JcefVanGoghApp</argument>
