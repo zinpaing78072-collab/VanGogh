@@ -171,9 +171,9 @@ Files:
   `--add-opens java.desktop/...=ALL-UNNAMED` flags (required by jcefmaven;
   harmless for Krema).
 
-To run: change the exec `main` argument from `vangogh.app.VanGoghApp` to
-`vangogh.app.jcef.JcefVanGoghApp` and launch with `mvn exec:exec`. First run
-downloads CEF natives (~100 MB).
+To run:
+- **Krema** (default): `mvn compile exec:exec` — Zed task "run van-gogh (Krema)" or the `java-main` ▶ indicator.
+- **JCEF**: `mvn compile exec:exec -Pjcef` — Zed task "run van-gogh (JCEF)" or "java run (JcefVanGoghApp via exec:exec -Pjcef)". First run downloads CEF natives (~100 MB).
 - Windows constraint (krema-core 0.3.2, same family as the `AppNativePreload`
   workaround): `engine.eval` is silently dropped when called off the UI thread,
   so async command replies and backend events never reach the page. Rule:

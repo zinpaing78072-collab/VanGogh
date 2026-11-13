@@ -124,5 +124,36 @@
                 </plugins>
             </build>
         </profile>
+        <!-- JCEF experiment shell. Run with: mvn exec:exec -Pjcef -->
+        <profile>
+            <id>jcef</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <configuration>
+                            <executable>${java.home}/bin/java</executable>
+                            <arguments>
+                                <!-- macOS: AppKit requires first thread. -->
+                                <argument>-XstartOnFirstThread</argument>
+                                <!-- Panama FFM: silence restricted-method warnings. -->
+                                <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                <!-- JCEF macOS requirements (jcefmaven README). -->
+                                <argument>--add-opens=java.desktop/sun.awt=ALL-UNNAMED</argument>
+                                <argument>--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED</argument>
+                                <argument>--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED</argument>
+                                <!-- Heap cap. -->
+                                <argument>-Xmx512m</argument>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>vangogh.app.jcef.JcefVanGoghApp</argument>
+                            </arguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>
