@@ -13,6 +13,7 @@ import org.cef.browser.CefBrowser;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
+import java.awt.Panel;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -133,14 +134,22 @@ public class JcefVanGoghApp {
                 "file://" + appDir.getAbsolutePath() + "/index.html", false, false);
         bridge.attachBrowser(browser);
 
-        // Step 5: Frame LAST — put the browser into its final layout and show
-        // the window once. No placeholder, no removeAll/re-pack afterwards:
-        // re-layouting the browser canvas after the native view attached is
-        // what misplaced the page on macOS.
+        // Step 5: Frame LAST — build the final layout and show the window
+        // once. The browser component must NOT be a direct child of the
+        // Frame: java-cef derives the browser's window-relative rect by
+        // walking the component's parent chain and stops only when a parent's
+        // own parent is a Window. As a direct Frame child the walk never
+        // stops — it translates by frame.getLocation() (screen coords), and
+        // AWT child coords add the title-bar inset — so the page rendered
+        // offset by the window's on-screen position (white strip top/left,
+        // clipped right/bottom). An intermediate container ends the walk at
+        // the right place, yielding a (0,0)-anchored window-local rect.
         System.out.println("[Van Gogh JCEF] Step 5: Building frame...");
         frame_ = new Frame("Van Gogh (JCEF)");
         frame_.setLayout(new BorderLayout());
-        frame_.add(browser.getUIComponent(), BorderLayout.CENTER);
+        Panel holder = new Panel(new BorderLayout());
+        holder.add(browser.getUIComponent(), BorderLayout.CENTER);
+        frame_.add(holder, BorderLayout.CENTER);
         frame_.setSize(1200, 800);
         frame_.setLocationRelativeTo(null);
         frame_.addWindowListener(new java.awt.event.WindowAdapter() {
