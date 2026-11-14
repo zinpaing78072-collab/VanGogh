@@ -14,6 +14,10 @@ import org.cef.browser.CefMessageRouter;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * Bridges the frontend's {@code window.krema} API to Van Gogh's controllers.
  *
@@ -39,6 +43,18 @@ public class JcefBridge {
     private final GameController gameController;
     private JcefEventEmitter emitter;
     private CefMessageRouter router;
+    /**
+     * Queries are answered asynchronously: controller calls (network) must not
+     * run on the thread that dispatches CEF queries — that thread pumps the
+     * macOS window's event loop, and a slow/hung HTTP call would freeze the
+     * whole window (red button included). Single-threaded so queries resolve
+     * in order.
+     */
+    private final ExecutorService queryExecutor = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "vangogh-query-worker");
+        t.setDaemon(true);
+        return t;
+    });
 
     public JcefBridge(MovieController movieController, GameController gameController) {
         this.movieController = movieController;
@@ -87,37 +103,48 @@ public class JcefBridge {
         if (router != null) {
             router.dispose();
         }
+        queryExecutor.shutdownNow();
+    }
+
+    /** A command's work, prepared on the dispatch thread, run on the worker. */
+    private record Command(Callable<Object> work) {
+        Object run() throws Exception {
+            return work.call();
+        }
     }
 
     private void handleQuery(String request, CefQueryCallback callback) {
+        // Parse and validate here (cheap), offload the actual work.
+        final Command command;
         try {
             JsonObject req = JsonParser.parseString(request).getAsJsonObject();
-            String command = req.get("command").getAsString();
+            String name = req.get("command").getAsString();
             JsonObject args = req.getAsJsonObject("args");
-
-            Object result;
-            switch (command) {
-                case "requestMovies":
-                    result = movieController.requestMovies(
-                            args.get("kind").getAsString(),
-                            args.has("query") ? args.get("query").getAsString() : null);
-                    break;
-                case "requestGames":
-                    result = gameController.requestGames(
-                            args.get("kind").getAsString(),
-                            args.has("query") ? args.get("query").getAsString() : null);
-                    break;
-                case "pollGamePosters":
-                    result = gameController.pollGamePosters();
-                    break;
-                default:
-                    callback.failure(400, "Unknown command: " + command);
+            switch (name) {
+                case "requestMovies" -> command = new Command(() -> movieController.requestMovies(
+                        args.get("kind").getAsString(),
+                        args.has("query") ? args.get("query").getAsString() : null));
+                case "requestGames" -> command = new Command(() -> gameController.requestGames(
+                        args.get("kind").getAsString(),
+                        args.has("query") ? args.get("query").getAsString() : null));
+                case "pollGamePosters" -> command = new Command(gameController::pollGamePosters);
+                default -> {
+                    callback.failure(400, "Unknown command: " + name);
                     return;
+                }
             }
-
-            callback.success(GSON.toJson(result));
         } catch (Exception e) {
-            callback.failure(500, e.getMessage());
+            callback.failure(400, "Bad request: " + e.getMessage());
+            return;
         }
+
+        // The message-router callback may be completed from any thread.
+        queryExecutor.submit(() -> {
+            try {
+                callback.success(GSON.toJson(command.run()));
+            } catch (Exception e) {
+                callback.failure(500, e.getMessage());
+            }
+        });
     }
 }
