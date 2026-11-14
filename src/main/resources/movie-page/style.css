@@ -97,6 +97,11 @@ body {
 }
 
 .filter-select {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     background-color: var(--bg);
     border: 1px solid var(--border);
     color: var(--text);
@@ -105,11 +110,56 @@ body {
     font-size: 14px;
     cursor: pointer;
     min-width: 110px;
+    user-select: none;
+}
+
+.filter-select::after {
+    content: "▾";
+    font-size: 11px;
+    opacity: 0.7;
 }
 
 .filter-select:focus {
     outline: none;
     border-color: var(--accent);
+}
+
+/* Custom dropdown menu (a native <select> freezes the app on macOS — its
+ * modal NSMenu event loop fights the CEF message pump on the AppKit thread) */
+.filter-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background-color: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    z-index: 50;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-option {
+    padding: 9px 12px;
+    border-radius: calc(var(--radius) - 2px);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.filter-option:hover {
+    background-color: var(--accent);
+    color: #fff;
+}
+
+.filter-option.selected {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.filter-option.selected:hover {
+    color: #fff;
 }
 
 /* Main container */

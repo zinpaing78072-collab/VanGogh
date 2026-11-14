@@ -22,6 +22,17 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 - **Tests**: JUnit 5; all network calls stubbed (no real TMDB API keys needed)
 - **IPC**: `@KremaCommand` methods on controllers; `<parameters>true</parameters>` in maven-compiler-plugin for arg binding by name
 
+### Vavr conventions (functional core)
+
+`io.vavr:vavr:1.0.1` is a compile dependency; the vendored `repos/vavr` subtree is the reference for its API. Functional types are used throughout the codebase as follows (mirroring the already-vavr-ified movie slice):
+
+- **`io.vavr.control.Option`** instead of `java.util.Optional` — for absent/present JSON fields, nullable lookups, and `posterUrl`/`genre` defaults. Prefer `.map`, `.flatMap`, `.filter`, `.getOrElse`.
+- **`io.vavr.control.Try`** instead of `throws Exception` on parsing and network methods where representing failure as a value is cleaner. Recover with `.getOrElse` / `.getOrElseThrow`.
+- **`io.vavr.concurrent.Future`** instead of `CompletableFuture` — for async poster prefetch on the IO pool; Krema command handlers on the UI thread stay synchronous.
+- **`io.vavr.collection.List`/`Seq`/`Map`** — persistent immutable collections for in-memory transformations. Convert to `java.util.List` only at Krema IPC boundaries (`@KremaCommand` return types).
+- **Caches stay `java.util.concurrent.ConcurrentHashMap`** — vavr has no concurrent map; immutable vavr maps are not a fit for a mutable read-through cache.
+- **Records stay data carriers** — `Movie`, `Game` are unchanged; only their construction/population goes functional.
+
 ### Project state
 - **Features wired**:
   - `VanGoghApp` — Krema window builder (title, identifier, size, debug mode, assets, events, commands)
@@ -128,11 +139,41 @@ before starting the next. Never expand scope mid-slice.
 - The workspace config routes Code Runner's Java Run Code action through
   `mvn compile exec:exec`; do not run `javac VanGoghApp.java` directly, since
   that omits the other project classes and Maven dependencies.
-- Main class: `vangogh.app.VanGoghApp`
+- Main class: `vangogh.app.VanGoghApp` (Krema shell) or
+  `vangogh.app.jcef.JcefVanGoghApp` (JCEF experiment shell — see below).
 - IPC: frontend calls `await window.krema.invoke("requestMovies", { kind, query })`;
   handlers are `@KremaCommand` methods on `MovieController` and require
   `<parameters>true</parameters>` in maven-compiler-plugin (args bind by
   parameter name). Posters stream as `window.krema.on("poster", …)` events.
+
+### JCEF experiment (branch `feat/jcef-experiment`)
+
+A standalone shell swap that replaces Krema's OS system webview with a bundled
+Chromium engine via `me.friwi:jcefmaven:152.0.6`. The existing controllers
+(`MovieController`, `GameController`) are shell-agnostic — they receive a
+`JcefEventEmitter` (a Krema `EventEmitter` subclass) via `setEventEmitter()`
+and their `@KremaCommand` methods are called directly by the JCEF bridge.
+
+Files:
+- `src/main/java/vangogh/app/jcef/JcefVanGoghApp.java` — `main()`: boots
+  `CefApp`, extracts classpath HTML to a temp dir, creates a Swing `JFrame`
+  hosting an OSR-rendered `CefBrowser`.
+- `src/main/java/vangogh/app/jcef/JcefBridge.java` — `CefMessageRouter`
+  handler for JS→Java (`window.krema.invoke` → controller methods) plus
+  `JcefEventEmitter` wiring for Java→JS poster events.
+- `src/main/java/vangogh/app/jcef/JcefEventEmitter.java` — extends Krema's
+  `EventEmitter`, overrides `emit()` to post via `executeJavaScript` on the
+  Swing EDT.
+- `src/main/resources/jcef/krema-shim.js` — implements `window.krema.invoke/on`
+  on top of `cefQuery` and `window.__krema_emit`, compatible with the existing
+  `app.js` (zero frontend changes).
+- `pom.xml` — adds `me.friwi:jcefmaven` dependency and macOS
+  `--add-opens java.desktop/...=ALL-UNNAMED` flags (required by jcefmaven;
+  harmless for Krema).
+
+To run:
+- **Krema** (default): `mvn compile exec:exec` — Zed task "run van-gogh (Krema)" or the `java-main` ▶ indicator.
+- **JCEF**: `mvn compile exec:exec -Pjcef` — Zed task "run van-gogh (JCEF)" or "java run (JcefVanGoghApp via exec:exec -Pjcef)". First run downloads CEF natives (~100 MB).
 - Windows constraint (krema-core 0.3.2, same family as the `AppNativePreload`
   workaround): `engine.eval` is silently dropped when called off the UI thread,
   so async command replies and backend events never reach the page. Rule:
@@ -141,6 +182,16 @@ before starting the next. Never expand scope mid-slice.
   currently `pollPosters`. Drop the dance when the project can move to a Krema
   release whose eval is thread-safe on Windows (0.3.3+ source does not fix it
   either; nothing newer is published on Maven Central).
+- macOS constraint (jcef windowed rendering): any native NSMenu tracking
+  session — the OS app menu bar, the green button's hover menu (fullscreen
+  on/off via the green button), (the native `<select>` popup was the other
+  trigger, now a DOM dropdown) — can trap the AppKit thread permanently.
+  The window stops taking all input while the renderer keeps running; only
+  relaunching recovers. Fullscreen: green button only (user decision
+  2026-11-14 — no DOM/keyboard toggle); aim-and-click it quickly, a long
+  hover pops its menu and can freeze. Accepted for the experiment — do not
+  rediscover this. Details: vault "Debug Record — JCEF window freezes on
+  native menus".
 
 ## Vendored repositories (git subtree)
 
@@ -164,3 +215,4 @@ Editor/agent config: exclude `repos/**` from auto-import, file watcher, search, 
 | Vendored repo | Intended usage |
 |---|---|
 | `repos/krema` (https://github.com/krema-build/krema, `master`) | Read-only reference for `build.krema:krema-core:0.3.2` — inspect real `Krema`, `KremaCommand`, `EventEmitter`, `WebViewCLibEngine` implementations and tests when working with Krema IPC/events/threading. |
+| `repos/vavr` (https://github.com/vavr-io/vavr, `main`) | Read-only reference for `io.vavr:vavr:1.0.1` — inspect `Future`, `Try`, `Either`, `Option`, and persistent collections when working with functional patterns. |

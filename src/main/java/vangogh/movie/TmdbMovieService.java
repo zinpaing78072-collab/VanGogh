@@ -6,7 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import java.util.ArrayList;
+import io.vavr.control.Option;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,7 +37,7 @@ public class TmdbMovieService {
         if (!res.isSuccess()) {
             throw new RuntimeException("TMDB trending failed: HTTP " + res.statusCode + " " + truncate(res.body, 300));
         }
-        return parseMovies(res.body);
+        return parseMovies(res.body).toJavaList();
     }
 
     public List<Movie> searchMovies(String query) throws Exception {
@@ -48,7 +48,7 @@ public class TmdbMovieService {
         if (!res.isSuccess()) {
             throw new RuntimeException("TMDB search failed: HTTP " + res.statusCode + " " + truncate(res.body, 300));
         }
-        return parseMovies(res.body);
+        return parseMovies(res.body).toJavaList();
     }
 
     /**
@@ -74,35 +74,40 @@ public class TmdbMovieService {
         return uri;
     }
 
-    public List<Movie> parseMovies(String json) {
-        List<Movie> movies = new ArrayList<>();
-        try {
-            JsonObject root = JsonParser.parseString(json).getAsJsonObject();
-            JsonArray results = root.getAsJsonArray("results");
-            for (int i = 0; i < results.size(); i++) {
-                JsonObject m = results.get(i).getAsJsonObject();
-                int id = m.has("id") && !m.get("id").isJsonNull() ? m.get("id").getAsInt() : 0;
-                String title = optString(m, "title");
-                if (title.isEmpty()) {
-                    title = "Untitled";
-                }
-                String release = optString(m, "release_date");
-                int year = parseYear(release);
-                double rating = m.has("vote_average") && !m.get("vote_average").isJsonNull()
-                        ? m.get("vote_average").getAsDouble() : 0.0;
-                String genre = "";
-                if (m.has("genre_ids") && !m.get("genre_ids").isJsonNull()) {
-                    genre = genreLabel(m.getAsJsonArray("genre_ids"));
-                }
-                String overview = optString(m, "overview");
-                String posterPath = optString(m, "poster_path");
-                String posterUrl = TmdbClient.posterPath(posterPath);
-                movies.add(new Movie(id, title, year, rating, genre, overview, posterUrl));
-            }
-        } catch (Exception e) {
-            System.err.println("TMDB parse error: " + e.getMessage());
-        }
-        return movies;
+    public io.vavr.collection.List<Movie> parseMovies(String json) {
+        Option<JsonObject> root = Option.of(json)
+                .flatMap(s -> io.vavr.control.Try.of(() -> JsonParser.parseString(s).getAsJsonObject()).toOption());
+        Option<JsonArray> results = root.map(r -> r.getAsJsonArray("results"));
+
+        return results
+                .map(arr -> io.vavr.collection.List.range(0, arr.size())
+                        .map(i -> arr.get(i).getAsJsonObject())
+                        .map(this::toMovie))
+                .getOrElse(io.vavr.collection.List.empty());
+    }
+
+    private Movie toMovie(JsonObject m) {
+        int id = Option.of(m.get("id"))
+                .filter(j -> !j.isJsonNull())
+                .map(j -> j.getAsInt())
+                .getOrElse(0);
+        String title = Option.of(optString(m, "title"))
+                .filter(s -> !s.isEmpty())
+                .getOrElse("Untitled");
+        String release = optString(m, "release_date");
+        int year = parseYear(release);
+        double rating = Option.of(m.get("vote_average"))
+                .filter(j -> !j.isJsonNull())
+                .map(j -> j.getAsDouble())
+                .getOrElse(0.0);
+        String genre = Option.of(m.get("genre_ids"))
+                .filter(j -> !j.isJsonNull())
+                .map(j -> genreLabel(j.getAsJsonArray()))
+                .getOrElse("");
+        String overview = optString(m, "overview");
+        String posterPath = optString(m, "poster_path");
+        String posterUrl = TmdbClient.posterPath(posterPath);
+        return new Movie(id, title, year, rating, genre, overview, posterUrl);
     }
 
     private static String optString(JsonObject m, String key) {

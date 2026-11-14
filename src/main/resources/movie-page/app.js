@@ -183,9 +183,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderContent(items, contentFilter.value);
             if (isGame) {
                 pollGamePostersUntilDone();
-            } else {
-                pollPostersUntilDone();
             }
+            // Movies now receive posters via direct "poster" events (Vavr Future).
         } catch (e) {
             const message = e && e.message ? e.message : String(e);
             showError("Failed to load content: " + escapeHtml(message));
@@ -214,16 +213,50 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    contentFilter.addEventListener("change", () => {
-        if (contentFilter.value === "movie" || contentFilter.value === "game") {
+    // Custom dropdown. A native <select> opens a modal macOS NSMenu whose
+    // event loop fights the CEF/AWT message pump on the AppKit thread and
+    // freezes the whole window (menu never closes, red button dead) — so the
+    // filter is a plain DOM widget instead.
+    function handleFilterChange(value) {
+        if (value === "movie" || value === "game") {
             requestPageContent("trending", "");
         } else {
-            sectionTitle.textContent = `${contentFilter.value.charAt(0).toUpperCase() + contentFilter.value.slice(1)}`
+            sectionTitle.textContent = `${value.charAt(0).toUpperCase() + value.slice(1)}`
                 + " (not connected)";
             grid.innerHTML = `
                 <div class="empty-state">
-                    <p>${escapeHtml(contentFilter.value.charAt(0).toUpperCase() + contentFilter.value.slice(1))} results are not yet connected to the API.</p>
+                    <p>${escapeHtml(value.charAt(0).toUpperCase() + value.slice(1))} results are not yet connected to the API.</p>
                 </div>`;
+        }
+    }
+
+    const filterMenu = document.getElementById("contentFilterMenu");
+    const filterLabel = document.getElementById("contentFilterLabel");
+
+    function closeFilterMenu() {
+        filterMenu.classList.add("hidden");
+    }
+
+    contentFilter.addEventListener("click", (e) => {
+        const option = e.target.closest(".filter-option");
+        if (option) {
+            filterMenu.querySelectorAll(".filter-option").forEach((el) =>
+                el.classList.toggle("selected", el === option));
+            filterLabel.textContent = option.textContent;
+            closeFilterMenu();
+            handleFilterChange(option.dataset.value);
+        } else {
+            filterMenu.classList.toggle("hidden");
+        }
+    });
+    document.addEventListener("click", (e) => {
+        if (!contentFilter.contains(e.target)) {
+            closeFilterMenu();
+        }
+    });
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeFilterMenu();
         }
     });
 

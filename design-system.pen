@@ -1953,7 +1953,7 @@
                   "ref": "AUn9I",
                   "name": "Movie Card — Pulp Fiction",
                   "width": "fill_container",
-                  "x": 469.5999999999999,
+                  "x": 469.6,
                   "y": 0,
                   "descendants": {
                     "lp7sW": {
@@ -1984,7 +1984,7 @@
                   "ref": "AUn9I",
                   "name": "Movie Card — The Shawshank Redemption",
                   "width": "fill_container",
-                  "x": 704.3999999999999,
+                  "x": 704.4000000000001,
                   "y": 0,
                   "descendants": {
                     "lp7sW": {
@@ -2018,7 +2018,7 @@
                   "height": "fit_content",
                   "flipX": false,
                   "flipY": false,
-                  "x": 939.1999999999998,
+                  "x": 939.2,
                   "y": 0,
                   "descendants": {
                     "lp7sW": {
@@ -3081,7 +3081,7 @@
       "name": "Prototype — 02-B Results · stacked rows (alternative)",
       "clip": true,
       "width": 1440,
-      "height": 2080,
+      "height": 2140,
       "fill": "$bg",
       "layout": "vertical",
       "children": [
@@ -3789,7 +3789,7 @@
       "name": "Prototype — 04 My Lists",
       "clip": true,
       "width": 1440,
-      "height": 1150,
+      "height": 1190,
       "fill": "$bg",
       "layout": "vertical",
       "children": [
@@ -4791,6 +4791,38 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "CzLbd",
+      "x": 1280,
+      "y": -1038,
+      "name": "Feedback — leave sticky notes here only",
+      "fill": "$surface",
+      "cornerRadius": "$radius-md",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "gap": 12,
+      "padding": 16,
+      "children": [
+        {
+          "type": "text",
+          "id": "BXyPC",
+          "name": "Zone Label",
+          "fill": "$text-secondary",
+          "content": "Feedback zone — sticky notes here never touch the screens",
+          "fontFamily": "$font-body",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "note",
+          "id": "KCrNv",
+          "width": 250,
+          "height": 219
         }
       ]
     }
