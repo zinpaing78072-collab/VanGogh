@@ -83,4 +83,40 @@
             handlers[eventName].push(handler);
         }
     };
+
+    // JCEF-only fullscreen toggle button. The native green button's hover
+    // menu is a freeze trigger in this AWT+CEF hybrid (its modal loop traps
+    // the AppKit thread — vault "Debug Record — JCEF window freezes on native
+    // menus"), so the safe path is this button → bridge command
+    // "toggleFullscreen" → GraphicsDevice.setFullScreenWindow: the same
+    // native fullscreen (title bar + menu bar hidden) with no menu surfaces.
+    function injectFullscreenButton() {
+        var header = document.querySelector(".app-header");
+        if (!header || document.getElementById("van-gogh-fullscreen")) return;
+        var btn = document.createElement("button");
+        btn.id = "van-gogh-fullscreen";
+        btn.title = "Toggle fullscreen";
+        btn.setAttribute("aria-label", "Toggle fullscreen");
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" ' +
+            'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
+            '<path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9"/></svg>';
+        btn.style.cssText = "display:flex;align-items:center;justify-content:center;" +
+            "height:42px;min-width:44px;margin-left:12px;padding:0 12px;border-radius:10px;" +
+            "border:1px solid rgba(255,255,255,0.14);background:#17171a;color:#e5e5e7;" +
+            "cursor:pointer;flex:0 0 auto;";
+        btn.addEventListener("mouseenter", function () { btn.style.background = "#232327"; });
+        btn.addEventListener("mouseleave", function () { btn.style.background = "#17171a"; });
+        btn.addEventListener("click", function () {
+            window.krema.invoke("toggleFullscreen", {}).catch(function (e) {
+                console.error("toggleFullscreen failed:", e);
+            });
+        });
+        header.appendChild(btn);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", injectFullscreenButton);
+    } else {
+        injectFullscreenButton();
+    }
 })();

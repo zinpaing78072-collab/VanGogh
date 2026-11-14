@@ -183,11 +183,15 @@ To run:
   release whose eval is thread-safe on Windows (0.3.3+ source does not fix it
   either; nothing newer is published on Maven Central).
 - macOS constraint (jcef windowed rendering): any native NSMenu tracking
-  session — the OS app menu bar (the native `<select>` popup was the other
+  session — the OS app menu bar, the green button's hover menu (fullscreen
+  on/off via the green button), (the native `<select>` popup was the other
   trigger, now a DOM dropdown) — can trap the AppKit thread permanently.
   The window stops taking all input while the renderer keeps running; only
-  relaunching recovers. Accepted for the experiment — do not rediscover
-  this. Details: vault "Debug Record — JCEF window freezes on native menus".
+  relaunching recovers. Fullscreen: use the ⛶ button in the app header
+  (bridge command `toggleFullscreen` → `GraphicsDevice.setFullScreenWindow`
+  — same native fullscreen, no menus). Accepted for the experiment — do not
+  rediscover this. Details: vault "Debug Record — JCEF window freezes on
+  native menus".
 
 ## Vendored repositories (git subtree)
 

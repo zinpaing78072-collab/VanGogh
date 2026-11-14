@@ -12,7 +12,10 @@ import org.cef.CefSettings;
 import org.cef.browser.CefBrowser;
 
 import java.awt.BorderLayout;
+import java.awt.EventQueue;
 import java.awt.Frame;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Panel;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -61,6 +64,8 @@ public class JcefVanGoghApp {
 
     private static CefApp cefApp_;
     private static Frame frame_;
+    /** Screen device used by the programmatic fullscreen toggle. */
+    private static GraphicsDevice screenDevice_;
 
     public static void main(String[] args) throws Exception {
         // Step 1: Configure CEF via CefAppBuilder. installDir points at the
@@ -164,6 +169,16 @@ public class JcefVanGoghApp {
         // in via com.apple.eawt.FullScreenUtilities — without it the green
         // button only "zooms" the window and both bars stay visible.
         enableNativeFullscreen(frame_);
+        // Programmatic fullscreen toggle for the DOM button (see the
+        // toggleFullscreen javadoc): cache the screen device and hand the
+        // bridge the toggle. GraphicsDevice.setFullScreenWindow enters the
+        // same native fullscreen as the green button but never opens a menu
+        // — the green button's hover menu is a freeze trigger in this
+        // AWT+CEF hybrid (vault "Debug Record — JCEF window freezes on
+        // native menus"), so the DOM button is the safe path.
+        screenDevice_ = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice();
+        bridge.setFullscreenAction(JcefVanGoghApp::toggleFullscreen);
         frame_.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
@@ -175,6 +190,31 @@ public class JcefVanGoghApp {
         frame_.setVisible(true);
 
         System.out.println("[Van Gogh JCEF] Done! Window should be showing.");
+    }
+
+    /**
+     * Toggles native macOS fullscreen programmatically — the target of the
+     * bridge's {@code toggleFullscreen} command, driven by the DOM button
+     * the shim injects. {@code GraphicsDevice.setFullScreenWindow} enters/
+     * exits the same native fullscreen as the green button (native fullscreen
+     * mode via the window peer, no title bar / menu bar) but involves no
+     * menus: hovering the green button pops its zoom/fullscreen menu, and in
+     * this AWT+CEF hybrid that menu's modal loop traps the AppKit thread
+     * permanently (vault "Debug Record — JCEF window freezes on native
+     * menus"). State detection covers both entry paths — a previous
+     * programmatic toggle (AWT tracks the full-screen window) and the green
+     * button (tracked via the frame covering the whole screen). Must run on
+     * the EDT (window peer manipulation); the bridge schedules it there.
+     */
+    private static void toggleFullscreen() {
+        GraphicsDevice device = screenDevice_;
+        Frame frame = frame_;
+        if (device == null || frame == null) {
+            return;
+        }
+        boolean inFullscreen = device.getFullScreenWindow() == frame
+                || frame.getBounds().equals(device.getDefaultConfiguration().getBounds());
+        device.setFullScreenWindow(inFullscreen ? null : frame);
     }
 
     /**
