@@ -14,8 +14,6 @@ import org.cef.browser.CefMessageRouter;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 
-import java.awt.EventQueue;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,12 +43,6 @@ public class JcefBridge {
     private final GameController gameController;
     private JcefEventEmitter emitter;
     private CefMessageRouter router;
-    /**
-     * Toggles the shell window's fullscreen state (set by
-     * {@code JcefVanGoghApp}; see {@link JcefVanGoghApp#toggleFullscreen}).
-     * Volatile: the DOM button can fire before/after the window exists.
-     */
-    private volatile Runnable fullscreenAction;
     /**
      * Queries are answered asynchronously: controller calls (network) must not
      * run on the thread that dispatches CEF queries — that thread pumps the
@@ -107,17 +99,6 @@ public class JcefBridge {
         gameController.setEventEmitter(emitter);
     }
 
-    /**
-     * Wires the fullscreen toggle (called once the frame exists). The action
-     * itself must run on the AWT EDT — the command handler schedules it
-     * there, so it is safe to hand in a plain method reference.
-     *
-     * @param action toggles the shell window's native fullscreen state
-     */
-    public void setFullscreenAction(Runnable action) {
-        this.fullscreenAction = action;
-    }
-
     public void dispose() {
         if (router != null) {
             router.dispose();
@@ -147,19 +128,6 @@ public class JcefBridge {
                         args.get("kind").getAsString(),
                         args.has("query") ? args.get("query").getAsString() : null));
                 case "pollGamePosters" -> command = new Command(gameController::pollGamePosters);
-                case "toggleFullscreen" -> {
-                    Runnable action = fullscreenAction;
-                    if (action == null) {
-                        callback.failure(503, "Fullscreen not wired yet");
-                        return;
-                    }
-                    // setFullScreenWindow touches the window peer — run it on
-                    // the EDT (the query worker must never block on AWT).
-                    command = new Command(() -> {
-                        EventQueue.invokeLater(action);
-                        return "toggled";
-                    });
-                }
                 default -> {
                     callback.failure(400, "Unknown command: " + name);
                     return;

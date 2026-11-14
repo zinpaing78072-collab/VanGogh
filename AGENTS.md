@@ -187,9 +187,9 @@ To run:
   on/off via the green button), (the native `<select>` popup was the other
   trigger, now a DOM dropdown) — can trap the AppKit thread permanently.
   The window stops taking all input while the renderer keeps running; only
-  relaunching recovers. Fullscreen: use the ⛶ button in the app header
-  (bridge command `toggleFullscreen` → `GraphicsDevice.setFullScreenWindow`
-  — same native fullscreen, no menus). Accepted for the experiment — do not
+  relaunching recovers. Fullscreen: green button only (user decision
+  2026-11-14 — no DOM/keyboard toggle); aim-and-click it quickly, a long
+  hover pops its menu and can freeze. Accepted for the experiment — do not
   rediscover this. Details: vault "Debug Record — JCEF window freezes on
   native menus".
 
