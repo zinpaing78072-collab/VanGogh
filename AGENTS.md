@@ -182,6 +182,12 @@ To run:
   currently `pollPosters`. Drop the dance when the project can move to a Krema
   release whose eval is thread-safe on Windows (0.3.3+ source does not fix it
   either; nothing newer is published on Maven Central).
+- macOS constraint (jcef windowed rendering): any native NSMenu tracking
+  session — the OS app menu bar (the native `<select>` popup was the other
+  trigger, now a DOM dropdown) — can trap the AppKit thread permanently.
+  The window stops taking all input while the renderer keeps running; only
+  relaunching recovers. Accepted for the experiment — do not rediscover
+  this. Details: vault "Debug Record — JCEF window freezes on native menus".
 
 ## Vendored repositories (git subtree)
 
