@@ -1,17 +1,20 @@
-/* Van Gogh content browser (Krema system-webview shell) */
+/* Van Gogh content browser (Krema system-webview shell / JCEF experiment shell) */
 
 /* The page talks to Java through window.krema:
    - await window.krema.invoke("requestMovies", { kind, query }) → movie list
    - await window.krema.invoke("requestGames", { kind, query }) → game list
-   - await window.krema.invoke("pollPosters", {}) → poster drain progress
-   - window.krema.on("poster", data) → poster data URIs streamed in
-   No JavaFX bridge shim needed anymore — Krema is the sole UI shell.
+   - await window.krema.invoke("pollGamePosters", {}) → game poster drain progress
+   - window.krema.on("poster", data) / on("gamePoster", data) → poster data URIs
+   The JCEF shell serves this page unchanged: jcef/krema-shim.js implements the
+   same window.krema API on top of window.cefQuery.
 
-   Windows note: krema-core 0.3.2 silently drops engine evals made off the UI
-   thread on Windows, so the backend can only touch this page from inside a
-   command handler (Krema runs those on the UI thread). That is why the movie
-   list comes back synchronously and posters are drained via pollPosters
-   instead of being pushed by background threads.
+   Poster delivery: movies stream as direct "poster" events pushed from the
+   backend's IO pool — verified to work from background threads on macOS and in
+   the JCEF shell (whose emitter marshals via the Swing EDT). On the Krema shell
+   this is macOS-only by design; the Windows engine.eval note in AGENTS.md is
+   why the games slice drains through pollGamePosters instead, which doubles as
+   the completion signal (returns -1 when nothing is pending — events alone
+   cannot tell the page "no more will come").
 */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -28,9 +31,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         return div.innerHTML;
     }
 
-    // Posters arrive as "poster" events drained by Java's pollPosters command
-    // (one per prefetched poster); the payload arrives wrapped as
-    // { payload, timestamp } by Krema's bridge.
+    // Posters arrive as direct "poster" events pushed by Java (one per
+    // prefetched poster); the payload arrives wrapped as
+    // { payload, timestamp } by Krema's bridge — and by jcef/krema-shim.js
+    // in the JCEF shell.
     window.krema.on("poster", function (data) {
         if (data && data.payload) {
             window.setPoster(data.payload.id, data.payload.dataUri);
@@ -80,27 +84,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             placeholder.classList.add("hidden");
         }
     };
-
-    // Posters are prefetched on Java's IO pool and drained into the page by
-    // the pollPosters command (one "poster" event per poster, emitted on the
-    // UI thread — see the Windows note at the top of this file). Poll until
-    // the backend reports -1: nothing pending, nothing more can arrive.
-    let posterPollToken = 0;
-    async function pollPostersUntilDone() {
-        const token = ++posterPollToken;
-        while (window.krema) {
-            let pending;
-            try {
-                pending = await window.krema.invoke("pollPosters", {});
-            } catch (e) {
-                return;
-            }
-            if (pending == null || pending < 0 || token !== posterPollToken) {
-                return;
-            }
-            await new Promise((resolve) => setTimeout(resolve, 150));
-        }
-    }
 
     function renderContent(items, contentType) {
         grid.innerHTML = "";
