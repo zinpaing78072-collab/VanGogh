@@ -136,17 +136,28 @@
                         <configuration>
                             <executable>${java.home}/bin/java</executable>
                             <arguments>
-                                <!-- macOS: AppKit requires first thread. -->
-                                <argument>-XstartOnFirstThread</argument>
+                                <!-- JVM flags per the jcefmaven README. Note: NO
+                                     -XstartOnFirstThread — with it, main() runs on the
+                                     AppKit-eligible first thread, and CEF's macOS native
+                                     init (N_Initialize on the EDT) circular-waits with
+                                     main blocked in invokeAndWait: nothing initializes and
+                                     the AWT window never paints. jcefsampleapp launches as
+                                     plain `java -jar` without the flag. (Krema's profile
+                                     keeps it — the OS webview genuinely needs it.) -->
                                 <!-- Panama FFM: silence restricted-method warnings. -->
                                 <argument>--enable-native-access=ALL-UNNAMED</argument>
                                 <!-- JCEF macOS requirements (jcefmaven README). -->
                                 <argument>--add-opens=java.desktop/sun.awt=ALL-UNNAMED</argument>
                                 <argument>--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED</argument>
                                 <argument>--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED</argument>
+                                <!-- OSR mode uses JOGL (jcefmaven README). -->
+                                <argument>--add-exports=java.base/java.lang=ALL-UNNAMED</argument>
+                                <argument>--add-exports=java.desktop/sun.awt=ALL-UNNAMED</argument>
+                                <argument>--add-exports=java.desktop/sun.java2d=ALL-UNNAMED</argument>
                                 <!-- Heap cap. -->
                                 <argument>-Xmx512m</argument>
-                                <argument>-Djava.library.path=/Users/macbookpro/Documents/school-project/van-gogh/jcef-bundle</argument>
+                                <!-- No -Djava.library.path needed: CefInitializer appends the
+                                     jcef-bundle install dir to it programmatically at startup. -->
                                 <argument>-classpath</argument>
                                 <classpath/>
                                 <argument>vangogh.app.jcef.JcefVanGoghApp</argument>

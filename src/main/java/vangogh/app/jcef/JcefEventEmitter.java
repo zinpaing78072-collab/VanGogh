@@ -39,8 +39,12 @@ public class JcefEventEmitter extends EventEmitter {
     @Override
     public void emit(String eventName, Object payload) {
         String json = GSON.toJson(payload != null ? payload : Map.of());
+        // The shim's contract is window.__krema_emit(name, jsonText) where the
+        // second argument is a JSON *string* that it JSON.parse()s. Pass it
+        // quoted — a raw object literal would make JSON.parse throw and the
+        // shim silently swallow the event as {payload: null}.
         String js = String.format("window.__krema_emit(%s, %s)",
-                escapeJs(eventName), json);
+                escapeJs(eventName), escapeJs(json));
 
         // JCEF browser calls must run on the UI (EDT) thread.
         if (java.awt.EventQueue.isDispatchThread()) {

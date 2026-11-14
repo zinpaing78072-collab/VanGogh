@@ -7,7 +7,9 @@
  *   window.krema.on("poster", data)                     → data = {payload, timestamp}
  *   window.krema.on("gamePoster", data)
  *
- * JS→Java: window.cefQuery({request: JSON, callback}) handled by JcefBridge.
+ * JS→Java: window.cefQuery({request, persistent, onSuccess, onFailure}) — CEF
+ * message-router contract (the keys are exact: onSuccess/onFailure; a wrong
+ * key means the response is computed but silently dropped). JcefBridge.
  * Java→JS: window.__krema_emit(eventName, jsonPayload) via executeJavaScript.
  */
 
@@ -21,12 +23,15 @@
     window.__krema_handlers = handlers;
 
     window.__krema_emit = function (eventName, jsonPayload) {
-        var data;
+        var payload;
         try {
-            data = jsonPayload ? JSON.parse(jsonPayload) : { payload: null };
+            payload = jsonPayload ? JSON.parse(jsonPayload) : null;
         } catch (e) {
-            data = { payload: null };
+            payload = null;
         }
+        // Krema's bridge wraps every event payload as {payload, timestamp} —
+        // app.js (written for the Krema shell) reads data.payload.id etc.
+        var data = { payload: payload, timestamp: Date.now() };
         var hs = handlers[eventName];
         if (hs) {
             hs.forEach(function (h) {
@@ -49,17 +54,19 @@
                     window.cefQuery({
                         request: request,
                         persistent: false,
-                        callback: function (success, response) {
+                        onSuccess: function (response) {
                             var p = pending[id];
                             delete pending[id];
                             if (!p) return;
-                            if (success) {
-                                try {
-                                    p.resolve(response ? JSON.parse(response) : null);
-                                } catch (err) { p.reject(err); }
-                            } else {
-                                p.reject(new Error(response || "query failed"));
-                            }
+                            try {
+                                p.resolve(response ? JSON.parse(response) : null);
+                            } catch (err) { p.reject(err); }
+                        },
+                        onFailure: function (errorCode, errorMessage) {
+                            var p = pending[id];
+                            delete pending[id];
+                            if (!p) return;
+                            p.reject(new Error("[" + errorCode + "] " + (errorMessage || "query failed")));
                         }
                     });
                 } else {

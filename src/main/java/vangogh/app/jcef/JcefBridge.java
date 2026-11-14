@@ -14,8 +14,6 @@ import org.cef.browser.CefMessageRouter;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 
-import java.lang.reflect.Method;
-
 /**
  * Bridges the frontend's {@code window.krema} API to Van Gogh's controllers.
  *
@@ -48,16 +46,14 @@ public class JcefBridge {
     }
 
     /**
-     * Wires the bridge into a browser: creates a {@link CefMessageRouter} for
-     * JS→Java calls and attaches the event emitter to both controllers.
+     * Registers the JS→Java message router on the client. Must be called
+     * BEFORE the browser is created — CEF injects {@code window.cefQuery}
+     * into a page only when the router already exists on the client (the
+     * upstream jcef test apps use the same order).
      *
      * @param client the {@link CefClient} (from {@code CefApp#createClient()})
      */
-    public void install(CefBrowser browser, CefClient client) {
-        this.emitter = new JcefEventEmitter(browser);
-        movieController.setEventEmitter(emitter);
-        gameController.setEventEmitter(emitter);
-
+    public void installRouter(CefClient client) {
         this.router = CefMessageRouter.create(new CefMessageRouter.CefMessageRouterConfig());
         router.addHandler(new CefMessageRouterHandlerAdapter() {
             @Override
@@ -68,19 +64,23 @@ public class JcefBridge {
             }
         }, false);
 
-        // CefClientHandler.addMessageRouter is protected; use reflection to invoke it.
-        addMessageRouter(client, router);
+        // CefClient.addMessageRouter (public) delegates to
+        // CefClientHandler.addMessageRouter: registers the router for
+        // renderer-side cefQuery injection and browser-side dispatch.
+        client.addMessageRouter(router);
     }
 
-    private static void addMessageRouter(CefClient client, CefMessageRouter router) {
-        try {
-            Method m = client.getClass().getSuperclass().getDeclaredMethod(
-                    "addMessageRouter", CefMessageRouter.class);
-            m.setAccessible(true);
-            m.invoke(client, router);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to register CefMessageRouter", e);
-        }
+    /**
+     * Attaches the browser after it is created: creates the
+     * {@link JcefEventEmitter} and wires it into both controllers, so their
+     * poster events flow into the page via {@code window.__krema_emit}.
+     *
+     * @param browser the {@link CefBrowser} (from {@code client.createBrowser()})
+     */
+    public void attachBrowser(CefBrowser browser) {
+        this.emitter = new JcefEventEmitter(browser);
+        movieController.setEventEmitter(emitter);
+        gameController.setEventEmitter(emitter);
     }
 
     public void dispose() {
