@@ -1,10 +1,15 @@
 package vangogh.net;
 
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import io.vavr.collection.Stream;
+import io.vavr.control.Option;
+import io.vavr.control.Try;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -35,31 +40,34 @@ public class TmdbClient {
         this.apiKey = apiKey;
     }
 
-    public ApiResponse searchMovie(String query) throws Exception {
+    /**
+     * Transport is wrapped as a value: callers chain with {@code map}/{@code flatMap}
+     * instead of {@code try}/{@code catch}. Network/HTTP failures surface as
+     * {@code Try.failure} and are converted to {@code FetchError.Transport} at the
+     * service seam.
+     */
+    public Try<ApiResponse> searchMovie(String query) {
         String url = BASE + "/search/movie?api_key=" + apiKey
                 + "&query=" + URLEncoder.encode(query, StandardCharsets.UTF_8)
                 + "&language=en-US&page=1";
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .build();
-
-        HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
-        return new ApiResponse(response.statusCode(), response.body(), null);
+        return send(url);
     }
 
-    public ApiResponse trending() throws Exception {
+    public Try<ApiResponse> trending() {
         String url = BASE + "/trending/movie/week?api_key=" + apiKey
                 + "&language=en-US";
+        return send(url);
+    }
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .build();
-
-        HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
-        return new ApiResponse(response.statusCode(), response.body(), null);
+    private Try<ApiResponse> send(String url) {
+        return Try.of(() -> {
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create(url))
+                            .GET()
+                            .build();
+                    return http.send(request, HttpResponse.BodyHandlers.ofString());
+                })
+                .map(response -> new ApiResponse(response.statusCode(), response.body(), null));
     }
 
     public static String posterPath(String path) {
@@ -98,30 +106,45 @@ public class TmdbClient {
         return "data:" + mime + ";base64," + Base64.getEncoder().encodeToString(bytes);
     }
 
-    public String loadPosterDataUri(String posterUrl) {
-        for (String source : posterSources(posterUrl, preferProxy)) {
-            try {
-                HttpRequest request = HttpRequest.newBuilder(URI.create(source))
-                        .timeout(POSTER_TIMEOUT)
-                        .GET()
-                        .build();
-                HttpResponse<byte[]> response = http.send(request, HttpResponse.BodyHandlers.ofByteArray());
-                if (response.statusCode() == 200) {
-                    String uri = toDataUri(response.body(),
-                            response.headers().firstValue("content-type").orElse(null));
-                    if (uri != null) {
-                        rememberPosterSource(source.startsWith(IMAGE_PROXY));
-                        return uri;
-                    }
-                }
-            } catch (IOException | InterruptedException e) {
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                    return null;
-                }
-            }
+    /**
+     * Failover chain: try each poster source (proxy / direct) as a {@link Try},
+     * stop at the first success. vavr's {@code Stream} is lazy, so only sources up
+     * to the first success are actually fetched. An interrupted fetch stops the
+     * whole chain (interrupt flag restored) and yields {@link Option#none()}.
+     */
+    public Option<String> loadPosterDataUri(String posterUrl) {
+        return Stream.ofAll(posterSources(posterUrl, preferProxy))
+                .map(source -> Try.of(() -> Tuple.of(source, fetchAsUri(source))))
+                .takeUntil(attempt -> attempt.isSuccess()
+                        || attempt.getCause() instanceof InterruptedException)
+                .lastOption()
+                .flatMap(attempt -> attempt.toOption())
+                .peek(pair -> rememberPosterSource(pair._1().startsWith(IMAGE_PROXY)))
+                .map(Tuple2::_2);
+    }
+
+    /** One poster source fetch as a throwing function, so {@link Try} can carry it. */
+    private String fetchAsUri(String source) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(source))
+                .timeout(POSTER_TIMEOUT)
+                .GET()
+                .build();
+        HttpResponse<byte[]> response;
+        try {
+            response = http.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw e;
         }
-        return null;
+        if (response.statusCode() != 200) {
+            throw new IllegalStateException("poster source returned HTTP " + response.statusCode());
+        }
+        String uri = toDataUri(response.body(),
+                response.headers().firstValue("content-type").orElse(null));
+        if (uri == null) {
+            throw new IllegalStateException("poster body was empty");
+        }
+        return uri;
     }
 
     private void rememberPosterSource(boolean proxied) {
@@ -131,29 +154,27 @@ public class TmdbClient {
         }
     }
 
+    /** Cosmetic file IO stays best-effort: failure is a value that defaults to false. */
     static boolean posterProxyPreferred() {
-        try {
-            return Files.isRegularFile(PROXY_MARKER);
-        } catch (Exception e) {
-            return false;
-        }
+        return Try.of(() -> Files.isRegularFile(PROXY_MARKER)).getOrElse(false);
     }
 
+    /** Cosmetic file IO stays best-effort: never break poster loading over it. */
     static void savePosterProxyPreference(boolean proxied) {
-        try {
+        Try.run(() -> {
             Files.createDirectories(PROXY_MARKER.getParent());
             if (proxied) {
                 Files.writeString(PROXY_MARKER, "proxy");
             } else {
                 Files.deleteIfExists(PROXY_MARKER);
             }
-        } catch (Exception e) {
+        }).onFailure(e -> {
             // Preference is cosmetic; never break poster loading over file IO.
-        }
+        });
     }
 
     public static void summarize(String json) {
-        try {
+        Try.run(() -> {
             JsonObject root = JsonParser.parseString(json).getAsJsonObject();
             int total = root.get("total_results").getAsInt();
             System.out.println("  TMDB total_results: " + total);
@@ -165,8 +186,6 @@ public class TmdbClient {
                 String date = m.has("release_date") ? m.get("release_date").getAsString() : "N/A";
                 System.out.println("   - " + title + " (" + date + ")");
             }
-        } catch (Exception e) {
-            System.out.println("  TMDB parse error: " + e.getMessage());
-        }
+        }).onFailure(e -> System.out.println("  TMDB parse error: " + e.getMessage()));
     }
 }

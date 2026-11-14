@@ -3,6 +3,9 @@ package vangogh.controller;
 import build.krema.core.KremaCommand;
 import build.krema.core.event.EventEmitter;
 import io.vavr.concurrent.Future;
+import io.vavr.control.Either;
+import io.vavr.control.Option;
+import vangogh.error.FetchError;
 import vangogh.movie.Movie;
 import vangogh.movie.TmdbMovieService;
 
@@ -11,11 +14,14 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 /**
- * Vavr-based rewrite (pretending the Krema Windows UI-thread constraint does
- * not exist): poster fetches run on an IO pool as Vavr {@link Future}s and emit
- * {@code "poster"} events directly on completion.
+ * Vavr-based rewrite: the movie fetch returns an {@link Either} value and is
+ * unwrapped to a thrown error only at this Krema edge ({@code getOrElseThrow}
+ * equivalent via {@code fold}) — that thrown error becomes Krema's error reply
+ * to the page. Poster prefetch runs on an IO pool as vavr {@link Future}s and
+ * each completed poster emits a {@code "poster"} event directly.
  */
 public class MovieController {
 
@@ -50,16 +56,19 @@ public class MovieController {
     @KremaCommand
     public List<Movie> requestMovies(String kind, String query) {
         int gen = generation.incrementAndGet();
-        List<Movie> movies;
-        try {
-            if ("search".equalsIgnoreCase(kind) && query != null && !query.trim().isEmpty()) {
-                movies = service.searchMovies(query.trim());
-            } else {
-                movies = service.fetchTrending();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+        boolean search = "search".equalsIgnoreCase(kind)
+                && query != null && !query.trim().isEmpty();
+        Either<FetchError, List<Movie>> result = search
+                ? service.searchMovies(query.trim())
+                : service.fetchTrending();
+
+        // The Krema edge: expected failures become the thrown error that Krema
+        // turns into the page's error reply (app.js catches the rejection).
+        List<Movie> movies = result.fold(
+                error -> {
+                    throw new RuntimeException(FetchError.uiMessage(error), error.cause());
+                },
+                Function.identity());
 
         // Cancel any in-flight prefetch from a previous request.
         if (currentFetch != null) {
@@ -76,13 +85,13 @@ public class MovieController {
                     if (generation.get() != gen) {
                         return;
                     }
-                    String uri = service.posterDataUri(movie.posterUrl());
-                    if (generation.get() != gen || uri == null) {
-                        return;
-                    }
-                    if (events != null) {
-                        events.emit("poster", Map.of("id", movie.id(), "dataUri", uri));
-                    }
+                    service.posterDataUri(movie.posterUrl())
+                            .filter(uri -> generation.get() == gen)
+                            .peek(uri -> {
+                                if (events != null) {
+                                    events.emit("poster", Map.of("id", movie.id(), "dataUri", uri));
+                                }
+                            });
                 })
         );
         return movies;

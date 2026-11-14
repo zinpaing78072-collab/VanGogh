@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import vangogh.net.ApiResponse;
 import vangogh.net.TmdbClient;
 
 class TmdbMovieServiceTest {
@@ -192,22 +193,22 @@ class TmdbMovieServiceTest {
         }
 
         @Override
-        public String loadPosterDataUri(String posterUrl) {
+        public io.vavr.control.Option<String> loadPosterDataUri(String posterUrl) {
             calls.add(posterUrl);
-            return "data:image/jpeg;base64,stubbed";
+            return io.vavr.control.Option.some("data:image/jpeg;base64,stubbed");
         }
     }
 
     @Test
-    void posterDataUriWithNullReturnsNull() {
+    void posterDataUriWithNullReturnsNone() {
         TmdbMovieService service = new TmdbMovieService(new PosterStubClient());
-        assertNull(service.posterDataUri(null));
+        assertTrue(service.posterDataUri(null).isEmpty());
     }
 
     @Test
-    void posterDataUriWithEmptyStringReturnsNull() {
+    void posterDataUriWithEmptyStringReturnsNone() {
         TmdbMovieService service = new TmdbMovieService(new PosterStubClient());
-        assertNull(service.posterDataUri(""));
+        assertTrue(service.posterDataUri("").isEmpty());
     }
 
     @Test
@@ -216,12 +217,72 @@ class TmdbMovieServiceTest {
         TmdbMovieService service = new TmdbMovieService(client);
         String url = "https://image.tmdb.org/t/p/w500/abc.jpg";
 
-        String uri1 = service.posterDataUri(url);
-        String uri2 = service.posterDataUri(url);
+        String uri1 = service.posterDataUri(url).getOrElse("");
+        String uri2 = service.posterDataUri(url).getOrElse("");
 
         assertEquals("data:image/jpeg;base64,stubbed", uri1);
         assertEquals(uri1, uri2);
         assertEquals(1, client.calls.size());
         assertEquals(url, client.calls.get(0));
+    }
+
+    // --- Either spine: transport → status → parse, short-circuiting ---
+
+    @Test
+    void fetchTrendingReturnsMoviesOnSuccess() {
+        TmdbMovieService service = new TmdbMovieService(new TmdbClient("test-key") {
+            @Override
+            public io.vavr.control.Try<ApiResponse> trending() {
+                return io.vavr.control.Try.success(new ApiResponse(200, VALID_TRENDING_JSON, null));
+            }
+        });
+
+        var result = service.fetchTrending();
+
+        assertTrue(result.isRight());
+        assertEquals(2, result.get().size());
+        assertEquals("Inception", result.get().get(0).title());
+    }
+
+    @Test
+    void searchMoviesReturnsHttpStatusErrorOnNon2xx() {
+        TmdbMovieService service = new TmdbMovieService(new TmdbClient("test-key") {
+            @Override
+            public io.vavr.control.Try<ApiResponse> searchMovie(String query) {
+                return io.vavr.control.Try.success(new ApiResponse(404, "nope", null));
+            }
+        });
+
+        var result = service.searchMovies("Inception");
+
+        assertTrue(result.isLeft());
+        assertEquals("TMDB search failed: HTTP 404 nope",
+                vangogh.error.FetchError.uiMessage(result.getLeft()));
+    }
+
+    @Test
+    void fetchTrendingReturnsTransportErrorWhenNetworkFails() {
+        TmdbMovieService service = new TmdbMovieService(new TmdbClient("test-key") {
+            @Override
+            public io.vavr.control.Try<ApiResponse> trending() {
+                return io.vavr.control.Try.failure(new java.io.IOException("connection refused"));
+            }
+        });
+
+        var result = service.fetchTrending();
+
+        assertTrue(result.isLeft());
+        assertInstanceOf(vangogh.error.FetchError.Transport.class, result.getLeft());
+        assertTrue(vangogh.error.FetchError.uiMessage(result.getLeft())
+                .contains("connection refused"));
+    }
+
+    @Test
+    void parseRowsStrictReturnsPayloadErrorOnMalformedJson() {
+        TmdbMovieService service = service();
+        var result = service.parseMovies("{\"page\":1}"); // missing "results"
+
+        // Lenient facade: empty list, no throw — strictness lives in the spine.
+        assertTrue(result.isEmpty());
     }
 }
