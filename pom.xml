@@ -154,6 +154,9 @@
                                 <argument>--add-exports=java.base/java.lang=ALL-UNNAMED</argument>
                                 <argument>--add-exports=java.desktop/sun.awt=ALL-UNNAMED</argument>
                                 <argument>--add-exports=java.desktop/sun.java2d=ALL-UNNAMED</argument>
+                                <!-- Native fullscreen (title bar + menu bar hide):
+                                     com.apple.eawt is internal on modern JDKs. -->
+                                <argument>--add-exports=java.desktop/com.apple.eawt=ALL-UNNAMED</argument>
                                 <!-- Heap cap. -->
                                 <argument>-Xmx512m</argument>
                                 <!-- No -Djava.library.path needed: CefInitializer appends the

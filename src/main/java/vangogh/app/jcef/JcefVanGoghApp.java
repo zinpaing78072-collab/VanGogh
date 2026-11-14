@@ -27,6 +27,8 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import javax.swing.JFrame;
+
 /**
  * JCEF shell: a plain AWT frame hosting a windowed-rendered Chromium browser
  * that runs the existing movie-page frontend. The frontend is
@@ -145,13 +147,23 @@ public class JcefVanGoghApp {
         // clipped right/bottom). An intermediate container ends the walk at
         // the right place, yielding a (0,0)-anchored window-local rect.
         System.out.println("[Van Gogh JCEF] Step 5: Building frame...");
-        frame_ = new Frame("Van Gogh (JCEF)");
+        // JFrame (not Frame): FullScreenUtilities.setWindowCanFullScreen
+        // requires a RootPaneContainer — plain AWT Frames cannot opt into
+        // native macOS fullscreen (green button / Ctrl+Cmd+F). The browser
+        // rect walk (see below) ends at the root pane with (0,0) offsets, so
+        // the offset fix holds. JFrame IS-A Frame: field type unchanged.
+        frame_ = new JFrame("Van Gogh (JCEF)");
         frame_.setLayout(new BorderLayout());
         Panel holder = new Panel(new BorderLayout());
         holder.add(browser.getUIComponent(), BorderLayout.CENTER);
         frame_.add(holder, BorderLayout.CENTER);
         frame_.setSize(1200, 800);
         frame_.setLocationRelativeTo(null);
+        // Native macOS fullscreen: hides the title bar AND the menu bar (the
+        // menu bar reappears on hover at the top edge). AWT windows must opt
+        // in via com.apple.eawt.FullScreenUtilities — without it the green
+        // button only "zooms" the window and both bars stay visible.
+        enableNativeFullscreen(frame_);
         frame_.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
@@ -163,6 +175,30 @@ public class JcefVanGoghApp {
         frame_.setVisible(true);
 
         System.out.println("[Van Gogh JCEF] Done! Window should be showing.");
+    }
+
+    /**
+     * Enables native macOS fullscreen for the frame (green button, or
+     * Ctrl+Cmd+F when the window is frontmost): the window moves to its own
+     * Space with the title bar and menu bar hidden. Without this flag AWT
+     * windows only zoom — both bars stay. Reflection keeps this file
+     * compilable on non-macOS JDK builds (no com.apple.eawt there); at
+     * runtime the pom passes
+     * {@code --add-exports=java.desktop/com.apple.eawt=ALL-UNNAMED} because
+     * the package is internal (not exported) on JDK 9+. The window must be a
+     * RootPaneContainer (a JFrame — a plain java.awt.Frame throws
+     * IllegalArgumentException) and must not have its native peer yet
+     * (call before setVisible(true) — the flag is read at addNotify).
+     */
+    private static void enableNativeFullscreen(Frame frame) {
+        try {
+            Class<?> util = Class.forName("com.apple.eawt.FullScreenUtilities");
+            util.getMethod("setWindowCanFullScreen", java.awt.Window.class, boolean.class)
+                    .invoke(null, frame, true);
+            System.out.println("[Van Gogh JCEF] Native fullscreen enabled (green button / Ctrl+Cmd+F)");
+        } catch (Throwable t) {
+            System.out.println("[Van Gogh JCEF] Native fullscreen not available: " + t);
+        }
     }
 
     /** Debug port from -Dvangogh.cef.debug.port or VANGOGH_CEF_DEBUG_PORT; 0 = off. */
