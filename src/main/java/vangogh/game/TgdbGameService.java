@@ -1,12 +1,16 @@
 package vangogh.game;
 
+import vangogh.error.FetchError;
 import vangogh.net.ApiResponse;
 import vangogh.net.TgdbClient;
 
+import io.vavr.collection.List;
+import io.vavr.collection.Seq;
+import io.vavr.control.Either;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
+import io.vavr.control.Validation;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,6 +18,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+/**
+ * Fetch pipeline as an {@link Either} spine with an accumulating structure
+ * node: the games array and the boxart map are two <em>independent</em>
+ * extractions from the payload, combined with {@code Validation.combine(...).ap(...)}
+ * — if both are unreadable, BOTH errors come back in one
+ * {@code Seq<FetchError>}. Row building stays lenient (missing fields get
+ * defaults, as before); only structure-level failures are errors.
+ */
 public class TgdbGameService {
 
     private final TgdbClient client;
@@ -31,44 +43,83 @@ public class TgdbGameService {
         this(new TgdbClient(apiKey));
     }
 
-    public List<Game> fetchTrending() throws Exception {
-        ApiResponse res = client.trending();
-        if (!res.isSuccess()) {
-            throw new RuntimeException("TheGamesDB trending failed: HTTP " + res.statusCode + " " + truncate(res.body, 300));
-        }
-        return parseGames(res.body).toJavaList();
+    public Either<FetchError, java.util.List<Game>> fetchTrending() {
+        return client.trending()
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Transport("TheGamesDB trending", e))
+                .flatMap(res -> requireSuccess("TheGamesDB trending", res))
+                .flatMap(this::parseRows);
     }
 
-    public List<Game> searchGames(String query) throws Exception {
-        if (query == null || query.trim().isEmpty()) {
-            return fetchTrending();
-        }
-        ApiResponse res = client.searchGame(query.trim());
-        if (!res.isSuccess()) {
-            throw new RuntimeException("TheGamesDB search failed: HTTP " + res.statusCode + " " + truncate(res.body, 300));
-        }
-        return parseGames(res.body).toJavaList();
+    public Either<FetchError, java.util.List<Game>> searchGames(String query) {
+        return (query == null || query.trim().isEmpty())
+                ? fetchTrending()
+                : client.searchGame(query.trim())
+                        .toEither()
+                        .mapLeft(e -> (FetchError) new FetchError.Transport("TheGamesDB search", e))
+                        .flatMap(res -> requireSuccess("TheGamesDB search", res))
+                        .flatMap(this::parseRows);
+    }
+
+    private Either<FetchError, String> requireSuccess(String api, ApiResponse res) {
+        return res.isSuccess()
+                ? Either.right(res.body)
+                : Either.left(new FetchError.HttpStatus(api, res.statusCode, truncate(res.body, 300)));
+    }
+
+    /** Structure-level strictness: an unreadable payload is an error, not an empty list. */
+    private Either<FetchError, java.util.List<Game>> parseRows(String body) {
+        return Try.of(() -> JsonParser.parseString(body).getAsJsonObject())
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Payload("TheGamesDB", "payload shape", e))
+                .flatMap(this::extractStructure)
+                .map(games -> games.toJavaList());
     }
 
     /**
-     * Parses the games payload into a persistent vavr list. Any parse failure
-     * (malformed JSON, missing nodes) is represented as an empty list rather
-     * than thrown, matching the previous swallow-and-log behavior.
+     * The accumulating node: games array and boxart map extracted independently,
+     * combined with {@code Validation.combine(...).ap(...)} so all structure
+     * failures collect into one {@code Seq<FetchError>} instead of
+     * short-circuiting at the first one.
      */
-    public io.vavr.collection.List<Game> parseGames(String json) {
-        return Try.of(() -> JsonParser.parseString(json).getAsJsonObject())
-                .map(root -> {
-                    JsonObject data = root.getAsJsonObject("data");
-                    JsonArray results = data == null ? null : data.getAsJsonArray("games");
-                    JsonObject boxartData = extractBoxartData(root);
-                    if (results == null) {
-                        return io.vavr.collection.List.<Game>empty();
-                    }
-                    return io.vavr.collection.List.range(0, results.size())
-                            .map(i -> results.get(i).getAsJsonObject())
-                            .map(g -> toGame(g, boxartData));
-                })
-                .getOrElse(io.vavr.collection.List.empty());
+    private Either<FetchError, List<Game>> extractStructure(JsonObject root) {
+        Validation<Seq<FetchError>, List<Game>> rows =
+                Validation.combine(validGames(root), validBoxart(root))
+                        .ap(this::zipRows);
+        return rows.toEither()
+                .mapLeft(errors -> (FetchError) new FetchError.Payload("TheGamesDB",
+                        "payload structure: " + errors.map(FetchError::uiMessage).mkString("; "),
+                        null));
+    }
+
+    private Validation<FetchError, JsonArray> validGames(JsonObject root) {
+        return Try.of(() -> root.getAsJsonObject("data"))
+                .map(data -> data == null ? null : data.getAsJsonArray("games"))
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Payload("TheGamesDB", "unreadable data.games", e))
+                .flatMap(games -> games != null
+                        ? Either.<FetchError, JsonArray>right(games)
+                        : Either.<FetchError, JsonArray>left(
+                                new FetchError.Payload("TheGamesDB", "missing data.games", null)))
+                .toValidation();
+    }
+
+    /** Boxart absence is NOT an error — games parse with empty poster URLs (as before). */
+    private Validation<FetchError, JsonObject> validBoxart(JsonObject root) {
+        return Validation.valid(extractBoxartData(root));
+    }
+
+    private List<Game> zipRows(JsonArray games, JsonObject boxartData) {
+        return List.range(0, games.size())
+                .map(i -> toGame(games.get(i).getAsJsonObject(), boxartData));
+    }
+
+    /**
+     * Lenient facade kept for callers that want the old swallow-and-return-empty
+     * behavior (tests, tooling): the strict spine, unwrapped with an empty default.
+     */
+    public java.util.List<Game> parseGames(String json) {
+        return parseRows(json).getOrElse(java.util.List.of());
     }
 
     private Game toGame(JsonObject g, JsonObject boxartData) {
@@ -112,7 +163,7 @@ public class TgdbGameService {
             return "";
         }
         JsonArray images = boxartData.getAsJsonArray(String.valueOf(gameId));
-        return io.vavr.collection.List.range(0, images.size())
+        return List.range(0, images.size())
                 .map(i -> images.get(i).getAsJsonObject())
                 .filter(image -> "boxart".equals(optString(image, "type"))
                         && "front".equals(optString(image, "side")))
@@ -123,22 +174,24 @@ public class TgdbGameService {
                 .getOrElse("");
     }
 
-    public String posterDataUri(String posterUrl) {
-        if (posterUrl == null || posterUrl.isEmpty()) {
-            return null;
+    /**
+     * Cache-aside as an {@link Option} chain: absent/empty URL is {@code None},
+     * a cache hit short-circuits via {@code orElse}, a miss is fetched and put
+     * back ({@code peek}) — bounded so long sessions don't grow the cache.
+     */
+    public Option<String> posterDataUri(String posterUrl) {
+        return Option.of(posterUrl)
+                .filter(u -> !u.isEmpty())
+                .flatMap(u -> Option.of(posterCache.get(u))
+                        .orElse(() -> client.loadPosterDataUri(u)
+                                .peek(uri -> cachePut(u, uri))));
+    }
+
+    private void cachePut(String url, String uri) {
+        if (posterCache.size() >= 512) {
+            posterCache.clear();
         }
-        String cached = posterCache.get(posterUrl);
-        if (cached != null) {
-            return cached;
-        }
-        String uri = client.loadPosterDataUri(posterUrl);
-        if (uri != null) {
-            if (posterCache.size() >= 512) {
-                posterCache.clear();
-            }
-            posterCache.put(posterUrl, uri);
-        }
-        return uri;
+        posterCache.put(url, uri);
     }
 
     private static String optString(JsonObject g, String key) {
@@ -152,7 +205,7 @@ public class TgdbGameService {
         if (ids == null || ids.size() == 0) {
             return "";
         }
-        return io.vavr.collection.List.range(0, ids.size())
+        return List.range(0, ids.size())
                 .map(i -> genreName(ids.get(i).getAsInt()))
                 .mkString(" · ");
     }
