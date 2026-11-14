@@ -4,6 +4,7 @@ import vangogh.controller.GameController;
 import vangogh.controller.MovieController;
 
 import build.krema.core.event.EventEmitter;
+import build.krema.core.event.KremaEvent;
 import org.cef.browser.CefBrowser;
 
 import com.google.gson.Gson;
@@ -13,9 +14,9 @@ import java.util.Map;
 /**
  * Java-to-JS event emitter for JCEF. Extends Krema's {@link EventEmitter} so it
  * can be passed to {@link MovieController#setEventEmitter} and
- * {@link GameController#setEventEmitter} unchanged. Overrides {@code emit()} to
- * deliver via {@link CefBrowser#executeJavaScript} instead of Krema's
- * {@code engine.eval}.
+ * {@link GameController#setEventEmitter} unchanged. Overrides both
+ * {@code emit} overloads to deliver via {@link CefBrowser#executeJavaScript}
+ * instead of Krema's {@code engine.eval}.
  *
  * <p>JCEF requires browser calls on the UI (Swing EDT) thread, so emissions
  * from IO-pool threads are marshalled via {@code EventQueue.invokeLater}.
@@ -53,6 +54,17 @@ public class JcefEventEmitter extends EventEmitter {
             java.awt.EventQueue.invokeLater(() ->
                     browser.executeJavaScript(js, "", 0));
         }
+    }
+
+    /**
+     * Routes pre-built {@link KremaEvent}s through the EDT-safe path above.
+     * The base class's implementation calls {@code engine.eval} on the null
+     * engine this class passes to {@code super} — routing through
+     * {@link #emit(String, Object)} avoids inheriting that NPE.
+     */
+    @Override
+    public void emit(KremaEvent event) {
+        emit(event.name(), event.payload());
     }
 
     private static String escapeJs(String s) {
