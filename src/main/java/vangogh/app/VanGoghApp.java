@@ -56,5 +56,20 @@ public class VanGoghApp {
                 // thread, the only safe point for Cocoa calls from app code.
                 .plugin(new MacMenubarPlugin())
                 .run(); // blocks until the window closes
+
+        // Standard desktop-shell exit guarantee: when the window closes, the
+        // JVM must die immediately. Our IO pools (MovieController's fixed pool,
+        // GameController's "van-gogh-io", HttpClient selector/dispatcher
+        // internals) are all non-daemon, so without this the JVM hangs forever
+        // in Threads::destroy_vm() after "Application closed" — an alive but
+        // eventless zombie process. The lingering process also stalls macOS
+        // teardown of a fullscreen space (the window-server race behind the
+        // "screen freezes after closing from fullscreen" bug); killing the
+        // process is what frees the space. Windowed close was unaffected
+        // because the space tear-down doesn't wait on the process. Daemonizing
+        // each pool individually was rejected: broader change, site-by-site,
+        // and HttpClient internals are not ours to mark. Verified via thread
+        // sampling of a hung process (Threads::destroy_vm → Monitor::wait).
+        System.exit(0);
     }
 }
