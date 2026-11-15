@@ -1,16 +1,28 @@
 package vangogh.movie;
 
+import vangogh.error.FetchError;
 import vangogh.net.ApiResponse;
 import vangogh.net.TmdbClient;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import io.vavr.control.Either;
 import io.vavr.control.Option;
+import io.vavr.control.Try;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Fetch pipeline as an {@link Either} spine: transport failures become
+ * {@link FetchError.Transport}, a non-2xx status becomes
+ * {@link FetchError.HttpStatus} (an expected outcome, not an exception), and an
+ * unreadable payload becomes {@link FetchError.Payload}. The chain short-circuits
+ * at the first {@code Left}; controllers unwrap at the edge only.
+ */
 public class TmdbMovieService {
 
     private final TmdbClient client;
@@ -32,58 +44,49 @@ public class TmdbMovieService {
         this.client = client;
     }
 
-    public List<Movie> fetchTrending() throws Exception {
-        ApiResponse res = client.trending();
-        if (!res.isSuccess()) {
-            throw new RuntimeException("TMDB trending failed: HTTP " + res.statusCode + " " + truncate(res.body, 300));
-        }
-        return parseMovies(res.body).toJavaList();
+    public Either<FetchError, List<Movie>> fetchTrending() {
+        return client.trending()
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Transport("TMDB trending", e))
+                .flatMap(res -> requireSuccess("TMDB trending", res))
+                .flatMap(this::parseRows);
     }
 
-    public List<Movie> searchMovies(String query) throws Exception {
-        if (query == null || query.trim().isEmpty()) {
-            return fetchTrending();
-        }
-        ApiResponse res = client.searchMovie(query.trim());
-        if (!res.isSuccess()) {
-            throw new RuntimeException("TMDB search failed: HTTP " + res.statusCode + " " + truncate(res.body, 300));
-        }
-        return parseMovies(res.body).toJavaList();
+    public Either<FetchError, List<Movie>> searchMovies(String query) {
+        return (query == null || query.trim().isEmpty())
+                ? fetchTrending()
+                : client.searchMovie(query.trim())
+                        .toEither()
+                        .mapLeft(e -> (FetchError) new FetchError.Transport("TMDB search", e))
+                        .flatMap(res -> requireSuccess("TMDB search", res))
+                        .flatMap(this::parseRows);
+    }
+
+    private Either<FetchError, String> requireSuccess(String api, ApiResponse res) {
+        return res.isSuccess()
+                ? Either.right(res.body)
+                : Either.left(new FetchError.HttpStatus(api, res.statusCode, truncate(res.body, 300)));
+    }
+
+    /** Structure-level strictness: an unreadable payload is an error, not an empty list. */
+    private Either<FetchError, List<Movie>> parseRows(String body) {
+        return Try.of(() -> {
+                    JsonObject root = JsonParser.parseString(body).getAsJsonObject();
+                    JsonArray rows = root.getAsJsonArray("results");
+                    return io.vavr.collection.List.range(0, rows.size())
+                            .map(i -> toMovie(rows.get(i).getAsJsonObject()))
+                            .toJavaList();
+                })
+                .toEither()
+                .mapLeft(e -> new FetchError.Payload("TMDB", "payload shape", e));
     }
 
     /**
-     * Loads one poster as a data: URI (never the direct URL — the WebView must
-     * not talk to image.tmdb.org itself, see TmdbClient). Cached so switching
-     * between trending and past searches is instant.
+     * Lenient facade kept for callers that want the old swallow-and-return-empty
+     * behavior (tests, tooling): the strict spine, unwrapped with an empty default.
      */
-    public String posterDataUri(String posterUrl) {
-        if (posterUrl == null || posterUrl.isEmpty()) {
-            return null;
-        }
-        String cached = posterCache.get(posterUrl);
-        if (cached != null) {
-            return cached;
-        }
-        String uri = client.loadPosterDataUri(posterUrl);
-        if (uri != null) {
-            if (posterCache.size() >= 512) {
-                posterCache.clear();
-            }
-            posterCache.put(posterUrl, uri);
-        }
-        return uri;
-    }
-
-    public io.vavr.collection.List<Movie> parseMovies(String json) {
-        Option<JsonObject> root = Option.of(json)
-                .flatMap(s -> io.vavr.control.Try.of(() -> JsonParser.parseString(s).getAsJsonObject()).toOption());
-        Option<JsonArray> results = root.map(r -> r.getAsJsonArray("results"));
-
-        return results
-                .map(arr -> io.vavr.collection.List.range(0, arr.size())
-                        .map(i -> arr.get(i).getAsJsonObject())
-                        .map(this::toMovie))
-                .getOrElse(io.vavr.collection.List.empty());
+    public List<Movie> parseMovies(String json) {
+        return parseRows(json).getOrElse(List.of());
     }
 
     private Movie toMovie(JsonObject m) {
@@ -165,6 +168,26 @@ public class TmdbMovieService {
             case 37 -> "Western";
             default -> "Unknown";
         };
+    }
+
+    /**
+     * Cache-aside as an {@link Option} chain: absent/empty URL is {@code None},
+     * a cache hit short-circuits via {@code orElse}, a miss is fetched and put
+     * back ({@code peek}) — bounded so long sessions don't grow the cache.
+     */
+    public Option<String> posterDataUri(String posterUrl) {
+        return Option.of(posterUrl)
+                .filter(u -> !u.isEmpty())
+                .flatMap(u -> Option.of(posterCache.get(u))
+                        .orElse(() -> client.loadPosterDataUri(u)
+                                .peek(uri -> cachePut(u, uri))));
+    }
+
+    private void cachePut(String url, String uri) {
+        if (posterCache.size() >= 512) {
+            posterCache.clear();
+        }
+        posterCache.put(url, uri);
     }
 
     private static String truncate(String s, int max) {

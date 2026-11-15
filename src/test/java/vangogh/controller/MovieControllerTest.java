@@ -15,8 +15,7 @@ import java.util.Map;
 
 /**
  * Unit tests for MovieController — the Krema IPC command handler that backs
- * {@code window.krema.invoke("requestMovies", ...)} and
- * {@code window.krema.invoke("pollPosters", ...)}.
+ * {@code window.krema.invoke("requestMovies", ...)}.
  *
  * Uses stubbed {@link TmdbClient}/{@link TmdbMovieService} injected via the
  * package-private constructors, so no real TMDB network calls are made.
@@ -46,19 +45,19 @@ class MovieControllerTest {
         }
 
         @Override
-        public ApiResponse trending() throws Exception {
-            return trendingResponse;
+        public io.vavr.control.Try<ApiResponse> trending() {
+            return io.vavr.control.Try.success(trendingResponse);
         }
 
         @Override
-        public ApiResponse searchMovie(String query) throws Exception {
-            return searchResponse;
+        public io.vavr.control.Try<ApiResponse> searchMovie(String query) {
+            return io.vavr.control.Try.success(searchResponse);
         }
 
         @Override
-        public String loadPosterDataUri(String posterUrl) {
+        public io.vavr.control.Option<String> loadPosterDataUri(String posterUrl) {
             posterCalls.add(posterUrl);
-            return "data:image/jpeg;base64,stubbed";
+            return io.vavr.control.Option.some("data:image/jpeg;base64,stubbed");
         }
     }
 
@@ -165,8 +164,8 @@ class MovieControllerTest {
     void pollPostersSkippedPostersDoNotStallPolling() throws Exception {
         StubClient client = new StubClient() {
             @Override
-            public String loadPosterDataUri(String posterUrl) {
-                return null; // every poster fetch fails
+            public io.vavr.control.Option<String> loadPosterDataUri(String posterUrl) {
+                return io.vavr.control.Option.none(); // every poster fetch fails
             }
         };
         client.trendingResponse = new ApiResponse(200, VALID_JSON, null);

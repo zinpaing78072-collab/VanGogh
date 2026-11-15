@@ -1,6 +1,15 @@
 package vangogh.net;
 
-import java.io.IOException;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import io.vavr.collection.Stream;
+import io.vavr.control.Option;
+import io.vavr.control.Try;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -14,12 +23,8 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 public class TgdbClient {
-	private static final String BASE = "https://api.thegamesdb.net/v1/";
+    private static final String BASE = "https://api.thegamesdb.net/v1/";
     private static final String IMAGE_BASE = "https://cdn.thegamesdb.net/images/original/";
     static final String IMAGE_PROXY = "https://wsrv.nl/?url=";
     private static final Duration POSTER_TIMEOUT = Duration.ofSeconds(5);
@@ -33,39 +38,45 @@ public class TgdbClient {
     public TgdbClient(String apiKey) {
         this.apiKey = apiKey;
     }
-    
-    public ApiResponse searchGame(String query) throws Exception {
-    	String url = BASE+"Games/ByGameName?apikey="+apiKey+"&name="+URLEncoder.encode(query, StandardCharsets.UTF_8)+"&fields=players,publishers,genres,overview,rating,platform&include=boxart,platform&page=1";
 
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .build();
-
-        HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
-        return new ApiResponse(response.statusCode(), response.body(), null);
+    /**
+     * Transport is wrapped as a value: callers chain with {@code map}/{@code flatMap}
+     * instead of {@code try}/{@code catch}. Network/HTTP failures surface as
+     * {@code Try.failure} and are converted to {@code FetchError.Transport} at the
+     * service seam.
+     */
+    public Try<ApiResponse> searchGame(String query) {
+        String url = BASE + "Games/ByGameName?apikey=" + apiKey
+                + "&name=" + URLEncoder.encode(query, StandardCharsets.UTF_8)
+                + "&fields=players,publishers,genres,overview,rating,platform&include=boxart,platform&page=1";
+        return send(url);
     }
-    
-    public ApiResponse trending() throws Exception {
-        String url = BASE+"Games/ByGameID?apikey="+apiKey+"&id=139623,65101,114899,136323,14517,130236,142770,60527&fields=players,publishers,genres,overview,rating,platform&include=boxart,platform&page=1";
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .build();
-
-        HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
-   
-        return new ApiResponse(response.statusCode(), response.body(), null);
+    public Try<ApiResponse> trending() {
+        String url = BASE + "Games/ByGameID?apikey=" + apiKey
+                + "&id=139623,65101,114899,136323,14517,130236,142770,60527"
+                + "&fields=players,publishers,genres,overview,rating,platform&include=boxart,platform&page=1";
+        return send(url);
     }
+
+    private Try<ApiResponse> send(String url) {
+        return Try.of(() -> {
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create(url))
+                            .GET()
+                            .build();
+                    return http.send(request, HttpResponse.BodyHandlers.ofString());
+                })
+                .map(response -> new ApiResponse(response.statusCode(), response.body(), null));
+    }
+
     public static String posterPath(String game_id) {
         if (game_id == null || game_id.isEmpty()) {
             return null;
         }
         return IMAGE_BASE + game_id;
     }
-    
+
     static List<String> posterSources(String posterUrl, boolean proxyFirst) {
         List<String> sources = new ArrayList<>();
         if (posterUrl == null || !posterUrl.startsWith(IMAGE_BASE + "boxart/front/")) {
@@ -83,13 +94,11 @@ public class TgdbClient {
         }
         return sources;
     }
-    
-    static String toDataUri(byte[] bytes, String contentType) {
 
+    static String toDataUri(byte[] bytes, String contentType) {
         if (bytes == null || bytes.length == 0) {
             return null;
         }
-
         String mime = contentType != null
                 ? contentType.split(";")[0].trim()
                 : "image/jpeg";
@@ -102,84 +111,75 @@ public class TgdbClient {
                 + Base64.getEncoder().encodeToString(bytes);
     }
 
-    public String loadPosterDataUri(String posterUrl) {
-
-        for (String source : posterSources(posterUrl, preferProxy)) {
-
-            try {
-
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(source))
-                        .timeout(POSTER_TIMEOUT)
-                        .GET()
-                        .build();
-
-                HttpResponse<byte[]> response = http.send(
-                        request,
-                        HttpResponse.BodyHandlers.ofByteArray()
-                );
-
-                if (response.statusCode() == 200) {
-
-                    String uri = toDataUri(
-                            response.body(),
-                            response.headers()
-                                    .firstValue("content-type")
-                                    .orElse(null)
-                    );
-
-                    if (uri != null) {
-
-                        rememberPosterSource(source.startsWith(IMAGE_PROXY));
-
-                        return uri;
-                    }
-                }
-
-            } catch (IOException | InterruptedException e) {
-
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                    return null;
-                }
-            }
-        }
-
-        return null;
+    /**
+     * Failover chain: try each poster source (proxy / direct) as a {@link Try},
+     * stop at the first success. vavr's {@code Stream} is lazy, so only sources up
+     * to the first success are actually fetched. An interrupted fetch stops the
+     * whole chain (interrupt flag restored) and yields {@link Option#none()}.
+     */
+    public Option<String> loadPosterDataUri(String posterUrl) {
+        return Stream.ofAll(posterSources(posterUrl, preferProxy))
+                .map(source -> Try.of(() -> Tuple.of(source, fetchAsUri(source))))
+                .takeUntil(attempt -> attempt.isSuccess()
+                        || attempt.getCause() instanceof InterruptedException)
+                .lastOption()
+                .flatMap(attempt -> attempt.toOption())
+                .peek(pair -> rememberPosterSource(pair._1().startsWith(IMAGE_PROXY)))
+                .map(Tuple2::_2);
     }
-    
-    static boolean posterProxyPreferred() {
+
+    /** One poster source fetch as a throwing function, so {@link Try} can carry it. */
+    private String fetchAsUri(String source) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(source))
+                .timeout(POSTER_TIMEOUT)
+                .GET()
+                .build();
+        HttpResponse<byte[]> response;
         try {
-            return Files.isRegularFile(PROXY_MARKER);
-        } catch (Exception e) {
-            return false;
+            response = http.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw e;
         }
+        if (response.statusCode() != 200) {
+            throw new IllegalStateException("poster source returned HTTP " + response.statusCode());
+        }
+        String uri = toDataUri(response.body(),
+                response.headers().firstValue("content-type").orElse(null));
+        if (uri == null) {
+            throw new IllegalStateException("poster body was empty");
+        }
+        return uri;
     }
-    
+
     private void rememberPosterSource(boolean proxied) {
         if (preferProxy != proxied) {
             preferProxy = proxied;
             savePosterProxyPreference(proxied);
         }
     }
-    
+
+    /** Cosmetic file IO stays best-effort: failure is a value that defaults to false. */
+    static boolean posterProxyPreferred() {
+        return Try.of(() -> Files.isRegularFile(PROXY_MARKER)).getOrElse(false);
+    }
+
+    /** Cosmetic file IO stays best-effort: never break poster loading over it. */
     static void savePosterProxyPreference(boolean proxied) {
-        try {
+        Try.run(() -> {
             Files.createDirectories(PROXY_MARKER.getParent());
             if (proxied) {
                 Files.writeString(PROXY_MARKER, "proxy");
             } else {
                 Files.deleteIfExists(PROXY_MARKER);
             }
-        } catch (Exception e) {
+        }).onFailure(e -> {
             // Preference is cosmetic; never break poster loading over file IO.
-        }
+        });
     }
-    
-    
-    public static void summarize(String json) {
 
-        try {
+    public static void summarize(String json) {
+        Try.run(() -> {
             JsonObject root = JsonParser.parseString(json).getAsJsonObject();
 
             JsonObject data = root.getAsJsonObject("data");
@@ -225,10 +225,6 @@ public class TgdbClient {
                     }
                 }
             }
-
-        } catch (Exception e) {
-            System.out.println("TheGamesDB parse error: " + e.getMessage());
-        }
+        }).onFailure(e -> System.out.println("TheGamesDB parse error: " + e.getMessage()));
     }
-    
 }

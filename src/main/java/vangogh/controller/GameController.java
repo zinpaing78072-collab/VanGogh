@@ -2,24 +2,30 @@ package vangogh.controller;
 
 import build.krema.core.KremaCommand;
 import build.krema.core.event.EventEmitter;
+import io.vavr.collection.List;
 import io.vavr.concurrent.Future;
+import io.vavr.control.Either;
+import io.vavr.control.Option;
+import vangogh.error.FetchError;
 import vangogh.game.Game;
 import vangogh.game.TgdbGameService;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 /**
- * Vavr-based rewrite: the game fetch runs on the IO pool as a vavr
- * {@link Future} and is joined on the UI thread (Krema handlers must stay
- * synchronous; see AGENTS.md Windows UI-thread rule). Posters are prefetched
- * on the IO pool and delivered through the {@code pollGamePosters} drain
- * command, which is the Windows-safe mechanism (engine.eval is dropped off the
- * UI thread on Windows).
+ * Vavr-based rewrite: the game fetch returns an {@link Either} value and is
+ * unwrapped to a thrown error only at this Krema edge — that thrown error
+ * becomes Krema's error reply to the page. The reply still joins the IO future
+ * on the UI thread (Krema handlers must stay synchronous; see AGENTS.md
+ * Windows UI-thread rule). Posters are prefetched on the IO pool via
+ * {@link Future#traverse} and delivered through the {@code pollGamePosters}
+ * drain command, which doubles as the completion signal (returns −1 when
+ * nothing is pending).
  */
 public class GameController {
 
@@ -56,41 +62,39 @@ public class GameController {
     }
 
     @KremaCommand
-    public List<Game> requestGames(String kind, String query) {
+    public java.util.List<Game> requestGames(String kind, String query) {
         int gen = generation.incrementAndGet();
         resetPosterTracking();
 
-        List<Game> games;
-        try {
-            // Block the UI thread until the IO pool resolves the game list, so
-            // the reply to the page is synchronous. vavr Future backs the async
-            // fetch; any service failure propagates through Future.get().
-            Future<List<Game>> future = Future.<List<Game>>of(executor, () -> {
-                try {
-                    return "search".equals(kind)
-                            ? service.searchGames(query)
-                            : service.fetchTrending();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-            games = future.get();
-        } catch (Exception e) {
-            // Surface the fetch failure's message through Krema's error reply
-            // instead of a bare vavr/completion wrapper.
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            throw cause instanceof RuntimeException re ? re : new RuntimeException(cause);
-        }
+        // The fetch returns an Either value and never throws, so the blocking
+        // join below cannot fail — the error unwraps at the edge instead.
+        Future<Either<FetchError, java.util.List<Game>>> future =
+                Future.of(executor, () -> fetchGames(kind, query));
 
-        // Total is set on the UI thread BEFORE this command returns, so a
-        // pollGamePosters issued for this request can never observe a stale count.
-        List<Game> posterable = io.vavr.collection.List.ofAll(games)
-                .filter(g -> g.posterUrl() != null && !g.posterUrl().isEmpty())
-                .toJavaList();
+        // Block the UI thread until the IO pool resolves the game list, so the
+        // reply to the page is synchronous (Krema handlers must stay synchronous).
+        java.util.List<Game> games = future.get()
+                .fold(
+                        error -> {
+                            throw new RuntimeException(FetchError.uiMessage(error), error.cause());
+                        },
+                        Function.identity());
+
+        // Total is set BEFORE this command returns, so a pollGamePosters issued
+        // for this request can never observe a stale count.
+        List<Game> posterable = List.ofAll(games)
+                .filter(g -> g.posterUrl() != null && !g.posterUrl().isEmpty());
         posterTotal.set(posterable.size());
 
-        executor.submit(() -> prefetchPosters(posterable, gen));
+        Future.traverse(executor, posterable, game ->
+                Future.run(executor, () -> fetchAndOffer(game.id(), game.posterUrl(), gen)));
         return games;
+    }
+
+    private Either<FetchError, java.util.List<Game>> fetchGames(String kind, String query) {
+        return "search".equals(kind)
+                ? service.searchGames(query)
+                : service.fetchTrending();
     }
 
     @KremaCommand
@@ -117,32 +121,16 @@ public class GameController {
         posterSkipped.set(0);
     }
 
-    private void prefetchPosters(List<Game> games, int gen) {
-        boolean first = true;
-        for (Game game : games) {
-            String posterUrl = game.posterUrl();
-            if (posterUrl == null || posterUrl.isEmpty()) {
-                continue;
-            }
-            if (first) {
-                first = false;
-                fetchAndOffer(game.id(), posterUrl, gen);
-                continue;
-            }
-            executor.submit(() -> fetchAndOffer(game.id(), posterUrl, gen));
-        }
-    }
-
     private void fetchAndOffer(int id, String posterUrl, int gen) {
-        String uri = service.posterDataUri(posterUrl);
-        if (generation.get() != gen) {
+        Option<String> uri = service.posterDataUri(posterUrl)
+                .filter(ignore -> generation.get() == gen);
+        if (uri.isEmpty()) {
+            if (generation.get() == gen) {
+                posterSkipped.incrementAndGet();
+            }
             return;
         }
-        if (uri == null) {
-            posterSkipped.incrementAndGet();
-            return;
-        }
-        posterQueue.offer(new PendingPoster(id, uri));
+        posterQueue.offer(new PendingPoster(id, uri.get()));
     }
 
     private static String resolveApiKey() {
