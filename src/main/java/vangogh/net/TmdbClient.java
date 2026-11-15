@@ -2,7 +2,6 @@ package vangogh.net;
 
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
-import io.vavr.collection.Stream;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 
@@ -113,12 +112,7 @@ public class TmdbClient {
      * whole chain (interrupt flag restored) and yields {@link Option#none()}.
      */
     public Option<String> loadPosterDataUri(String posterUrl) {
-        return Stream.ofAll(posterSources(posterUrl, preferProxy))
-                .map(source -> Try.of(() -> Tuple.of(source, fetchAsUri(source))))
-                .takeUntil(attempt -> attempt.isSuccess()
-                        || attempt.getCause() instanceof InterruptedException)
-                .lastOption()
-                .flatMap(attempt -> attempt.toOption())
+        return PosterFailover.firstSuccess(posterSources(posterUrl, preferProxy), this::fetchAsUri)
                 .peek(pair -> rememberPosterSource(pair._1().startsWith(IMAGE_PROXY)))
                 .map(Tuple2::_2);
     }
