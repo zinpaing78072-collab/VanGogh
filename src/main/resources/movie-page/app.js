@@ -1,17 +1,20 @@
-/* Van Gogh content browser (Krema system-webview shell) */
+/* Van Gogh content browser (Krema system-webview shell / JCEF experiment shell) */
 
 /* The page talks to Java through window.krema:
    - await window.krema.invoke("requestMovies", { kind, query }) → movie list
    - await window.krema.invoke("requestGames", { kind, query }) → game list
-   - await window.krema.invoke("pollPosters", {}) → poster drain progress
-   - window.krema.on("poster", data) → poster data URIs streamed in
-   No JavaFX bridge shim needed anymore — Krema is the sole UI shell.
+   - await window.krema.invoke("pollGamePosters", {}) → game poster drain progress
+   - window.krema.on("poster", data) / on("gamePoster", data) → poster data URIs
+   The JCEF shell serves this page unchanged: jcef/krema-shim.js implements the
+   same window.krema API on top of window.cefQuery.
 
-   Windows note: krema-core 0.3.2 silently drops engine evals made off the UI
-   thread on Windows, so the backend can only touch this page from inside a
-   command handler (Krema runs those on the UI thread). That is why the movie
-   list comes back synchronously and posters are drained via pollPosters
-   instead of being pushed by background threads.
+   Poster delivery: movies stream as direct "poster" events pushed from the
+   backend's IO pool — verified to work from background threads on macOS and in
+   the JCEF shell (whose emitter marshals via the Swing EDT). On the Krema shell
+   this is macOS-only by design; the Windows engine.eval note in AGENTS.md is
+   why the games slice drains through pollGamePosters instead, which doubles as
+   the completion signal (returns -1 when nothing is pending — events alone
+   cannot tell the page "no more will come").
 */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -21,6 +24,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const contentFilter = document.getElementById("contentFilter");
     const sectionTitle = document.getElementById("sectionTitle");
 
+    // Selected content type ("movie" | "music" | "book" | "game"). The filter
+    // is a custom DOM widget (a div — see the NSMenu-freeze note below), so it
+    // has no native .value; the old select-based code read contentFilter.value,
+    // which became undefined after the widget swap and silently disabled the
+    // Game filter (Game selections kept calling requestMovies and rendered
+    // movie cards that gamePoster events could never match).
+    let selectedContent = "movie";
+
     function escapeHtml(text) {
         if (text == null) return "";
         const div = document.createElement("div");
@@ -28,9 +39,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         return div.innerHTML;
     }
 
-    // Posters arrive as "poster" events drained by Java's pollPosters command
-    // (one per prefetched poster); the payload arrives wrapped as
-    // { payload, timestamp } by Krema's bridge.
+    // Posters arrive as direct "poster" events pushed by Java (one per
+    // prefetched poster); the payload arrives wrapped as
+    // { payload, timestamp } by Krema's bridge — and by jcef/krema-shim.js
+    // in the JCEF shell.
     window.krema.on("poster", function (data) {
         if (data && data.payload) {
             window.setPoster(data.payload.id, data.payload.dataUri);
@@ -80,27 +92,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             placeholder.classList.add("hidden");
         }
     };
-
-    // Posters are prefetched on Java's IO pool and drained into the page by
-    // the pollPosters command (one "poster" event per poster, emitted on the
-    // UI thread — see the Windows note at the top of this file). Poll until
-    // the backend reports -1: nothing pending, nothing more can arrive.
-    let posterPollToken = 0;
-    async function pollPostersUntilDone() {
-        const token = ++posterPollToken;
-        while (window.krema) {
-            let pending;
-            try {
-                pending = await window.krema.invoke("pollPosters", {});
-            } catch (e) {
-                return;
-            }
-            if (pending == null || pending < 0 || token !== posterPollToken) {
-                return;
-            }
-            await new Promise((resolve) => setTimeout(resolve, 150));
-        }
-    }
 
     function renderContent(items, contentType) {
         grid.innerHTML = "";
@@ -168,7 +159,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
         try {
-            const isGame = contentFilter.value === "game";
+            const isGame = selectedContent === "game";
             sectionTitle.textContent = kind === "search"
                 ? "Search Results"
                 : `Trending ${isGame ? "Games" : "Movies"}`;
@@ -180,12 +171,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 showError(items.error);
                 return;
             }
-            renderContent(items, contentFilter.value);
+            renderContent(items, selectedContent);
             if (isGame) {
                 pollGamePostersUntilDone();
-            } else {
-                pollPostersUntilDone();
             }
+            // Movies now receive posters via direct "poster" events (Vavr Future).
         } catch (e) {
             const message = e && e.message ? e.message : String(e);
             showError("Failed to load content: " + escapeHtml(message));
@@ -214,16 +204,51 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    contentFilter.addEventListener("change", () => {
-        if (contentFilter.value === "movie" || contentFilter.value === "game") {
+    // Custom dropdown. A native <select> opens a modal macOS NSMenu whose
+    // event loop fights the CEF/AWT message pump on the AppKit thread and
+    // freezes the whole window (menu never closes, red button dead) — so the
+    // filter is a plain DOM widget instead.
+    function handleFilterChange(value) {
+        selectedContent = value;
+        if (value === "movie" || value === "game") {
             requestPageContent("trending", "");
         } else {
-            sectionTitle.textContent = `${contentFilter.value.charAt(0).toUpperCase() + contentFilter.value.slice(1)}`
+            sectionTitle.textContent = `${value.charAt(0).toUpperCase() + value.slice(1)}`
                 + " (not connected)";
             grid.innerHTML = `
                 <div class="empty-state">
-                    <p>${escapeHtml(contentFilter.value.charAt(0).toUpperCase() + contentFilter.value.slice(1))} results are not yet connected to the API.</p>
+                    <p>${escapeHtml(value.charAt(0).toUpperCase() + value.slice(1))} results are not yet connected to the API.</p>
                 </div>`;
+        }
+    }
+
+    const filterMenu = document.getElementById("contentFilterMenu");
+    const filterLabel = document.getElementById("contentFilterLabel");
+
+    function closeFilterMenu() {
+        filterMenu.classList.add("hidden");
+    }
+
+    contentFilter.addEventListener("click", (e) => {
+        const option = e.target.closest(".filter-option");
+        if (option) {
+            filterMenu.querySelectorAll(".filter-option").forEach((el) =>
+                el.classList.toggle("selected", el === option));
+            filterLabel.textContent = option.textContent;
+            closeFilterMenu();
+            handleFilterChange(option.dataset.value);
+        } else {
+            filterMenu.classList.toggle("hidden");
+        }
+    });
+    document.addEventListener("click", (e) => {
+        if (!contentFilter.contains(e.target)) {
+            closeFilterMenu();
+        }
+    });
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeFilterMenu();
         }
     });
 

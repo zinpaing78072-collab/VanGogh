@@ -1,0 +1,21 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-tag:
+        description: 'Tag to release (must start with "v", e.g., v1.2.3)'
+        required: true
+        type: string
+
+jobs:
+  release:
+    uses: vavr-io/workflows/.github/workflows/release.yml@main
+    with:
+      java-version: 21
+      release-tag: ${{ inputs.release-tag }}
+    secrets:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+      MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+      MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}

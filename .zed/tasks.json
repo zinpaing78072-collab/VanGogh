@@ -5,10 +5,22 @@
 // (-XstartOnFirstThread, --enable-native-access=ALL-UNNAMED) stay intact.
 // Do NOT use -Dexec.args=... — that replaces the pom's <arguments> list and
 // drops the flags, so the Krema window never appears on macOS.
+//
+// To run the JCEF shell instead: mvn compile exec:exec -Pjcef
 [
   {
     "label": "run van-gogh (Krema, mvn exec:exec)",
     "command": "mvn compile exec:exec",
+    "cwd": "/Users/macbookpro/Documents/school-project/van-gogh",
+    "env": {
+      "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home"
+    },
+    "use_new_terminal": false,
+    "reveal": "never"
+  },
+  {
+    "label": "run van-gogh (JCEF, mvn exec:exec -Pjcef)",
+    "command": "mvn compile exec:exec -Pjcef",
     "cwd": "/Users/macbookpro/Documents/school-project/van-gogh",
     "env": {
       "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home"
@@ -22,6 +34,17 @@
   {
     "label": "java run (VanGoghApp via exec:exec)",
     "command": "mvn compile exec:exec",
+    "cwd": "/Users/macbookpro/Documents/school-project/van-gogh",
+    "env": {
+      "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home"
+    },
+    "use_new_terminal": false,
+    "reveal": "always",
+    "tags": ["java-main"]
+  },
+  {
+    "label": "java run (JcefVanGoghApp via exec:exec -Pjcef)",
+    "command": "mvn compile exec:exec -Pjcef",
     "cwd": "/Users/macbookpro/Documents/school-project/van-gogh",
     "env": {
       "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home"

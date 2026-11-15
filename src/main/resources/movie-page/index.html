@@ -15,12 +15,15 @@
         <button id="searchBtn" class="search-btn">Search</button>
     </div>
     <div class="filter-wrapper">
-        <select id="contentFilter" class="filter-select">
-            <option value="movie" selected>Movie</option>
-            <option value="music">Music</option>
-            <option value="book">Book</option>
-            <option value="game">Game</option>
-        </select>
+        <div id="contentFilter" class="filter-select" tabindex="0" role="listbox" aria-label="Content type filter">
+            <span id="contentFilterLabel">Movie</span>
+            <div id="contentFilterMenu" class="filter-menu hidden">
+                <div class="filter-option selected" data-value="movie">Movie</div>
+                <div class="filter-option" data-value="music">Music</div>
+                <div class="filter-option" data-value="book">Book</div>
+                <div class="filter-option" data-value="game">Game</div>
+            </div>
+        </div>
     </div>
 </header>
 

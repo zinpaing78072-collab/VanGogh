@@ -25,6 +25,18 @@
             <version>2.10.1</version>
         </dependency>
         <dependency>
+            <groupId>io.vavr</groupId>
+            <artifactId>vavr</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+        <!-- JCEF experiment: Chromium Embedded Framework shell (swap for Krema system webview).
+             Natives are downloaded automatically on first run (~100 MB per platform). -->
+        <dependency>
+            <groupId>me.friwi</groupId>
+            <artifactId>jcefmaven</artifactId>
+            <version>152.0.6</version>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.0</version>
@@ -98,10 +110,60 @@
                                      krema-core's own pom. macOS-only HotSpot flag. -->
                                 <argument>-XstartOnFirstThread</argument>
                                 <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                <!-- JCEF macOS requirements (jcefmaven README): harmless for Krema too. -->
+                                <argument>--add-opens=java.desktop/sun.awt=ALL-UNNAMED</argument>
+                                <argument>--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED</argument>
+                                <argument>--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED</argument>
                                 <argument>-Xmx512m</argument>
                                 <argument>-classpath</argument>
                                 <classpath/>
                                 <argument>vangogh.app.VanGoghApp</argument>
+                            </arguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- JCEF experiment shell. Run with: mvn exec:exec -Pjcef -->
+        <profile>
+            <id>jcef</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <configuration>
+                            <executable>${java.home}/bin/java</executable>
+                            <arguments>
+                                <!-- JVM flags per the jcefmaven README. Note: NO
+                                     -XstartOnFirstThread — with it, main() runs on the
+                                     AppKit-eligible first thread, and CEF's macOS native
+                                     init (N_Initialize on the EDT) circular-waits with
+                                     main blocked in invokeAndWait: nothing initializes and
+                                     the AWT window never paints. jcefsampleapp launches as
+                                     plain `java -jar` without the flag. (Krema's profile
+                                     keeps it — the OS webview genuinely needs it.) -->
+                                <!-- Panama FFM: silence restricted-method warnings. -->
+                                <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                <!-- JCEF macOS requirements (jcefmaven README). -->
+                                <argument>--add-opens=java.desktop/sun.awt=ALL-UNNAMED</argument>
+                                <argument>--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED</argument>
+                                <argument>--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED</argument>
+                                <!-- OSR mode uses JOGL (jcefmaven README). -->
+                                <argument>--add-exports=java.base/java.lang=ALL-UNNAMED</argument>
+                                <argument>--add-exports=java.desktop/sun.awt=ALL-UNNAMED</argument>
+                                <argument>--add-exports=java.desktop/sun.java2d=ALL-UNNAMED</argument>
+                                <!-- Native fullscreen (title bar + menu bar hide):
+                                     com.apple.eawt is internal on modern JDKs. -->
+                                <argument>--add-exports=java.desktop/com.apple.eawt=ALL-UNNAMED</argument>
+                                <!-- Heap cap. -->
+                                <argument>-Xmx512m</argument>
+                                <!-- No -Djava.library.path needed: CefInitializer appends the
+                                     jcef-bundle install dir to it programmatically at startup. -->
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>vangogh.app.jcef.JcefVanGoghApp</argument>
                             </arguments>
                         </configuration>
                     </plugin>

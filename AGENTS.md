@@ -9,7 +9,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 ### Core behavior
 - **Input**: A keyword or content name (e.g. `"Inception"`, `"Taylor Swift"`, `"Minecraft"`)
 - **Output**: Related content across Movies and Games (Music and Books are not yet wired)
-- **Mechanism**: The frontend invokes `requestMovies` or `requestGames`; movie and game controllers query TMDB or TheGamesDB and drain artwork through Krema events.
+- **Mechanism**: The frontend invokes `requestMovies` or `requestGames`; movie and game controllers query TMDB or TheGamesDB. Movies push poster data-URIs as direct `"poster"` events from IO-pool Futures; games deliver through the polled `pollGamePosters` drain (emitting `"gamePoster"`).
 - **Filter**: Dropdown offers Movie / Music / Book / Game — Movie and Game connect to their APIs; Music and Book show a "not yet connected" message.
 
 ### Tech stack
@@ -18,9 +18,21 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 - **Frontend**: HTML/CSS/JS served from classpath (`src/main/resources/movie-page/`)
 - **HTTP client**: Java 17+ `java.net.http.HttpClient` (Gson for JSON parsing)
 - **Data sources**: TMDB (The Movie Database) for movies and TheGamesDB for games
-- **Poster proxy**: `wsrv.nl` with persistent user preference stored in `~/.van-gogh/poster-proxy.conf`
+- **Poster proxy**: `wsrv.nl` with persistent user preference stored in `~/.van-gogh/poster-proxy.conf`. Needed because `image.tmdb.org` is unreachable from this machine/ISP (TLS dies mid-handshake; `api.themoviedb.org` works) — poster loading depends on the proxy failover, see team-vault "Debug Record — TMDB posters blocked".
 - **Tests**: JUnit 5; all network calls stubbed (no real TMDB API keys needed)
 - **IPC**: `@KremaCommand` methods on controllers; `<parameters>true</parameters>` in maven-compiler-plugin for arg binding by name
+
+### Vavr conventions (functional core)
+
+`io.vavr:vavr:1.0.1` is a compile dependency; the vendored `repos/vavr` subtree is the reference for its API. Functional types are used throughout the codebase as follows (mirroring the already-vavr-ified movie slice):
+
+- **`io.vavr.control.Option`** instead of `java.util.Optional` — for absent/present JSON fields, nullable lookups, and `posterUrl`/`genre` defaults. Prefer `.map`, `.flatMap`, `.filter`, `.getOrElse`.
+- **`io.vavr.control.Try`** instead of `throws Exception` on parsing and network methods where representing failure as a value is cleaner. Recover with `.getOrElse` / `.getOrElseThrow`.
+- **`io.vavr.concurrent.Future`** instead of `CompletableFuture` — for async poster prefetch on the IO pool; Krema command handlers on the UI thread stay synchronous.
+- **`io.vavr.collection.List`/`Seq`/`Map`** — persistent immutable collections for in-memory transformations. Convert to `java.util.List` only at Krema IPC boundaries (`@KremaCommand` return types).
+- **Caches stay `java.util.concurrent.ConcurrentHashMap`** — vavr has no concurrent map; immutable vavr maps are not a fit for a mutable read-through cache.
+- **Records stay data carriers** — `Movie`, `Game` are unchanged; only their construction/population goes functional.
+- **Verify op semantics against the vendored source, never intuition.** Two traps verified 2026-11-15 (poster failover, [[Debug Record — VanGogh Posters Never Loaded (vavr takeUntil)]] in the agent-docs vault): vavr's `takeUntil` is `takeWhile(negate)` — it **excludes** the element satisfying the predicate, so "first match, else none" is `find(...)`, never `takeUntil(...).lastOption()`; and `Try` treats `InterruptedException` as **fatal** — `Try.of` rethrows it sneakily instead of capturing it, so catch interrupts at the boundary (restore the flag) and carry a non-fatal marker if a chain must observe the stop.
 
 ### Project state
 - **Features wired**:
@@ -29,7 +41,11 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
   - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming
-  - Frontend: shared movie/game card grid, search bar, content filter dropdown, poster rendering
+  - Frontend: shared movie/game card grid, search bar, poster rendering. The
+    content filter is a custom DOM dropdown (a `div` — no native `<select>`,
+    therefore **no `.value`**); the selection lives in `selectedContent` in
+    `app.js`. Read that variable, never `contentFilter.value` (re-introducing
+    `.value` silently re-breaks the Game filter — it evaluates to `undefined`).
 - **Features pending**: Music, Books, and the "Presentation build" features below. Loading/retry states are backlog.
 
 ### Presentation build — decided feature set (2026-11-10 brainstorm)
@@ -128,19 +144,69 @@ before starting the next. Never expand scope mid-slice.
 - The workspace config routes Code Runner's Java Run Code action through
   `mvn compile exec:exec`; do not run `javac VanGoghApp.java` directly, since
   that omits the other project classes and Maven dependencies.
-- Main class: `vangogh.app.VanGoghApp`
-- IPC: frontend calls `await window.krema.invoke("requestMovies", { kind, query })`;
-  handlers are `@KremaCommand` methods on `MovieController` and require
+- Main class: `vangogh.app.VanGoghApp` (Krema shell) or
+  `vangogh.app.jcef.JcefVanGoghApp` (JCEF experiment shell — see below).
+- IPC: frontend calls `await window.krema.invoke("requestMovies", { kind, query })`
+  (or `requestGames` / `pollGamePosters`); handlers are `@KremaCommand` methods
+  on `MovieController` and `GameController` and require
   `<parameters>true</parameters>` in maven-compiler-plugin (args bind by
-  parameter name). Posters stream as `window.krema.on("poster", …)` events.
+  parameter name). Movies receive posters as `window.krema.on("poster", …)`
+  events pushed from Java's IO pool; games receive them via the
+  `pollGamePosters` drain (`window.krema.on("gamePoster", …)`).
+
+### JCEF experiment (merged to `main` via PR #28; further shell work happens on its own branches)
+
+A standalone shell swap that replaces Krema's OS system webview with a bundled
+Chromium engine via `me.friwi:jcefmaven:152.0.6`. The existing controllers
+(`MovieController`, `GameController`) are shell-agnostic — they receive a
+`JcefEventEmitter` (a Krema `EventEmitter` subclass) via `setEventEmitter()`
+and their `@KremaCommand` methods are called directly by the JCEF bridge.
+
+Files:
+- `src/main/java/vangogh/app/jcef/JcefVanGoghApp.java` — `main()`: boots
+  `CefApp`, extracts classpath HTML to a temp dir, creates a Swing `JFrame`
+  hosting a **windowed**-rendered `CefBrowser` (OSR is deliberately not used —
+  the OSR/JOGL path crashes on macOS, see the app's own comments).
+- `src/main/java/vangogh/app/jcef/JcefBridge.java` — `CefMessageRouter`
+  handler for JS→Java (`window.krema.invoke` → controller methods) plus
+  `JcefEventEmitter` wiring for Java→JS poster events.
+- `src/main/java/vangogh/app/jcef/JcefEventEmitter.java` — extends Krema's
+  `EventEmitter`, overrides **both** `emit` overloads to deliver via
+  `executeJavaScript` on the Swing EDT (the base class's path would hit the
+  null engine).
+- `src/main/resources/jcef/krema-shim.js` — implements `window.krema.invoke/on`
+  on top of `cefQuery` and `window.__krema_emit`, compatible with the existing
+  `app.js` (zero frontend changes).
+- `pom.xml` — adds `me.friwi:jcefmaven` dependency and macOS
+  `--add-opens java.desktop/...=ALL-UNNAMED` flags (required by jcefmaven;
+  harmless for Krema).
+
+To run:
+- **Krema** (default): `mvn compile exec:exec` — Zed task "run van-gogh (Krema)" or the `java-main` ▶ indicator.
+- **JCEF**: `mvn compile exec:exec -Pjcef` — Zed task "run van-gogh (JCEF)" or "java run (JcefVanGoghApp via exec:exec -Pjcef)". Uses the vendored `jcef-bundle/` install dir, so no ~100 MB download; delete that dir to force a fresh CEF install.
 - Windows constraint (krema-core 0.3.2, same family as the `AppNativePreload`
   workaround): `engine.eval` is silently dropped when called off the UI thread,
   so async command replies and backend events never reach the page. Rule:
   every command that touches the page must be synchronous (handlers run on the
-  UI thread), and background work delivers through a polled drain command —
-  currently `pollPosters`. Drop the dance when the project can move to a Krema
-  release whose eval is thread-safe on Windows (0.3.3+ source does not fix it
-  either; nothing newer is published on Maven Central).
+  UI thread). Background delivery is per-slice: the games slice drains through
+  `pollGamePosters` (which doubles as the completion signal, returning −1 when
+  nothing is pending); the movies slice pushes direct `"poster"` events, which
+  works from background threads on macOS and in the JCEF shell (EDT-marshalled)
+  but would be silently dropped on Windows — if a Windows build ever matters,
+  the movie slice needs a drain like the games slice. Drop the dance when the
+  project can move to a Krema release whose eval is thread-safe on Windows
+  (0.3.3+ source does not fix it either; nothing newer is published on Maven
+  Central).
+- macOS constraint (jcef windowed rendering): any native NSMenu tracking
+  session — the OS app menu bar, the green button's hover menu (fullscreen
+  on/off via the green button), (the native `<select>` popup was the other
+  trigger, now a DOM dropdown) — can trap the AppKit thread permanently.
+  The window stops taking all input while the renderer keeps running; only
+  relaunching recovers. Fullscreen: green button only (user decision
+  2026-11-14 — no DOM/keyboard toggle); aim-and-click it quickly, a long
+  hover pops its menu and can freeze. Accepted for the experiment — do not
+  rediscover this. Details: vault "Debug Record — JCEF window freezes on
+  native menus".
 
 ## Vendored repositories (git subtree)
 
@@ -164,3 +230,4 @@ Editor/agent config: exclude `repos/**` from auto-import, file watcher, search, 
 | Vendored repo | Intended usage |
 |---|---|
 | `repos/krema` (https://github.com/krema-build/krema, `master`) | Read-only reference for `build.krema:krema-core:0.3.2` — inspect real `Krema`, `KremaCommand`, `EventEmitter`, `WebViewCLibEngine` implementations and tests when working with Krema IPC/events/threading. |
+| `repos/vavr` (https://github.com/vavr-io/vavr, `main`) | Read-only reference for `io.vavr:vavr:1.0.1` — inspect `Future`, `Try`, `Either`, `Option`, and persistent collections when working with functional patterns. |

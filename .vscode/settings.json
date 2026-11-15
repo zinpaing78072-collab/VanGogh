@@ -16,5 +16,23 @@
     }
   ],
   "java.jdt.ls.vmargs": "-Xmx512m -XX:+UseStringDeduplication -XX:+UseG1GC",
-  "java.configuration.updateBuildConfiguration": "interactive"
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "java.import.exclusions": ["target/**", "build/**", ".gradle/**", "dist/**", "node_modules/**"],
+  "java.search.exclusions": ["target/**", "build/**", ".gradle/**", "dist/**", "node_modules/**"],
+  "files.watcherExclude": {
+    "repos/**": true,
+    "target/**": true,
+    "build/**": true,
+    ".gradle/**": true,
+    "dist/**": true,
+    "node_modules/**": true
+  },
+  "search.exclude": {
+    "repos/**": true,
+    "target/**": true,
+    "build/**": true,
+    ".gradle/**": true,
+    "dist/**": true,
+    "node_modules/**": true
+  }
 }

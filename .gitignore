@@ -29,3 +29,6 @@ bin/
 # Output of running the app
 *.pid
 *.log
+
+# Vendored jcefmaven CEF bundle (downloaded at first app run, ~100 MB)
+jcef-bundle/

@@ -1,0 +1,279 @@
+/* ____  ______________  ________________________  __________
+ * \   \/   /      \   \/   /   __/   /      \   \/   /      \
+ *  \______/___/\___\______/___/_____/___/\___\______/___/\___\
+ *
+ * Copyright 2014-2026 Vavr, https://vavr.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.vavr;
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*\
+   G E N E R A T O R   C R A F T E D
+\*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+import io.vavr.control.Option;
+import io.vavr.control.Try;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import org.jspecify.annotations.Nullable;
+
+/**
+ * Represents a function with two arguments.
+ *
+ * @param <T1> argument 1 of the function
+ * @param <T2> argument 2 of the function
+ * @param <R> return type of the function
+ * @author Daniel Dietrich
+ */
+@FunctionalInterface
+public interface Function2<T1 extends @Nullable Object, T2 extends @Nullable Object, R extends @Nullable Object> extends Serializable, BiFunction<T1, T2, R> {
+
+    /**
+     * The serial version UID for serialization.
+     */
+    long serialVersionUID = 1L;
+
+    /**
+     * Returns a function that always returns the constant
+     * value that you give in parameter.
+     *
+     * @param <T1> generic parameter type 1 of the resulting function
+     * @param <T2> generic parameter type 2 of the resulting function
+     * @param <R> the result type
+     * @param value the value to be returned
+     * @return a function always returning the given value
+     */
+    static <T1 extends @Nullable Object, T2 extends @Nullable Object, R extends @Nullable Object> Function2<T1, T2, R> constant(R value) {
+        return (t1, t2) -> value;
+    }
+
+    /**
+     * Creates a {@code Function2} based on
+     * <ul>
+     * <li><a href="https://docs.oracle.com/javase/tutorial/java/javaOO/methodreferences.html">method reference</a></li>
+     * <li><a href="https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html#syntax">lambda expression</a></li>
+     * </ul>
+     *
+     * Examples (w.l.o.g. referring to Function1):
+     * <pre>{@code // using a lambda expression
+     * Function1<Integer, Integer> add1 = Function1.of(i -> i + 1);
+     *
+     * // using a method reference (, e.g. Integer method(Integer i) { return i + 1; })
+     * Function1<Integer, Integer> add2 = Function1.of(this::method);
+     *
+     * // using a lambda reference
+     * Function1<Integer, Integer> add3 = Function1.of(add1::apply);
+     * }</pre>
+     *
+     * @param methodReference (typically) a method reference, e.g. {@code Type::method}
+     * @param <R> return type
+     * @param <T1> 1st argument
+     * @param <T2> 2nd argument
+     * @return a {@code Function2}
+     */
+    static <T1 extends @Nullable Object, T2 extends @Nullable Object, R extends @Nullable Object> Function2<T1, T2, R> of(Function2<T1, T2, R> methodReference) {
+        return methodReference;
+    }
+
+    /**
+     * Lifts the given {@code partialFunction} into a function that returns an {@code Option} result.
+     *
+     * @param partialFunction a function that is not defined for all values of the domain (e.g. by throwing)
+     * @param <R> return type
+     * @param <T1> 1st argument
+     * @param <T2> 2nd argument
+     * @return a function that applies arguments to the given {@code partialFunction} and returns {@code Some(result)}
+     *         if the function is defined for the given arguments, and {@code None} if it throws a non-fatal
+     *         throwable. Fatal throwables (see {@link Try}) are rethrown
+     *         instead of being turned into {@code None}.
+     */
+    static <T1 extends @Nullable Object, T2 extends @Nullable Object, R extends @Nullable Object> Function2<T1, T2, Option<R>> lift(BiFunction<? super T1, ? super T2, ? extends R> partialFunction) {
+        return (t1, t2) -> Try.<R>of(() -> partialFunction.apply(t1, t2)).toOption();
+    }
+
+    /**
+     * Lifts the given {@code partialFunction} into a function that returns a {@code Try} result.
+     *
+     * @param partialFunction a function that is not defined for all values of the domain (e.g. by throwing)
+     * @param <R> return type
+     * @param <T1> 1st argument
+     * @param <T2> 2nd argument
+     * @return a function that applies arguments to the given {@code partialFunction} and returns {@code Success(result)}
+     *         if the function is defined for the given arguments, and {@code Failure(throwable)} if it throws a
+     *         non-fatal throwable. Fatal throwables (see {@link Try}) are rethrown
+     *         instead of being wrapped.
+     */
+    static <T1 extends @Nullable Object, T2 extends @Nullable Object, R extends @Nullable Object> Function2<T1, T2, Try<R>> liftTry(BiFunction<? super T1, ? super T2, ? extends R> partialFunction) {
+        return (t1, t2) -> Try.of(() -> partialFunction.apply(t1, t2));
+    }
+
+    /**
+     * Narrows the given {@code Function2<? super T1, ? super T2, ? extends R>} to {@code Function2<T1, T2, R>}
+     *
+     * @param f A {@code Function2}
+     * @param <R> return type
+     * @param <T1> 1st argument
+     * @param <T2> 2nd argument
+     * @return the given {@code f} instance as narrowed type {@code Function2<T1, T2, R>}
+     */
+    @SuppressWarnings("unchecked")
+    static <T1 extends @Nullable Object, T2 extends @Nullable Object, R extends @Nullable Object> Function2<T1, T2, R> narrow(Function2<? super T1, ? super T2, ? extends R> f) {
+        return (Function2<T1, T2, R>) f;
+    }
+
+    /**
+     * Applies this function to two arguments and returns the result.
+     *
+     * @param t1 argument 1
+     * @param t2 argument 2
+     * @return the result of function application
+     * 
+     */
+    R apply(T1 t1, T2 t2);
+
+    /**
+     * Applies this function partially to one argument.
+     *
+     * @param t1 argument 1
+     * @return a partial application of this function
+     */
+    default Function1<T2, R> apply(T1 t1) {
+        return (T2 t2) -> apply(t1, t2);
+    }
+
+    /**
+     * Returns the number of function arguments.
+     * @return an int value &gt;= 0
+     * @see <a href="http://en.wikipedia.org/wiki/Arity">Arity</a>
+     */
+    default int arity() {
+        return 2;
+    }
+
+    /**
+     * Returns a curried version of this function.
+     *
+     * @return a curried function equivalent to this.
+     */
+    default Function1<T1, Function1<T2, R>> curried() {
+        return t1 -> t2 -> apply(t1, t2);
+    }
+
+    /**
+     * Returns a tupled version of this function.
+     *
+     * @return a tupled function equivalent to this.
+     */
+    default Function1<Tuple2<T1, T2>, R> tupled() {
+        return t -> apply(t._1, t._2);
+    }
+
+    /**
+     * Returns a reversed version of this function. This may be useful in a recursive context.
+     *
+     * @return a reversed function equivalent to this.
+     */
+    default Function2<T2, T1, R> reversed() {
+        return (t2, t1) -> apply(t1, t2);
+    }
+
+    /**
+     * Returns a memoizing version of this function, which computes the return value for given arguments only one time.
+     * On subsequent calls given the same arguments the memoized value is returned.
+     * <p>
+     * Note that {@code null} arguments and {@code null} return values are permitted; a {@code null} result
+     * is cached like any other value.
+     *
+     * @return a memoizing function equivalent to this.
+     */
+    default Function2<T1, T2, R> memoized() {
+        if (isMemoized()) {
+            return this;
+        } else {
+            final Map<Tuple2<T1, T2>, R> cache = new HashMap<>();
+            final ReentrantLock lock = new ReentrantLock();
+            return (Function2<T1, T2, R> & Memoized) (t1, t2) -> {
+                final Tuple2<T1, T2> key = Tuple.of(t1, t2);
+                lock.lock();
+                try {
+                    if (cache.containsKey(key)) {
+                        return cache.get(key);
+                    } else {
+                        final R value = tupled().apply(key);
+                        cache.put(key, value);
+                        return value;
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            };
+        }
+    }
+
+    /**
+     * Checks if this function is memoizing (= caching) computed values.
+     *
+     * @return true, if this function is memoizing, false otherwise
+     */
+    default boolean isMemoized() {
+        return this instanceof Memoized;
+    }
+
+    /**
+     * Returns a composed function that first applies this Function2 to the given arguments and then applies
+     * {@linkplain Function} {@code after} to the result.
+     *
+     * @param <V> return type of after
+     * @param after the function applied after this
+     * @return a function composed of this and after
+     * @throws NullPointerException if after is null
+     */
+    default <V extends @Nullable Object> Function2<T1, T2, V> andThen(Function<? super R, ? extends V> after) {
+        Objects.requireNonNull(after, "after is null");
+        return (t1, t2) -> after.apply(apply(t1, t2));
+    }
+
+    /**
+     * Returns a composed function that first applies the {@linkplain Function} {@code before} to the
+     * 1st argument and then applies this Function2 to the result and the other argument.
+     *
+     * @param <S> argument type of before
+     * @param before the function applied before this
+     * @return a function composed of before and this
+     * @throws NullPointerException if before is null
+     */
+    default <S extends @Nullable Object> Function2<S, T2, R> compose1(Function1<? super S, ? extends T1> before) {
+        Objects.requireNonNull(before, "before is null");
+        return (S s, T2 t2) -> apply(before.apply(s), t2);
+    }
+
+    /**
+     * Returns a composed function that first applies the {@linkplain Function} {@code before} to the
+     * 2nd argument and then applies this Function2 to the result and the other argument.
+     *
+     * @param <S> argument type of before
+     * @param before the function applied before this
+     * @return a function composed of before and this
+     * @throws NullPointerException if before is null
+     */
+    default <S extends @Nullable Object> Function2<T1, S, R> compose2(Function1<? super S, ? extends T2> before) {
+        Objects.requireNonNull(before, "before is null");
+        return (T1 t1, S s) -> apply(t1, before.apply(s));
+    }
+}
