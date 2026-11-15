@@ -24,6 +24,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const contentFilter = document.getElementById("contentFilter");
     const sectionTitle = document.getElementById("sectionTitle");
 
+    // Selected content type ("movie" | "music" | "book" | "game"). The filter
+    // is a custom DOM widget (a div — see the NSMenu-freeze note below), so it
+    // has no native .value; the old select-based code read contentFilter.value,
+    // which became undefined after the widget swap and silently disabled the
+    // Game filter (Game selections kept calling requestMovies and rendered
+    // movie cards that gamePoster events could never match).
+    let selectedContent = "movie";
+
     function escapeHtml(text) {
         if (text == null) return "";
         const div = document.createElement("div");
@@ -151,7 +159,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
         try {
-            const isGame = contentFilter.value === "game";
+            const isGame = selectedContent === "game";
             sectionTitle.textContent = kind === "search"
                 ? "Search Results"
                 : `Trending ${isGame ? "Games" : "Movies"}`;
@@ -163,7 +171,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 showError(items.error);
                 return;
             }
-            renderContent(items, contentFilter.value);
+            renderContent(items, selectedContent);
             if (isGame) {
                 pollGamePostersUntilDone();
             }
@@ -201,6 +209,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // freezes the whole window (menu never closes, red button dead) — so the
     // filter is a plain DOM widget instead.
     function handleFilterChange(value) {
+        selectedContent = value;
         if (value === "movie" || value === "game") {
             requestPageContent("trending", "");
         } else {
