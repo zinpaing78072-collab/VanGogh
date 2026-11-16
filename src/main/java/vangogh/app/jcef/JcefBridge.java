@@ -174,11 +174,28 @@ public class JcefBridge {
         return switch (name) {
             case "requestMovies" -> argsCommand(args, this::movieCommand);
             case "requestGames" -> argsCommand(args, this::gameCommand);
+            case "pollMovieData" -> intCommand(args, "generation", movieController::pollMovieData);
+            case "pollGameData" -> intCommand(args, "generation", gameController::pollGameData);
             case "pollGamePosters" -> Validation.valid(new Command(gameController::pollGamePosters));
             case "pollMoviePosters" -> Validation.valid(new Command(movieController::pollMoviePosters));
             default -> Validation.invalid(List.of(
                     new FetchError.BadInput("command", "unknown command: " + name)));
         };
+    }
+
+    /** A drain command that takes one int arg (bound by name, like Krema does). */
+    private Validation<Seq<FetchError>, Command> intCommand(JsonObject args, String field,
+                                                            java.util.function.IntFunction<Object> command) {
+        return validInt(args, field).fold(
+                error -> Validation.invalid(List.of(error)),
+                gen -> Validation.valid(new Command(() -> command.apply(gen))));
+    }
+
+    private Validation<FetchError, Integer> validInt(JsonObject args, String field) {
+        return Try.of(() -> args.get(field).getAsInt())
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.BadInput(field, "missing or not a number"))
+                .toValidation();
     }
 
     /**

@@ -9,7 +9,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 ### Core behavior
 - **Input**: A keyword or content name (e.g. `"Inception"`, `"Taylor Swift"`, `"Minecraft"`)
 - **Output**: Related content across Movies and Games (Music and Books are not yet wired)
-- **Mechanism**: The frontend invokes `requestMovies` or `requestGames`; movie and game controllers query TMDB or TheGamesDB. Movies push poster data-URIs as direct `"poster"` events from IO-pool Futures; games deliver through the polled `pollGamePosters` drain (emitting `"gamePoster"`).
+- **Mechanism**: The frontend invokes `requestMovies` or `requestGames` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` drains (`pending` / `done` / `error` / `superseded`); posters stream through the `pollMoviePosters` / `pollGamePosters` drains (emitting `"poster"` / `"gamePoster"`). Skeleton cards show while a fetch is in flight.
 - **Filter**: Dropdown offers Movie / Music / Book / Game — Movie and Game connect to their APIs; Music and Book show a "not yet connected" message.
 
 ### Tech stack
@@ -37,7 +37,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 ### Project state
 - **Features wired**:
   - `VanGoghApp` — Krema window builder (title, identifier, size, debug mode, assets, events, commands)
-  - `MovieController` — `@KremaCommand requestMovies(kind, query)`, generation-counted poster streaming via `events.emit("poster", ...)`
+  - `MovieController` — `@KremaCommand requestMovies(kind, query)` (non-blocking kickoff, returns the generation), data + poster drains, generation-counted poster streaming via `events.emit("poster", ...)`
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
   - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming
@@ -46,7 +46,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
     therefore **no `.value`**); the selection lives in `selectedContent` in
     `app.js`. Read that variable, never `contentFilter.value` (re-introducing
     `.value` silently re-breaks the Game filter — it evaluates to `undefined`).
-- **Features pending**: Music, Books, and the "Presentation build" features below. Loading/retry states are backlog.
+- **Features pending**: Music, Books, and the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
 
 ### Presentation build — decided feature set (2026-11-10 brainstorm)
 
@@ -147,12 +147,15 @@ before starting the next. Never expand scope mid-slice.
 - Main class: `vangogh.app.VanGoghApp` (Krema shell) or
   `vangogh.app.jcef.JcefVanGoghApp` (JCEF experiment shell — see below).
 - IPC: frontend calls `await window.krema.invoke("requestMovies", { kind, query })`
-  (or `requestGames` / `pollGamePosters`); handlers are `@KremaCommand` methods
-  on `MovieController` and `GameController` and require
-  `<parameters>true</parameters>` in maven-compiler-plugin (args bind by
-  parameter name). Movies receive posters as `window.krema.on("poster", …)`
-  events pushed from Java's IO pool; games receive them via the
-  `pollGamePosters` drain (`window.krema.on("gamePoster", …)`).
+  (or `requestGames`) — the handler kicks off the IO-pool fetch and returns
+  the request generation immediately (never blocks the UI thread). The page
+  then polls `pollMovieData` / `pollGameData` with `{ generation }` until the
+  card list (or error) arrives, and `pollMoviePosters` / `pollGamePosters`
+  for artwork. Handlers are `@KremaCommand` methods on `MovieController` and
+  `GameController` and require `<parameters>true</parameters>` in
+  maven-compiler-plugin (args bind by parameter name). Posters arrive as
+  `window.krema.on("poster", …)` / `window.krema.on("gamePoster", …)` events
+  emitted by the drains on the UI thread.
 
 ### JCEF experiment (merged to `main` via PR #28; further shell work happens on its own branches)
 
@@ -188,15 +191,17 @@ To run:
   workaround): `engine.eval` is silently dropped when called off the UI thread,
   so async command replies and backend events never reach the page. Rule:
   every command that touches the page must be synchronous (handlers run on the
-  UI thread). Background delivery is per-slice: the games slice drains through
+  UI thread) — and that thread must never block on network I/O either: the
+  original handlers fetched synchronously and the whole window froze for the
+  round-trip (see "Debug Record — UI thread blocked by content fetches").
+  Delivery is drain-based for both content slices: the request commands kick
+  off IO-pool fetches and return at once; card metadata drains through
+  `pollMovieData` / `pollGameData` and posters through `pollMoviePosters` /
   `pollGamePosters` (which doubles as the completion signal, returning −1 when
-  nothing is pending); the movies slice pushes direct `"poster"` events, which
-  works from background threads on macOS and in the JCEF shell (EDT-marshalled)
-  but would be silently dropped on Windows — if a Windows build ever matters,
-  the movie slice needs a drain like the games slice. Drop the dance when the
-  project can move to a Krema release whose eval is thread-safe on Windows
-  (0.3.3+ source does not fix it either; nothing newer is published on Maven
-  Central).
+  nothing is pending) — all synchronous UI-thread commands. Drop the dance
+  when the project can move to a Krema release whose eval is thread-safe on
+  Windows (0.3.3+ source does not fix it either; nothing newer is published on
+  Maven Central).
 - macOS constraint (jcef windowed rendering): any native NSMenu tracking
   session — the OS app menu bar, the green button's hover menu (fullscreen
   on/off via the green button), (the native `<select>` popup was the other

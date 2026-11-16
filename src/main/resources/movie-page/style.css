@@ -252,8 +252,12 @@ body {
 /* Movie card — frosted midnight glass */
 .movie-card {
     background-color: var(--panel);
-    -webkit-backdrop-filter: var(--blur-glass);
-    backdrop-filter: var(--blur-glass);
+    /* Removed backdrop-filter from .movie-card: applying a per-card blur(16px)
+       filter on every card in the grid is the dominant cost in the scroll
+       composite and causes frame hitches while dragging. Cards are already a
+       semi-transparent glass tint (--panel), so the frozen look comes from the
+       alpha background, not from a blur pass. The header keeps its blur. If a
+       frosted-card look is required, restore back with blur(8px). */
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
@@ -261,7 +265,7 @@ body {
     flex-direction: column;
     cursor: pointer;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 14px 30px -20px rgba(4, 8, 18, 0.85);
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease;
     animation: cardIn 0.5s cubic-bezier(0.2, 0.7, 0.25, 1) both;   /* staggered via --i */
     animation-delay: calc(var(--i, 0) * 35ms);
 }
@@ -436,12 +440,58 @@ button:focus-visible, .search-input:focus-visible, .filter-select:focus-visible 
     box-shadow: inset 0 0 130px 24px rgba(127, 166, 201, 0.20);
 }
 
+/* Loading skeletons — shown the moment a request starts, before any data.
+   They reuse .movie-card for the grid look; .skeleton-card opts out of hover
+   since there is nothing to interact with yet. */
+.skeleton-card {
+    cursor: default;
+    pointer-events: none;
+}
+
+.skeleton-poster,
+.skeleton-line {
+    background: linear-gradient(
+        100deg,
+        var(--panel-deep) 30%,
+        rgba(127, 166, 201, 0.16) 50%,
+        var(--panel-deep) 70%
+    );
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-poster {
+    width: 100%;
+    height: 100%;
+}
+
+.skeleton-line {
+    height: 12px;
+    border-radius: 6px;
+}
+
+.skeleton-title {
+    width: 80%;
+}
+
+.skeleton-meta {
+    width: 55%;
+    height: 10px;
+}
+
+@keyframes skeletonShimmer {
+    0% { background-position: 120% 0; }
+    100% { background-position: -80% 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .movie-card { transition: none; animation: none; }
     .movie-card:hover { transform: none; }
     .movie-card:active { transform: none; }
     .card-poster img { transition: none; }
     .movie-card:hover .card-poster img { transform: none; }
+    .skeleton-poster,
+    .skeleton-line { animation: none; }
 }
 
 /* Responsive */
