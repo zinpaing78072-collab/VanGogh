@@ -1,5 +1,6 @@
 package vangogh.app.jcef;
 
+import vangogh.controller.BookController;
 import vangogh.controller.GameController;
 import vangogh.controller.MovieController;
 import vangogh.error.FetchError;
@@ -32,8 +33,9 @@ import java.util.function.BiFunction;
  * <ul>
  *   <li><b>JS→Java:</b> {@code window.krema.invoke("requestMovies", {...})}
  *       travels through CEF's {@code cefQuery} into a {@link CefMessageRouter}
- *       handler, which calls {@link MovieController#requestMovies} /
- *       {@link GameController#requestGames} / {@link GameController#pollGamePosters}.
+ *       handler, which calls the controllers' {@code @KremaCommand} methods
+ *       ({@code requestMovies} / {@code requestGames} / {@code requestBooks},
+ *       the data drains, and the artwork drains).
  *   <li><b>Java→JS:</b> poster events flow through {@link JcefEventEmitter}
  *       via {@code executeJavaScript} → {@code window.__krema_emit}.
  * </ul>
@@ -55,6 +57,7 @@ public class JcefBridge {
 
     private final MovieController movieController;
     private final GameController gameController;
+    private final BookController bookController;
     private JcefEventEmitter emitter;
     private CefMessageRouter router;
     /**
@@ -70,9 +73,11 @@ public class JcefBridge {
         return t;
     });
 
-    public JcefBridge(MovieController movieController, GameController gameController) {
+    public JcefBridge(MovieController movieController, GameController gameController,
+                      BookController bookController) {
         this.movieController = movieController;
         this.gameController = gameController;
+        this.bookController = bookController;
     }
 
     /**
@@ -111,6 +116,7 @@ public class JcefBridge {
         this.emitter = new JcefEventEmitter(browser);
         movieController.setEventEmitter(emitter);
         gameController.setEventEmitter(emitter);
+        bookController.setEventEmitter(emitter);
     }
 
     public void dispose() {
@@ -174,10 +180,13 @@ public class JcefBridge {
         return switch (name) {
             case "requestMovies" -> argsCommand(args, this::movieCommand);
             case "requestGames" -> argsCommand(args, this::gameCommand);
+            case "requestBooks" -> argsCommand(args, this::bookCommand);
             case "pollMovieData" -> intCommand(args, "generation", movieController::pollMovieData);
             case "pollGameData" -> intCommand(args, "generation", gameController::pollGameData);
+            case "pollBookData" -> intCommand(args, "generation", bookController::pollBookData);
             case "pollGamePosters" -> Validation.valid(new Command(gameController::pollGamePosters));
             case "pollMoviePosters" -> Validation.valid(new Command(movieController::pollMoviePosters));
+            case "pollBookCovers" -> Validation.valid(new Command(bookController::pollBookCovers));
             default -> Validation.invalid(List.of(
                     new FetchError.BadInput("command", "unknown command: " + name)));
         };
@@ -236,5 +245,9 @@ public class JcefBridge {
 
     private Command gameCommand(String kind, String query) {
         return new Command(() -> gameController.requestGames(kind, query));
+    }
+
+    private Command bookCommand(String kind, String query) {
+        return new Command(() -> bookController.requestBooks(kind, query));
     }
 }
