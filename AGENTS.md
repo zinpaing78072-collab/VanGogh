@@ -8,16 +8,17 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 
 ### Core behavior
 - **Input**: A keyword or content name (e.g. `"Inception"`, `"Taylor Swift"`, `"Minecraft"`)
-- **Output**: Related content across Movies and Games (Music and Books are not yet wired)
-- **Mechanism**: The frontend invokes `requestMovies` or `requestGames` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` drains (`pending` / `done` / `error` / `superseded`); posters stream through the `pollMoviePosters` / `pollGamePosters` drains (emitting `"poster"` / `"gamePoster"`). Skeleton cards show while a fetch is in flight.
-- **Filter**: Dropdown offers Movie / Music / Book / Game — Movie and Game connect to their APIs; Music and Book show a "not yet connected" message.
+- **Output**: Related content across Movies, Music, Books, and Games (all four wired)
+- **Mechanism**: The frontend invokes `requestMovies` / `requestGames` / `requestMusic` / `requestBooks` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` drains (`pending` / `done` / `error` / `superseded`); posters stream through the `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` / `pollBookPosters` drains (emitting `"poster"` / `"gamePoster"` / `"musicPoster"` / `"bookPoster"`). Skeleton cards show while a fetch is in flight.
+- **Filter**: Dropdown offers Movie / Music / Book / Game — all four connect to their APIs (TMDB, TheGamesDB, MusicBrainz, Open Library).
+- **Card shapes are per-domain**: movie/game share the portrait-poster card; music uses square album covers with an artist subtitle; books use a portrait cover with the author subtitle (genre line = first Open Library subjects). Don't force one card layout across domains.
 
 ### Tech stack
 - **Language**: Java 25 (LTS), compiled with `--release 25`
 - **UI framework**: Krema 0.3.2 (system webview)
 - **Frontend**: HTML/CSS/JS served from classpath (`src/main/resources/movie-page/`)
 - **HTTP client**: Java 17+ `java.net.http.HttpClient` (Gson for JSON parsing)
-- **Data sources**: TMDB (The Movie Database) for movies and TheGamesDB for games
+- **Data sources**: TMDB (The Movie Database) for movies, TheGamesDB for games, MusicBrainz (+ Cover Art Archive) for music, Open Library (+ Open Library Covers) for books
 - **Poster proxy**: `wsrv.nl` with persistent user preference stored in `~/.van-gogh/poster-proxy.conf`. Needed because `image.tmdb.org` is unreachable from this machine/ISP (TLS dies mid-handshake; `api.themoviedb.org` works) — poster loading depends on the proxy failover, see team-vault "Debug Record — TMDB posters blocked".
 - **Tests**: JUnit 5; all network calls stubbed (no real TMDB API keys needed)
 - **IPC**: `@KremaCommand` methods on controllers; `<parameters>true</parameters>` in maven-compiler-plugin for arg binding by name
@@ -41,12 +42,14 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
   - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming
-  - Frontend: shared movie/game card grid, search bar, poster rendering. The
+  - `MusicController`, `MusicBrainzService`, and `MusicBrainzClient` — MusicBrainz release-group search (album cards), curated trending MBID list, Cover Art Archive cover streaming; MBZ requests are paced (~1/s) with a 503 backoff-retry — see `docs/music-and-book-domains.md`
+  - `BookController`, `OpenLibraryService`, and `OpenLibraryClient` — Open Library search + real trending (`trending/now.json`) and cover streaming
+  - Frontend: shared card grid with per-domain card shapes (movie/game portrait posters, music square covers, book covers with author subtitle and subject genre line), search bar, poster rendering. The
     content filter is a custom DOM dropdown (a `div` — no native `<select>`,
     therefore **no `.value`**); the selection lives in `selectedContent` in
     `app.js`. Read that variable, never `contentFilter.value` (re-introducing
     `.value` silently re-breaks the Game filter — it evaluates to `undefined`).
-- **Features pending**: Music, Books, and the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
+- **Features pending**: the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
 
 ### Presentation build — decided feature set (2026-11-10 brainstorm)
 
@@ -55,7 +58,7 @@ settled — agents follow them. Implementation details (API providers, LLM
 models, prompt design) are left to each builder slice.
 
 - **Recommendation engine core: LLM API.** The LLM *composes* the picks for a
-  query; the wired content sources (TMDB and TheGamesDB; Music/Book to be wired)
+  query; the wired content sources (TMDB, TheGamesDB, MusicBrainz, Open Library)
   *resolve* each pick into a real card (artwork, year, etc.). Do not build a
   deterministic API search as the result source — it would contradict the
   re-run behavior below.
@@ -194,10 +197,11 @@ To run:
   UI thread) — and that thread must never block on network I/O either: the
   original handlers fetched synchronously and the whole window froze for the
   round-trip (see "Debug Record — UI thread blocked by content fetches").
-  Delivery is drain-based for both content slices: the request commands kick
+  Delivery is drain-based for all four content slices: the request commands kick
   off IO-pool fetches and return at once; card metadata drains through
-  `pollMovieData` / `pollGameData` and posters through `pollMoviePosters` /
-  `pollGamePosters` (which doubles as the completion signal, returning −1 when
+  `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` and
+  posters through `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` /
+  `pollBookPosters` (which doubles as the completion signal, returning −1 when
   nothing is pending) — all synchronous UI-thread commands. Drop the dance
   when the project can move to a Krema release whose eval is thread-safe on
   Windows (0.3.3+ source does not fix it either; nothing newer is published on

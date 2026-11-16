@@ -15,8 +15,10 @@ Defines how VanGogh adds new content domains (Music, Book, Game, TV, …) beyond
 
 - **Movie domain is fully wired**: `MovieController.requestMovies(kind, query)`, `TmdbMovieService`, `TmdbClient`, TMDB API, poster proxy/cache, frontend card grid.
 - **Game domain is wired**: `GameController.requestGames(kind, query)`, `TgdbGameService`, `TgdbClient`, TheGamesDB, and front-boxart streaming.
-- **Filter dropdown** in `src/main/resources/movie-page/index.html` offers Movie / Music / Book / Game; Movie and Game call APIs while Music and Book render a stub "not yet connected" message.
-- **IPC contract**: `requestMovies` and `requestGames` return domain records synchronously; artwork streams through separate poster-drain commands and events.
+- **Music domain is wired**: `MusicController.requestMusic(kind, query)`, `MusicBrainzService`, `MusicBrainzClient` — MusicBrainz release-group search (album cards, square cover art from Cover Art Archive), curated trending MBID list, client-side request pacing. See `docs/music-and-book-domains.md`.
+- **Book domain is wired**: `BookController.requestBooks(kind, query)`, `OpenLibraryService`, `OpenLibraryClient` — Open Library search plus real trending (`trending/now.json`), portrait cover cards from Open Library Covers.
+- **Filter dropdown** in `src/main/resources/movie-page/index.html` offers Movie / Music / Book / Game; all four call their APIs.
+- **IPC contract**: every domain has a non-blocking kickoff command (`requestMovies` / `requestGames` / `requestMusic` / `requestBooks` — returns the request's generation), a `poll<Domain>Data` drain (`pending` / `done` / `error` / `superseded`), and a `poll<Domain>Posters` drain emitting domain poster events (`"poster"` / `"gamePoster"` / `"musicPoster"` / `"bookPoster"`).
 - **Build rules**: `pom.xml` compiles with `--release 25` and `<parameters>true</parameters>` (required so `@KremaCommand` arguments bind by parameter name). Run with `JAVA_HOME=jdk-25 mvn compile exec:exec` (never `exec:java` on macOS).
 
 ## Guiding principles
@@ -183,6 +185,7 @@ const tracks = await window.krema.invoke("searchMusic", { query });
 ## Related files
 
 - `AGENTS.md` — IPC contract, build/run rules, Krema 0.3.2, macOS launch flags
+- `docs/music-and-book-domains.md` — music/book upstream constraints (rate limiting, cover redirects, curated trending)
 - `src/main/java/vangogh/controller/MovieController.java` — reference controller implementation
 - `src/main/java/vangogh/movie/TmdbMovieService.java` — service + poster cache pattern
 - `src/main/java/vangogh/net/TmdbClient.java` — client + proxy pattern

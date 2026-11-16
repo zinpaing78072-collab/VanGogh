@@ -5,15 +5,18 @@
      IO-pool fetch, returns the request generation immediately (never blocks)
    - await window.krema.invoke("requestGames", { kind, query }) → same for games
    - await window.krema.invoke("requestMusic", { kind, query }) → same for music
+   - await window.krema.invoke("requestBooks", { kind, query }) → same for books
    - await window.krema.invoke("pollMovieData", { generation }) → data drain:
      { status: "pending" | "done" | "error" | "superseded", items?, error? }
    - await window.krema.invoke("pollGameData", { generation }) → same for games
    - await window.krema.invoke("pollMusicData", { generation }) → same for music
+   - await window.krema.invoke("pollBookData", { generation }) → same for books
    - await window.krema.invoke("pollMoviePosters", {}) → movie poster drain progress
    - await window.krema.invoke("pollGamePosters", {}) → game poster drain progress
    - await window.krema.invoke("pollMusicPosters", {}) → music cover drain progress
+   - await window.krema.invoke("pollBookPosters", {}) → book cover drain progress
    - window.krema.on("poster", data) / on("gamePoster", data) / on("musicPoster", data)
-     → poster data URIs
+     / on("bookPoster", data) → poster data URIs
    The JCEF shell serves this page unchanged: jcef/krema-shim.js implements the
    same window.krema API on top of window.cefQuery.
 
@@ -43,6 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const DOMAINS = {
         movie: { request: "requestMovies", data: "pollMovieData", posters: "pollMoviePosters", trendingTitle: "Trending Movies" },
         music: { request: "requestMusic",  data: "pollMusicData",  posters: "pollMusicPosters",  trendingTitle: "Trending Music" },
+        book:  { request: "requestBooks",  data: "pollBookData",   posters: "pollBookPosters",   trendingTitle: "Trending Books" },
         game:  { request: "requestGames",  data: "pollGameData",   posters: "pollGamePosters",   trendingTitle: "Trending Games" },
     };
 
@@ -70,6 +74,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.krema.on("musicPoster", function (data) {
         if (data && data.payload) {
             window.setMusicPoster(data.payload.id, data.payload.dataUri);
+        }
+    });
+    window.krema.on("bookPoster", function (data) {
+        if (data && data.payload) {
+            window.setBookPoster(data.payload.id, data.payload.dataUri);
         }
     });
 
@@ -125,9 +134,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
+    window.setBookPoster = function (bookId, dataUri) {
+        // Work keys contain slashes — match the exact attribute value.
+        const card = grid.querySelector(`.book-card[data-book-id="${CSS.escape(bookId)}"]`);
+        if (!card || !dataUri) return;
+        const img = card.querySelector(".poster-img");
+        const placeholder = card.querySelector(".poster-placeholder");
+        if (!img) return;
+        img.src = dataUri;
+        img.classList.remove("hidden");
+        if (placeholder) {
+            placeholder.classList.add("hidden");
+        }
+    };
+
     function renderContent(items, contentType) {
         grid.innerHTML = "";
-        const label = { movie: "movies", game: "games", music: "albums" }[contentType];
+        const label = { movie: "movies", game: "games", music: "albums", book: "books" }[contentType];
         if (!items || items.length === 0) {
             grid.innerHTML = `
                 <div class="empty-state">
@@ -135,9 +158,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>`;
             return;
         }
+        const builders = { music: albumCard, book: bookCard };
+        const builder = builders[contentType] || movieOrGameCard;
         items.forEach((item, idx) => {
-            grid.appendChild(
-                contentType === "music" ? albumCard(item, idx) : movieOrGameCard(item, idx, contentType));
+            grid.appendChild(builder(item, idx, contentType));
         });
     }
 
@@ -218,6 +242,46 @@ document.addEventListener("DOMContentLoaded", async () => {
         return card;
     }
 
+    // Book cards keep the portrait cover (book covers are 2:3-ish) but swap
+    // the genre for the author as the subtitle line and show the Open Library
+    // rating when one exists. The genre line carries the first community
+    // subjects — Open Library has no curated genre field.
+    function bookCard(book, idx) {
+        const card = document.createElement("div");
+        card.className = "movie-card book-card";
+        card.dataset.bookId = book.id || "";
+        card.style.setProperty("--i", idx);
+
+        const placeholderSvg = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>`;
+
+        const year = book.year || "–";
+        const rating = book.rating ? book.rating.toFixed(1) : "–";
+        const genre = book.genre || "";
+
+        card.innerHTML = `
+            <div class="card-poster">
+                <img class="poster-img hidden" alt="${escapeHtml(book.title)} cover"
+                     loading="lazy" decoding="async">
+                <div class="poster-placeholder">${placeholderSvg}</div>
+            </div>
+            <div class="card-info">
+                <div class="card-title">${escapeHtml(book.title || "Untitled")}</div>
+                <div class="card-subtitle">${escapeHtml(book.author || "Unknown Author")}</div>
+                <div class="card-meta">
+                    <span class="card-meta-item">${escapeHtml(year)}</span>
+                    <span class="card-meta-item">${escapeHtml(genre)}</span>
+                    <span class="card-meta-item card-rating">★ ${rating}</span>
+                </div>
+            </div>
+        `;
+
+        wireCardCommon(card, book.title, year, book.overview || "");
+        return card;
+    }
+
     function wireCardCommon(card, title, year, detailText) {
         card.querySelector(".poster-img").addEventListener("error", function () {
             posterFailed(this);
@@ -262,7 +326,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
         const domain = DOMAINS[selectedContent];
-        if (!domain) return;   // content form not wired yet (book)
+        if (!domain) return;
         try {
             sectionTitle.textContent = kind === "search"
                 ? "Search Results"
