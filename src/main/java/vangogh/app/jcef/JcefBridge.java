@@ -175,6 +175,7 @@ public class JcefBridge {
             case "requestMovies" -> argsCommand(args, this::movieCommand);
             case "requestGames" -> argsCommand(args, this::gameCommand);
             case "pollGamePosters" -> Validation.valid(new Command(gameController::pollGamePosters));
+            case "pollMoviePosters" -> Validation.valid(new Command(movieController::pollMoviePosters));
             default -> Validation.invalid(List.of(
                     new FetchError.BadInput("command", "unknown command: " + name)));
         };

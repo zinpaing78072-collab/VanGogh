@@ -3,18 +3,15 @@
 /* The page talks to Java through window.krema:
    - await window.krema.invoke("requestMovies", { kind, query }) → movie list
    - await window.krema.invoke("requestGames", { kind, query }) → game list
+   - await window.krema.invoke("pollMoviePosters", {}) → movie poster drain progress
    - await window.krema.invoke("pollGamePosters", {}) → game poster drain progress
    - window.krema.on("poster", data) / on("gamePoster", data) → poster data URIs
    The JCEF shell serves this page unchanged: jcef/krema-shim.js implements the
    same window.krema API on top of window.cefQuery.
 
-   Poster delivery: movies stream as direct "poster" events pushed from the
-   backend's IO pool — verified to work from background threads on macOS and in
-   the JCEF shell (whose emitter marshals via the Swing EDT). On the Krema shell
-   this is macOS-only by design; the Windows engine.eval note in AGENTS.md is
-   why the games slice drains through pollGamePosters instead, which doubles as
-   the completion signal (returns -1 when nothing is pending — events alone
-   cannot tell the page "no more will come").
+   Poster delivery: both forms are drained by their poll command, which emits
+   on the UI thread and doubles as the completion signal (returns -1 when
+   nothing is pending — events alone cannot tell the page "no more will come").
 */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -104,12 +101,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>`;
             return;
         }
-        items.forEach(item => {
+        items.forEach((item, idx) => {
             const title = item.title || item.game_title || "Untitled";
             const year = item.year || (item.release_date ? item.release_date.slice(0, 4) : "–");
             const card = document.createElement("div");
             card.className = isGame ? "movie-card game-card" : "movie-card";
             card.dataset[isGame ? "gameId" : "movieId"] = item.id;
+            card.style.setProperty("--i", idx);   // stagger the entrance
 
             const placeholderSvg = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -172,10 +170,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
             renderContent(items, selectedContent);
-            if (isGame) {
-                pollGamePostersUntilDone();
-            }
-            // Movies now receive posters via direct "poster" events (Vavr Future).
+            pollPostersUntilDone(isGame ? "pollGamePosters" : "pollMoviePosters");
         } catch (e) {
             const message = e && e.message ? e.message : String(e);
             showError("Failed to load content: " + escapeHtml(message));
@@ -252,11 +247,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    async function pollGamePostersUntilDone() {
+    async function pollPostersUntilDone(command) {
         while (window.krema) {
             let pending;
             try {
-                pending = await window.krema.invoke("pollGamePosters", {});
+                pending = await window.krema.invoke(command, {});
             } catch (e) {
                 return;
             }
