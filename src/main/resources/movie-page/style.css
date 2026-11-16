@@ -249,6 +249,18 @@ body {
     gap: 20px;
 }
 
+/* Book cards share the poster-card layout; the only difference is that
+   book titles (long, subtitle-prone) wrap to two lines instead of
+   ellipsizing (design-system.pen: Book Card). */
+.book-card .card-title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.25;
+}
+
 /* Movie card — frosted midnight glass */
 .movie-card {
     background-color: var(--panel);

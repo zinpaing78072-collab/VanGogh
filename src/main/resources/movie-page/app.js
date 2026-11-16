@@ -4,12 +4,16 @@
    - await window.krema.invoke("requestMovies", { kind, query }) → kicks off the
      IO-pool fetch, returns the request generation immediately (never blocks)
    - await window.krema.invoke("requestGames", { kind, query }) → same for games
+   - await window.krema.invoke("requestBooks", { kind, query }) → same for books
    - await window.krema.invoke("pollMovieData", { generation }) → data drain:
      { status: "pending" | "done" | "error" | "superseded", items?, error? }
    - await window.krema.invoke("pollGameData", { generation }) → same for games
+   - await window.krema.invoke("pollBookData", { generation }) → same for books
    - await window.krema.invoke("pollMoviePosters", {}) → movie poster drain progress
    - await window.krema.invoke("pollGamePosters", {}) → game poster drain progress
-   - window.krema.on("poster", data) / on("gamePoster", data) → poster data URIs
+   - await window.krema.invoke("pollBookCovers", {}) → book cover drain progress
+   - window.krema.on("poster", data) / on("gamePoster", data) / on("bookCover", data)
+     → artwork data URIs
    The JCEF shell serves this page unchanged: jcef/krema-shim.js implements the
    same window.krema API on top of window.cefQuery.
 
@@ -54,6 +58,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.setGamePoster(data.payload.id, data.payload.dataUri);
         }
     });
+    window.krema.on("bookCover", function (data) {
+        if (data && data.payload) {
+            window.setBookCover(data.payload.id, data.payload.dataUri);
+        }
+    });
 
     // Posters stream in as data: URIs, so  elements start with no src
     // and the placeholder is visible. If an img carrying a real src fails,
@@ -94,7 +103,95 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
+    // Book covers target the book card (`.book-card`, the design-system Book
+    // Card shape). The id is the Open Library work key (e.g. "OL27482W") —
+    // alphanumeric, so it is safe inside the attribute selector.
+    window.setBookCover = function (workKey, dataUri) {
+        const card = grid.querySelector(`.book-card[data-book-id="${workKey}"]`);
+        if (!card || !dataUri) return;
+        const img = card.querySelector(".poster-img");
+        const placeholder = card.querySelector(".poster-placeholder");
+        if (!img) return;
+        img.src = dataUri;
+        img.classList.remove("hidden");
+        if (placeholder) {
+            placeholder.classList.add("hidden");
+        }
+    };
+
+    // Books render in the design-system Book Card shape: the same vertical
+    // poster card as movies/games, but the meta row reads "year  Author · N
+    // pages" (design-system.pen: Book Card) and the rating sits on its own
+    // row. The detail (click) stays book-specific — subjects, editions, the
+    // first line.
+    function renderBooks(items) {
+        grid.innerHTML = "";
+        if (!items || items.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <p style="color:#ff6b6b; margin:0;">No books found.</p>
+                </div>`;
+            return;
+        }
+        items.forEach((book, idx) => {
+            const card = document.createElement("div");
+            card.className = "movie-card book-card";
+            card.dataset.bookId = book.workKey;
+            card.style.setProperty("--i", idx);   // stagger the entrance
+
+            const coverSvg = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>`;
+
+            const rating = book.rating ? book.rating.toFixed(1) : "";
+            const year = book.year || "–";
+            const authorPages = [book.author, book.pages ? book.pages + " pages" : ""]
+                .filter((part) => part).join(" · ");
+
+            card.innerHTML = `
+                <div class="card-poster">
+                    <img class="poster-img hidden" alt="${escapeHtml(book.title)} cover"
+                         loading="lazy" decoding="async">
+                    <div class="poster-placeholder">${coverSvg}</div>
+                </div>
+                <div class="card-info">
+                    <div class="card-title">${escapeHtml(book.title)}</div>
+                    <div class="card-meta">
+                        <span class="card-meta-item">${escapeHtml(year)}</span>
+                        ${authorPages ? `<span class="card-meta-item">${escapeHtml(authorPages)}</span>` : ""}
+                    </div>
+                    ${rating ? `<div class="card-meta"><span class="card-meta-item card-rating">★ ${rating}</span></div>` : ""}
+                </div>
+            `;
+
+            card.querySelector(".poster-img").addEventListener("error", function () {
+                posterFailed(this);
+            });
+
+            card.addEventListener("click", () => {
+                // Book detail — deliberately its own thing (author, editions,
+                // subjects, first line), not the movie/game alert format.
+                const lines = [];
+                if (book.author) lines.push(`Author: ${book.author}`);
+                if (book.year) lines.push(`First published: ${book.year}`);
+                if (book.rating) lines.push(`Rating: ${book.rating.toFixed(1)} / 5`);
+                if (book.pages) lines.push(`Pages: ${book.pages}`);
+                if (book.editionCount) lines.push(`Editions catalogued: ${book.editionCount}`);
+                if (book.subjects) lines.push(`Subjects: ${book.subjects}`);
+                if (book.firstSentence) lines.push("", `“${book.firstSentence}”`);
+                alert(`${book.title}\n\n${lines.join("\n")}`);
+            });
+
+            grid.appendChild(card);
+        });
+    }
+
     function renderContent(items, contentType) {
+        if (contentType === "book") {
+            renderBooks(items);
+            return;
+        }
         grid.innerHTML = "";
         const isGame = contentType === "game";
         const contentName = isGame ? "games" : "movies";
@@ -157,7 +254,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Skeleton cards shown the moment a request starts — the grid should
-    // never sit empty or stale while the fetch is in flight.
+    // never sit empty or stale while the fetch is in flight. All wired
+    // content forms share the poster-card shape.
     function showLoading() {
         grid.innerHTML = "";
         for (let i = 0; i < 8; i++) {
@@ -175,30 +273,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    // Per-domain IPC commands and display names: the request kickoff, the
+    // data drain, the artwork drain, and the trending heading. Wiring a new
+    // content form is a row here plus a render branch in renderContent.
+    const DOMAINS = {
+        movie: { request: "requestMovies", data: "pollMovieData", art: "pollMoviePosters", plural: "Movies" },
+        game:  { request: "requestGames",  data: "pollGameData",  art: "pollGamePosters",  plural: "Games" },
+        book:  { request: "requestBooks",  data: "pollBookData",  art: "pollBookCovers",   plural: "Books" },
+    };
+
     async function requestPageContent(kind, term) {
         if (!window.krema) {
             showError("API bridge not ready yet. Please wait a moment and try again.");
             return;
         }
         try {
-            const isGame = selectedContent === "game";
+            const domain = DOMAINS[selectedContent];
             sectionTitle.textContent = kind === "search"
                 ? "Search Results"
-                : `Trending ${isGame ? "Games" : "Movies"}`;
+                : `Trending ${domain.plural}`;
             showLoading();
             // Kicks off the IO-pool fetch and resolves immediately with the
             // request's generation — the UI thread never blocks on network.
-            const generation = await window.krema.invoke(
-                isGame ? "requestGames" : "requestMovies",
-                { kind: kind, query: term }
-            );
-            const reply = await pollDataUntilDone(
-                isGame ? "pollGameData" : "pollMovieData",
-                generation
-            );
+            const generation = await window.krema.invoke(domain.request, { kind: kind, query: term });
+            const reply = await pollDataUntilDone(domain.data, generation);
             if (!reply) return;   // superseded by a newer request, or already shown
             renderContent(reply.items, selectedContent);
-            pollPostersUntilDone(isGame ? "pollGamePosters" : "pollMoviePosters");
+            pollPostersUntilDone(domain.art);
         } catch (e) {
             const message = e && e.message ? e.message : String(e);
             showError("Failed to load content: " + escapeHtml(message));
@@ -261,15 +362,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // filter is a plain DOM widget instead.
     function handleFilterChange(value) {
         selectedContent = value;
-        if (value === "movie" || value === "game") {
-            requestPageContent("trending", "");
-        } else {
+        if (value === "music") {
             sectionTitle.textContent = `${value.charAt(0).toUpperCase() + value.slice(1)}`
                 + " (not connected)";
             grid.innerHTML = `
                 <div class="empty-state">
                     <p>${escapeHtml(value.charAt(0).toUpperCase() + value.slice(1))} results are not yet connected to the API.</p>
                 </div>`;
+        } else {
+            requestPageContent("trending", "");
         }
     }
 

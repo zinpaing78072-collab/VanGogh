@@ -8,9 +8,9 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 
 ### Core behavior
 - **Input**: A keyword or content name (e.g. `"Inception"`, `"Taylor Swift"`, `"Minecraft"`)
-- **Output**: Related content across Movies and Games (Music and Books are not yet wired)
-- **Mechanism**: The frontend invokes `requestMovies` or `requestGames` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` drains (`pending` / `done` / `error` / `superseded`); posters stream through the `pollMoviePosters` / `pollGamePosters` drains (emitting `"poster"` / `"gamePoster"`). Skeleton cards show while a fetch is in flight.
-- **Filter**: Dropdown offers Movie / Music / Book / Game — Movie and Game connect to their APIs; Music and Book show a "not yet connected" message.
+- **Output**: Related content across Movies, Games, and Books (Music is not yet wired)
+- **Mechanism**: The frontend invokes `requestMovies` / `requestGames` / `requestBooks` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` / `pollBookData` drains (`pending` / `done` / `error` / `superseded`); artwork streams through the `pollMoviePosters` / `pollGamePosters` / `pollBookCovers` drains (emitting `"poster"` / `"gamePoster"` / `"bookCover"`). Skeleton cards show while a fetch is in flight.
+- **Filter**: Dropdown offers Movie / Music / Book / Game — Movie, Game, and Book connect to their APIs (Books via Open Library, no API key); Music shows a "not yet connected" message.
 
 ### Tech stack
 - **Language**: Java 25 (LTS), compiled with `--release 25`
@@ -41,12 +41,13 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
   - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming
+  - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail)
   - Frontend: shared movie/game card grid, search bar, poster rendering. The
     content filter is a custom DOM dropdown (a `div` — no native `<select>`,
     therefore **no `.value`**); the selection lives in `selectedContent` in
     `app.js`. Read that variable, never `contentFilter.value` (re-introducing
     `.value` silently re-breaks the Game filter — it evaluates to `undefined`).
-- **Features pending**: Music, Books, and the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
+- **Features pending**: Music, and the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
 
 ### Presentation build — decided feature set (2026-11-10 brainstorm)
 

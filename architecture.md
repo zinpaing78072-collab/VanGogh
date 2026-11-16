@@ -15,8 +15,9 @@ Defines how VanGogh adds new content domains (Music, Book, Game, TV, …) beyond
 
 - **Movie domain is fully wired**: `MovieController.requestMovies(kind, query)`, `TmdbMovieService`, `TmdbClient`, TMDB API, poster proxy/cache, frontend card grid.
 - **Game domain is wired**: `GameController.requestGames(kind, query)`, `TgdbGameService`, `TgdbClient`, TheGamesDB, and front-boxart streaming.
-- **Filter dropdown** in `src/main/resources/movie-page/index.html` offers Movie / Music / Book / Game; Movie and Game call APIs while Music and Book render a stub "not yet connected" message.
-- **IPC contract**: `requestMovies` and `requestGames` return domain records synchronously; artwork streams through separate poster-drain commands and events.
+- **Book domain is wired**: `BookController.requestBooks(kind, query)`, `OpenLibraryBookService`, `OpenLibraryClient`, Open Library (search + weekly trending, no API key), and cover streaming via the `pollBookCovers` drain / `"bookCover"` events. The Book Card follows the design system's (`design-system.pen`): poster-card layout with a `year  Author · N pages` meta row; the click detail is book-specific (author, pages, editions, subjects, first line).
+- **Filter dropdown** in `src/main/resources/movie-page/index.html` offers Movie / Music / Book / Game; Movie, Game, and Book call their APIs while Music renders a stub "not yet connected" message.
+- **IPC contract**: `requestMovies` / `requestGames` / `requestBooks` kick off an IO-pool fetch and return the request generation immediately; card data arrives through the `pollMovieData` / `pollGameData` / `pollBookData` drains and artwork through the `pollMoviePosters` / `pollGamePosters` / `pollBookCovers` drains (see AGENTS.md — the Windows Krema engine.eval constraint makes every page-facing command a synchronous UI-thread drain).
 - **Build rules**: `pom.xml` compiles with `--release 25` and `<parameters>true</parameters>` (required so `@KremaCommand` arguments bind by parameter name). Run with `JAVA_HOME=jdk-25 mvn compile exec:exec` (never `exec:java` on macOS).
 
 ## Guiding principles
@@ -184,10 +185,13 @@ const tracks = await window.krema.invoke("searchMusic", { query });
 
 - `AGENTS.md` — IPC contract, build/run rules, Krema 0.3.2, macOS launch flags
 - `src/main/java/vangogh/controller/MovieController.java` — reference controller implementation
+- `src/main/java/vangogh/controller/BookController.java` — newest controller (copy-paste its drain skeleton for Music)
 - `src/main/java/vangogh/movie/TmdbMovieService.java` — service + poster cache pattern
+- `src/main/java/vangogh/book/OpenLibraryBookService.java` — Either spine over a second upstream API
 - `src/main/java/vangogh/net/TmdbClient.java` — client + proxy pattern
+- `src/main/java/vangogh/net/OpenLibraryClient.java` — keyless client + cover failover
 - `src/main/resources/movie-page/index.html` — filter dropdown markup
-- `src/main/resources/movie-page/app.js` — frontend invoke + render patterns
+- `src/main/resources/movie-page/app.js` — frontend invoke + render patterns (per-domain `DOMAINS` map, book render branch)
 - `src/test/java/vangogh/controller/MovieControllerTest.java` — test pattern with stubbed client/emitter
 - Vendored Krema source (read-only reference): `repos/krema/krema/krema-core/` — `KremaCommand`, `EventEmitter`, `KremaEvent`
 

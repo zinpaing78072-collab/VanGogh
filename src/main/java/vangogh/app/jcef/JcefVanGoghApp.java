@@ -1,5 +1,6 @@
 package vangogh.app.jcef;
 
+import vangogh.controller.BookController;
 import vangogh.controller.GameController;
 import vangogh.controller.MovieController;
 
@@ -128,7 +129,7 @@ public class JcefVanGoghApp {
         // exists on the client (same order as the upstream jcef test apps).
         System.out.println("[Van Gogh JCEF] Step 4: Browser init...");
         CefClient client = cefApp_.createClient();
-        JcefBridge bridge = new JcefBridge(new MovieController(), new GameController());
+        JcefBridge bridge = new JcefBridge(new MovieController(), new GameController(), new BookController());
         bridge.installRouter(client);
         // Windowed rendering: osr=false (see the CefSettings comment above —
         // the OSR/JOGL path crashes on macOS during GLProfile init).
