@@ -2,6 +2,7 @@ package vangogh.app.jcef;
 
 import vangogh.controller.GameController;
 import vangogh.controller.MovieController;
+import vangogh.controller.MusicController;
 import vangogh.error.FetchError;
 
 import io.vavr.collection.List;
@@ -55,6 +56,7 @@ public class JcefBridge {
 
     private final MovieController movieController;
     private final GameController gameController;
+    private final MusicController musicController;
     private JcefEventEmitter emitter;
     private CefMessageRouter router;
     /**
@@ -70,9 +72,11 @@ public class JcefBridge {
         return t;
     });
 
-    public JcefBridge(MovieController movieController, GameController gameController) {
+    public JcefBridge(MovieController movieController, GameController gameController,
+                      MusicController musicController) {
         this.movieController = movieController;
         this.gameController = gameController;
+        this.musicController = musicController;
     }
 
     /**
@@ -111,6 +115,7 @@ public class JcefBridge {
         this.emitter = new JcefEventEmitter(browser);
         movieController.setEventEmitter(emitter);
         gameController.setEventEmitter(emitter);
+        musicController.setEventEmitter(emitter);
     }
 
     public void dispose() {
@@ -174,10 +179,13 @@ public class JcefBridge {
         return switch (name) {
             case "requestMovies" -> argsCommand(args, this::movieCommand);
             case "requestGames" -> argsCommand(args, this::gameCommand);
+            case "requestMusic" -> argsCommand(args, this::musicCommand);
             case "pollMovieData" -> intCommand(args, "generation", movieController::pollMovieData);
             case "pollGameData" -> intCommand(args, "generation", gameController::pollGameData);
+            case "pollMusicData" -> intCommand(args, "generation", musicController::pollMusicData);
             case "pollGamePosters" -> Validation.valid(new Command(gameController::pollGamePosters));
             case "pollMoviePosters" -> Validation.valid(new Command(movieController::pollMoviePosters));
+            case "pollMusicPosters" -> Validation.valid(new Command(musicController::pollMusicPosters));
             default -> Validation.invalid(List.of(
                     new FetchError.BadInput("command", "unknown command: " + name)));
         };
@@ -236,5 +244,9 @@ public class JcefBridge {
 
     private Command gameCommand(String kind, String query) {
         return new Command(() -> gameController.requestGames(kind, query));
+    }
+
+    private Command musicCommand(String kind, String query) {
+        return new Command(() -> musicController.requestMusic(kind, query));
     }
 }
