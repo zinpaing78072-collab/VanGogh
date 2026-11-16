@@ -1,17 +1,21 @@
 /* Van Gogh content browser (Krema system-webview shell / JCEF experiment shell) */
 
 /* The page talks to Java through window.krema:
-   - await window.krema.invoke("requestMovies", { kind, query }) → movie list
-   - await window.krema.invoke("requestGames", { kind, query }) → game list
+   - await window.krema.invoke("requestMovies", { kind, query }) → kicks off the
+     IO-pool fetch, returns the request generation immediately (never blocks)
+   - await window.krema.invoke("requestGames", { kind, query }) → same for games
+   - await window.krema.invoke("pollMovieData", { generation }) → data drain:
+     { status: "pending" | "done" | "error" | "superseded", items?, error? }
+   - await window.krema.invoke("pollGameData", { generation }) → same for games
    - await window.krema.invoke("pollMoviePosters", {}) → movie poster drain progress
    - await window.krema.invoke("pollGamePosters", {}) → game poster drain progress
    - window.krema.on("poster", data) / on("gamePoster", data) → poster data URIs
    The JCEF shell serves this page unchanged: jcef/krema-shim.js implements the
    same window.krema API on top of window.cefQuery.
 
-   Poster delivery: both forms are drained by their poll command, which emits
-   on the UI thread and doubles as the completion signal (returns -1 when
-   nothing is pending — events alone cannot tell the page "no more will come").
+   Delivery is drained, never pushed, for both data and posters: the drains run
+   as synchronous commands on the UI thread (so the reply's engine.eval always
+   fires — the Windows Krema constraint) and double as completion signals.
 */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -119,7 +123,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             card.innerHTML = `
                 <div class="card-poster">
-                    <img class="poster-img hidden" alt="${escapeHtml(title)} poster">
+                    <img class="poster-img hidden" alt="${escapeHtml(title)} poster"
+                         loading="lazy" decoding="async">
                     <div class="poster-placeholder">${placeholderSvg}</div>
                 </div>
                 <div class="card-info">
@@ -151,6 +156,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>`;
     }
 
+    // Skeleton cards shown the moment a request starts — the grid should
+    // never sit empty or stale while the fetch is in flight.
+    function showLoading() {
+        grid.innerHTML = "";
+        for (let i = 0; i < 8; i++) {
+            const card = document.createElement("div");
+            card.className = "movie-card skeleton-card";
+            card.style.setProperty("--i", i);   // stagger the entrance
+            card.innerHTML = `
+                <div class="card-poster skeleton-poster"></div>
+                <div class="card-info">
+                    <div class="skeleton-line skeleton-title"></div>
+                    <div class="skeleton-line skeleton-meta"></div>
+                </div>
+            `;
+            grid.appendChild(card);
+        }
+    }
+
     async function requestPageContent(kind, term) {
         if (!window.krema) {
             showError("API bridge not ready yet. Please wait a moment and try again.");
@@ -161,20 +185,52 @@ document.addEventListener("DOMContentLoaded", async () => {
             sectionTitle.textContent = kind === "search"
                 ? "Search Results"
                 : `Trending ${isGame ? "Games" : "Movies"}`;
-            const items = await window.krema.invoke(
+            showLoading();
+            // Kicks off the IO-pool fetch and resolves immediately with the
+            // request's generation — the UI thread never blocks on network.
+            const generation = await window.krema.invoke(
                 isGame ? "requestGames" : "requestMovies",
                 { kind: kind, query: term }
             );
-            if (items && items.error) {
-                showError(items.error);
-                return;
-            }
-            renderContent(items, selectedContent);
+            const reply = await pollDataUntilDone(
+                isGame ? "pollGameData" : "pollMovieData",
+                generation
+            );
+            if (!reply) return;   // superseded by a newer request, or already shown
+            renderContent(reply.items, selectedContent);
             pollPostersUntilDone(isGame ? "pollGamePosters" : "pollMoviePosters");
         } catch (e) {
             const message = e && e.message ? e.message : String(e);
             showError("Failed to load content: " + escapeHtml(message));
         }
+    }
+
+    // Poll the data drain until this generation's fetch resolves. Returns the
+    // done reply, or null when the loop should stop (error already shown,
+    // request superseded by a newer one, or bridge gone).
+    async function pollDataUntilDone(command, generation) {
+        while (window.krema) {
+            let reply;
+            try {
+                reply = await window.krema.invoke(command, { generation: generation });
+            } catch (e) {
+                const message = e && e.message ? e.message : String(e);
+                showError("Failed to load content: " + escapeHtml(message));
+                return null;
+            }
+            if (reply && reply.status === "done") {
+                return reply;
+            }
+            if (reply && reply.status === "error") {
+                showError(reply.error || "Failed to load content.");
+                return null;
+            }
+            if (reply && reply.status === "superseded") {
+                return null;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 100));   // "pending"
+        }
+        return null;
     }
 
     // Seed the initial trending render.

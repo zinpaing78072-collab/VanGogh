@@ -19,6 +19,12 @@ import java.util.Map;
  *
  * Uses stubbed {@link TmdbClient}/{@link TmdbMovieService} injected via the
  * package-private constructors, so no real TMDB network calls are made.
+ *
+ * Contract (see the class comment on {@link MovieController}): the command
+ * kicks off the IO-pool fetch and returns the request generation at once —
+ * the UI thread never blocks on network I/O. The resolved list arrives via
+ * the {@code pollMovieData} drain; posters via the {@code pollMoviePosters}
+ * drain.
  */
 class MovieControllerTest {
 
@@ -83,17 +89,34 @@ class MovieControllerTest {
         return new MovieController(service); // package-private ctor
     }
 
+    /** Drains pollMovieData until this generation's fetch resolves (2s deadline). */
+    private MovieController.MovieDataReply drainData(MovieController controller, int generation)
+            throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 2000;
+        MovieController.MovieDataReply reply = null;
+        while (System.currentTimeMillis() < deadline) {
+            reply = controller.pollMovieData(generation);
+            if (!"pending".equals(reply.status())) {
+                return reply;
+            }
+            Thread.sleep(10);
+        }
+        return reply;
+    }
+
     @Test
     void requestMoviesWithSearchKindDispatchesToSearchMovies() throws Exception {
         StubClient client = new StubClient();
         client.searchResponse = new ApiResponse(200, VALID_JSON, null);
         MovieController controller = controllerWith(serviceWith(client));
 
-        List<Movie> movies = controller.requestMovies("search", "Inception");
+        int gen = controller.requestMovies("search", "Inception");
+        MovieController.MovieDataReply reply = drainData(controller, gen);
 
-        assertEquals(1, movies.size());
-        assertEquals("Inception", movies.get(0).title());
-        assertEquals(2010, movies.get(0).year());
+        assertEquals("done", reply.status());
+        assertEquals(1, reply.items().size());
+        assertEquals("Inception", reply.items().get(0).title());
+        assertEquals(2010, reply.items().get(0).year());
     }
 
     @Test
@@ -102,10 +125,12 @@ class MovieControllerTest {
         client.trendingResponse = new ApiResponse(200, VALID_JSON, null);
         MovieController controller = controllerWith(serviceWith(client));
 
-        List<Movie> movies = controller.requestMovies("trending", "ignored");
+        int gen = controller.requestMovies("trending", "ignored");
+        MovieController.MovieDataReply reply = drainData(controller, gen);
 
-        assertEquals(1, movies.size());
-        assertEquals("Inception", movies.get(0).title());
+        assertEquals("done", reply.status());
+        assertEquals(1, reply.items().size());
+        assertEquals("Inception", reply.items().get(0).title());
     }
 
     @Test
@@ -114,23 +139,75 @@ class MovieControllerTest {
         client.trendingResponse = new ApiResponse(200, VALID_JSON, null);
         MovieController controller = controllerWith(serviceWith(client));
 
-        List<Movie> movies = controller.requestMovies("search", "");
+        int gen = controller.requestMovies("search", "");
+        MovieController.MovieDataReply reply = drainData(controller, gen);
 
-        assertEquals(1, movies.size());
-        assertEquals("Inception", movies.get(0).title());
+        assertEquals("done", reply.status());
+        assertEquals(1, reply.items().size());
+        assertEquals("Inception", reply.items().get(0).title());
     }
 
     @Test
-    void requestMoviesWhenServiceThrowsRethrowsWithServiceMessage() {
+    void fetchFailureSurfacesAsAnErrorStatusOnTheDataDrain() throws Exception {
         StubClient client = new StubClient();
         client.trendingResponse = new ApiResponse(500, "boom", "server error");
         MovieController controller = controllerWith(serviceWith(client));
 
-        // The UI thread joins the IO future; the fetch failure's own message
-        // must surface (it becomes Krema's error reply to the page).
-        RuntimeException e = assertThrows(RuntimeException.class,
-                () -> controller.requestMovies("trending", "x"));
-        assertTrue(e.getMessage().contains("TMDB trending failed: HTTP 500"));
+        int gen = controller.requestMovies("trending", "x");
+        MovieController.MovieDataReply reply = drainData(controller, gen);
+
+        // The fetch failure's own message must surface (it becomes the page's
+        // error state, same text the old thrown-edge produced).
+        assertEquals("error", reply.status());
+        assertTrue(reply.error().contains("TMDB trending failed: HTTP 500"));
+    }
+
+    @Test
+    void requestMoviesDoesNotBlockTheCallingThreadDuringFetch() throws Exception {
+        StubClient client = new StubClient() {
+            @Override
+            public io.vavr.control.Try<ApiResponse> trending() {
+                try {
+                    Thread.sleep(500); // simulate a slow TMDB round-trip
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return io.vavr.control.Try.success(new ApiResponse(200, VALID_JSON, null));
+            }
+        };
+        MovieController controller = controllerWith(serviceWith(client));
+
+        long start = System.nanoTime();
+        controller.requestMovies("trending", "x");
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+        // The Krema handler runs on the UI thread: it must kick off the fetch
+        // and return at once, never block on network I/O (that freezes the
+        // window — no repaints, no loading state, 1-3s of dead UI at startup).
+        assertTrue(elapsedMs < 250,
+                "requestMovies blocked the calling thread for " + elapsedMs
+                        + "ms — UI-thread freeze");
+    }
+
+    @Test
+    void pollMovieDataOlderGenerationIsSupersededByANewerRequest() throws Exception {
+        StubClient client = new StubClient();
+        client.trendingResponse = new ApiResponse(200, VALID_JSON, null);
+        MovieController controller = controllerWith(serviceWith(client));
+
+        int firstGen = controller.requestMovies("trending", "x");
+        int secondGen = controller.requestMovies("trending", "y");
+        assertTrue(secondGen > firstGen);
+
+        // The first poller must never consume the second request's result —
+        // two loops can poll the same one-slot drain. Whether the first poll
+        // observes "pending" (fetch still in flight) or "superseded" (resolved
+        // and dropped as stale) is timing-dependent; "done" would mean it
+        // stole the newer request's data.
+        assertNotEquals("done", controller.pollMovieData(firstGen).status());
+
+        // The newer request still delivers through the drain.
+        assertEquals("done", drainData(controller, secondGen).status());
     }
 
     @Test
@@ -142,7 +219,9 @@ class MovieControllerTest {
         TestEventEmitter emitter = new TestEventEmitter();
         controller.setEventEmitter(emitter);
 
-        controller.requestMovies("trending", "x"); // kicks off poster prefetch
+        int gen = controller.requestMovies("trending", "x");
+        MovieController.MovieDataReply reply = drainData(controller, gen);
+        assertEquals("done", reply.status()); // poster bookkeeping is in place
 
         long deadline = System.currentTimeMillis() + 2000;
         int result = 0;
@@ -175,7 +254,8 @@ class MovieControllerTest {
         MovieController controller = controllerWith(serviceWith(client));
         controller.setEventEmitter(new TestEventEmitter());
 
-        controller.requestMovies("trending", "x");
+        int gen = controller.requestMovies("trending", "x");
+        assertEquals("done", drainData(controller, gen).status());
 
         // Skipped posters are counted against the total, so the drain must
         // reach the -1 completion signal promptly instead of hanging.
