@@ -101,12 +101,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>`;
             return;
         }
-        items.forEach(item => {
+        items.forEach((item, idx) => {
             const title = item.title || item.game_title || "Untitled";
             const year = item.year || (item.release_date ? item.release_date.slice(0, 4) : "–");
             const card = document.createElement("div");
             card.className = isGame ? "movie-card game-card" : "movie-card";
             card.dataset[isGame ? "gameId" : "movieId"] = item.id;
+            card.style.setProperty("--i", idx);   // stagger the entrance
 
             const placeholderSvg = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
