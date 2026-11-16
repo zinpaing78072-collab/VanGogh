@@ -133,10 +133,8 @@ class MovieControllerTest {
         assertTrue(e.getMessage().contains("TMDB trending failed: HTTP 500"));
     }
 
-    // pollPosters removed in the Vavr rewrite (posters emit directly).
-
     @Test
-    void pollPostersDrainsQueuedPostersAndEmitsPosterEvents() throws Exception {
+    void pollMoviePostersDrainsQueuedPostersAndEmitsPosterEvents() throws Exception {
         StubClient client = new StubClient();
         client.trendingResponse = new ApiResponse(200, VALID_JSON, null);
         MovieController controller = controllerWith(serviceWith(client));
@@ -147,10 +145,15 @@ class MovieControllerTest {
         controller.requestMovies("trending", "x"); // kicks off poster prefetch
 
         long deadline = System.currentTimeMillis() + 2000;
-        while (emitter.emitted.isEmpty() && System.currentTimeMillis() < deadline) {
-            Thread.sleep(10);
+        int result = 0;
+        while (result != -1 && System.currentTimeMillis() < deadline) {
+            result = controller.pollMoviePosters();
+            if (result != -1) {
+                Thread.sleep(10);
+            }
         }
 
+        assertEquals(-1, result);
         assertEquals(1, emitter.emitted.size());
         KremaEvent e = emitter.emitted.get(0);
         assertEquals("poster", e.name());
@@ -161,7 +164,7 @@ class MovieControllerTest {
     }
 
     @Test
-    void pollPostersSkippedPostersDoNotStallPolling() throws Exception {
+    void pollMoviePostersSkippedPostersDoNotStallPolling() throws Exception {
         StubClient client = new StubClient() {
             @Override
             public io.vavr.control.Option<String> loadPosterDataUri(String posterUrl) {
@@ -174,8 +177,16 @@ class MovieControllerTest {
 
         controller.requestMovies("trending", "x");
 
-        // With direct emission, a failed poster simply emits nothing; ensure the
-        // call returns promptly without hanging.
-        Thread.sleep(200);
+        // Skipped posters are counted against the total, so the drain must
+        // reach the -1 completion signal promptly instead of hanging.
+        long deadline = System.currentTimeMillis() + 2000;
+        int result = 0;
+        while (result != -1 && System.currentTimeMillis() < deadline) {
+            result = controller.pollMoviePosters();
+            if (result != -1) {
+                Thread.sleep(10);
+            }
+        }
+        assertEquals(-1, result);
     }
 }
