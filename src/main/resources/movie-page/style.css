@@ -1,13 +1,41 @@
-/* Van Gogh — Dark Mode Streaming UI */
+/* Van Gogh — Stargazer skin (Starry Night palette)
+   Ported from the standalone Stargazer · C prototype. Same layout, classes and
+   ids as the app page; the content filter stays the app's custom DOM widget
+   (a native <select> freezes the window on macOS — see app.js) and is restyled
+   in the same glass palette.
+
+   Visual roles vs the previous flat dark theme:
+   - Bars (header + card info) and cards are frosted glass tinted midnight
+     (#101B2D) with backdrop blur, so the starry sky shows through faintly
+   - Accent passes from red to the palette golds: Search button, ratings,
+     hover/active borders and focus rings; light blues carry borders/muted text
+   - Body sits on starry.png behind a 10px frosted veil
+*/
 :root {
-    --bg: #0f0f0f;
-    --panel: #1a1a1a;
-    --panel-hover: #242424;
-    --accent: #e50914;
-    --accent-hover: #f40612;
+    /* Starry Night palette */
+    --star-midnight: #101B2D;   /* bars/cards glass base, page fallback */
+    --star-blue:    #1E3F73;    /* deep poster glass */
+    --star-blue-mid:#3367A8;    /* scrollbar thumb, selection */
+    --star-blue-lt: #7FA6C9;    /* borders, muted text, focus rings */
+    --star-gold:    #D8A931;
+    --star-gold-lt: #F4D35E;
+
+    /* themed roles */
+    --bg: var(--star-midnight);
+    --panel: rgba(24, 40, 66, 0.50);                              /* frosted midnight glass */
+    --panel-hover: rgba(24, 40, 66, 0.72);
+    --panel-inset: rgba(16, 27, 45, 0.45);                        /* search input + select fill */
+    --panel-deep: #0C1524;                                        /* poster bed */
+    --accent: var(--star-gold);
+    --accent-hover: var(--star-gold-lt);
+    --accent-ink: var(--star-midnight);                           /* dark text on gold buttons */
     --text: #ffffff;
-    --text-muted: #a3a3a3;
-    --border: #333333;
+    --text-muted: var(--star-blue-lt);
+    --rating: var(--star-gold-lt);
+    --border: rgba(127, 166, 201, 0.22);
+    --border-strong: rgba(127, 166, 201, 0.4);
+
+    --blur-glass: blur(16px) saturate(1.35) brightness(1.10);
     --radius: 8px;
 }
 
@@ -25,10 +53,26 @@ body {
     min-height: 100vh;
 }
 
-/* Header */
+::selection {
+    background: var(--star-blue-mid);
+    color: var(--text);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    /* without backdrop-filter, fall back to a firmer glass tint */
+    :root {
+        --panel: rgba(16, 27, 45, 0.92);
+        --panel-inset: rgba(11, 19, 33, 0.9);
+    }
+}
+
+/* Header — frosted midnight glass bar */
 .app-header {
     background-color: var(--panel);
+    -webkit-backdrop-filter: var(--blur-glass);
+    backdrop-filter: var(--blur-glass);
     border-bottom: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 10px 30px -18px rgba(4, 8, 18, 0.8);
     padding: 16px 24px;
     display: flex;
     align-items: center;
@@ -47,6 +91,12 @@ body {
     flex-shrink: 0;
 }
 
+.brand-mark {
+    color: var(--star-gold-lt);
+    text-shadow: 0 0 12px rgba(244, 211, 94, 0.55);
+    margin-right: 0.3em;
+}
+
 .search-bar {
     position: relative;
     display: flex;
@@ -60,17 +110,24 @@ body {
     flex: 1;
     min-width: 200px;
     width: 100%;
-    background-color: var(--bg);
+    background-color: var(--panel-inset);
     border: 1px solid var(--border);
     color: var(--text);
+    caret-color: var(--star-gold-lt);
     padding: 12px 56px 12px 18px;
     border-radius: var(--radius);
     font-size: 15px;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.search-input::placeholder {
+    color: rgba(127, 166, 201, 0.85);
 }
 
 .search-input:focus {
     outline: none;
     border-color: var(--accent);
+    background-color: rgba(16, 27, 45, 0.7);
 }
 
 .search-btn {
@@ -79,17 +136,20 @@ body {
     top: 50%;
     transform: translateY(-50%);
     background-color: var(--accent);
-    color: white;
+    background-image: linear-gradient(180deg, var(--star-gold-lt) 0%, var(--star-gold) 100%);
+    color: var(--accent-ink);
     border: none;
     padding: 10px 18px;
     border-radius: 6px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
+    box-shadow: 0 6px 18px -6px rgba(216, 169, 49, 0.55);
+    transition: filter 0.2s ease;
 }
 
 .search-btn:hover {
-    background-color: var(--accent-hover);
+    filter: brightness(1.1);
 }
 
 .filter-wrapper {
@@ -102,7 +162,7 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    background-color: var(--bg);
+    background-color: var(--panel-inset);
     border: 1px solid var(--border);
     color: var(--text);
     padding: 12px 14px;
@@ -131,12 +191,14 @@ body {
     top: calc(100% + 6px);
     left: 0;
     right: 0;
-    background-color: var(--bg);
-    border: 1px solid var(--border);
+    background-color: rgba(16, 27, 45, 0.95);
+    -webkit-backdrop-filter: var(--blur-glass);
+    backdrop-filter: var(--blur-glass);
+    border: 1px solid var(--border-strong);
     border-radius: var(--radius);
     padding: 4px;
     z-index: 50;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 18px 34px -18px rgba(4, 8, 18, 0.9);
     display: flex;
     flex-direction: column;
 }
@@ -146,11 +208,12 @@ body {
     border-radius: calc(var(--radius) - 2px);
     cursor: pointer;
     white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .filter-option:hover {
     background-color: var(--accent);
-    color: #fff;
+    color: var(--accent-ink);
 }
 
 .filter-option.selected {
@@ -159,7 +222,7 @@ body {
 }
 
 .filter-option.selected:hover {
-    color: #fff;
+    color: var(--accent-ink);
 }
 
 /* Main container */
@@ -176,6 +239,7 @@ body {
     margin-bottom: 16px;
     color: var(--text);
     letter-spacing: -0.3px;
+    text-shadow: 0 2px 18px rgba(4, 8, 18, 0.6);
 }
 
 /* Card grid */
@@ -185,28 +249,37 @@ body {
     gap: 20px;
 }
 
-/* Movie card */
+/* Movie card — frosted midnight glass */
 .movie-card {
     background-color: var(--panel);
+    -webkit-backdrop-filter: var(--blur-glass);
+    backdrop-filter: var(--blur-glass);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     cursor: pointer;
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 14px 30px -20px rgba(4, 8, 18, 0.85);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    animation: cardIn 0.5s cubic-bezier(0.2, 0.7, 0.25, 1) both;   /* staggered via --i */
+    animation-delay: calc(var(--i, 0) * 35ms);
 }
 
 .movie-card:hover {
     transform: translateY(-4px);
-    border-color: var(--accent);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border-color: var(--star-gold-lt);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 18px 34px -18px rgba(4, 8, 18, 0.9), 0 0 44px rgba(244, 211, 94, 0.32);
+}
+
+.movie-card:active {
+    transform: translateY(-1px) scale(0.985);
 }
 
 .card-poster {
     width: 100%;
     aspect-ratio: 2 / 3;
-    background-color: #111;
+    background-color: var(--panel-deep);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -219,6 +292,11 @@ body {
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.25, 1), filter 0.45s ease;
+}
+
+.movie-card:hover .card-poster img {
+    transform: scale(1.06);
 }
 
 .hidden {
@@ -228,7 +306,7 @@ body {
 .poster-placeholder {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    background: linear-gradient(135deg, var(--star-blue) 0%, var(--star-midnight) 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -249,6 +327,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    border-top: 1px solid rgba(127, 166, 201, 0.10);
 }
 
 .card-title {
@@ -259,6 +338,11 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.3;
+    transition: color 0.25s ease;
+}
+
+.movie-card:hover .card-title {
+    color: var(--star-gold-lt);
 }
 
 .card-meta {
@@ -271,7 +355,7 @@ body {
 
 .card-rating {
     font-weight: 700;
-    color: var(--text);
+    color: var(--rating);
 }
 
 /* Empty state */
@@ -293,14 +377,71 @@ body {
     height: 10px;
 }
 ::-webkit-scrollbar-track {
-    background: var(--bg);
+    background: rgba(16, 27, 45, 0.65);
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--border);
+    background: var(--star-blue-mid);
     border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: var(--star-blue-lt);
+}
+
+/* Keyboard focus */
+button:focus-visible, .search-input:focus-visible, .filter-select:focus-visible {
+    outline: 2px solid var(--star-blue-lt);
+    outline-offset: 2px;
+}
+
+/* Card entrance — staggered per card via --i (set in app.js) */
+@keyframes cardIn {
+    from { opacity: 0; translate: 0 12px; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+/* Starry Night backdrop — starry.png behind a lighter frosted veil */
+.sky {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background: url("starry.png") center/cover no-repeat var(--bg);
+}
+
+.veil {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(10px) saturate(1.25) brightness(1.04);
+    backdrop-filter: blur(10px) saturate(1.25) brightness(1.04);
+    background: linear-gradient(180deg,
+        rgba(127, 166, 201, 0.07),
+        rgba(127, 166, 201, 0.14));
+}
+
+.veil::before { /* ice grain */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='260'%20height='260'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.85'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 260px 260px;
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+}
+
+.veil::after { /* frost settling at the edges */
+    content: "";
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 130px 24px rgba(127, 166, 201, 0.20);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .movie-card { transition: none; animation: none; }
+    .movie-card:hover { transform: none; }
+    .movie-card:active { transform: none; }
+    .card-poster img { transition: none; }
+    .movie-card:hover .card-poster img { transform: none; }
 }
 
 /* Responsive */
