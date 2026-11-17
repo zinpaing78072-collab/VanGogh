@@ -1,0 +1,937 @@
+/*
+ * Van Gogh — Book detail prototypes (starry night theme).
+ * Ported from src/main/resources/movie-page/style.css (the app's Stargazer
+ * skin): same palette variables, header, card shapes and sky/veil backdrop,
+ * plus the detail-page styles the three layout variants share.
+ */
+:root {
+    /* Starry Night palette */
+    --star-midnight: #101B2D;
+    --star-blue:    #1E3F73;
+    --star-blue-mid:#3367A8;
+    --star-blue-lt: #7FA6C9;
+    --star-gold:    #D8A931;
+    --star-gold-lt: #F4D35E;
+
+    --bg: var(--star-midnight);
+    --panel: rgba(24, 40, 66, 0.50);
+    --panel-hover: rgba(24, 40, 66, 0.72);
+    --panel-inset: rgba(16, 27, 45, 0.45);
+    --panel-deep: #0C1524;
+    --accent: var(--star-gold);
+    --accent-hover: var(--star-gold-lt);
+    --accent-ink: var(--star-midnight);
+    --text: #ffffff;
+    --text-muted: var(--star-blue-lt);
+    --rating: var(--star-gold-lt);
+    --border: rgba(127, 166, 201, 0.22);
+    --border-strong: rgba(127, 166, 201, 0.4);
+
+    --blur-glass: blur(16px) saturate(1.35) brightness(1.10);
+    --radius: 8px;
+
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+::selection { background: var(--star-blue-mid); color: var(--text); }
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root {
+        --panel: rgba(16, 27, 45, 0.92);
+        --panel-inset: rgba(11, 19, 33, 0.9);
+    }
+}
+
+/* ---- Header — frosted midnight glass bar (as the app) ---- */
+.app-header {
+    background-color: var(--panel);
+    -webkit-backdrop-filter: var(--blur-glass);
+    backdrop-filter: var(--blur-glass);
+    border-bottom: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 10px 30px -18px rgba(4, 8, 18, 0.8);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 24px;
+}
+
+.brand {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.brand-mark {
+    color: var(--star-gold-lt);
+    text-shadow: 0 0 12px rgba(244, 211, 94, 0.55);
+    margin-right: 0.3em;
+}
+
+.search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    max-width: 900px;
+    margin: 0 24px;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 200px;
+    width: 100%;
+    background-color: var(--panel-inset);
+    border: 1px solid var(--border);
+    color: var(--text);
+    caret-color: var(--star-gold-lt);
+    padding: 12px 56px 12px 18px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.search-input::placeholder { color: rgba(127, 166, 201, 0.85); }
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background-color: rgba(16, 27, 45, 0.7);
+}
+
+.search-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--accent);
+    background-image: linear-gradient(180deg, var(--star-gold-lt) 0%, var(--star-gold) 100%);
+    color: var(--accent-ink);
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 18px -6px rgba(216, 169, 49, 0.55);
+    transition: filter 0.2s ease;
+}
+
+.search-btn:hover { filter: brightness(1.1); }
+
+.filter-wrapper { flex-shrink: 0; }
+
+.filter-select {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background-color: var(--panel-inset);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    cursor: pointer;
+    min-width: 110px;
+    user-select: none;
+}
+
+.filter-select::after { content: "\25BE"; font-size: 11px; opacity: 0.7; }
+
+/* Prototype layout switcher — sits where the app's filter would be */
+.layout-switch { display: inline-flex; gap: 6px; flex-shrink: 0; }
+
+.layout-switch a {
+    display: inline-block;
+    padding: 9px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background-color: var(--panel-inset);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.layout-switch a:hover { color: var(--text); border-color: var(--border-strong); }
+.layout-switch a.active {
+    color: var(--accent);
+    border-color: var(--accent);
+    background-color: rgba(216, 169, 49, 0.12);
+}
+
+/* ---- Starry Night backdrop (as the app) ---- */
+.sky {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background: url("starry.png") center/cover no-repeat var(--bg);
+}
+
+.veil {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(10px) saturate(1.25) brightness(1.04);
+    backdrop-filter: blur(10px) saturate(1.25) brightness(1.04);
+    background: linear-gradient(180deg,
+        rgba(127, 166, 201, 0.07),
+        rgba(127, 166, 201, 0.14));
+}
+
+.veil::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='260'%20height='260'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.85'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 260px 260px;
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+}
+
+.veil::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 130px 24px rgba(127, 166, 201, 0.20);
+}
+
+/* ---- Containers ---- */
+.container {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.container.narrow { max-width: 1180px; }
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+    text-shadow: 0 2px 18px rgba(4, 8, 18, 0.6);
+}
+
+/* Prototype banner */
+.proto-note {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding: 10px 16px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    background-color: rgba(16, 27, 45, 0.55);
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.proto-note .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--star-gold-lt);
+    box-shadow: 0 0 10px rgba(244, 211, 94, 0.8);
+    flex-shrink: 0;
+}
+
+/* ---- Book cards (design-system Book Card shape, as the app grid) ---- */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.movie-card {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 14px 30px -20px rgba(4, 8, 18, 0.85);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    animation: cardIn 0.5s cubic-bezier(0.2, 0.7, 0.25, 1) both;
+    animation-delay: calc(var(--i, 0) * 35ms);
+}
+
+.movie-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--star-gold-lt);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 18px 34px -18px rgba(4, 8, 18, 0.9), 0 0 44px rgba(244, 211, 94, 0.32);
+}
+
+.movie-card:active { transform: translateY(-1px) scale(0.985); }
+
+.card-poster {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    background-color: var(--panel-deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.card-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.25, 1), filter 0.45s ease;
+}
+
+.movie-card:hover .card-poster img { transform: scale(1.06); }
+
+.hidden { display: none !important; }
+
+.poster-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--star-blue) 0%, var(--star-midnight) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.poster-placeholder svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 8px;
+    opacity: 0.5;
+}
+
+.card-info {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-top: 1px solid rgba(127, 166, 201, 0.10);
+}
+
+.card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+    transition: color 0.25s ease;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.movie-card:hover .card-title { color: var(--star-gold-lt); }
+
+.card-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.card-rating { font-weight: 700; color: var(--rating); }
+
+@keyframes cardIn {
+    from { opacity: 0; translate: 0 12px; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+/* ================= Detail page — shared ================= */
+
+.crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 22px;
+    color: var(--text-muted);
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.crumb:hover { color: var(--star-gold-lt); }
+
+/* source chip — the Open Library work key */
+.work-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    background-color: rgba(16, 27, 45, 0.55);
+    padding: 4px 9px;
+    border-radius: 999px;
+    letter-spacing: 0.3px;
+    text-decoration: none;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.work-chip:hover { color: var(--star-gold-lt); border-color: var(--border-strong); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.chip {
+    display: inline-block;
+    padding: 6px 13px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background-color: var(--panel-inset);
+    color: var(--text-muted);
+    font-size: 12.5px;
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.chip:hover {
+    color: var(--accent-ink);
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* Pull-quote — the first line of the book */
+.pull-quote {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--text);
+    border-left: 3px solid var(--star-gold);
+    padding: 4px 0 4px 20px;
+    text-shadow: 0 2px 18px rgba(4, 8, 18, 0.6);
+}
+
+.pull-quote .mark { color: var(--star-gold-lt); }
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: filter 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    user-select: none;
+}
+
+.btn-primary {
+    background-color: var(--accent);
+    background-image: linear-gradient(180deg, var(--star-gold-lt) 0%, var(--star-gold) 100%);
+    color: var(--accent-ink);
+    border-color: transparent;
+    box-shadow: 0 6px 18px -6px rgba(216, 169, 49, 0.55);
+}
+
+.btn-primary:hover { filter: brightness(1.1); }
+
+.btn-ghost {
+    background-color: var(--panel-inset);
+    color: var(--text);
+}
+
+.btn-ghost:hover { border-color: var(--star-gold-lt); color: var(--star-gold-lt); }
+
+/* Star rating */
+.stars { display: inline-flex; align-items: baseline; gap: 10px; }
+
+.stars .glyphs {
+    color: var(--star-gold-lt);
+    font-size: 17px;
+    letter-spacing: 3px;
+    text-shadow: 0 0 12px rgba(244, 211, 94, 0.45);
+}
+
+.stars .glyphs .dim { opacity: 0.22; text-shadow: none; }
+
+.stars .value { font-weight: 700; color: var(--rating); font-size: 15px; }
+.stars .note { color: var(--text-muted); font-size: 12.5px; }
+
+/* Fact grid — the Book record fields laid out as facts */
+.fact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.fact {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.fact .k {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.fact .v { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.fact .v .unit { font-size: 12px; font-weight: 400; color: var(--text-muted); }
+
+/* Section blocks on detail pages */
+.detail-section {
+    margin-top: 34px;
+}
+
+.detail-section > h3 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.6px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+}
+
+/* Related row — small horizontal cards */
+.related-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(160px, 200px);
+    gap: 18px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scrollbar-width: thin;
+}
+
+.related-row .movie-card { animation: none; }
+
+/* Small screens */
+@media (max-width: 860px) {
+    .app-header { flex-wrap: wrap; }
+    .search-bar { max-width: none; margin: 0; }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgba(16, 27, 45, 0.65); }
+::-webkit-scrollbar-thumb { background: var(--star-blue-mid); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--star-blue-lt); }
+
+button:focus-visible, .search-input:focus-visible, .filter-select:focus-visible {
+    outline: 2px solid var(--star-blue-lt);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .movie-card { transition: none; animation: none; }
+    .movie-card:hover { transform: none; }
+    .card-poster img { transition: none; }
+    .movie-card:hover .card-poster img { transform: none; }
+}
+
+/* ================= Layout A — "Open Page" =================
+   Editorial two-column hero: the cover as a slightly turned 3D book on the
+   left, the record (title, author, rating, facts, first line) on the right. */
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: minmax(240px, 300px) 1fr;
+    gap: 46px;
+    align-items: start;
+}
+
+.cover-shell {
+    position: relative;
+    transform: perspective(1400px) rotateY(-7deg);
+    transform-style: preserve-3d;
+    border-radius: 4px 10px 10px 4px;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.14),
+        0 24px 50px -18px rgba(4, 8, 18, 0.95),
+        0 0 70px rgba(30, 63, 115, 0.55);
+    transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.25, 1);
+    width: fit-content;
+    margin: 8px 0 8px 22px;
+}
+
+.cover-shell:hover { transform: perspective(1400px) rotateY(-3deg) translateY(-4px); }
+
+/* the spine */
+.cover-shell::before {
+    content: "";
+    position: absolute;
+    left: -14px;
+    top: 2px;
+    bottom: 2px;
+    width: 14px;
+    border-radius: 4px 0 0 4px;
+    background: linear-gradient(90deg, #0A1220 0%, #18294a 55%, rgba(127, 166, 201, 0.35) 100%);
+    transform: translateZ(-1px);
+}
+
+.cover-shell img {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 3px 8px 8px 3px;
+    background: var(--panel-deep);
+}
+
+/* page edges */
+.cover-shell::after {
+    content: "";
+    position: absolute;
+    right: -5px;
+    top: 3px;
+    bottom: 3px;
+    width: 5px;
+    border-radius: 0 3px 3px 0;
+    background: repeating-linear-gradient(180deg,
+        rgba(240, 236, 224, 0.85) 0 2px,
+        rgba(160, 150, 120, 0.55) 2px 3px);
+}
+
+.cover-shell .poster-placeholder {
+    width: 300px;
+    max-width: 100%;
+    aspect-ratio: 2 / 3;
+    border-radius: 3px 8px 8px 3px;
+}
+
+.detail-head .eyebrow {
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.detail-head h1 {
+    font-family: var(--serif);
+    font-size: 40px;
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    text-shadow: 0 3px 24px rgba(4, 8, 18, 0.65);
+}
+
+.detail-head .author {
+    font-size: 17px;
+    color: var(--star-blue-lt);
+    margin-bottom: 16px;
+}
+
+.detail-head .author .by { color: var(--text-muted); font-size: 13px; margin-right: 6px; }
+
+.detail-head .stars { margin: 4px 0 18px; }
+
+.meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    margin-bottom: 20px;
+}
+
+.meta-line b { color: var(--text); font-weight: 600; }
+
+.detail-head .pull-quote { font-size: 19px; line-height: 1.55; margin-bottom: 22px; }
+
+.detail-head .chips { margin-bottom: 26px; }
+
+.action-row { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.about-para {
+    color: rgba(255, 255, 255, 0.88);
+    font-family: var(--serif);
+    font-size: 15.5px;
+    line-height: 1.75;
+    max-width: 780px;
+}
+
+/* ================= Layout B — "First Light" =================
+   Quote-first, cinematic: the book's opening line is the hero, the cover
+   floats above it over a glow; facts compress into a stat strip. */
+
+.light-stage {
+    text-align: center;
+    padding-top: 8px;
+}
+
+.light-cover {
+    width: 218px;
+    margin: 0 auto 30px;
+    position: relative;
+}
+
+.light-cover::before {
+    content: "";
+    position: absolute;
+    inset: -70px -120px;
+    background: radial-gradient(ellipse at 50% 42%,
+        rgba(244, 211, 94, 0.16) 0%,
+        rgba(51, 103, 168, 0.18) 38%,
+        transparent 70%);
+    filter: blur(6px);
+    z-index: -1;
+}
+
+.light-cover img {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    display: block;
+    border-radius: 6px;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.14),
+        0 30px 60px -20px rgba(4, 8, 18, 0.95),
+        0 0 90px rgba(51, 103, 168, 0.5);
+    background: var(--panel-deep);
+}
+
+.light-cover .poster-placeholder {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    border-radius: 6px;
+}
+
+.light-title {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+    margin-bottom: 6px;
+    text-shadow: 0 3px 24px rgba(4, 8, 18, 0.65);
+}
+
+.light-author { color: var(--star-blue-lt); font-size: 15.5px; margin-bottom: 26px; }
+
+.light-quote {
+    max-width: 820px;
+    margin: 0 auto 30px;
+    border-left: none;
+    padding: 0;
+    font-size: 25px;
+    line-height: 1.5;
+}
+
+.light-quote .mark { font-size: 30px; }
+
+.light-quote .credit {
+    display: block;
+    margin-top: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-style: normal;
+    font-size: 11.5px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.stat-strip {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0;
+    max-width: 900px;
+    margin: 0 auto 30px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background-color: var(--panel);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    overflow: hidden;
+}
+
+.stat-strip .stat {
+    flex: 1 1 0;
+    min-width: 150px;
+    padding: 18px 20px;
+    text-align: center;
+    border-right: 1px solid rgba(127, 166, 201, 0.14);
+}
+
+.stat-strip .stat:last-child { border-right: none; }
+
+.stat-strip .stat .k {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.stat-strip .stat .v { font-size: 20px; font-weight: 700; }
+.stat-strip .stat .v.gold { color: var(--star-gold-lt); text-shadow: 0 0 14px rgba(244, 211, 94, 0.4); }
+
+.light-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+
+.light-subjects { max-width: 760px; margin: 6px auto 0; justify-content: center; }
+
+/* ================= Layout C — "Catalog Card" =================
+   Library-catalog interpretation: a sticky left rail (cover + actions) and a
+   right column of ruled, catalog-card sections with dotted-leader facts. */
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
+.rail { position: sticky; top: 96px; }
+
+.rail .cover-plain {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    display: block;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--panel-deep);
+    box-shadow: 0 20px 44px -20px rgba(4, 8, 18, 0.9), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.rail .rail-card {
+    margin-top: 16px;
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.rail .rail-card .stars { margin-bottom: 4px; }
+
+.rail .rail-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.rail .rail-actions .btn { justify-content: center; }
+
+.catalog-card {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 14px 30px -20px rgba(4, 8, 18, 0.85);
+    overflow: hidden;
+}
+
+.catalog-card + .catalog-card { margin-top: 22px; }
+
+.catalog-head {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    background-color: rgba(16, 27, 45, 0.35);
+}
+
+.catalog-head h2 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--star-gold-lt);
+}
+
+.catalog-head .no { font-size: 11.5px; color: var(--text-muted); letter-spacing: 1px; }
+
+.catalog-body { padding: 22px 24px; }
+
+.catalog-title {
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+    line-height: 1.15;
+    margin-bottom: 4px;
+}
+
+.catalog-author { color: var(--star-blue-lt); font-size: 15px; margin-bottom: 18px; }
+
+/* dotted-leader fact rows */
+.ledger { display: flex; flex-direction: column; }
+
+.ledger .row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 9px 0;
+}
+
+.ledger .row + .row { border-top: 1px dotted rgba(127, 166, 201, 0.25); }
+
+.ledger .k {
+    flex-shrink: 0;
+    width: 170px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+}
+
+.ledger .dots {
+    flex: 1;
+    border-bottom: 1px dotted rgba(127, 166, 201, 0.35);
+    transform: translateY(-4px);
+    min-width: 30px;
+}
+
+.ledger .v { text-align: right; font-weight: 600; font-size: 14.5px; flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.ledger .v.gold { color: var(--star-gold-lt); }
+
+.catalog-body .pull-quote { font-size: 17px; line-height: 1.6; }
+
+.subject-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.subject-cloud .chip { font-size: 12px; padding: 5px 12px; }
+
+/* Big edition number panel */
+.edition-hero {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.edition-hero .big {
+    font-family: var(--serif);
+    font-size: 64px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--star-gold-lt);
+    text-shadow: 0 0 26px rgba(244, 211, 94, 0.35);
+}
+
+.edition-hero .txt { color: var(--text-muted); font-size: 13.5px; line-height: 1.6; max-width: 420px; }
+.edition-hero .txt b { color: var(--text); }

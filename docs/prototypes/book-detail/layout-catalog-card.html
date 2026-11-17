@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Van Gogh — Book detail (Layout C · Catalog Card)</title>
+    <link rel="stylesheet" href="book-detail.css">
+</head>
+<body>
+
+<div class="sky" aria-hidden="true"></div>
+<div class="veil" aria-hidden="true"></div>
+
+<header class="app-header"></header>
+
+<main class="container narrow" id="detailRoot">
+    <!-- rendered by renderCatalogCard() -->
+</main>
+
+<script src="books-data.js"></script>
+<script src="detail-common.js"></script>
+<script>
+renderHeader("c");
+
+var book = bookFromUrl();
+
+/* An "About" paragraph composed only from the real record's fields — the
+ * same facts the current alert() detail shows, in prose form. */
+function aboutProse(b) {
+    if (!b.firstSentence) return "";
+    return '<p class="about-para">' + escapeHtml(b.firstSentence) + '</p>';
+}
+
+function ledgerRow(k, v, gold) {
+    if (v === null || v === undefined || v === "" || v === "\u2013") return "";
+    return '<div class="row"><div class="k">' + k + '</div><div class="dots"></div>' +
+           '<div class="v' + (gold ? ' gold' : '') + '">' + v + '</div></div>';
+}
+
+function renderCatalogCard(b) {
+    var root = document.getElementById("detailRoot");
+
+    root.innerHTML =
+        '<a class="crumb" href="index.html">\u2190 Back to results</a>' +
+
+        '<div class="proto-note"><span class="dot"></span>' +
+        'Prototype \u00b7 Layout C \u201CCatalog Card\u201D \u2014 a library-card reading of the record, editions take the spotlight.</div>' +
+
+        '<div class="detail-grid">' +
+        '  <aside class="rail">' +
+        '    <img class="cover-plain poster-img hidden" alt="' + escapeHtml(b.title) + ' cover">' +
+        '    <div class="poster-placeholder hidden"></div>' +
+        '    <div class="rail-card">' +
+        '      ' + starsHtml(b.rating) +
+        '    </div>' +
+        '    <div class="rail-actions">' +
+        '      <button class="btn btn-primary">\uFF0B Add to Watchlist</button>' +
+        '      <button class="btn btn-ghost">\u2665 Favorite</button>' +
+        '      <a class="btn btn-ghost" href="https://openlibrary.org/works/' + escapeHtml(b.workKey) + '" target="_blank" rel="noopener">\u2197 Open Library</a>' +
+        '    </div>' +
+        '  </aside>' +
+
+        '  <div class="detail-main">' +
+        '    <section class="catalog-card">' +
+        '      <div class="catalog-head"><h2>Catalog entry</h2><span class="no">Van Gogh \u00b7 Book</span></div>' +
+        '      <div class="catalog-body">' +
+        '        <h1 class="catalog-title">' + escapeHtml(b.title) + '</h1>' +
+        '        <div class="catalog-author">' + escapeHtml(b.author || "Unknown author") + '</div>' +
+        '        <div class="ledger">' +
+        '          ' + ledgerRow("Work key", '<span class="work-chip">' + escapeHtml(b.workKey) + '</span>', false) +
+        '          ' + ledgerRow("First published", b.year || null, false) +
+        '          ' + ledgerRow("Pages", b.pages ? b.pages + ' pp.' : null, false) +
+        '          ' + ledgerRow("Community rating", b.rating ? '\u2605 ' + b.rating.toFixed(2) + ' / 5' : null, true) +
+        '          ' + ledgerRow("Subjects", b.subjects, false) +
+        '        </div>' +
+        (aboutProse(b) ? '<div class="detail-section" style="margin-top:20px">' +
+            '<h3>Opening line</h3>' + aboutProse(b) + '</div>' : "") +
+        '      </div>' +
+        '    </section>' +
+
+        '    <section class="catalog-card">' +
+        '      <div class="catalog-head"><h2>Editions</h2><span class="no">Open Library \u00b7 edition_count</span></div>' +
+        '      <div class="catalog-body">' +
+        '        <div class="edition-hero">' +
+        '          <div class="big">' + (b.editionCount || "\u2013") + '</div>' +
+        '          <div class="txt"><b>editions catalogued.</b> Open Library counts every published ' +
+        '          incarnation of this work \u2014 translations, reprints, and bindings alike \u2014 ' +
+        '          which is why classics tower over recent releases.</div>' +
+        '        </div>' +
+        '      </div>' +
+        '    </section>' +
+
+        '    <section class="catalog-card">' +
+        '      <div class="catalog-head"><h2>Subjects</h2><span class="no">first 3 rendered \u00b7 full array truncated</span></div>' +
+        '      <div class="catalog-body">' +
+        '        <div class="subject-cloud">' + subjectChips(b.subjects) + '</div>' +
+        '      </div>' +
+        '    </section>' +
+        '  </div>' +
+        '</div>' +
+
+        '<div class="detail-section">' +
+        '  <h3>More from this trending week</h3>' +
+        '  <div class="related-row" id="relatedRow"></div>' +
+        '</div>';
+
+    attachCover(root.querySelector(".cover-plain"), b.coverUrl);
+    var related = root.querySelector("#relatedRow");
+    related.innerHTML = otherBooks(b).map(function (ob) {
+        return bookCardHtml(ob, 0, "layout-catalog-card.html?book=" + encodeURIComponent(ob.workKey));
+    }).join("");
+    related.querySelectorAll(".movie-card").forEach(function (card) {
+        var key = card.dataset.bookId;
+        var row = window.VANGOGH_BOOK_ROWS.find(function (r) { return r.key === "/works/" + key; });
+        var rb = window.toVanGoghBook(row);
+        var img = card.querySelector(".poster-img");
+        img.classList.remove("hidden");
+        attachCover(img, rb.coverUrl);
+    });
+}
+
+renderCatalogCard(book);
+</script>
+</body>
+</html>

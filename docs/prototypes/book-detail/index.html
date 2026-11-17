@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Van Gogh — Book detail prototypes</title>
+    <link rel="stylesheet" href="book-detail.css">
+</head>
+<body>
+
+<div class="sky" aria-hidden="true"></div>
+<div class="veil" aria-hidden="true"></div>
+
+<header class="app-header">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">✶</span>Van Gogh</a>
+    <div class="search-bar">
+        <input type="text" class="search-input" placeholder="Search movies, books, music, games…">
+        <button class="search-btn" onclick="window.location.href='index.html'">Search</button>
+    </div>
+    <div class="filter-wrapper"><div class="filter-select"><span>Book</span></div></div>
+    <nav class="layout-switch" aria-label="Prototype layout" id="layoutSwitch">
+        <a href="#" data-layout="layout-open-page.html" class="active">A</a>
+        <a href="#" data-layout="layout-first-light.html">B</a>
+        <a href="#" data-layout="layout-catalog-card.html">C</a>
+    </nav>
+</header>
+
+<main class="container">
+    <div class="proto-note">
+        <span class="dot"></span>
+        <span>
+            Book detail prototypes — click a card to open its detail page in the selected layout
+            (currently <b id="layoutName">A · Open Page</b>). Sample data is real
+            Open Library weekly-trending rows. Not wired to the app backend.
+        </span>
+    </div>
+
+    <section class="trending-section">
+        <h2 class="section-title">Trending Books · Open Library</h2>
+        <div class="card-grid" id="bookGrid">
+            <!-- Book cards injected by mountCards() -->
+        </div>
+    </section>
+</main>
+
+<script src="books-data.js"></script>
+<script src="detail-common.js"></script>
+<script>
+var layoutNames = {
+    "layout-open-page.html": "A · Open Page",
+    "layout-first-light.html": "B · First Light",
+    "layout-catalog-card.html": "C · Catalog Card"
+};
+
+var chosenLayout = localStorage.getItem("vgBookProtoLayout") || "layout-open-page.html";
+
+var grid = document.getElementById("bookGrid");
+function refresh() {
+    mountCards(grid, function (b) {
+        return chosenLayout + "?book=" + encodeURIComponent(b.workKey);
+    });
+}
+refresh();
+
+var sw = document.getElementById("layoutSwitch");
+var nameEl = document.getElementById("layoutName");
+function syncSwitch() {
+    sw.querySelectorAll("a").forEach(function (a) {
+        a.classList.toggle("active", a.dataset.layout === chosenLayout);
+    });
+    nameEl.textContent = layoutNames[chosenLayout];
+}
+syncSwitch();
+
+sw.querySelectorAll("a").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+        e.preventDefault();
+        chosenLayout = a.dataset.layout;
+        localStorage.setItem("vgBookProtoLayout", chosenLayout);
+        syncSwitch();
+        refresh();
+    });
+});
+</script>
+</body>
+</html>

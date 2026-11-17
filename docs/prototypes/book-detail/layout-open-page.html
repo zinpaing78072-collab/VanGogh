@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Van Gogh — Book detail (Layout A · Open Page)</title>
+    <link rel="stylesheet" href="book-detail.css">
+</head>
+<body>
+
+<div class="sky" aria-hidden="true"></div>
+<div class="veil" aria-hidden="true"></div>
+
+<header class="app-header"></header>
+
+<main class="container narrow" id="detailRoot">
+    <!-- rendered by renderOpenPage() -->
+</main>
+
+<script src="books-data.js"></script>
+<script src="detail-common.js"></script>
+<script>
+renderHeader("a");
+
+var book = bookFromUrl();
+
+function renderOpenPage(b) {
+    var root = document.getElementById("detailRoot");
+    var quote = b.firstSentence
+        ? '<div class="pull-quote"><span class="mark">\u201C</span>' + escapeHtml(b.firstSentence) + '<span class="mark">\u201D</span></div>'
+        : '<div class="pull-quote" style="color:var(--text-muted);font-size:15px">No opening line is catalogued for this work yet \u2014 Open Library rows often arrive sparse.</div>';
+
+    root.innerHTML =
+        '<a class="crumb" href="index.html">\u2190 Back to results</a>' +
+
+        '<div class="proto-note"><span class="dot"></span>' +
+        'Prototype \u00b7 Layout A \u201COpen Page\u201D \u2014 not wired to the app. Sample data: real Open Library trending rows.</div>' +
+
+        '<div class="hero-grid">' +
+        '  <div class="cover-column">' +
+        '    <div class="cover-shell">' +
+        '      <img class="poster-img hidden" alt="' + escapeHtml(b.title) + ' cover">' +
+        '      <div class="poster-placeholder hidden"></div>' +
+        '    </div>' +
+        '  </div>' +
+        '  <div class="detail-head">' +
+        '    <div class="eyebrow">' +
+        '      <span>Open Library \u00b7 Book</span>' +
+        '      <a class="work-chip" href="https://openlibrary.org/works/' + escapeHtml(b.workKey) + '" target="_blank" rel="noopener">' + escapeHtml(b.workKey) + ' \u2197</a>' +
+        '    </div>' +
+        '    <h1>' + escapeHtml(b.title) + '</h1>' +
+        '    <div class="author"><span class="by">by</span>' + escapeHtml(b.author || "Unknown author") + '</div>' +
+        '    ' + starsHtml(b.rating) +
+        '    <div class="meta-line">' +
+        '      <span>First published <b>' + (b.year || "\u2013") + '</b></span>' +
+        '      <span><b>' + (b.pages || "\u2013") + '</b> pages</span>' +
+        '      <span><b>' + (b.editionCount || "\u2013") + '</b> editions catalogued</span>' +
+        '    </div>' +
+        quote +
+        '    <div class="detail-section">' +
+        '      <h3>Subjects</h3>' +
+        '      <div class="chips">' + subjectChips(b.subjects) + '</div>' +
+        '    </div>' +
+        '    <div class="detail-section">' +
+        '      <div class="action-row">' +
+        '        <button class="btn btn-primary">\uFF0B Add to Watchlist</button>' +
+        '        <button class="btn btn-ghost">\u2665 Favorite</button>' +
+        '        <a class="btn btn-ghost" href="https://openlibrary.org/works/' + escapeHtml(b.workKey) + '" target="_blank" rel="noopener">\u2197 Open in Open Library</a>' +
+        '      </div>' +
+        '    </div>' +
+        '  </div>' +
+        '</div>' +
+
+        '<div class="detail-section">' +
+        '  <h3>About this record</h3>' +
+        '  <div class="fact-grid">' +
+        '    <div class="fact"><div class="k">Work key</div><div class="v">' + escapeHtml(b.workKey) + '</div></div>' +
+        '    <div class="fact"><div class="k">First published</div><div class="v">' + (b.year || "\u2013") + '</div></div>' +
+        '    <div class="fact"><div class="k">Pages</div><div class="v">' + (b.pages || "\u2013") + '</div></div>' +
+        '    <div class="fact"><div class="k">Editions</div><div class="v">' + (b.editionCount || "\u2013") + '</div></div>' +
+        '    <div class="fact"><div class="k">Rating</div><div class="v">' + (b.rating ? b.rating.toFixed(2) + ' <span class="unit">/ 5</span>' : "\u2013") + '</div></div>' +
+        '  </div>' +
+        '</div>' +
+
+        '<div class="detail-section">' +
+        '  <h3>More from this trending week</h3>' +
+        '  <div class="related-row" id="relatedRow"></div>' +
+        '</div>';
+
+    attachCover(root.querySelector(".cover-shell .poster-img"), b.coverUrl);
+    var related = root.querySelector("#relatedRow");
+    related.innerHTML = otherBooks(b).map(function (ob) {
+        return bookCardHtml(ob, 0, "layout-open-page.html?book=" + encodeURIComponent(ob.workKey));
+    }).join("");
+    related.querySelectorAll(".movie-card").forEach(function (card) {
+        var key = card.dataset.bookId;
+        var row = window.VANGOGH_BOOK_ROWS.find(function (r) { return r.key === "/works/" + key; });
+        var rb = window.toVanGoghBook(row);
+        var img = card.querySelector(".poster-img");
+        img.classList.remove("hidden");
+        attachCover(img, rb.coverUrl);
+    });
+}
+
+renderOpenPage(book);
+</script>
+</body>
+</html>

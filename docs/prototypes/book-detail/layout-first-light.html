@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Van Gogh — Book detail (Layout B · First Light)</title>
+    <link rel="stylesheet" href="book-detail.css">
+</head>
+<body>
+
+<div class="sky" aria-hidden="true"></div>
+<div class="veil" aria-hidden="true"></div>
+
+<header class="app-header"></header>
+
+<main class="container narrow" id="detailRoot">
+    <!-- rendered by renderFirstLight() -->
+</main>
+
+<script src="books-data.js"></script>
+<script src="detail-common.js"></script>
+<script>
+renderHeader("b");
+
+var book = bookFromUrl();
+
+function renderFirstLight(b) {
+    var root = document.getElementById("detailRoot");
+    var quote = b.firstSentence
+        ? '<div class="pull-quote light-quote">' +
+          '<span class="mark">\u201C</span>' + escapeHtml(b.firstSentence) + '<span class="mark">\u201D</span>' +
+          '<span class="credit">The first line \u00b7 as catalogued by Open Library</span>' +
+          '</div>'
+        : '<div class="pull-quote light-quote" style="color:var(--text-muted);font-size:17px">' +
+          'No opening line is catalogued for this work yet.' +
+          '</div>';
+
+    root.innerHTML =
+        '<a class="crumb" href="index.html">\u2190 Back to results</a>' +
+
+        '<div class="proto-note"><span class="dot"></span>' +
+        'Prototype \u00b7 Layout B \u201CFirst Light\u201D \u2014 the opening line is the hero; facts compress into a stat strip.</div>' +
+
+        '<div class="light-stage">' +
+        '  <div class="light-cover">' +
+        '    <img class="poster-img hidden" alt="' + escapeHtml(b.title) + ' cover">' +
+        '    <div class="poster-placeholder hidden"></div>' +
+        '  </div>' +
+        '  <h1 class="light-title">' + escapeHtml(b.title) + '</h1>' +
+        '  <div class="light-author">' + escapeHtml(b.author || "Unknown author") +
+        '    \u00b7 first published ' + (b.year || "\u2013") + '</div>' +
+        quote +
+        '  <div class="stat-strip">' +
+        '    <div class="stat"><div class="k">Rating</div><div class="v gold">' + (b.rating ? '\u2605 ' + b.rating.toFixed(2) : "\u2013") + '</div></div>' +
+        '    <div class="stat"><div class="k">Pages</div><div class="v">' + (b.pages || "\u2013") + '</div></div>' +
+        '    <div class="stat"><div class="k">Editions</div><div class="v">' + (b.editionCount || "\u2013") + '</div></div>' +
+        '    <div class="stat"><div class="k">First published</div><div class="v">' + (b.year || "\u2013") + '</div></div>' +
+        '    <div class="stat"><div class="k">Work</div><div class="v" style="font-size:14px">' + escapeHtml(b.workKey) + '</div></div>' +
+        '  </div>' +
+        '  <div class="light-actions">' +
+        '    <button class="btn btn-primary">\uFF0B Watchlist</button>' +
+        '    <button class="btn btn-ghost">\u2665 Favorite</button>' +
+        '    <a class="btn btn-ghost" href="https://openlibrary.org/works/' + escapeHtml(b.workKey) + '" target="_blank" rel="noopener">\u2197 Open Library</a>' +
+        '  </div>' +
+        '  <div class="detail-section">' +
+        '    <h3>Subjects</h3>' +
+        '    <div class="chips light-subjects">' + subjectChips(b.subjects) + '</div>' +
+        '  </div>' +
+        '</div>' +
+
+        '<div class="detail-section">' +
+        '  <h3>You might also open</h3>' +
+        '  <div class="related-row" id="relatedRow"></div>' +
+        '</div>';
+
+    attachCover(root.querySelector(".light-cover .poster-img"), b.coverUrl);
+    var related = root.querySelector("#relatedRow");
+    related.innerHTML = otherBooks(b).map(function (ob) {
+        return bookCardHtml(ob, 0, "layout-first-light.html?book=" + encodeURIComponent(ob.workKey));
+    }).join("");
+    related.querySelectorAll(".movie-card").forEach(function (card) {
+        var key = card.dataset.bookId;
+        var row = window.VANGOGH_BOOK_ROWS.find(function (r) { return r.key === "/works/" + key; });
+        var rb = window.toVanGoghBook(row);
+        var img = card.querySelector(".poster-img");
+        img.classList.remove("hidden");
+        attachCover(img, rb.coverUrl);
+    });
+}
+
+renderFirstLight(book);
+</script>
+</body>
+</html>
