@@ -118,10 +118,20 @@ Krema.app()
 
 ## Frontend integration
 
-- `src/main/resources/movie-page/index.html` — `<select id="contentFilter">` already lists movie/music/book/game.
-- `src/main/resources/movie-page/app.js` — `contentFilter.change` routes Movie and Game into their domain-specific commands and renders both in the shared `#movieGrid` card grid.
-- Cards use `data-movie-id` for poster lookup via `window.setPoster(id, dataUri)`. For multi-domain, consider `data-content-id` + a `data-domain` attribute so posters from one domain don't clobber cards from another.
-- Reuse `escapeHtml`, `renderMovies`, `showError`, poster placeholder, and fullscreen toggle patterns.
+- `src/main/resources/movie-page/index.html` — `#contentFilter` is a custom DOM dropdown (a `div`, not a `<select>`) listing movie/music/book/game. It loads `krema-shim.js` plus the module entry `js/app.js`.
+- `src/main/resources/movie-page/js/` — ES modules, one per seam:
+  `dom`, `util`, `state`, `cards`, `domains/{movie,game,music,book}`,
+  `domains`, `artwork`, `detail`, `render`, `content`, `ui`, `app` (entry).
+  Both shells serve the directory over loopback HTTP; Chromium refuses module
+  scripts from `file://`.
+- Each row in `js/domains.js` carries its own IPC names, card class, id field,
+  card builder and detail builder; `render.js` paints from `state`, and
+  `content.js` polls the drains behind a request sequence guard.
+- Cards carry `data-<domain>-id`; artwork arrives per domain via
+  `window.krema.on(<domain event>, { payload: { id, dataUri } })` and lands on
+  the matching card through `js/artwork.js`.
+- Reuse `escapeHtml`/`messageOf` (`js/util.js`), the placeholder fallback in
+  `js/cards.js`, and the skeleton/empty states in `js/render.js`.
 
 ## Adding a domain (checklist)
 
@@ -130,7 +140,7 @@ Krema.app()
 3. **Service** — `vangogh/<domain>/<Domain>Service.java` with search/trending + poster data-URI cache (mirror `TmdbMovieService.posterCache`, capped at 512).
 4. **Controller** — `vangogh/controller/<Domain>Controller.java` with `@KremaCommand` methods, `setEventEmitter`, IO thread pool, generation counter.
 5. **Register** — add controller instance to `.commands(...)` in `VanGoghApp.main()`.
-6. **Frontend** — wire the filter `<option>` in `app.js` → `window.krema.invoke("<domainCommand>", …)` → render cards → listen to `"poster"` events.
+6. **Frontend** — add `js/domains/<domain>.js` (a row: IPC names, labels, card class, id field, `card`, `detail`) and one line in `js/domains.js`; add the filter option in `index.html`. Nothing else needs to know the form exists.
 7. **Tests** — stub client + controller test following `MovieControllerTest` / `TmdbClientTest` patterns.
 
 ## Example: Music domain (sketch)
@@ -191,7 +201,7 @@ const tracks = await window.krema.invoke("searchMusic", { query });
 - `src/main/java/vangogh/net/TmdbClient.java` — client + proxy pattern
 - `src/main/java/vangogh/net/OpenLibraryClient.java` — keyless client + cover failover
 - `src/main/resources/movie-page/index.html` — filter dropdown markup
-- `src/main/resources/movie-page/app.js` — frontend invoke + render patterns (per-domain `DOMAINS` map, book render branch)
+- `src/main/resources/movie-page/js/` — frontend module patterns (per-domain row map, request lifecycle, rendering)
 - `src/test/java/vangogh/controller/MovieControllerTest.java` — test pattern with stubbed client/emitter
 - Vendored Krema source (read-only reference): `repos/krema/krema/krema-core/` — `KremaCommand`, `EventEmitter`, `KremaEvent`
 
