@@ -8,16 +8,16 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 
 ### Core behavior
 - **Input**: A keyword or content name (e.g. `"Inception"`, `"Taylor Swift"`, `"Minecraft"`)
-- **Output**: Related content across Movies, Games, and Books (Music is not yet wired)
-- **Mechanism**: The frontend invokes `requestMovies` / `requestGames` / `requestBooks` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` / `pollBookData` drains (`pending` / `done` / `error` / `superseded`); artwork streams through the `pollMoviePosters` / `pollGamePosters` / `pollBookCovers` drains (emitting `"poster"` / `"gamePoster"` / `"bookCover"`). Skeleton cards show while a fetch is in flight.
-- **Filter**: Dropdown offers Movie / Music / Book / Game — Movie, Game, and Book connect to their APIs (Books via Open Library, no API key); Music shows a "not yet connected" message.
+- **Output**: Related content across Movies, Music, Books, and Games (all four wired)
+- **Mechanism**: The frontend invokes `requestMovies` / `requestGames` / `requestMusic` / `requestBooks` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` drains (`pending` / `done` / `error` / `superseded`); artwork streams through the `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` / `pollBookCovers` drains (emitting `"poster"` / `"gamePoster"` / `"musicPoster"` / `"bookCover"`). Skeleton cards show while a fetch is in flight.
+- **Filter**: Dropdown offers Movie / Music / Book / Game — all four connect to their APIs (TMDB, TheGamesDB, MusicBrainz, Open Library).
 
 ### Tech stack
 - **Language**: Java 25 (LTS), compiled with `--release 25`
 - **UI framework**: Krema 0.3.2 (system webview)
 - **Frontend**: HTML/CSS/JS served from classpath (`src/main/resources/movie-page/`)
 - **HTTP client**: Java 17+ `java.net.http.HttpClient` (Gson for JSON parsing)
-- **Data sources**: TMDB (The Movie Database) for movies and TheGamesDB for games
+- **Data sources**: TMDB (The Movie Database) for movies, TheGamesDB for games, MusicBrainz (+ Cover Art Archive) for music, Open Library (+ Open Library Covers) for books
 - **Poster proxy**: `wsrv.nl` with persistent user preference stored in `~/.van-gogh/poster-proxy.conf`. Needed because `image.tmdb.org` is unreachable from this machine/ISP (TLS dies mid-handshake; `api.themoviedb.org` works) — poster loading depends on the proxy failover, see team-vault "Debug Record — TMDB posters blocked".
 - **Tests**: JUnit 5; all network calls stubbed (no real TMDB API keys needed)
 - **IPC**: `@KremaCommand` methods on controllers; `<parameters>true</parameters>` in maven-compiler-plugin for arg binding by name
@@ -41,13 +41,14 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
   - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming
+  - `MusicController`, `MusicBrainzService`, and `MusicBrainzClient` — MusicBrainz release-group search (album cards), curated trending MBID list, Cover Art Archive cover streaming; MBZ requests are paced (~1/s) with a 503 backoff-retry — see `docs/music-domain.md`
   - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail)
-  - Frontend: shared movie/game card grid, search bar, poster rendering. The
+  - Frontend: shared card grid with per-domain card shapes (movie/game portrait posters, music square covers with an artist subtitle, books the Book Card), search bar, artwork rendering. The
     content filter is a custom DOM dropdown (a `div` — no native `<select>`,
     therefore **no `.value`**); the selection lives in `selectedContent` in
     `app.js`. Read that variable, never `contentFilter.value` (re-introducing
     `.value` silently re-breaks the Game filter — it evaluates to `undefined`).
-- **Features pending**: Music, and the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
+- **Features pending**: the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
 
 ### Presentation build — decided feature set (2026-11-10 brainstorm)
 
@@ -56,7 +57,7 @@ settled — agents follow them. Implementation details (API providers, LLM
 models, prompt design) are left to each builder slice.
 
 - **Recommendation engine core: LLM API.** The LLM *composes* the picks for a
-  query; the wired content sources (TMDB and TheGamesDB; Music/Book to be wired)
+  query; the wired content sources (TMDB, TheGamesDB, MusicBrainz, Open Library)
   *resolve* each pick into a real card (artwork, year, etc.). Do not build a
   deterministic API search as the result source — it would contradict the
   re-run behavior below.
@@ -96,8 +97,8 @@ Agent work happens in **single-feature slices**. One slice per branch and PR.
 Finish a slice (build green, tests pass, feature demonstrably works in the app)
 before starting the next. Never expand scope mid-slice.
 
-- **Content sources:** one content form per slice. Movies are wired; the next
-  slice adds exactly one of Music / Books / Games (propose which in the PR).
+- **Content sources:** one content form per slice. Movies, Music, Books, and
+  Games are each wired; any new form (e.g. TV) gets its own slice.
 - **Detail view:** implement for one content form at a time (Movies first);
   roll to the next form only when the first is complete.
 - **My Lists / My Searches:** one view per slice — building the Favorites page
@@ -195,10 +196,11 @@ To run:
   UI thread) — and that thread must never block on network I/O either: the
   original handlers fetched synchronously and the whole window froze for the
   round-trip (see "Debug Record — UI thread blocked by content fetches").
-  Delivery is drain-based for both content slices: the request commands kick
+  Delivery is drain-based for all four content slices: the request commands kick
   off IO-pool fetches and return at once; card metadata drains through
-  `pollMovieData` / `pollGameData` and posters through `pollMoviePosters` /
-  `pollGamePosters` (which doubles as the completion signal, returning −1 when
+  `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` and
+  posters through `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` /
+  `pollBookCovers` (which doubles as the completion signal, returning −1 when
   nothing is pending) — all synchronous UI-thread commands. Drop the dance
   when the project can move to a Krema release whose eval is thread-safe on
   Windows (0.3.3+ source does not fix it either; nothing newer is published on

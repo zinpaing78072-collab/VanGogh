@@ -3,6 +3,7 @@ package vangogh.app.jcef;
 import vangogh.controller.BookController;
 import vangogh.controller.GameController;
 import vangogh.controller.MovieController;
+import vangogh.controller.MusicController;
 import vangogh.error.FetchError;
 
 import io.vavr.collection.List;
@@ -34,8 +35,8 @@ import java.util.function.BiFunction;
  *   <li><b>JS→Java:</b> {@code window.krema.invoke("requestMovies", {...})}
  *       travels through CEF's {@code cefQuery} into a {@link CefMessageRouter}
  *       handler, which calls the controllers' {@code @KremaCommand} methods
- *       ({@code requestMovies} / {@code requestGames} / {@code requestBooks},
- *       the data drains, and the artwork drains).
+ *       ({@code requestMovies} / {@code requestGames} / {@code requestMusic} /
+ *       {@code requestBooks}, the data drains, and the artwork drains).
  *   <li><b>Java→JS:</b> poster events flow through {@link JcefEventEmitter}
  *       via {@code executeJavaScript} → {@code window.__krema_emit}.
  * </ul>
@@ -57,6 +58,7 @@ public class JcefBridge {
 
     private final MovieController movieController;
     private final GameController gameController;
+    private final MusicController musicController;
     private final BookController bookController;
     private JcefEventEmitter emitter;
     private CefMessageRouter router;
@@ -74,9 +76,10 @@ public class JcefBridge {
     });
 
     public JcefBridge(MovieController movieController, GameController gameController,
-                      BookController bookController) {
+                      MusicController musicController, BookController bookController) {
         this.movieController = movieController;
         this.gameController = gameController;
+        this.musicController = musicController;
         this.bookController = bookController;
     }
 
@@ -107,7 +110,7 @@ public class JcefBridge {
 
     /**
      * Attaches the browser after it is created: creates the
-     * {@link JcefEventEmitter} and wires it into both controllers, so their
+     * {@link JcefEventEmitter} and wires it into the controllers, so their
      * poster events flow into the page via {@code window.__krema_emit}.
      *
      * @param browser the {@link CefBrowser} (from {@code client.createBrowser()})
@@ -116,6 +119,7 @@ public class JcefBridge {
         this.emitter = new JcefEventEmitter(browser);
         movieController.setEventEmitter(emitter);
         gameController.setEventEmitter(emitter);
+        musicController.setEventEmitter(emitter);
         bookController.setEventEmitter(emitter);
     }
 
@@ -180,12 +184,15 @@ public class JcefBridge {
         return switch (name) {
             case "requestMovies" -> argsCommand(args, this::movieCommand);
             case "requestGames" -> argsCommand(args, this::gameCommand);
+            case "requestMusic" -> argsCommand(args, this::musicCommand);
             case "requestBooks" -> argsCommand(args, this::bookCommand);
             case "pollMovieData" -> intCommand(args, "generation", movieController::pollMovieData);
             case "pollGameData" -> intCommand(args, "generation", gameController::pollGameData);
+            case "pollMusicData" -> intCommand(args, "generation", musicController::pollMusicData);
             case "pollBookData" -> intCommand(args, "generation", bookController::pollBookData);
             case "pollGamePosters" -> Validation.valid(new Command(gameController::pollGamePosters));
             case "pollMoviePosters" -> Validation.valid(new Command(movieController::pollMoviePosters));
+            case "pollMusicPosters" -> Validation.valid(new Command(musicController::pollMusicPosters));
             case "pollBookCovers" -> Validation.valid(new Command(bookController::pollBookCovers));
             default -> Validation.invalid(List.of(
                     new FetchError.BadInput("command", "unknown command: " + name)));
@@ -245,6 +252,10 @@ public class JcefBridge {
 
     private Command gameCommand(String kind, String query) {
         return new Command(() -> gameController.requestGames(kind, query));
+    }
+
+    private Command musicCommand(String kind, String query) {
+        return new Command(() -> musicController.requestMusic(kind, query));
     }
 
     private Command bookCommand(String kind, String query) {

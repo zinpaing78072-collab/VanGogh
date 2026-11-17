@@ -4,16 +4,19 @@
    - await window.krema.invoke("requestMovies", { kind, query }) → kicks off the
      IO-pool fetch, returns the request generation immediately (never blocks)
    - await window.krema.invoke("requestGames", { kind, query }) → same for games
+   - await window.krema.invoke("requestMusic", { kind, query }) → same for music
    - await window.krema.invoke("requestBooks", { kind, query }) → same for books
    - await window.krema.invoke("pollMovieData", { generation }) → data drain:
      { status: "pending" | "done" | "error" | "superseded", items?, error? }
    - await window.krema.invoke("pollGameData", { generation }) → same for games
+   - await window.krema.invoke("pollMusicData", { generation }) → same for music
    - await window.krema.invoke("pollBookData", { generation }) → same for books
    - await window.krema.invoke("pollMoviePosters", {}) → movie poster drain progress
    - await window.krema.invoke("pollGamePosters", {}) → game poster drain progress
+   - await window.krema.invoke("pollMusicPosters", {}) → music cover drain progress
    - await window.krema.invoke("pollBookCovers", {}) → book cover drain progress
-   - window.krema.on("poster", data) / on("gamePoster", data) / on("bookCover", data)
-     → artwork data URIs
+   - window.krema.on("poster", data) / on("gamePoster", data) / on("musicPoster", data)
+     / on("bookCover", data) → artwork data URIs
    The JCEF shell serves this page unchanged: jcef/krema-shim.js implements the
    same window.krema API on top of window.cefQuery.
 
@@ -58,6 +61,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.setGamePoster(data.payload.id, data.payload.dataUri);
         }
     });
+    window.krema.on("musicPoster", function (data) {
+        if (data && data.payload) {
+            window.setMusicPoster(data.payload.id, data.payload.dataUri);
+        }
+    });
     window.krema.on("bookCover", function (data) {
         if (data && data.payload) {
             window.setBookCover(data.payload.id, data.payload.dataUri);
@@ -92,6 +100,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     window.setGamePoster = function (gameId, dataUri) {
         const card = grid.querySelector(`.game-card[data-game-id="${gameId}"]`);
+        if (!card || !dataUri) return;
+        const img = card.querySelector(".poster-img");
+        const placeholder = card.querySelector(".poster-placeholder");
+        if (!img) return;
+        img.src = dataUri;
+        img.classList.remove("hidden");
+        if (placeholder) {
+            placeholder.classList.add("hidden");
+        }
+    };
+
+    // Music covers target the album card (`.music-card`); the id is the
+    // release-group MBID — alphanumeric with dashes, safe in the selector.
+    window.setMusicPoster = function (albumId, dataUri) {
+        const card = grid.querySelector(`.music-card[data-music-id="${albumId}"]`);
         if (!card || !dataUri) return;
         const img = card.querySelector(".poster-img");
         const placeholder = card.querySelector(".poster-placeholder");
@@ -187,9 +210,68 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
+    // Album cards use their own shape: square cover art (album art is 1:1),
+    // the artist as the subtitle line, and type/tags instead of a rating —
+    // MusicBrainz has no numeric ratings.
+    function renderMusic(items) {
+        grid.innerHTML = "";
+        if (!items || items.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <p style="color:#ff6b6b; margin:0;">No albums found.</p>
+                </div>`;
+            return;
+        }
+        items.forEach((album, idx) => {
+            const card = document.createElement("div");
+            card.className = "movie-card music-card";
+            card.dataset.musicId = album.id || "";
+            card.style.setProperty("--i", idx);   // stagger the entrance
+
+            const coverSvg = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>`;
+
+            const year = album.year || "–";
+            const subtitle = [album.primaryType, album.genre].filter(Boolean).join(" · ");
+
+            card.innerHTML = `
+                <div class="card-cover">
+                    <img class="poster-img hidden" alt="${escapeHtml(album.title)} cover"
+                         loading="lazy" decoding="async">
+                    <div class="poster-placeholder">${coverSvg}</div>
+                </div>
+                <div class="card-info">
+                    <div class="card-title">${escapeHtml(album.title || "Untitled")}</div>
+                    <div class="card-subtitle">${escapeHtml(album.artist || "Unknown Artist")}</div>
+                    <div class="card-meta">
+                        <span class="card-meta-item">${escapeHtml(year)}</span>
+                        <span class="card-meta-item">${escapeHtml(subtitle)}</span>
+                    </div>
+                </div>
+            `;
+
+            card.querySelector(".poster-img").addEventListener("error", function () {
+                posterFailed(this);
+            });
+
+            card.addEventListener("click", () => {
+                const detail = [album.artist, subtitle].filter(Boolean).join(" — ");
+                alert(`Selected: ${album.title} (${year})\n\n${escapeHtml(detail)}`);
+            });
+
+            grid.appendChild(card);
+        });
+    }
+
     function renderContent(items, contentType) {
         if (contentType === "book") {
             renderBooks(items);
+            return;
+        }
+        if (contentType === "music") {
+            renderMusic(items);
             return;
         }
         grid.innerHTML = "";
@@ -254,16 +336,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Skeleton cards shown the moment a request starts — the grid should
-    // never sit empty or stale while the fetch is in flight. All wired
-    // content forms share the poster-card shape.
+    // never sit empty or stale while the fetch is in flight. The skeleton
+    // artwork area matches the domain's card shape (square covers for music,
+    // portrait posters otherwise).
     function showLoading() {
         grid.innerHTML = "";
+        const posterClass = selectedContent === "music" ? "card-cover" : "card-poster";
         for (let i = 0; i < 8; i++) {
             const card = document.createElement("div");
             card.className = "movie-card skeleton-card";
             card.style.setProperty("--i", i);   // stagger the entrance
             card.innerHTML = `
-                <div class="card-poster skeleton-poster"></div>
+                <div class="${posterClass} skeleton-poster"></div>
                 <div class="card-info">
                     <div class="skeleton-line skeleton-title"></div>
                     <div class="skeleton-line skeleton-meta"></div>
@@ -279,6 +363,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const DOMAINS = {
         movie: { request: "requestMovies", data: "pollMovieData", art: "pollMoviePosters", plural: "Movies" },
         game:  { request: "requestGames",  data: "pollGameData",  art: "pollGamePosters",  plural: "Games" },
+        music: { request: "requestMusic",  data: "pollMusicData", art: "pollMusicPosters", plural: "Music" },
         book:  { request: "requestBooks",  data: "pollBookData",  art: "pollBookCovers",   plural: "Books" },
     };
 
@@ -362,15 +447,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // filter is a plain DOM widget instead.
     function handleFilterChange(value) {
         selectedContent = value;
-        if (value === "music") {
-            sectionTitle.textContent = `${value.charAt(0).toUpperCase() + value.slice(1)}`
-                + " (not connected)";
+        if (DOMAINS[value]) {
+            requestPageContent("trending", "");
+        } else {
+            const label = value.charAt(0).toUpperCase() + value.slice(1);
+            sectionTitle.textContent = `${label} (not connected)`;
             grid.innerHTML = `
                 <div class="empty-state">
-                    <p>${escapeHtml(value.charAt(0).toUpperCase() + value.slice(1))} results are not yet connected to the API.</p>
+                    <p>${escapeHtml(label)} results are not yet connected to the API.</p>
                 </div>`;
-        } else {
-            requestPageContent("trending", "");
         }
     }
 
