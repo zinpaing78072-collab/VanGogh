@@ -43,12 +43,35 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
   - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming
   - `MusicController`, `MusicBrainzService`, and `MusicBrainzClient` — MusicBrainz release-group search (album cards), curated trending MBID list, Cover Art Archive cover streaming; MBZ requests are paced (~1/s) with a 503 backoff-retry — see `docs/music-domain.md`
   - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail)
-  - Frontend: shared card grid with per-domain card shapes (movie/game portrait posters, music square covers with an artist subtitle, books the Book Card), search bar, artwork rendering. The
-    content filter is a custom DOM dropdown (a `div` — no native `<select>`,
-    therefore **no `.value`**); the selection lives in `selectedContent` in
-    `app.js`. Read that variable, never `contentFilter.value` (re-introducing
+  - Frontend: ES modules under `src/main/resources/movie-page/js/` (entry
+    `js/app.js`, one file per seam — see "Frontend modules" below): shared card
+    grid with per-domain card shapes (movie/game portrait posters, music square
+    covers with an artist subtitle, books the Book Card), search bar, artwork
+    rendering. The content filter is a custom DOM dropdown (a `div` — no native
+    `<select>`, therefore **no `.value`**); the selection lives in `state.domain`
+    in `js/state.js`. Read that, never `contentFilter.value` (re-introducing
     `.value` silently re-breaks the Game filter — it evaluates to `undefined`).
 - **Features pending**: the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
+
+### Frontend modules (ES modules, both shells over loopback HTTP)
+
+`index.html` loads `krema-shim.js` (classic) and `js/app.js`
+(`type="module"`). Both shells serve the page from the classpath over
+`http://127.0.0.1:<port>` — Krema through its own asset server, JCEF through
+krema-core's `AssetServer` — because Chromium refuses module scripts from
+`file://`. Never point a shell at `file://` again.
+
+- `js/app.js` — entry: imports wiring, subscribes artwork, seeds the first load
+- `js/dom.js` `js/util.js` `js/state.js` `js/cards.js` — page elements, helpers, state + request sequence, shared card builders
+- `js/domains/{movie,game,music,book}.js` — one row per form: IPC names, labels, card class, id field, `card(item, idx, onOpen)`, `detail(item)`
+- `js/domains.js` — `DOMAINS` registry (`Object.fromEntries` over the rows) and `DOMAIN_KEYS`
+- `js/artwork.js` `js/detail.js` `js/render.js` `js/content.js` `js/ui.js` — artwork routing, the `openDetail` seam, rendering, request lifecycle, search + filter
+
+Rules that keep the graph acyclic: builders take the row as a parameter
+(`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click
+handler (`card(item, idx, onOpen)`) so `cards.js` never imports `detail.js`;
+`render.js` passes `openDetail` in. A new content form is a row file plus one
+line in `js/domains.js` — nothing else knows the form exists.
 
 ### Presentation build — decided feature set (2026-11-10 brainstorm)
 
@@ -169,9 +192,11 @@ and their `@KremaCommand` methods are called directly by the JCEF bridge.
 
 Files:
 - `src/main/java/vangogh/app/jcef/JcefVanGoghApp.java` — `main()`: boots
-  `CefApp`, extracts classpath HTML to a temp dir, creates a Swing `JFrame`
-  hosting a **windowed**-rendered `CefBrowser` (OSR is deliberately not used —
-  the OSR/JOGL path crashes on macOS, see the app's own comments).
+  `CefApp`, serves `/movie-page` from the classpath through krema-core's
+  `AssetServer` over loopback HTTP (the same load path as the Krema shell — and
+  the reason ES modules work in this shell), creates a Swing `JFrame` hosting a
+  **windowed**-rendered `CefBrowser` (OSR is deliberately not used — the
+  OSR/JOGL path crashes on macOS, see the app's own comments).
 - `src/main/java/vangogh/app/jcef/JcefBridge.java` — `CefMessageRouter`
   handler for JS→Java (`window.krema.invoke` → controller methods) plus
   `JcefEventEmitter` wiring for Java→JS poster events.
@@ -179,9 +204,12 @@ Files:
   `EventEmitter`, overrides **both** `emit` overloads to deliver via
   `executeJavaScript` on the Swing EDT (the base class's path would hit the
   null engine).
-- `src/main/resources/jcef/krema-shim.js` — implements `window.krema.invoke/on`
-  on top of `cefQuery` and `window.__krema_emit`, compatible with the existing
-  `app.js` (zero frontend changes).
+- `src/main/resources/movie-page/krema-shim.js` — implements
+  `window.krema.invoke/on` on top of `cefQuery` and `window.__krema_emit`
+  (payloads wrapped as `{payload, timestamp}`, like Krema's bridge). It is part
+  of the page and loaded by `index.html`, and it returns immediately when
+  `window.krema` already exists — the Krema shell injects its native bridge
+  before page scripts, so the shim is inert there. No HTML rewriting anywhere.
 - `pom.xml` — adds `me.friwi:jcefmaven` dependency and macOS
   `--add-opens java.desktop/...=ALL-UNNAMED` flags (required by jcefmaven;
   harmless for Krema).
