@@ -48,12 +48,19 @@ public class GameController {
     private final AtomicInteger posterSkipped = new AtomicInteger();
 
     /** One-slot holder for the latest completed fetch (written by the IO pool, drained on the UI thread). */
-    private record PendingData(int generation, Either<FetchError, java.util.List<Game>> result) {}
+    private record PendingData(int generation, Either<FetchError, TgdbGameService.SearchPage> result) {}
 
     private final AtomicReference<PendingData> pendingData = new AtomicReference<>();
 
     /** The reply the data drain hands the page (Gson-serialized; null fields omitted). */
-    public record GameDataReply(int generation, String status, String error, java.util.List<Game> items) {}
+    public record GameDataReply(
+            int generation,
+            String status,
+            String error,
+            java.util.List<Game> items,
+            Integer page,
+            Integer previousPage,
+            Integer nextPage) {}
 
     public GameController() {
         this(new TgdbGameService(resolveApiKey()));
@@ -78,19 +85,29 @@ public class GameController {
      */
     @KremaCommand
     public int requestGames(String kind, String query) {
+        return requestGames(kind, query, 1);
+    }
+
+    @KremaCommand
+    public int requestGamesPage(String query, int page) {
+        return requestGames("search", query, page);
+    }
+
+    private int requestGames(String kind, String query, int page) {
         int gen = generation.incrementAndGet();
         resetPosterTracking();
         pendingData.set(null);
 
-        Future.of(executor, () -> fetchGames(kind, query))
+        Future.of(executor, () -> fetchGames(kind, query, page))
                 .onComplete(result -> deliverData(gen, result));
         return gen;
     }
 
-    private Either<FetchError, java.util.List<Game>> fetchGames(String kind, String query) {
+    private Either<FetchError, TgdbGameService.SearchPage> fetchGames(String kind, String query, int page) {
         return "search".equals(kind)
-                ? service.searchGames(query)
-                : service.fetchTrending();
+                ? service.searchGamesPage(query, page)
+                : service.fetchTrending()
+                        .map(games -> new TgdbGameService.SearchPage(games, 1, null, null));
     }
 
     /**
@@ -98,15 +115,15 @@ public class GameController {
      * and parks the outcome for the {@code pollGameData} drain. Stale
      * completions (a newer request superseded this one) are dropped.
      */
-    private void deliverData(int gen, Try<Either<FetchError, java.util.List<Game>>> result) {
+    private void deliverData(int gen, Try<Either<FetchError, TgdbGameService.SearchPage>> result) {
         if (generation.get() != gen) {
             return;
         }
-        Either<FetchError, java.util.List<Game>> either = result.isFailure()
+        Either<FetchError, TgdbGameService.SearchPage> either = result.isFailure()
                 ? Either.left(new FetchError.Transport("TheGamesDB request", result.getCause()))
                 : result.get();
 
-        java.util.List<Game> games = either.isRight() ? either.get() : java.util.List.of();
+        java.util.List<Game> games = either.isRight() ? either.get().games() : java.util.List.of();
         List<Game> posterable = List.ofAll(games)
                 .filter(g -> g.posterUrl() != null && !g.posterUrl().isEmpty());
 
@@ -131,19 +148,21 @@ public class GameController {
     public GameDataReply pollGameData(int generation) {
         PendingData pending = pendingData.get();
         if (pending == null) {
-            return new GameDataReply(generation, "pending", null, null);
+            return new GameDataReply(generation, "pending", null, null, null, null, null);
         }
         if (pending.generation() > generation) {
             // A newer request owns the grid; this poller should stop quietly.
-            return new GameDataReply(pending.generation(), "superseded", null, null);
+            return new GameDataReply(pending.generation(), "superseded", null, null, null, null, null);
         }
         // Consume: the page renders what it drained; a later poll sees empty.
         // Safe without CAS — a new writer can only appear via requestGames,
         // which runs on this same UI thread after this handler returns.
         pendingData.set(null);
         return pending.result().fold(
-                error -> new GameDataReply(pending.generation(), "error", FetchError.uiMessage(error), null),
-                games -> new GameDataReply(pending.generation(), "done", null, games));
+                error -> new GameDataReply(pending.generation(), "error", FetchError.uiMessage(error),
+                        null, null, null, null),
+                page -> new GameDataReply(pending.generation(), "done", null, page.games(),
+                        page.page(), page.previousPage(), page.nextPage()));
     }
 
     @KremaCommand

@@ -43,6 +43,12 @@ class GameControllerTest {
         public Either<FetchError, java.util.List<Game>> searchGames(String query) {
             return fetchTrending();
         }
+
+        @Override
+        public Either<FetchError, SearchPage> searchGamesPage(String query, int page) {
+            return Either.right(new SearchPage(java.util.List.of(), page,
+                    page > 1 ? page - 1 : null, page + 1));
+        }
     }
 
     /** Stub service that fails the fetch, to test the error drain. */
@@ -60,6 +66,12 @@ class GameControllerTest {
         @Override
         public Either<FetchError, java.util.List<Game>> searchGames(String query) {
             return fetchTrending();
+        }
+
+        @Override
+        public Either<FetchError, SearchPage> searchGamesPage(String query, int page) {
+            return Either.left(new FetchError.Transport(
+                    "TheGamesDB search", new RuntimeException("boom")));
         }
     }
 
@@ -137,5 +149,18 @@ class GameControllerTest {
 
         // The newer request still delivers through the drain.
         assertEquals("done", drainData(controller, secondGen).status());
+    }
+
+    @Test
+    void gameSearchPageRequestReturnsPreviousAndNextPageMetadata() throws Exception {
+        GameController controller = new GameController(new SlowService());
+
+        int gen = controller.requestGamesPage("cyberpunk", 2);
+        GameController.GameDataReply reply = drainData(controller, gen);
+
+        assertEquals("done", reply.status());
+        assertEquals(2, reply.page());
+        assertEquals(1, reply.previousPage());
+        assertEquals(3, reply.nextPage());
     }
 }

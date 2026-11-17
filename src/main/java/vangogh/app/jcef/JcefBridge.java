@@ -184,6 +184,7 @@ public class JcefBridge {
         return switch (name) {
             case "requestMovies" -> argsCommand(args, this::movieCommand);
             case "requestGames" -> argsCommand(args, this::gameCommand);
+            case "requestGamesPage" -> gamePageCommand(args);
             case "requestMusic" -> argsCommand(args, this::musicCommand);
             case "requestBooks" -> argsCommand(args, this::bookCommand);
             case "pollMovieData" -> intCommand(args, "generation", movieController::pollMovieData);
@@ -252,6 +253,21 @@ public class JcefBridge {
 
     private Command gameCommand(String kind, String query) {
         return new Command(() -> gameController.requestGames(kind, query));
+    }
+
+    private Validation<Seq<FetchError>, Command> gamePageCommand(JsonObject args) {
+        if (args == null) {
+            return Validation.invalid(List.of(new FetchError.BadInput("args", "missing")));
+        }
+        return Validation.combine(validRequiredQuery(args), validInt(args, "page"))
+                .ap((query, page) -> new Command(() -> gameController.requestGamesPage(query, page)));
+    }
+
+    private Validation<FetchError, String> validRequiredQuery(JsonObject args) {
+        return Try.of(() -> args.get("query").getAsString())
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.BadInput("query", "missing or not a string"))
+                .toValidation();
     }
 
     private Command musicCommand(String kind, String query) {

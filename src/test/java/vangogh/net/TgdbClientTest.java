@@ -18,6 +18,17 @@ class TgdbClientTest {
     }
 
     @Test
+    void searchGameUrlUsesRequestedPageAndEncodesQueryAndKey() {
+        assertEquals(
+                "https://api.thegamesdb.net/v1/Games/ByGameName?apikey=test%2Bkey"
+                        + "&name=cyberpunk+2077"
+                        + "&fields=players,publishers,genres,overview,rating,platform"
+                        + "&include=boxart,platform&page=2",
+                TgdbClient.searchGameUrl("test+key", "cyberpunk 2077", 2)
+        );
+    }
+
+    @Test
     void posterSourcesAcceptFrontBoxartUrls() {
         var sources = TgdbClient.posterSources(
                 "https://cdn.thegamesdb.net/images/original/boxart/front/front.jpg",

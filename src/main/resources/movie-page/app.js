@@ -4,6 +4,7 @@
    - await window.krema.invoke("requestMovies", { kind, query }) → kicks off the
      IO-pool fetch, returns the request generation immediately (never blocks)
    - await window.krema.invoke("requestGames", { kind, query }) → same for games
+   - await window.krema.invoke("requestGamesPage", { query, page }) → game search page
    - await window.krema.invoke("requestMusic", { kind, query }) → same for music
    - await window.krema.invoke("requestBooks", { kind, query }) → same for books
    - await window.krema.invoke("pollMovieData", { generation }) → data drain:
@@ -31,6 +32,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const searchBtn = document.getElementById("searchBtn");
     const contentFilter = document.getElementById("contentFilter");
     const sectionTitle = document.getElementById("sectionTitle");
+    const gamePagination = document.getElementById("gamePagination");
+    const gamePreviousBtn = document.getElementById("gamePreviousBtn");
+    const gameNextBtn = document.getElementById("gameNextBtn");
+    const gamePageLabel = document.getElementById("gamePageLabel");
 
     // Selected content type ("movie" | "music" | "book" | "game"). The filter
     // is a custom DOM widget (a div — see the NSMenu-freeze note below), so it
@@ -39,6 +44,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Game filter (Game selections kept calling requestMovies and rendered
     // movie cards that gamePoster events could never match).
     let selectedContent = "movie";
+    let gameSearchTerm = "";
+    let gamePreviousPage = null;
+    let gameNextPage = null;
+
+    function hideGamePagination() {
+        gamePagination.classList.add("hidden");
+        gamePreviousBtn.disabled = true;
+        gameNextBtn.disabled = true;
+        gamePageLabel.textContent = "";
+        gamePreviousPage = null;
+        gameNextPage = null;
+    }
+
+    function updateGamePagination(reply) {
+        gamePreviousPage = reply.previousPage == null ? null : reply.previousPage;
+        gameNextPage = reply.nextPage == null ? null : reply.nextPage;
+        gamePagination.classList.toggle("hidden", gamePreviousPage == null && gameNextPage == null);
+        gamePreviousBtn.disabled = gamePreviousPage == null;
+        gameNextBtn.disabled = gameNextPage == null;
+        gamePageLabel.textContent = `Page ${reply.page || 1}`;
+    }
 
     function escapeHtml(text) {
         if (text == null) return "";
@@ -367,11 +393,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         book:  { request: "requestBooks",  data: "pollBookData",  art: "pollBookCovers",   plural: "Books" },
     };
 
-    async function requestPageContent(kind, term) {
+    async function requestPageContent(kind, term, requestedPage) {
         if (!window.krema) {
             showError("API bridge not ready yet. Please wait a moment and try again.");
             return;
         }
+        const isGameSearch = selectedContent === "game" && kind === "search";
+        const page = requestedPage || 1;
+        if (isGameSearch) {
+            if (page === 1) {
+                gameSearchTerm = term;
+            } else {
+                term = gameSearchTerm;
+            }
+        }
+        hideGamePagination();
         try {
             const domain = DOMAINS[selectedContent];
             sectionTitle.textContent = kind === "search"
@@ -380,14 +416,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             showLoading();
             // Kicks off the IO-pool fetch and resolves immediately with the
             // request's generation — the UI thread never blocks on network.
-            const generation = await window.krema.invoke(domain.request, { kind: kind, query: term });
+            const generation = isGameSearch && page > 1
+                ? await window.krema.invoke("requestGamesPage", { query: term, page: page })
+                : await window.krema.invoke(domain.request, { kind: kind, query: term });
             const reply = await pollDataUntilDone(domain.data, generation);
             if (!reply) return;   // superseded by a newer request, or already shown
             renderContent(reply.items, selectedContent);
+            if (isGameSearch) {
+                updateGamePagination(reply);
+            } else {
+                hideGamePagination();
+            }
             pollPostersUntilDone(domain.art);
         } catch (e) {
             const message = e && e.message ? e.message : String(e);
             showError("Failed to load content: " + escapeHtml(message));
+            if (isGameSearch) {
+                hideGamePagination();
+            }
         }
     }
 
@@ -421,6 +467,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Seed the initial trending render.
     await requestPageContent("trending", "");
+
+    gamePreviousBtn.addEventListener("click", () => {
+        if (gamePreviousPage != null) {
+            requestPageContent("search", gameSearchTerm, gamePreviousPage);
+        }
+    });
+    gameNextBtn.addEventListener("click", () => {
+        if (gameNextPage != null) {
+            requestPageContent("search", gameSearchTerm, gameNextPage);
+        }
+    });
 
     searchBtn.addEventListener("click", () => {
         const term = searchInput.value.trim();

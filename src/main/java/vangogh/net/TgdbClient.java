@@ -45,10 +45,17 @@ public class TgdbClient {
      * service seam.
      */
     public Try<ApiResponse> searchGame(String query) {
-        String url = BASE + "Games/ByGameName?apikey=" + apiKey
+        return searchGame(query, 1);
+    }
+
+    public Try<ApiResponse> searchGame(String query, int page) {
+        return send(searchGameUrl(apiKey, query, page));
+    }
+
+    static String searchGameUrl(String apiKey, String query, int page) {
+        return BASE + "Games/ByGameName?apikey=" + URLEncoder.encode(apiKey, StandardCharsets.UTF_8)
                 + "&name=" + URLEncoder.encode(query, StandardCharsets.UTF_8)
-                + "&fields=players,publishers,genres,overview,rating,platform&include=boxart,platform&page=1";
-        return send(url);
+                + "&fields=players,publishers,genres,overview,rating,platform&include=boxart,platform&page=" + page;
     }
 
     public Try<ApiResponse> trending() {

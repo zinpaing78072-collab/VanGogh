@@ -13,8 +13,12 @@ import io.vavr.control.Validation;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -27,6 +31,8 @@ import com.google.gson.JsonParser;
  * defaults, as before); only structure-level failures are errors.
  */
 public class TgdbGameService {
+
+    public record SearchPage(java.util.List<Game> games, int page, Integer previousPage, Integer nextPage) {}
 
     private final TgdbClient client;
 
@@ -52,19 +58,88 @@ public class TgdbGameService {
     }
 
     public Either<FetchError, java.util.List<Game>> searchGames(String query) {
-        return (query == null || query.trim().isEmpty())
-                ? fetchTrending()
-                : client.searchGame(query.trim())
-                        .toEither()
-                        .mapLeft(e -> (FetchError) new FetchError.Transport("TheGamesDB search", e))
-                        .flatMap(res -> requireSuccess("TheGamesDB search", res))
-                        .flatMap(this::parseRows);
+        return searchGamesPage(query, 1).map(SearchPage::games);
+    }
+
+    public Either<FetchError, SearchPage> searchGamesPage(String query, int page) {
+        if (page < 1) {
+            return Either.left(new FetchError.BadInput("page", "must be greater than zero"));
+        }
+        if (query == null || query.trim().isEmpty()) {
+            return fetchTrending()
+                    .map(games -> new SearchPage(games, 1, null, null));
+        }
+        return client.searchGame(query.trim(), page)
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Transport("TheGamesDB search", e))
+                .flatMap(res -> requireSuccess("TheGamesDB search", res))
+                .flatMap(body -> parseSearchPage(body, page));
     }
 
     private Either<FetchError, String> requireSuccess(String api, ApiResponse res) {
         return res.isSuccess()
                 ? Either.right(res.body)
                 : Either.left(new FetchError.HttpStatus(api, res.statusCode, truncate(res.body, 300)));
+    }
+
+    private Either<FetchError, SearchPage> parseSearchPage(String body, int requestedPage) {
+        return Try.of(() -> JsonParser.parseString(body).getAsJsonObject())
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Payload("TheGamesDB", "payload shape", e))
+                .flatMap(root -> extractStructure(root).flatMap(games ->
+                        readPageLink(root, "previous").flatMap(previous ->
+                                readPageLink(root, "next").map(next ->
+                                        new SearchPage(games.toJavaList(), requestedPage,
+                                                previous.getOrElse(requestedPage > 1 ? requestedPage - 1 : null),
+                                                next.getOrNull())))));
+    }
+
+    private Either<FetchError, Option<Integer>> readPageLink(JsonObject root, String relation) {
+        JsonObject data = responseData(root);
+        JsonObject pages = root.has("pages") && root.get("pages").isJsonObject()
+                ? root.getAsJsonObject("pages")
+                : data != null && data.has("pages") && data.get("pages").isJsonObject()
+                        ? data.getAsJsonObject("pages")
+                        : null;
+        JsonElement link = null;
+        if (pages != null && pages.has(relation)) {
+            link = pages.get(relation);
+        } else if (data != null && data.has(relation)) {
+            link = data.get(relation);
+        } else if (root.has(relation)) {
+            link = root.get(relation);
+        }
+        if (link == null || link.isJsonNull()) {
+            return Either.right(Option.none());
+        }
+        JsonElement pageLink = link;
+        return Try.of(() -> {
+                    URI uri = URI.create(pageLink.getAsString());
+                    if (!"https".equals(uri.getScheme())
+                            || !"api.thegamesdb.net".equalsIgnoreCase(uri.getHost())) {
+                        throw new IllegalArgumentException("unexpected pagination URL");
+                    }
+                    String query = uri.getRawQuery();
+                    if (query == null) {
+                        throw new IllegalArgumentException("pagination URL has no query");
+                    }
+                    for (String part : query.split("&")) {
+                        int separator = part.indexOf('=');
+                        if (separator > 0
+                                && "page".equals(URLDecoder.decode(part.substring(0, separator), StandardCharsets.UTF_8))) {
+                            int page = Integer.parseInt(URLDecoder.decode(
+                                    part.substring(separator + 1), StandardCharsets.UTF_8));
+                            if (page < 1) {
+                                throw new IllegalArgumentException("pagination page must be greater than zero");
+                            }
+                            return Option.some(page);
+                        }
+                    }
+                    throw new IllegalArgumentException("pagination URL has no page parameter");
+                })
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Payload(
+                        "TheGamesDB", "invalid pages." + relation, e));
     }
 
     /** Structure-level strictness: an unreadable payload is an error, not an empty list. */
@@ -93,8 +168,8 @@ public class TgdbGameService {
     }
 
     private Validation<FetchError, JsonArray> validGames(JsonObject root) {
-        return Try.of(() -> root.getAsJsonObject("data"))
-                .map(data -> data == null ? null : data.getAsJsonArray("games"))
+        JsonObject data = responseData(root);
+        return Try.of(() -> data == null ? null : data.getAsJsonArray("games"))
                 .toEither()
                 .mapLeft(e -> (FetchError) new FetchError.Payload("TheGamesDB", "unreadable data.games", e))
                 .flatMap(games -> games != null
@@ -107,6 +182,16 @@ public class TgdbGameService {
     /** Boxart absence is NOT an error — games parse with empty poster URLs (as before). */
     private Validation<FetchError, JsonObject> validBoxart(JsonObject root) {
         return Validation.valid(extractBoxartData(root));
+    }
+
+    private static JsonObject responseData(JsonObject root) {
+        if (root == null) {
+            return null;
+        }
+        if (root.has("data") && !root.get("data").isJsonNull() && root.get("data").isJsonObject()) {
+            return root.getAsJsonObject("data");
+        }
+        return root;
     }
 
     private List<Game> zipRows(JsonArray games, JsonObject boxartData) {
@@ -143,10 +228,10 @@ public class TgdbGameService {
     }
 
     private static JsonObject extractBoxartData(JsonObject root) {
-        if (root == null || !root.has("include") || root.get("include").isJsonNull()) {
+        JsonObject include = includeNode(root);
+        if (include == null) {
             return null;
         }
-        JsonObject include = root.getAsJsonObject("include");
         if (!include.has("boxart") || include.get("boxart").isJsonNull()) {
             return null;
         }
@@ -155,6 +240,20 @@ public class TgdbGameService {
             return null;
         }
         return boxart.getAsJsonObject("data");
+    }
+
+    private static JsonObject includeNode(JsonObject root) {
+        if (root == null) {
+            return null;
+        }
+        if (root.has("include") && !root.get("include").isJsonNull() && root.get("include").isJsonObject()) {
+            return root.getAsJsonObject("include");
+        }
+        JsonObject data = responseData(root);
+        if (data != null && data.has("include") && !data.get("include").isJsonNull() && data.get("include").isJsonObject()) {
+            return data.getAsJsonObject("include");
+        }
+        return null;
     }
 
     private static String findFrontBoxart(JsonObject boxartData, int gameId) {
