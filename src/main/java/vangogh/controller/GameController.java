@@ -6,6 +6,7 @@ import io.vavr.collection.List;
 import io.vavr.concurrent.Future;
 import io.vavr.control.Either;
 import io.vavr.control.Option;
+import io.vavr.control.Try;
 import vangogh.error.FetchError;
 import vangogh.game.Game;
 import vangogh.game.TgdbGameService;
@@ -15,17 +16,19 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Vavr-based rewrite: the game fetch returns an {@link Either} value and is
- * unwrapped to a thrown error only at this Krema edge — that thrown error
- * becomes Krema's error reply to the page. The reply still joins the IO future
- * on the UI thread (Krema handlers must stay synchronous; see AGENTS.md
- * Windows UI-thread rule). Posters are prefetched on the IO pool via
- * {@link Future#traverse} and delivered through the {@code pollGamePosters}
- * drain command, which doubles as the completion signal (returns −1 when
- * nothing is pending).
+ * Vavr-based rewrite: the game fetch returns an {@link Either} value and runs
+ * on the IO pool. The {@code @KremaCommand} handler only <em>kicks off</em>
+ * the fetch and returns at once — it runs on the Krema UI thread, and blocking
+ * it on network I/O (the old {@code future.get()}) froze the whole window for
+ * the round-trip. The resolved list (or error) lands in a one-slot holder that
+ * the {@code pollGameData} drain — itself a synchronous UI-thread command, per
+ * the Windows Krema engine.eval constraint — hands to the page. Posters are
+ * prefetched on the IO pool via {@link Future#traverse} and delivered through
+ * the {@code pollGamePosters} drain, which doubles as the completion signal
+ * (returns −1 when nothing is pending).
  */
 public class GameController {
 
@@ -44,6 +47,14 @@ public class GameController {
     private final AtomicInteger posterDelivered = new AtomicInteger();
     private final AtomicInteger posterSkipped = new AtomicInteger();
 
+    /** One-slot holder for the latest completed fetch (written by the IO pool, drained on the UI thread). */
+    private record PendingData(int generation, Either<FetchError, java.util.List<Game>> result) {}
+
+    private final AtomicReference<PendingData> pendingData = new AtomicReference<>();
+
+    /** The reply the data drain hands the page (Gson-serialized; null fields omitted). */
+    public record GameDataReply(int generation, String status, String error, java.util.List<Game> items) {}
+
     public GameController() {
         this(new TgdbGameService(resolveApiKey()));
     }
@@ -61,40 +72,78 @@ public class GameController {
         this.events = events;
     }
 
+    /**
+     * Kicks off the TheGamesDB fetch on the IO pool and returns the request's
+     * generation immediately — never blocks on network I/O.
+     */
     @KremaCommand
-    public java.util.List<Game> requestGames(String kind, String query) {
+    public int requestGames(String kind, String query) {
         int gen = generation.incrementAndGet();
         resetPosterTracking();
+        pendingData.set(null);
 
-        // The fetch returns an Either value and never throws, so the blocking
-        // join below cannot fail — the error unwraps at the edge instead.
-        Future<Either<FetchError, java.util.List<Game>>> future =
-                Future.of(executor, () -> fetchGames(kind, query));
-
-        // Block the UI thread until the IO pool resolves the game list, so the
-        // reply to the page is synchronous (Krema handlers must stay synchronous).
-        java.util.List<Game> games = future.get()
-                .fold(
-                        error -> {
-                            throw new RuntimeException(FetchError.uiMessage(error), error.cause());
-                        },
-                        Function.identity());
-
-        // Total is set BEFORE this command returns, so a pollGamePosters issued
-        // for this request can never observe a stale count.
-        List<Game> posterable = List.ofAll(games)
-                .filter(g -> g.posterUrl() != null && !g.posterUrl().isEmpty());
-        posterTotal.set(posterable.size());
-
-        Future.traverse(executor, posterable, game ->
-                Future.run(executor, () -> fetchAndOffer(game.id(), game.posterUrl(), gen)));
-        return games;
+        Future.of(executor, () -> fetchGames(kind, query))
+                .onComplete(result -> deliverData(gen, result));
+        return gen;
     }
 
     private Either<FetchError, java.util.List<Game>> fetchGames(String kind, String query) {
         return "search".equals(kind)
                 ? service.searchGames(query)
                 : service.fetchTrending();
+    }
+
+    /**
+     * Runs on the IO pool: joins the fetch result, fans out poster prefetch,
+     * and parks the outcome for the {@code pollGameData} drain. Stale
+     * completions (a newer request superseded this one) are dropped.
+     */
+    private void deliverData(int gen, Try<Either<FetchError, java.util.List<Game>>> result) {
+        if (generation.get() != gen) {
+            return;
+        }
+        Either<FetchError, java.util.List<Game>> either = result.isFailure()
+                ? Either.left(new FetchError.Transport("TheGamesDB request", result.getCause()))
+                : result.get();
+
+        java.util.List<Game> games = either.isRight() ? either.get() : java.util.List.of();
+        List<Game> posterable = List.ofAll(games)
+                .filter(g -> g.posterUrl() != null && !g.posterUrl().isEmpty());
+
+        // Total is set BEFORE the data drain can hand the page this request's
+        // items, so a pollGamePosters issued after render never observes a
+        // stale count.
+        posterTotal.set(posterable.size());
+        Future.traverse(executor, posterable, game ->
+                Future.run(executor, () -> fetchAndOffer(game.id(), game.posterUrl(), gen)));
+
+        // Set last: the drain hands the page items only after the poster
+        // bookkeeping above is in place.
+        pendingData.set(new PendingData(gen, either));
+    }
+
+    /**
+     * The data drain: returns the latest completed fetch for the page's own
+     * generation, or a pending/superseded marker. Synchronous on the UI thread,
+     * so the reply's engine.eval always fires (Windows Krema constraint).
+     */
+    @KremaCommand
+    public GameDataReply pollGameData(int generation) {
+        PendingData pending = pendingData.get();
+        if (pending == null) {
+            return new GameDataReply(generation, "pending", null, null);
+        }
+        if (pending.generation() > generation) {
+            // A newer request owns the grid; this poller should stop quietly.
+            return new GameDataReply(pending.generation(), "superseded", null, null);
+        }
+        // Consume: the page renders what it drained; a later poll sees empty.
+        // Safe without CAS — a new writer can only appear via requestGames,
+        // which runs on this same UI thread after this handler returns.
+        pendingData.set(null);
+        return pending.result().fold(
+                error -> new GameDataReply(pending.generation(), "error", FetchError.uiMessage(error), null),
+                games -> new GameDataReply(pending.generation(), "done", null, games));
     }
 
     @KremaCommand

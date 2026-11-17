@@ -3,9 +3,11 @@
  * The page (app.js) expects:
  *   window.krema.invoke("requestMovies", {kind, query}) → Promise<list>
  *   window.krema.invoke("requestGames",  {kind, query}) → Promise<list>
+ *   window.krema.invoke("requestBooks",  {kind, query}) → Promise<generation>
  *   window.krema.invoke("pollGamePosters", {})          → Promise<number>
  *   window.krema.on("poster", data)                     → data = {payload, timestamp}
  *   window.krema.on("gamePoster", data)
+ *   window.krema.on("bookCover", data)
  *
  * JS→Java: window.cefQuery({request, persistent, onSuccess, onFailure}) — CEF
  * message-router contract (the keys are exact: onSuccess/onFailure; a wrong
