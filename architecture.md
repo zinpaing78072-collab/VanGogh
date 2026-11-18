@@ -16,7 +16,7 @@ Defines how VanGogh adds new content domains (Music, Book, Game, TV, …) beyond
 - **Movie domain is fully wired**: `MovieController.requestMovies(kind, query)`, `TmdbMovieService`, `TmdbClient`, TMDB API, poster proxy/cache, frontend card grid.
 - **Game domain is wired**: `GameController.requestGames(kind, query)`, `TgdbGameService`, `TgdbClient`, TheGamesDB, and front-boxart streaming.
 - **Book domain is wired**: `BookController.requestBooks(kind, query)`, `OpenLibraryBookService`, `OpenLibraryClient`, Open Library (search + weekly trending, no API key), and cover streaming via the `pollBookCovers` drain / `"bookCover"` events. The Book Card follows the design system's (`design-system.pen`): poster-card layout with a `year  Author · N pages` meta row; the click detail is book-specific (author, pages, editions, subjects, first line).
-- **Filter dropdown** in `src/main/resources/movie-page/index.html` offers Movie / Music / Book / Game; Movie, Game, and Book call their APIs while Music renders a stub "not yet connected" message.
+- **Sidebar switcher** in `src/main/resources/movie-page/index.html` offers Music / Movies / Books / Games as separate buttons; all four call their APIs. The same sidebar is collapsible (cards reflow into the freed width), `Menu` and `Library` are section labels, and Home / My Lists / Favorites / Settings plus the header notification/profile buttons are placeholders with no backend yet.
 - **IPC contract**: `requestMovies` / `requestGames` / `requestBooks` kick off an IO-pool fetch and return the request generation immediately; card data arrives through the `pollMovieData` / `pollGameData` / `pollBookData` drains and artwork through the `pollMoviePosters` / `pollGamePosters` / `pollBookCovers` drains (see AGENTS.md — the Windows Krema engine.eval constraint makes every page-facing command a synchronous UI-thread drain).
 - **Build rules**: `pom.xml` compiles with `--release 25` and `<parameters>true</parameters>` (required so `@KremaCommand` arguments bind by parameter name). Run with `JAVA_HOME=jdk-25 mvn compile exec:exec` (never `exec:java` on macOS).
 
@@ -118,7 +118,7 @@ Krema.app()
 
 ## Frontend integration
 
-- `src/main/resources/movie-page/index.html` — `#contentFilter` is a custom DOM dropdown (a `div`, not a `<select>`) listing movie/music/book/game. It loads `krema-shim.js` plus the module entry `js/app.js`.
+- `src/main/resources/movie-page/index.html` — the shell is a `flex` row: a collapsible `aside.sidebar` (brand, menu, `.nav-item[data-domain]` form buttons, Settings at the foot) plus the content column (search header, card grid). A native `<select>` is avoided on purpose (its macOS popup freezes the window). It loads `krema-shim.js` plus the module entry `js/app.js`.
 - `src/main/resources/movie-page/js/` — ES modules, one per seam:
   `dom`, `util`, `state`, `cards`, `domains/{movie,game,music,book}`,
   `domains`, `artwork`, `detail`, `render`, `content`, `ui`, `app` (entry).
@@ -140,7 +140,7 @@ Krema.app()
 3. **Service** — `vangogh/<domain>/<Domain>Service.java` with search/trending + poster data-URI cache (mirror `TmdbMovieService.posterCache`, capped at 512).
 4. **Controller** — `vangogh/controller/<Domain>Controller.java` with `@KremaCommand` methods, `setEventEmitter`, IO thread pool, generation counter.
 5. **Register** — add controller instance to `.commands(...)` in `VanGoghApp.main()`.
-6. **Frontend** — add `js/domains/<domain>.js` (a row: IPC names, labels, card class, id field, `card`, `detail`) and one line in `js/domains.js`; add the filter option in `index.html`. Nothing else needs to know the form exists.
+6. **Frontend** — add `js/domains/<domain>.js` (a row: IPC names, labels, card class, id field, `card`, `detail`) and one line in `js/domains.js`; add the form button (`data-domain="<domain>"`) with its icon to the sidebar nav in `index.html`. Nothing else needs to know the form exists.
 7. **Tests** — stub client + controller test following `MovieControllerTest` / `TmdbClientTest` patterns.
 
 ## Example: Music domain (sketch)
@@ -200,7 +200,7 @@ const tracks = await window.krema.invoke("searchMusic", { query });
 - `src/main/java/vangogh/book/OpenLibraryBookService.java` — Either spine over a second upstream API
 - `src/main/java/vangogh/net/TmdbClient.java` — client + proxy pattern
 - `src/main/java/vangogh/net/OpenLibraryClient.java` — keyless client + cover failover
-- `src/main/resources/movie-page/index.html` — filter dropdown markup
+- `src/main/resources/movie-page/index.html` — app shell: sidebar markup (form buttons, collapse toggle) + content column
 - `src/main/resources/movie-page/js/` — frontend module patterns (per-domain row map, request lifecycle, rendering)
 - `src/test/java/vangogh/controller/MovieControllerTest.java` — test pattern with stubbed client/emitter
 - Vendored Krema source (read-only reference): `repos/krema/krema/krema-core/` — `KremaCommand`, `EventEmitter`, `KremaEvent`
