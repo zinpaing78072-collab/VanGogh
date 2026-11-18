@@ -42,18 +42,21 @@
         requestMovies: "movie",
         requestGames: "game",
         requestMusic: "music",
+        requestGeniusMusic: "music",
         requestBooks: "book"
     };
     var FORM_BY_DATA = {
         pollMovieData: "movie",
         pollGameData: "game",
         pollMusicData: "music",
+        pollGeniusMusicData: "music",
         pollBookData: "book"
     };
     var FORM_BY_ART = {
         pollMoviePosters: "movie",
         pollGamePosters: "game",
         pollMusicPosters: "music",
+        pollGeniusMusicPosters: "music",
         pollBookCovers: "book"
     };
     var EVENT_BY_FORM = {

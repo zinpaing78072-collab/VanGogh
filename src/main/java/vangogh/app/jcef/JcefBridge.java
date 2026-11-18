@@ -2,6 +2,7 @@ package vangogh.app.jcef;
 
 import vangogh.controller.BookController;
 import vangogh.controller.GameController;
+import vangogh.controller.GeniusController;
 import vangogh.controller.MovieController;
 import vangogh.controller.MusicController;
 import vangogh.error.FetchError;
@@ -59,6 +60,7 @@ public class JcefBridge {
     private final MovieController movieController;
     private final GameController gameController;
     private final MusicController musicController;
+    private final GeniusController geniusController;
     private final BookController bookController;
     private JcefEventEmitter emitter;
     private CefMessageRouter router;
@@ -76,10 +78,12 @@ public class JcefBridge {
     });
 
     public JcefBridge(MovieController movieController, GameController gameController,
-                      MusicController musicController, BookController bookController) {
+                      MusicController musicController, GeniusController geniusController,
+                      BookController bookController) {
         this.movieController = movieController;
         this.gameController = gameController;
         this.musicController = musicController;
+        this.geniusController = geniusController;
         this.bookController = bookController;
     }
 
@@ -120,6 +124,7 @@ public class JcefBridge {
         movieController.setEventEmitter(emitter);
         gameController.setEventEmitter(emitter);
         musicController.setEventEmitter(emitter);
+        geniusController.setEventEmitter(emitter);
         bookController.setEventEmitter(emitter);
     }
 
@@ -185,14 +190,17 @@ public class JcefBridge {
             case "requestMovies" -> argsCommand(args, this::movieCommand);
             case "requestGames" -> argsCommand(args, this::gameCommand);
             case "requestMusic" -> argsCommand(args, this::musicCommand);
+            case "requestGeniusMusic" -> argsCommand(args, this::geniusMusicCommand);
             case "requestBooks" -> argsCommand(args, this::bookCommand);
             case "pollMovieData" -> intCommand(args, "generation", movieController::pollMovieData);
             case "pollGameData" -> intCommand(args, "generation", gameController::pollGameData);
             case "pollMusicData" -> intCommand(args, "generation", musicController::pollMusicData);
+            case "pollGeniusMusicData" -> intCommand(args, "generation", geniusController::pollGeniusMusicData);
             case "pollBookData" -> intCommand(args, "generation", bookController::pollBookData);
             case "pollGamePosters" -> Validation.valid(new Command(gameController::pollGamePosters));
             case "pollMoviePosters" -> Validation.valid(new Command(movieController::pollMoviePosters));
             case "pollMusicPosters" -> Validation.valid(new Command(musicController::pollMusicPosters));
+            case "pollGeniusMusicPosters" -> Validation.valid(new Command(geniusController::pollGeniusMusicPosters));
             case "pollBookCovers" -> Validation.valid(new Command(bookController::pollBookCovers));
             default -> Validation.invalid(List.of(
                     new FetchError.BadInput("command", "unknown command: " + name)));
@@ -256,6 +264,10 @@ public class JcefBridge {
 
     private Command musicCommand(String kind, String query) {
         return new Command(() -> musicController.requestMusic(kind, query));
+    }
+
+    private Command geniusMusicCommand(String kind, String query) {
+        return new Command(() -> geniusController.requestGeniusMusic(kind, query));
     }
 
     private Command bookCommand(String kind, String query) {
