@@ -13,29 +13,24 @@ import org.cef.CefClient;
 import org.cef.CefSettings;
 import org.cef.browser.CefBrowser;
 
+import build.krema.core.AssetServer;
+
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.Panel;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.Enumeration;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 import javax.swing.JFrame;
 
 /**
  * JCEF shell: a plain AWT frame hosting a windowed-rendered Chromium browser
- * that runs the existing movie-page frontend. The frontend is
- * unchanged — {@code jcef/krema-shim.js} implements the {@code window.krema}
- * API on top of CEF (see {@link JcefBridge}).
+ * that runs the existing movie-page frontend. The page is served from the
+ * classpath over loopback HTTP through krema-core's {@link AssetServer} — the
+ * same way the Krema shell serves it, and the reason the page can use ES
+ * modules (Chromium refuses module scripts from {@code file://} origins).
+ * {@code movie-page/krema-shim.js} implements the {@code window.krema} API on
+ * top of CEF (see {@link JcefBridge}) and no-ops when a native bridge is
+ * already present, so one page works in both shells.
  *
  * <p>CEF is initialized through jcefmaven's {@link CefAppBuilder}, the
  * canonical entry point. Going around it (raw {@code CefApp.getInstance()})
@@ -56,8 +51,8 @@ import javax.swing.JFrame;
  */
 public class JcefVanGoghApp {
 
-    private static final String RESOURCE_PREFIX = "movie-page/";
-    private static final String SHIM_RESOURCE = "jcef/krema-shim.js";
+    /** Classpath directory the AssetServer publishes (index.html lives here). */
+    private static final String ASSET_PATH = "/movie-page";
     /** Vendored jcefmaven install dir (its default install dir name). */
     private static final String INSTALL_DIR = "jcef-bundle";
 
@@ -118,11 +113,18 @@ public class JcefVanGoghApp {
         cefApp_ = builder.build();
         System.out.println("[Van Gogh JCEF] Step 2 done: CefApp initialized");
 
-        // Step 3: Extract the frontend into a fresh temp dir and inject the
-        // krema shim (rewrites index.html to load krema-shim.js before app.js).
-        System.out.println("[Van Gogh JCEF] Step 3: Extracting resources...");
-        File appDir = extractResources(RESOURCE_PREFIX);
-        injectShim(appDir);
+        // Step 3: Publish the frontend over loopback HTTP, exactly as the
+        // Krema shell does. This is what lets the page use ES modules:
+        // Chromium refuses <script type="module"> from file:// origins. The
+        // page also ships its own krema-shim.js (it no-ops when a native
+        // window.krema already exists), so no HTML rewriting is needed.
+        System.out.println("[Van Gogh JCEF] Step 3: Starting asset server...");
+        AssetServer assets = new AssetServer(ASSET_PATH);
+        assets.start();
+        Runtime.getRuntime().addShutdownHook(
+                new Thread(assets::close, "vangogh-asset-server-close"));
+        String pageUrl = assets.getUrl() + "/index.html";
+        System.out.println("[Van Gogh JCEF] Serving " + ASSET_PATH + " at " + pageUrl);
 
         // Step 4: Client, then the message router, then the browser. The
         // router must be registered BEFORE the browser loads its page — CEF
@@ -135,8 +137,7 @@ public class JcefVanGoghApp {
         bridge.installRouter(client);
         // Windowed rendering: osr=false (see the CefSettings comment above —
         // the OSR/JOGL path crashes on macOS during GLProfile init).
-        CefBrowser browser = client.createBrowser(
-                "file://" + appDir.getAbsolutePath() + "/index.html", false, false);
+        CefBrowser browser = client.createBrowser(pageUrl, false, false);
         bridge.attachBrowser(browser);
 
         // Step 5: Frame LAST — build the final layout and show the window
@@ -224,90 +225,5 @@ public class JcefVanGoghApp {
             System.out.println("[Van Gogh JCEF] Ignoring bad debug port: " + raw);
             return 0;
         }
-    }
-
-    /**
-     * Copies the frontend resources into a fresh temp dir (never the classpath
-     * dir they came from — injectShim rewrites index.html in the returned dir)
-     * and returns it, ready for {@code file://} loading.
-     */
-    private static File extractResources(String prefix) throws IOException {
-        File dir = Files.createTempDirectory("vangogh-jcef-").toFile();
-        dir.deleteOnExit();
-
-        URL res = JcefVanGoghApp.class.getClassLoader().getResource(prefix);
-        if (res == null) {
-            throw new FileNotFoundException("Classpath resource not found: " + prefix);
-        }
-
-        if ("file".equals(res.getProtocol())) {
-            // Running from target/classes (mvn exec:exec): copy the tree.
-            try {
-                copyTree(new File(res.toURI()), dir);
-            } catch (java.net.URISyntaxException e) {
-                throw new IOException("Bad resource URI: " + res, e);
-            }
-            return dir;
-        }
-
-        // Running from a packaged jar: walk the entries and copy them out.
-        String jarUrl = res.toString();
-        int bang = jarUrl.indexOf("!/");
-        if (bang < 0) {
-            throw new IOException("Unexpected resource URL: " + jarUrl);
-        }
-        String jarPath = jarUrl.substring("jar:".length(), bang);
-        if (jarPath.startsWith("file:")) {
-            jarPath = jarPath.substring("file:".length());
-        }
-
-        try (JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"))) {
-            Enumeration<JarEntry> entries = jar.entries();
-            while (entries.hasMoreElements()) {
-                JarEntry entry = entries.nextElement();
-                String name = entry.getName();
-                if (name.startsWith(prefix) && !entry.isDirectory()) {
-                    Path dest = dir.toPath().resolve(name.substring(prefix.length()));
-                    Files.createDirectories(dest.getParent());
-                    try (InputStream in = jar.getInputStream(entry)) {
-                        Files.copy(in, dest, StandardCopyOption.REPLACE_EXISTING);
-                    }
-                }
-            }
-        }
-        return dir;
-    }
-
-    private static void copyTree(File src, File dest) throws IOException {
-        File[] children = src.listFiles();
-        if (children == null) {
-            throw new FileNotFoundException("Not a directory: " + src);
-        }
-        for (File child : children) {
-            File target = new File(dest, child.getName());
-            if (child.isDirectory()) {
-                target.mkdirs();
-                copyTree(child, target);
-            } else {
-                Files.copy(child.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
-        }
-    }
-
-    private static void injectShim(File appDir) throws IOException {
-        URL shimUrl = JcefVanGoghApp.class.getClassLoader().getResource(SHIM_RESOURCE);
-        if (shimUrl == null) {
-            throw new FileNotFoundException("Shim resource not found: " + SHIM_RESOURCE);
-        }
-        File shimDest = new File(appDir, "krema-shim.js");
-        try (InputStream in = shimUrl.openStream()) {
-            Files.copy(in, shimDest.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        }
-        File html = new File(appDir, "index.html");
-        String content = new String(Files.readAllBytes(html.toPath()),
-                java.nio.charset.StandardCharsets.UTF_8);
-        content = content.replace("<script src=\"app.js\"></script>",
-                "<script src=\"krema-shim.js\"></script>\n    <script src=\"app.js\"></script>");
-        Files.write(html.toPath(), content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 }
