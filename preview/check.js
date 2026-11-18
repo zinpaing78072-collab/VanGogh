@@ -5,7 +5,7 @@
  * over the DevTools protocol, and asserts the invariants that were previously
  * verified by hand: card counts, per-form card shapes, the artwork stream
  * settling, placeholder fallback, overflow, the empty/error states, and the
- * supersede guard when the filter is switched quickly.
+ * supersede guard when the sidebar switcher is clicked quickly.
  *
  * No dependencies. Node 22 has global fetch and WebSocket, which is all a CDP
  * client needs. The browser is any local Chromium/Chrome (see findBrowser());
@@ -375,10 +375,9 @@ class Page {
         return this.stats();
     }
 
-    async setFilter(value) {
+    async selectForm(value) {
         const before = (await this.stats()).generation;
-        await this.evaluate(`document.getElementById("contentFilter").click();
-            document.querySelector('.filter-option[data-value="${value}"]').click(); true`);
+        await this.evaluate(`document.querySelector('#sidebarNav [data-domain="${value}"]').click(); true`);
         await this.waitFor(`window.__preview.stats().generation > ${before}`);
         return this.settle();
     }
@@ -442,7 +441,7 @@ const TESTS = [
         }
     },
     {
-        name: "filter switches all four forms",
+        name: "sidebar switches all four forms",
         path: "/movie-page/index.html",
         run: async (page) => {
             const results = [];
@@ -457,7 +456,7 @@ const TESTS = [
             ];
 
             for (const form of forms) {
-                await page.setFilter(form.value);
+                await page.selectForm(form.value);
                 const d = await page.dom();
                 results.push(check(
                     form.value + ": title + card class",
@@ -471,11 +470,11 @@ const TESTS = [
             // The music row is the only one with an artist subtitle; the book row
             // carries the author in its meta line. Those are the domain-specific
             // shapes worth pinning.
-            await page.setFilter("music");
+            await page.selectForm("music");
             const music = await page.dom();
             results.push(check("music shows an artist subtitle", music.subtitle.trim().length > 0, music.subtitle));
 
-            await page.setFilter("book");
+            await page.selectForm("book");
             const book = await page.dom();
             results.push(check("book meta carries the author", /Tolkien|Herbert|Fitzgerald/.test(book.meta.join(" ")),
                 book.meta[0]));
@@ -484,11 +483,71 @@ const TESTS = [
         }
     },
     {
+        name: "sidebar: form buttons, inert items, collapse",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            const shell = async () => JSON.parse(await page.evaluate(`JSON.stringify({
+                forms: document.querySelectorAll("#sidebarNav [data-domain]").length,
+                inert: document.querySelectorAll("#sidebarNav [data-nav]").length
+                    + document.querySelectorAll(".sidebar-foot [data-nav]").length,
+                labels: [...document.querySelectorAll("#sidebarNav .nav-label")]
+                    .map(el => el.textContent.trim()).join(" / "),
+                active: (document.querySelector("#sidebarNav .nav-item.active") || {dataset: {}}).dataset.domain || "",
+                sidebarWidth: document.getElementById("sidebar").getBoundingClientRect().width,
+                gridWidth: document.getElementById("movieGrid").getBoundingClientRect().width,
+                brandDisplay: getComputedStyle(document.querySelector(".brand")).display,
+                expanded: document.getElementById("sidebarToggle").getAttribute("aria-expanded"),
+                title: document.getElementById("sectionTitle").textContent
+            })`));
+
+            await page.settle();
+            const open = await shell();
+
+            // Home is shell chrome: it must not fire a request or steal the
+            // active marker from the form that is actually on screen.
+            const beforeDummy = await page.stats();
+            await page.evaluate(`document.querySelector('#sidebarNav [data-nav="home"]').click(); true`);
+            const dummy = await shell();
+            const afterDummy = await page.stats();
+
+            await page.evaluate(`document.getElementById("sidebarToggle").click(); true`);
+            await page.waitFor(`document.getElementById("sidebar").getBoundingClientRect().width < 100`);
+            const collapsed = await shell();
+
+            await page.evaluate(`document.getElementById("sidebarToggle").click(); true`);
+            await page.waitFor(`document.getElementById("sidebar").getBoundingClientRect().width > 200`);
+            const restored = await shell();
+
+            return [
+                check("four form buttons in the sidebar", open.forms === 4, open.forms),
+                check("four not-yet-wired items", open.inert === 4, open.inert),
+                check("Menu and Library are section labels", open.labels === "Menu / Library", open.labels),
+                check("the form on screen is the active button", open.active === "movie", open.active),
+                check("a dummy item fires no request", afterDummy.generation === beforeDummy.generation,
+                    beforeDummy.generation + " → " + afterDummy.generation),
+                check("a dummy item leaves the page alone",
+                    dummy.title === open.title && dummy.active === "movie",
+                    dummy.title + " / " + dummy.active),
+                check("the toggle collapses to the icon rail",
+                    collapsed.sidebarWidth < 100 && collapsed.brandDisplay === "none"
+                        && collapsed.expanded === "false",
+                    collapsed.sidebarWidth + "px, brand " + collapsed.brandDisplay),
+                check("collapsing hands the width to the card grid",
+                    collapsed.gridWidth > open.gridWidth + 100,
+                    open.gridWidth + " → " + collapsed.gridWidth),
+                check("expanding restores the labels and the width",
+                    restored.sidebarWidth > 200 && restored.brandDisplay !== "none"
+                        && restored.expanded === "true",
+                    restored.sidebarWidth + "px, brand " + restored.brandDisplay)
+            ];
+        }
+    },
+    {
         name: "search hit and miss",
         path: "/movie-page/index.html",
         run: async (page) => {
             await page.settle();
-            await page.setFilter("book");
+            await page.selectForm("book");
 
             await page.search("dune");
             const hit = await page.dom();
@@ -560,19 +619,15 @@ const TESTS = [
         }
     },
     {
-        name: "rapid filter switching settles on the last form",
+        name: "rapid form switching settles on the last form",
         path: "/movie-page/index.html",
         run: async (page) => {
             await page.settle();
             const start = (await page.stats()).generation;
 
             // Three kicks with no wait between them: only the last may paint.
-            await page.evaluate(`document.getElementById("contentFilter").click();
-                document.querySelector('.filter-option[data-value="game"]').click();
-                document.getElementById("contentFilter").click();
-                document.querySelector('.filter-option[data-value="music"]').click();
-                document.getElementById("contentFilter").click();
-                document.querySelector('.filter-option[data-value="book"]').click(); true`);
+            await page.evaluate(`["game", "music", "book"].forEach(d =>
+                document.querySelector('#sidebarNav [data-domain="' + d + '"]').click()); true`);
 
             await page.settle(30000);
             const d = await page.dom();

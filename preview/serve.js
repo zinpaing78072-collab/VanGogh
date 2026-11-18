@@ -177,7 +177,7 @@ if (require.main === module) {
         console.log("  " + app.url + "/?scenario=error       error state");
         console.log("  " + app.url + "/?scenario=noposters   placeholder artwork");
         console.log("");
-        console.log("Filter (Movie/Music/Book/Game) and search work: each form");
+        console.log("Sidebar (Music/Movie/Books/Games) and search work: each form");
         console.log("serves its own fixtures. Ctrl-C to stop.");
         console.log("Run `node preview/check.js` for the automated version.");
     }).catch((err) => {
