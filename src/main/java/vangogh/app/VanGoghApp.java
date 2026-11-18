@@ -2,6 +2,7 @@ package vangogh.app;
 
 import vangogh.controller.BookController;
 import vangogh.controller.GameController;
+import vangogh.controller.GeniusController;
 import vangogh.controller.MovieController;
 import vangogh.controller.MusicController;
 import build.krema.core.Krema;
@@ -40,6 +41,7 @@ public class VanGoghApp {
         MovieController controller = new MovieController();
         GameController gameController = new GameController();
         MusicController musicController = new MusicController();
+        GeniusController geniusController = new GeniusController();
         BookController bookController = new BookController();
         Krema.app()
                 .title("Van Gogh")
@@ -51,9 +53,10 @@ public class VanGoghApp {
                     controller.setEventEmitter(events);
                     gameController.setEventEmitter(events);
                     musicController.setEventEmitter(events);
+                    geniusController.setEventEmitter(events);
                     bookController.setEventEmitter(events);
                 })
-                .commands(controller, gameController, musicController, bookController)
+                .commands(controller, gameController, musicController, geniusController, bookController)
                 // Installs the macOS menu bar (App/Edit/View/Window with real
                 // actions) before the event loop starts. NSApp ships without any
                 // menu in this stack, and native fullscreen's top-edge reveal
