@@ -1,8 +1,8 @@
 /* Van Gogh — Stargazer skin (Starry Night palette)
    Ported from the standalone Stargazer · C prototype. Same layout, classes and
-   ids as the app page; the content filter stays the app's custom DOM widget
-   (a native <select> freezes the window on macOS — see app.js) and is restyled
-   in the same glass palette.
+   ids as the app page; the content-form switcher lives in the sidebar (plain
+   buttons — a native <select> freezes the window on macOS, see app.js) and is
+   styled in the same glass palette.
 
    Visual roles vs the previous flat dark theme:
    - Bars (header + card info) and cards are frosted glass tinted midnight
@@ -66,6 +66,219 @@ body {
     }
 }
 
+/* App shell — sidebar + content column. The sidebar is in normal flow (not an
+ * overlay), so collapsing it hands the extra width straight back to the card
+ * grid: every card reflows into the wider column. */
+.app-shell {
+    display: flex;
+    align-items: stretch;
+    min-height: 100vh;
+}
+
+.main-column {
+    flex: 1 1 auto;
+    min-width: 0;   /* without this, the grid's auto-fill track can force overflow */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sidebar — frosted midnight glass rail, pinned while the cards scroll */
+.sidebar {
+    flex: 0 0 auto;
+    width: 240px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 18px 14px 16px;
+    background-color: var(--panel);
+    -webkit-backdrop-filter: var(--blur-glass);
+    backdrop-filter: var(--blur-glass);
+    border-right: 1px solid var(--border);
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05), 12px 0 30px -24px rgba(4, 8, 18, 0.9);
+    overflow: hidden;
+    /* Short and front-loaded: a width transition re-lays-out the card grid every
+       frame, so the less time spent in it the better. 160ms with an ease-out
+       curve reads as instant while still showing the cards reflow. */
+    transition: width 0.16s cubic-bezier(0.2, 0.7, 0.25, 1);
+    z-index: 110;
+}
+
+.sidebar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 2px 4px 14px;
+    flex: 0 0 auto;
+}
+
+.sidebar-nav {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 6px;
+}
+
+.sidebar-foot {
+    flex: 0 0 auto;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+}
+
+.nav-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(127, 166, 201, 0.75);
+    padding: 4px 12px 8px;
+}
+
+.nav-label-spaced {
+    margin-top: 16px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 500;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.nav-item svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    opacity: 0.82;
+}
+
+.nav-item .nav-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-item:hover {
+    background-color: var(--panel-hover);
+    border-color: var(--border);
+}
+
+.nav-item.active {
+    background-image: linear-gradient(90deg, rgba(216, 169, 49, 0.26), rgba(216, 169, 49, 0.05));
+    border-color: rgba(244, 211, 94, 0.42);
+    color: var(--star-gold-lt);
+    font-weight: 600;
+}
+
+.nav-item.active svg {
+    opacity: 1;
+}
+
+/* Collapsed rail: icons only. The toggle flips this class from js/ui.js;
+ * labels are also exposed as native tooltips while collapsed. */
+.sidebar.collapsed {
+    width: 76px;
+}
+
+.sidebar.collapsed .brand,
+.sidebar.collapsed .nav-label,
+.sidebar.collapsed .nav-text {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-head {
+    justify-content: center;
+    padding-bottom: 18px;
+}
+
+.sidebar.collapsed .nav-item {
+    justify-content: center;
+    gap: 0;
+    padding: 11px 0;
+}
+
+/* Resizing state — js/ui.js puts .resizing on the shell for the ~160ms the rail
+ * is moving. The rail and the sticky header both change width on every one of
+ * those frames, and a backdrop-filter whose box changes geometry is re-blurred
+ * from scratch each time: two full-size blur(16px) passes per frame is what made
+ * the toggle feel sluggish in the system webview. Swap them for a denser tint
+ * while the rail moves — at that speed the swap is invisible — and the glass
+ * comes back as soon as the width settles. */
+.app-shell.resizing .sidebar,
+.app-shell.resizing .app-header,
+.app-shell.resizing .quick-actions .icon-btn.round {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: rgba(20, 34, 57, 0.94);
+}
+
+/* Icon buttons — sidebar toggle + the notification/profile corner */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background-color: var(--panel-inset);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.icon-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.icon-btn:hover {
+    border-color: var(--star-gold-lt);
+    color: var(--star-gold-lt);
+    box-shadow: 0 0 20px rgba(244, 211, 94, 0.22);
+}
+
+/* Notification + profile cluster in the header's top-right corner (dummy) */
+.quick-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+.quick-actions .icon-btn.round {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--panel);
+    -webkit-backdrop-filter: var(--blur-glass);
+    backdrop-filter: var(--blur-glass);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 14px 28px -14px rgba(4, 8, 18, 0.9);
+}
+
+.quick-actions .icon-btn.round svg {
+    width: 19px;
+    height: 19px;
+}
+
 /* Header — frosted midnight glass bar */
 .app-header {
     background-color: var(--panel);
@@ -80,7 +293,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    gap: 24px;
+    gap: 16px;
 }
 
 .brand {
@@ -101,9 +314,9 @@ body {
     position: relative;
     display: flex;
     align-items: center;
-    flex: 1;
+    flex: 1 1 auto;
     max-width: 900px;
-    margin: 0 24px;
+    margin: 0;
 }
 
 .search-input {
@@ -152,81 +365,11 @@ body {
     filter: brightness(1.1);
 }
 
-.filter-wrapper {
-    flex-shrink: 0;
-}
-
-.filter-select {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    background-color: var(--panel-inset);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 12px 14px;
-    border-radius: var(--radius);
-    font-size: 14px;
-    cursor: pointer;
-    min-width: 110px;
-    user-select: none;
-}
-
-.filter-select::after {
-    content: "▾";
-    font-size: 11px;
-    opacity: 0.7;
-}
-
-.filter-select:focus {
-    outline: none;
-    border-color: var(--accent);
-}
-
-/* Custom dropdown menu (a native <select> freezes the app on macOS — its
- * modal NSMenu event loop fights the CEF message pump on the AppKit thread) */
-.filter-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    right: 0;
-    background-color: rgba(16, 27, 45, 0.95);
-    -webkit-backdrop-filter: var(--blur-glass);
-    backdrop-filter: var(--blur-glass);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
-    padding: 4px;
-    z-index: 50;
-    box-shadow: 0 18px 34px -18px rgba(4, 8, 18, 0.9);
-    display: flex;
-    flex-direction: column;
-}
-
-.filter-option {
-    padding: 9px 12px;
-    border-radius: calc(var(--radius) - 2px);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.filter-option:hover {
-    background-color: var(--accent);
-    color: var(--accent-ink);
-}
-
-.filter-option.selected {
-    color: var(--accent);
-    font-weight: 600;
-}
-
-.filter-option.selected:hover {
-    color: var(--accent-ink);
-}
-
 /* Main container */
 .container {
+    /* width:100% matters: as a flex item, margin:auto would otherwise cancel
+       the cross-axis stretch and shrink the grid to its content width. */
+    width: 100%;
     padding: 24px;
     max-width: 1400px;
     margin: 0 auto;
@@ -245,7 +388,9 @@ body {
 /* Card grid */
 .card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    /* Exactly five cards per row. The sidebar takes horizontal room, so the
+       tracks shrink evenly instead of the row count changing. */
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 20px;
 }
 
@@ -440,7 +585,7 @@ body {
 }
 
 /* Keyboard focus */
-button:focus-visible, .search-input:focus-visible, .filter-select:focus-visible {
+button:focus-visible, .search-input:focus-visible, .nav-item:focus-visible {
     outline: 2px solid var(--star-blue-lt);
     outline-offset: 2px;
 }
@@ -533,6 +678,7 @@ button:focus-visible, .search-input:focus-visible, .filter-select:focus-visible 
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .sidebar { transition: none; }
     .movie-card { transition: none; animation: none; }
     .movie-card:hover { transform: none; }
     .movie-card:active { transform: none; }
@@ -546,18 +692,15 @@ button:focus-visible, .search-input:focus-visible, .filter-select:focus-visible 
 /* Responsive */
 @media (max-width: 768px) {
     .app-header {
-        flex-direction: column;
-        gap: 16px;
-        align-items: stretch;
+        gap: 12px;
+        padding: 12px 16px;
     }
     .search-bar {
         max-width: none;
         margin: 0;
+        min-width: 0;
     }
     .search-input {
-        min-width: 250px;
-    }
-    .filter-wrapper {
-        order: -1;
+        min-width: 0;
     }
 }

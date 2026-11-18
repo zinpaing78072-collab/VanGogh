@@ -47,7 +47,7 @@ reproduce on demand in the real app.
 | `?scenario=error` | error reply — the red error state |
 | `?scenario=noposters` | done, artwork never arrives — every placeholder visible |
 
-The filter and the search box work in every scenario. Each form serves its own
+The sidebar form buttons and the search box work in every scenario. Each form serves its own
 fixtures, and a search that matches nothing falls through to the empty state.
 
 ## What the mock implements
@@ -141,10 +141,12 @@ node preview/check.js            # pass/fail, exit 1 on any failure
 node preview/check.js --verbose  # also prints each test's preview stats
 ```
 
-43 assertions across 8 groups: trending render, the filter across all four
-forms, search hit and miss, the empty / error / no-posters / slow scenarios, and
-a rapid filter-switch that exercises the supersede guard. Exit code 1 on any
-failure, so it can gate a commit.
+52 assertions across 9 groups: trending render, the sidebar (four form buttons,
+inert placeholder items, section labels, collapse and card reflow, and the
+active marker), the switcher across all four forms, search hit and miss, the
+empty / error / no-posters / slow scenarios, and a rapid form-switch that
+exercises the supersede guard. Exit code 1 on any failure, so it can gate a
+commit.
 
 It is self-contained: it boots the preview server on an ephemeral port, drives a
 headless Chromium over the DevTools protocol, and shuts both down. No npm
@@ -156,7 +158,7 @@ then the Playwright and Puppeteer caches (so a machine that already runs browser
 tests needs nothing installed). Set `CHROME=/path/to/binary` to force one.
 
 Each assertion is a `check(label, ok, detail)` in a test's `run(page)`. The
-`page` helper gives `settle()`, `stats()`, `dom()`, `setFilter()`, `search()`
+`page` helper gives `settle()`, `stats()`, `dom()`, `selectForm()`, `search()`
 and `evaluate()`. To pin new behaviour, add a test object to `TESTS`.
 
 Two things worth knowing before you write assertions:

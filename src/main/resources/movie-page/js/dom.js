@@ -6,7 +6,8 @@
 export const grid = document.getElementById("movieGrid");
 export const searchInput = document.getElementById("searchInput");
 export const searchBtn = document.getElementById("searchBtn");
-export const contentFilter = document.getElementById("contentFilter");
-export const contentFilterMenu = document.getElementById("contentFilterMenu");
-export const contentFilterLabel = document.getElementById("contentFilterLabel");
 export const sectionTitle = document.getElementById("sectionTitle");
+export const appShell = document.querySelector(".app-shell");
+export const sidebar = document.getElementById("sidebar");
+export const sidebarToggle = document.getElementById("sidebarToggle");
+export const sidebarNav = document.getElementById("sidebarNav");
