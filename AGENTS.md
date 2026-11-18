@@ -10,7 +10,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 - **Input**: A keyword or content name (e.g. `"Inception"`, `"Taylor Swift"`, `"Minecraft"`)
 - **Output**: Related content across Movies, Music, Books, and Games (all four wired)
 - **Mechanism**: The frontend invokes `requestMovies` / `requestGames` / `requestMusic` / `requestBooks` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` drains (`pending` / `done` / `error` / `superseded`); artwork streams through the `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` / `pollBookCovers` drains (emitting `"poster"` / `"gamePoster"` / `"musicPoster"` / `"bookCover"`). Skeleton cards show while a fetch is in flight.
-- **Filter**: Dropdown offers Movie / Music / Book / Game — all four connect to their APIs (TMDB, TheGamesDB, MusicBrainz, Open Library).
+- **Navigation**: a collapsible sidebar switches the content form with one button per form (Music / Movies / Books / Games) — all four connect to their APIs (TMDB, TheGamesDB, MusicBrainz, Open Library). The other menu items (Home, My Lists, Favorites, Settings) and the notification/profile buttons are shell chrome with no backend yet; `Menu` and `Library` are section labels, not destinations.
 
 ### Tech stack
 - **Language**: Java 25 (LTS), compiled with `--release 25`
@@ -47,10 +47,11 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
     `js/app.js`, one file per seam — see "Frontend modules" below): shared card
     grid with per-domain card shapes (movie/game portrait posters, music square
     covers with an artist subtitle, books the Book Card), search bar, artwork
-    rendering. The content filter is a custom DOM dropdown (a `div` — no native
-    `<select>`, therefore **no `.value`**); the selection lives in `state.domain`
-    in `js/state.js`. Read that, never `contentFilter.value` (re-introducing
-    `.value` silently re-breaks the Game filter — it evaluates to `undefined`).
+    rendering. The content-form switcher is the collapsible sidebar: one
+    `.nav-item[data-domain]` button per form (it replaced the old dropdown).
+    The active form lives in `state.domain` in `js/state.js`; `render.js` paints
+    the active button from it, and `js/ui.js` turns a click into the trending
+    load. Buttons without `data-domain` are inert shell chrome.
 - **Features pending**: the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
 
 ### Frontend modules (ES modules, both shells over loopback HTTP)
@@ -65,7 +66,7 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
 - `js/dom.js` `js/util.js` `js/state.js` `js/cards.js` — page elements, helpers, state + request sequence, shared card builders
 - `js/domains/{movie,game,music,book}.js` — one row per form: IPC names, labels, card class, id field, `card(item, idx, onOpen)`, `detail(item)`
 - `js/domains.js` — `DOMAINS` registry (`Object.fromEntries` over the rows) and `DOMAIN_KEYS`
-- `js/artwork.js` `js/detail.js` `js/render.js` `js/content.js` `js/ui.js` — artwork routing, the `openDetail` seam, rendering, request lifecycle, search + filter
+- `js/artwork.js` `js/detail.js` `js/render.js` `js/content.js` `js/ui.js` — artwork routing, the `openDetail` seam, rendering (incl. the active sidebar button), request lifecycle, search + sidebar switching/collapse
 
 Rules that keep the graph acyclic: builders take the row as a parameter
 (`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click
@@ -193,8 +194,9 @@ self-disables when a bridge is present, so no app code changes for this.
 unreproducible (skeletons, empty, error, missing artwork). Fixtures are keyed to
 the real resolved-item shapes and survive the LLM engine slice. `node
 preview/check.js` (Zed task "check UI (headless)") is the same harness driven
-headless: 43 assertions over the card grid, all four forms, search and every
-scenario, exit 1 on failure. Full guide: `docs/preview-harness.md`. Layout,
+headless: 52 assertions over the card grid, the sidebar (form buttons, inert
+items, section labels, collapse/reflow), search and every scenario, exit 1 on
+failure. Full guide: `docs/preview-harness.md`. Layout,
 styling and page JS go through the preview; shell, IPC and network code still
 need a real app run.
 
@@ -251,8 +253,9 @@ To run:
   Maven Central).
 - macOS constraint (jcef windowed rendering): any native NSMenu tracking
   session — the OS app menu bar, the green button's hover menu (fullscreen
-  on/off via the green button), (the native `<select>` popup was the other
-  trigger, now a DOM dropdown) — can trap the AppKit thread permanently.
+  on/off via the green button; the native `<select>` popup was the other
+  trigger, and the page no longer contains a `<select>` — the content switcher
+  is plain sidebar buttons) — can trap the AppKit thread permanently.
   The window stops taking all input while the renderer keeps running; only
   relaunching recovers. Fullscreen: green button only (user decision
   2026-11-14 — no DOM/keyboard toggle); aim-and-click it quickly, a long
