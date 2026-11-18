@@ -191,9 +191,12 @@ refresh instead of `mvn compile exec:exec` plus a native window. `krema-shim.js`
 self-disables when a bridge is present, so no app code changes for this.
 `?scenario=slow|empty|error|noposters` reproduces the states that are otherwise
 unreproducible (skeletons, empty, error, missing artwork). Fixtures are keyed to
-the real resolved-item shapes and survive the LLM engine slice. Full guide:
-`docs/preview-harness.md`. Layout, styling and page JS go through the preview;
-shell, IPC and network code still need a real app run.
+the real resolved-item shapes and survive the LLM engine slice. `node
+preview/check.js` (Zed task "check UI (headless)") is the same harness driven
+headless: 43 assertions over the card grid, all four forms, search and every
+scenario, exit 1 on failure. Full guide: `docs/preview-harness.md`. Layout,
+styling and page JS go through the preview; shell, IPC and network code still
+need a real app run.
 
 ### JCEF experiment (merged to `main` via PR #28; further shell work happens on its own branches)
 

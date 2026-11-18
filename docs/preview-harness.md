@@ -131,6 +131,9 @@ Note that `openDetail` in `js/detail.js` still calls `alert()`, which blocks the
 page in an automated tab. Dismiss it with `browser.dialog`, or read `DOMAINS`
 directly when the detail-view slice replaces that seam.
 
+Those checks are codified in `preview/check.js` (see below), so prefer running
+it over pasting the snippets by hand.
+
 ## Automated checks
 
 ```sh

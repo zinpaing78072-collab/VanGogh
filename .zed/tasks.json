@@ -62,5 +62,14 @@
     "cwd": "/Users/macbookpro/Documents/school-project/van-gogh",
     "use_new_terminal": true,
     "reveal": "always"
+  },
+  // Headless pass/fail over the same preview: no window, exit 1 on any broken
+  // card, artwork, state or form. See docs/preview-harness.md.
+  {
+    "label": "check UI (headless, exit 1 on failure)",
+    "command": "node preview/check.js",
+    "cwd": "/Users/macbookpro/Documents/school-project/van-gogh",
+    "use_new_terminal": true,
+    "reveal": "always"
   }
 ]
