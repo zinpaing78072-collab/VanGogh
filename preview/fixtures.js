@@ -1,0 +1,259 @@
+/* Preview fixtures — the fake payloads the mock bridge serves.
+ *
+ * Loaded as a classic script BEFORE js/app.js, so window.__previewFixtures is
+ * populated by the time the page starts asking for content.
+ *
+ * Item shapes are the REAL resolved-item shapes the controllers hand the page
+ * (see js/cards.js, js/domains/*.js). The upcoming LLM engine picks *titles*
+ * that the content sources resolve into these same objects, so these fixtures
+ * stay valid across that slice — only the picking changes, not the card data.
+ *
+ * Deliberate coverage: long titles, a missing poster, a null rating, a
+ * missing artist, a book with no page count. Those are the cases CSS gets
+ * wrong first, so the preview must reproduce them.
+ */
+(function () {
+    "use strict";
+
+    var movies = [
+        {
+            id: "27205",
+            title: "Inception",
+            year: "2010",
+            rating: 8.4,
+            genre: "Science Fiction",
+            overview: "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O."
+        },
+        {
+            id: "155",
+            title: "The Dark Knight",
+            year: "2008",
+            rating: 8.5,
+            genre: "Action",
+            overview: "Batman raises the stakes in his war on crime when a rising criminal mastermind known as the Joker unleashes chaos on Gotham."
+        },
+        {
+            id: "157336",
+            title: "Interstellar",
+            year: "2014",
+            rating: 8.4,
+            genre: "Adventure",
+            overview: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival."
+        },
+        {
+            id: "680",
+            title: "Pulp Fiction",
+            year: "1994",
+            rating: 8.5,
+            genre: "Thriller",
+            overview: "The lives of two mob hitmen, a boxer, a gangster and his wife intertwine in four tales of violence and redemption."
+        },
+        {
+            id: "238",
+            title: "The Godfather",
+            year: "1972",
+            rating: 8.7,
+            genre: "Crime",
+            overview: "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son."
+        },
+        {
+            // stress: no poster (placeholder path), no rating, no genre
+            id: "278",
+            title: "The Shawshank Redemption",
+            year: "1994",
+            rating: null,
+            genre: "",
+            overview: "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency."
+        }
+    ];
+
+    var games = [
+        {
+            id: "10225",
+            game_title: "Minecraft",
+            year: "2011",
+            rating: 9.2,
+            genre: "Sandbox",
+            overview: "Build, explore and survive in a procedurally generated world made of blocks."
+        },
+        {
+            id: "9034",
+            game_title: "The Legend of Zelda: Breath of the Wild",
+            year: "2017",
+            rating: 9.7,
+            genre: "Action Adventure",
+            overview: "Wake up in a ruined Hyrule and reclaim the kingdom from Calamity Ganon."
+        },
+        {
+            id: "7720",
+            game_title: "Hollow Knight",
+            year: "2017",
+            rating: 9.0,
+            genre: "Metroidvania",
+            overview: "Descend into Hallownest, a ruined insect kingdom, and uncover its secrets."
+        },
+        {
+            // stress: very long single-token title, no rating
+            id: "4411",
+            game_title: "Supercalifragilisticexpialidociousdeluxeultimateedition",
+            year: "2023",
+            rating: null,
+            genre: "Arcade",
+            overview: "A deliberately unbreakable title, to prove the card truncates instead of overflowing."
+        },
+        {
+            id: "5502",
+            game_title: "Stardew Valley",
+            year: "2016",
+            rating: 8.9,
+            genre: "Farming Sim",
+            overview: "Inherit your grandfather's farm and build a new life in the valley."
+        },
+        {
+            id: "3310",
+            game_title: "Elden Ring",
+            year: "2022",
+            rating: 9.5,
+            genre: "Action RPG",
+            overview: "Rise, Tarnished, and be guided by grace to brandish the power of the Elden Ring."
+        }
+    ];
+
+    var music = [
+        {
+            id: "c9f5b1a2-1111-4a3b-9c2d-7e6f5a4b3c2d",
+            title: "Rumours",
+            artist: "Fleetwood Mac",
+            year: "1977",
+            primaryType: "Album",
+            genre: "Rock"
+        },
+        {
+            id: "a1b2c3d4-2222-4e5f-8a9b-0c1d2e3f4a5b",
+            title: "Random Access Memories",
+            artist: "Daft Punk",
+            year: "2013",
+            primaryType: "Album",
+            genre: "Electronic"
+        },
+        {
+            // stress: no artist (Unknown Artist path), no genre
+            id: "b2c3d4e5-3333-4f6a-9b0c-1d2e3f4a5b6c",
+            title: "Untitled Demo Sessions",
+            artist: "",
+            year: "1998",
+            primaryType: "EP",
+            genre: ""
+        },
+        {
+            id: "c3d4e5f6-4444-4a7b-8c1d-2e3f4a5b6c7d",
+            title: "Kind of Blue",
+            artist: "Miles Davis",
+            year: "1959",
+            primaryType: "Album",
+            genre: "Jazz"
+        },
+        {
+            id: "d4e5f6a7-5555-4b8c-9d2e-3f4a5b6c7d8e",
+            title: "The Suburbs",
+            artist: "Arcade Fire",
+            year: "2010",
+            primaryType: "Album",
+            genre: "Indie Rock"
+        },
+        {
+            id: "e5f6a7b8-6666-4c9d-8e3f-4a5b6c7d8e9f",
+            title: "Blue Train",
+            artist: "John Coltrane",
+            year: "1958",
+            primaryType: "Album",
+            genre: "Jazz"
+        }
+    ];
+
+    var books = [
+        {
+            workKey: "OL82563W",
+            title: "The Lord of the Rings",
+            author: "J. R. R. Tolkien",
+            year: "1954",
+            rating: 4.5,
+            pages: 1216,
+            editionCount: 312,
+            subjects: "Fantasy, Adventure, Epic",
+            firstSentence: "When Mr. Bilbo Baggins of Bag End announced that he would shortly be celebrating his eleventy-first birthday..."
+        },
+        {
+            workKey: "OL1168007W",
+            title: "Dune",
+            author: "Frank Herbert",
+            year: "1965",
+            rating: 4.2,
+            pages: 688,
+            editionCount: 208,
+            subjects: "Science Fiction, Politics, Ecology",
+            firstSentence: "In the week before their departure to Arrakis, when all the final scurrying about had reached a nearly unbearable frenzy..."
+        },
+        {
+            // stress: no page count, no first sentence, no rating
+            workKey: "OL7890123W",
+            title: "A Very Long Book Title That Will Not Fit On One Line No Matter How Wide The Card Is",
+            author: "An Author With An Unusually Long Name",
+            year: "2019",
+            rating: null,
+            pages: null,
+            editionCount: null,
+            subjects: null,
+            firstSentence: null
+        },
+        {
+            workKey: "OL27448W",
+            title: "The Great Gatsby",
+            author: "F. Scott Fitzgerald",
+            year: "1925",
+            rating: 3.9,
+            pages: 180,
+            editionCount: 640,
+            subjects: "Classics, American Literature",
+            firstSentence: "In my younger and more vulnerable years my father gave me some advice that I've been turning over in my mind ever since."
+        },
+        {
+            workKey: "OL1513254W",
+            title: "Neuromancer",
+            author: "William Gibson",
+            year: "1984",
+            rating: 4.0,
+            pages: 271,
+            editionCount: 97,
+            subjects: "Cyberpunk, Science Fiction",
+            firstSentence: "The sky above the port was the color of television, tuned to a dead channel."
+        },
+        {
+            workKey: "OL48029W",
+            title: "One Hundred Years of Solitude",
+            author: "Gabriel García Márquez",
+            year: "1967",
+            rating: 4.3,
+            pages: 417,
+            editionCount: 154,
+            subjects: "Magical Realism, Latin American Literature",
+            firstSentence: "Many years later, as he faced the firing squad, Colonel Aureliano Buendía was to remember that distant afternoon..."
+        }
+    ];
+
+    window.__previewFixtures = {
+        movie: movies,
+        game: games,
+        music: music,
+        book: books,
+
+        /* The plural + label the app shows in the section title, so the mock can
+         * honour the same wording the real controllers produce. */
+        labels: {
+            movie: { plural: "Movies", empty: "movies" },
+            game: { plural: "Games", empty: "games" },
+            music: { plural: "Music", empty: "albums" },
+            book: { plural: "Books", empty: "books" }
+        }
+    };
+})();

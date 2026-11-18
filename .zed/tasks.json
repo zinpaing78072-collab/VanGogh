@@ -52,5 +52,15 @@
     "use_new_terminal": false,
     "reveal": "always",
     "tags": ["java-main"]
+  },
+  // UI loop without Maven, without a native window: the real page from
+  // src/main/resources/movie-page with the mock IPC bridge injected. Refresh
+  // to see a CSS or JS edit. See docs/preview-harness.md.
+  {
+    "label": "preview UI (browser, mock IPC)",
+    "command": "node preview/serve.js",
+    "cwd": "/Users/macbookpro/Documents/school-project/van-gogh",
+    "use_new_terminal": true,
+    "reveal": "always"
   }
 ]

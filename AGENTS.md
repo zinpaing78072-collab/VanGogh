@@ -182,6 +182,19 @@ before starting the next. Never expand scope mid-slice.
   `window.krema.on("poster", …)` / `window.krema.on("gamePoster", …)` events
   emitted by the drains on the UI thread.
 
+### UI preview harness (browser, mock IPC)
+
+`node preview/serve.js` (Zed task "preview UI (browser, mock IPC)") serves the
+**real** page from `src/main/resources/movie-page/` over loopback HTTP with a
+fake `window.krema` injected, so CSS and page-side JS iterate on a browser
+refresh instead of `mvn compile exec:exec` plus a native window. `krema-shim.js`
+self-disables when a bridge is present, so no app code changes for this.
+`?scenario=slow|empty|error|noposters` reproduces the states that are otherwise
+unreproducible (skeletons, empty, error, missing artwork). Fixtures are keyed to
+the real resolved-item shapes and survive the LLM engine slice. Full guide:
+`docs/preview-harness.md`. Layout, styling and page JS go through the preview;
+shell, IPC and network code still need a real app run.
+
 ### JCEF experiment (merged to `main` via PR #28; further shell work happens on its own branches)
 
 A standalone shell swap that replaces Krema's OS system webview with a bundled
