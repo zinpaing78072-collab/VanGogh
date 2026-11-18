@@ -1,6 +1,6 @@
 /* Van Gogh JCEF shim: implements the window.krema API on top of CEF.
  *
- * The page (app.js) expects:
+ * The page (js/app.js and the modules it imports) expects:
  *   window.krema.invoke("requestMovies", {kind, query}) → Promise<list>
  *   window.krema.invoke("requestGames",  {kind, query}) → Promise<list>
  *   window.krema.invoke("requestBooks",  {kind, query}) → Promise<generation>
@@ -16,6 +16,13 @@
  */
 
 (function () {
+    // The Krema shell injects its own native bridge before any page script
+    // (IpcHandler.initialize runs before window.navigate), so this file is
+    // inert there. Only the JCEF shell, which has no native bridge, needs it.
+    if (window.krema && typeof window.krema.invoke === "function") {
+        return;
+    }
+
     var seq = 0;
     var pending = {};
     var handlers = {};
