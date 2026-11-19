@@ -16,7 +16,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 - **Language**: Java 25 (LTS), compiled with `--release 25`
 - **UI framework**: Krema 0.3.2 (system webview)
 - **Frontend**: HTML/CSS/JS served from classpath (`src/main/resources/movie-page/`)
-- **HTTP client**: Java 17+ `java.net.http.HttpClient` (Gson for JSON parsing)
+- **HTTP client**: Java 17+ `java.net.http.HttpClient` (Gson for JSON parsing) for the content sources; the LLM slice uses the official `com.openai:openai-java` SDK (OkHttp + Jackson) with `baseUrl` pointed at any OpenAI-compatible endpoint
 - **Data sources**: TMDB (The Movie Database) for movies, TheGamesDB for games, MusicBrainz (+ Cover Art Archive) for music, Open Library (+ Open Library Covers) for books
 - **Poster proxy**: `wsrv.nl` with persistent user preference stored in `~/.van-gogh/poster-proxy.conf`. Needed because `image.tmdb.org` is unreachable from this machine/ISP (TLS dies mid-handshake; `api.themoviedb.org` works) — poster loading depends on the proxy failover, see team-vault "Debug Record — TMDB posters blocked".
 - **Tests**: JUnit 5; all network calls stubbed (no real TMDB API keys needed)

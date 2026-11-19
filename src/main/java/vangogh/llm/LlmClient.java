@@ -1,144 +1,164 @@
 package vangogh.llm;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import io.vavr.control.Try;
-import vangogh.net.ApiResponse;
+import com.openai.client.OpenAIClient;
+import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.core.Sleeper;
+import com.openai.errors.OpenAIIoException;
+import com.openai.errors.OpenAIException;
+import com.openai.errors.OpenAIServiceException;
+import com.openai.errors.RateLimitException;
+import com.openai.models.chat.completions.ChatCompletion;
+import com.openai.models.chat.completions.ChatCompletionCreateParams;
+import io.vavr.control.Either;
+import vangogh.error.FetchError;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Optional;
 
 /**
- * Minimal OpenAI-compatible chat-completions client, ported from the
- * connection-tester probe. Deliberately no JSON mode / structured outputs:
- * many compatible servers lack them, and the contract is plain text
- * ({@code title | disambiguator} per line) anyway.
+ * OpenAI-compatible chat-completions client built on the official
+ * {@code com.openai:openai-java} SDK. The SDK owns transport, JSON, auth and
+ * retries (exponential backoff, {@code Retry-After}); this class only maps its
+ * typed errors onto {@link FetchError} values and hands the assistant text to
+ * the recommendation pipeline.
  *
- * <p>Transport failures are {@code Try.failure}; HTTP statuses are values
- * ({@link ApiResponse}) so the caller can classify expected failures (401, 429)
- * without exceptions. Free providers throttle hard, so 429/5xx are retried with
- * backoff instead of failing the request.
+ * <p>The base URL comes from {@link LlmConfig}, so any compatible endpoint
+ * works — the SDK is not bound to api.openai.com. Structured outputs are still
+ * deliberately unused: many compatible servers lack them, and the contract is
+ * plain text ({@code title | disambiguator} per line).
  *
- * <p>{@code InterruptedException} is handled here, not thrown: vavr's
- * {@code Try} treats it as fatal and rethrows it sneakily, which would escape
- * the value-based pipeline. The interrupt flag is restored and a normal
- * failure is returned.
+ * <p>Failures are values, never exceptions. A final 429 becomes the friendly
+ * rate-limit message the page shows; other statuses carry the HTTP code and a
+ * body excerpt; IO failures are {@link FetchError.Transport}; an unreadable
+ * 2xx reply is {@link FetchError.Payload}.
+ *
+ * <p>{@code InterruptedException} is re-flagged at this boundary: the SDK wraps
+ * it in an IO exception, and vavr treats interrupts as fatal, so the flag is
+ * restored before the failure travels on as a value.
  */
 public class LlmClient {
 
-    /** Free providers answer 429 on the second call; back off instead of failing. */
-    private static final long[] BACKOFF_MS = {3000, 8000, 20000, 45000};
+    /** The SDK retries 429/5xx itself; four retries cover the free tier's bursts. */
+    static final int MAX_RETRIES = 4;
 
-    private final HttpClient http = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(10))
-            .build();
+    /** Free-tier models need some invention; the prompt pins the format, not the choice. */
+    private static final double TEMPERATURE = 0.7;
 
-    private final long[] backoffMs;
+    private static final int BODY_EXCERPT = 300;
+
+    /** Null means "let the SDK use its own sleeper"; tests inject a no-wait one. */
+    private final Sleeper sleeper;
+
+    private Cached cached;
 
     public LlmClient() {
-        this(BACKOFF_MS);
+        this(null);
     }
 
-    /** Package-private seam: tests retry with no real waiting. */
-    LlmClient(long... backoffMs) {
-        this.backoffMs = backoffMs;
+    /** Test seam: a no-op sleeper keeps the SDK's retry backoff out of `mvn test`. */
+    LlmClient(Sleeper sleeper) {
+        this.sleeper = sleeper;
     }
 
-    public Try<ApiResponse> complete(LlmConfig config, String system, String user) {
-        HttpRequest request;
+    /**
+     * One chat-completions request. The assistant text is the {@code Right};
+     * every expected failure is a {@code Left} the caller can render.
+     */
+    public Either<FetchError, String> complete(LlmConfig config, String system, String user) {
+        ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
+                .model(config.model())
+                .temperature(TEMPERATURE)
+                .addSystemMessage(system)
+                .addUserMessage(user)
+                .build();
+
         try {
-            request = HttpRequest.newBuilder()
-                    .uri(URI.create(config.baseUrl() + "/chat/completions"))
-                    .timeout(Duration.ofSeconds(config.timeoutSeconds()))
-                    .header("Authorization", "Bearer " + config.apiKey())
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body(config, system, user)))
-                    .build();
+            ChatCompletion completion = clientFor(config).chat().completions().create(params);
+            return contentOf(completion)
+                    .<Either<FetchError, String>>map(Either::right)
+                    .orElseGet(() -> Either.left(new FetchError.Payload(
+                            "LLM", "chat completions",
+                            new IllegalStateException("reply has no content"))));
+        } catch (RateLimitException e) {
+            // The free tier's most common answer. Name it in demo language
+            // instead of leaking a raw HTTP status onto the card grid.
+            return Either.left(new FetchError.BadInput(
+                    "AI recommendations", "rate-limited — try again in a minute"));
+        } catch (OpenAIServiceException e) {
+            return Either.left(new FetchError.HttpStatus(
+                    "LLM", e.statusCode(), excerpt(e.body())));
+        } catch (OpenAIIoException e) {
+            restoreInterrupt(e);
+            return Either.left(new FetchError.Transport("LLM request", e));
+        } catch (OpenAIException e) {
+            return Either.left(new FetchError.Payload("LLM", "chat completions", e));
         } catch (RuntimeException e) {
-            return Try.failure(e);
-        }
-
-        try {
-            for (int attempt = 0; ; attempt++) {
-                HttpResponse<String> response =
-                        http.send(request, HttpResponse.BodyHandlers.ofString());
-                int status = response.statusCode();
-                boolean retryable = status == 429 || status >= 500;
-                if (retryable && attempt < backoffMs.length) {
-                    Thread.sleep(Math.max(backoffMs[attempt], retryAfterMs(response)));
-                    continue;
-                }
-                return Try.success(new ApiResponse(status, response.body(), null));
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return Try.failure(new IllegalStateException("LLM call interrupted", e));
-        } catch (Exception e) {
-            return Try.failure(e);
+            restoreInterrupt(e);
+            return Either.left(new FetchError.Transport("LLM request", e));
         }
     }
 
     /**
-     * The assistant text of a chat-completions body. Public so the
-     * recommendation service can classify a bad shape as {@code Payload}
-     * instead of a transport error.
+     * The first assistant text, if the reply has one. Package-private so the
+     * transport tests can pin the empty-choices and null-content cases.
      */
-    public static String contentOf(String body) {
-        JsonObject root = JsonParser.parseString(body).getAsJsonObject();
-        JsonArray choices = root.has("choices") && root.get("choices").isJsonArray()
-                ? root.getAsJsonArray("choices")
-                : new JsonArray();
-        if (choices.size() == 0) {
-            throw new IllegalStateException("LLM reply has no choices: " + truncate(body));
+    static Optional<String> contentOf(ChatCompletion completion) {
+        if (completion.choices().isEmpty()) {
+            return Optional.empty();
         }
-        JsonObject message = choices.get(0).isJsonObject()
-                ? choices.get(0).getAsJsonObject().getAsJsonObject("message")
-                : null;
-        if (message == null || !message.has("content") || message.get("content").isJsonNull()) {
-            throw new IllegalStateException("LLM reply has no content: " + truncate(body));
+        return completion.choices().get(0).message().content();
+    }
+
+    /**
+     * One SDK client per distinct config. Rebuilding per call would leak an
+     * OkHttp connection pool and dispatcher every time; the config is stable
+     * in practice, so a single cached client is enough.
+     */
+    private synchronized OpenAIClient clientFor(LlmConfig config) {
+        ClientKey key = new ClientKey(
+                config.baseUrl(), config.apiKey(), config.timeoutSeconds());
+        if (cached != null && cached.key().equals(key)) {
+            return cached.client();
         }
-        return message.get("content").getAsString();
-    }
-
-    private static String body(LlmConfig config, String system, String user) {
-        JsonObject body = new JsonObject();
-        body.addProperty("model", config.model());
-        body.addProperty("temperature", 0.7);
-
-        JsonArray messages = new JsonArray();
-        messages.add(message("system", system));
-        messages.add(message("user", user));
-        body.add("messages", messages);
-        return body.toString();
-    }
-
-    private static JsonObject message(String role, String content) {
-        JsonObject message = new JsonObject();
-        message.addProperty("role", role);
-        message.addProperty("content", content);
-        return message;
-    }
-
-    private static long retryAfterMs(HttpResponse<String> response) {
-        return response.headers().firstValue("Retry-After")
-                .map(value -> {
-                    try {
-                        return Long.parseLong(value.trim()) * 1000L;
-                    } catch (NumberFormatException e) {
-                        return 0L;
-                    }
-                })
-                .orElse(0L);
-    }
-
-    private static String truncate(String value) {
-        if (value == null) {
-            return "null";
+        if (cached != null) {
+            cached.client().close();
         }
-        return value.length() > 400 ? value.substring(0, 400) + "…" : value;
+
+        OpenAIOkHttpClient.Builder builder = OpenAIOkHttpClient.builder()
+                .apiKey(config.apiKey())
+                .baseUrl(config.baseUrl())
+                .timeout(Duration.ofSeconds(config.timeoutSeconds()))
+                .maxRetries(MAX_RETRIES);
+        if (sleeper != null) {
+            builder.sleeper(sleeper);
+        }
+
+        cached = new Cached(key, builder.build());
+        return cached.client();
     }
+
+    private static void restoreInterrupt(Throwable error) {
+        for (Throwable cause = error; cause != null; cause = cause.getCause()) {
+            if (cause instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
+    private static String excerpt(Object body) {
+        String text = body == null ? "null" : body.toString();
+        return text.length() > BODY_EXCERPT ? text.substring(0, BODY_EXCERPT) + "…" : text;
+    }
+
+    private record ClientKey(String baseUrl, String apiKey, int timeoutSeconds) {
+        /** Same rule as {@link LlmConfig}: a key must never reach a log line. */
+        @Override
+        public String toString() {
+            return "ClientKey[baseUrl=" + baseUrl + ", timeoutSeconds=" + timeoutSeconds
+                    + ", apiKey=***]";
+        }
+    }
+
+    private record Cached(ClientKey key, OpenAIClient client) {}
 }
