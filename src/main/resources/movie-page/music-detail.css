@@ -1,10 +1,11 @@
 /* Song detail + demo player (the screen behind a music card click).
  *
- * Same Starry Night glass as style.css: the detail panels reuse --panel,
+ * Same Starry Night glass as style.css: the detail tiles reuse --panel,
  * --border and the gold accent; the sidebar/header are the app shell and are
- * untouched here. Layout follows music-details.pen: artwork + info + credits,
- * the lyrics panel in the middle, the related rail on the right, and the
- * player bar pinned to the bottom of the content column.
+ * untouched here. Layout follows prototypes/song-detail-layouts/bento.html:
+ * a 12-column dashboard with cover / identity / details on the first row,
+ * lyrics + About in the middle and credits + related below. The player bar
+ * stays pinned to the bottom of the content column.
  */
 
 /* ------------------------------------------------------------ detail shell */
@@ -57,32 +58,117 @@
     text-shadow: 0 1px 12px rgba(4, 8, 18, 0.95), 0 1px 3px rgba(4, 8, 18, 0.9);
 }
 
-.song-layout {
+/* ------------------------------------------------------------- bento grid
+ * Tiles are named areas, so the same markup can reflow from the wide
+ * dashboard to a 6-column tablet arrangement to a single stack without the
+ * page-side JS knowing anything about the layout.
+ */
+
+.song-bento {
     display: grid;
-    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr) minmax(260px, 320px);
-    gap: 26px;
-    align-items: start;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-areas:
+        "cover cover cover head head head head head head details details details"
+        "lyrics lyrics lyrics lyrics lyrics lyrics about about about about about about"
+        "lyrics lyrics lyrics lyrics lyrics lyrics credits credits credits related related related";
+    gap: 14px;
+    align-items: stretch;
 }
 
+.song-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    min-height: 0;
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* The artwork is its own tile: no surface behind it, the cover carries the
+ * border and shadow. */
+.song-tile.t-cover {
+    grid-area: cover;
+    align-self: start;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+.t-cover .song-artwork {
+    width: 100%;
+}
+
+.song-tile.t-head {
+    grid-area: head;
+    justify-content: center;
+    gap: 12px;
+}
+
+.song-tile.t-details { grid-area: details; }
+.song-tile.t-lyrics  { grid-area: lyrics; }
+.song-tile.t-about   { grid-area: about; }
+.song-tile.t-credits { grid-area: credits; }
+.song-tile.t-related { grid-area: related; }
+
+.t-head .song-title { margin: 0; }
+.t-head .song-artist-row { margin-top: 0; }
+.t-head .song-actions { margin-top: 2px; }
+.t-head .song-listen { margin-top: 0; }
+
+/* Stats and swatches are tile rows, not separate surfaces: the tile's gap is
+   their spacing, and the stats keep a hairline separator. */
+.t-details .song-stats,
+.t-details .song-palette { margin-top: 0; }
+
+/* Default window with the sidebar open lands here: the dashboard folds into
+ * a 6-column arrangement, cover + identity on top and the rest in rows. */
 @media (max-width: 1400px) {
-    .song-layout { grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); }
-    .related-panel { grid-column: 1 / -1; }
+    .song-bento {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-areas:
+            "cover cover head head head head"
+            "details details details details details details"
+            "lyrics lyrics lyrics lyrics lyrics lyrics"
+            "about about about about about about"
+            "credits credits credits related related related";
+    }
+
+    /* Full-width details row has room for four meta columns. */
+    .song-bento .song-meta-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .song-bento .song-meta-cell.wide {
+        grid-column: 1 / -1;
+    }
 }
 
 @media (max-width: 1000px) {
-    .song-layout { grid-template-columns: minmax(0, 1fr); }
-    .related-panel { grid-column: auto; }
+    .song-bento {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "cover"
+            "head"
+            "details"
+            "lyrics"
+            "about"
+            "credits"
+            "related";
+        gap: 12px;
+    }
+
+    .song-tile.t-cover { max-width: 340px; }
     .song-view { padding: 16px 16px 24px; }
+    .song-bento .song-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .song-bento .t-related .related-list { max-height: none; }
 }
 
 /* ---------------------------------------------------------------- artwork */
-
-.song-column {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    min-width: 0;
-}
 
 .song-artwork {
     position: relative;
@@ -158,13 +244,35 @@
 
 /* -------------------------------------------------------------- song info */
 
+/* Identity kicker: "Song · Midnights · 2022", above the title. */
+.song-kicker {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--star-blue-lt);
+}
+
+.song-kicker .chip {
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: #cfe0f2;
+    border: 1px solid var(--border-strong);
+    background: rgba(12, 21, 36, 0.45);
+}
+
 .song-title {
-    font-size: 30px;
-    line-height: 1.15;
-    letter-spacing: -0.6px;
-    font-weight: 700;
+    font-size: clamp(30px, 3.1vw, 44px);
+    line-height: 1.05;
+    letter-spacing: -1px;
+    font-weight: 800;
     color: var(--text);
-    text-shadow: 0 2px 20px rgba(4, 8, 18, 0.7);
+    text-shadow: 0 2px 24px rgba(4, 8, 18, 0.75);
     overflow-wrap: anywhere;
 }
 
@@ -230,15 +338,13 @@ a.song-artist:hover {
     backdrop-filter: blur(6px);
 }
 
+/* Meta grid lives inside the Details tile, so the tile carries the surface;
+ * the grid itself is bare. Four columns in the wide tablet row, two in the
+ * narrow desktop tile, two again when stacked. */
 .song-meta-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px 16px;
-    margin-top: 18px;
-    padding: 16px;
-    border-radius: 12px;
-    background: var(--panel);
-    border: 1px solid var(--border);
 }
 
 .song-meta-cell {
@@ -345,6 +451,23 @@ a.song-artist:hover {
     background: rgba(216, 169, 49, 0.10);
 }
 
+/* The Play pill that sits in the identity tile (the artwork keeps its own
+ * round play button). */
+.song-action-primary {
+    border: none;
+    background-image: linear-gradient(180deg, var(--star-gold-lt) 0%, var(--star-gold) 100%);
+    color: var(--accent-ink);
+    box-shadow: 0 10px 24px -12px rgba(216, 169, 49, 0.9);
+}
+
+.song-action-primary:hover,
+.song-action-primary.active {
+    border: none;
+    color: var(--accent-ink);
+    background-image: linear-gradient(180deg, var(--star-gold-lt) 0%, var(--star-gold) 100%);
+    filter: brightness(1.07);
+}
+
 /* --------------------------------------------------------------- listen row */
 
 .song-listen {
@@ -391,10 +514,8 @@ a.song-artist:hover {
     flex-wrap: wrap;
     gap: 6px 14px;
     margin-top: 14px;
-    padding: 9px 12px;
-    border-radius: 10px;
-    background: var(--panel);
-    border: 1px solid var(--border);
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
     font-size: 11px;
     letter-spacing: 0.03em;
     color: var(--text-muted);
@@ -407,14 +528,27 @@ a.song-artist:hover {
     font-variant-numeric: tabular-nums;
 }
 
+/* Artwork palette swatches in the Details tile (secondary tile content, not a
+ * control: the palette is already applied to the cover tint). */
+.song-palette {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.palette-chip {
+    flex: 1 1 0;
+    height: 34px;
+    min-width: 0;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
 .song-credits {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 14px 16px;
-    border-radius: 12px;
-    background: var(--panel);
-    border: 1px solid var(--border);
 }
 
 .credit-row {
@@ -487,16 +621,7 @@ a.song-artist:hover {
     color: var(--text-muted);
 }
 
-/* ---------------------------------------------------------------- panels */
-
-.song-panel {
-    border-radius: 14px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    padding: 20px 22px;
-    min-width: 0;
-}
+/* -------------------------------------------------------------- tile heads */
 
 .song-panel-head {
     display: flex;
@@ -553,11 +678,18 @@ a.song-artist:hover {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    max-height: 620px;
+    min-height: 220px;
+    max-height: 640px;
     overflow-y: auto;
-    padding: 14px 4px 4px 0;
+    padding: 2px 4px 4px 0;
     mask-image: linear-gradient(180deg, #000 0%, #000 92%, transparent 100%);
     -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 92%, transparent 100%);
+}
+
+/* The lyrics tile spans two grid rows, so its list fills whatever height the
+   About + Credits/Related rows give it. */
+.t-lyrics .lyrics-list {
+    flex: 1 1 auto;
 }
 
 .lyrics-line {
@@ -617,7 +749,14 @@ a.song-artist:hover {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding-top: 10px;
+    padding-top: 2px;
+}
+
+/* The rail caps its height inside the tile so the credits row next to it is
+ * not stretched by eight related entries; the Genius link below stays put. */
+.t-related .related-list {
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .related-row {
@@ -738,19 +877,19 @@ a.song-artist:hover {
 
 /* ------------------------------------------------------------ about panel */
 
-/* Sits under the three columns, spanning the grid: the editorial copy Genius
-   carries for the song, collapsed to a few lines with a Read more toggle. */
-.song-about {
-    grid-column: 1 / -1;
-}
-
+/* The About tile sits in the grid's `about` area; the copy keeps a readable
+   measure and collapses to a few lines with a Read more toggle. */
 .about-body {
     position: relative;
-    max-width: 78ch;
-    padding-top: 14px;
+    max-width: 72ch;
     font-size: 14px;
     line-height: 1.65;
     color: #c6d8ea;
+}
+
+.t-about .about-toggle {
+    margin-top: 0;
+    align-self: flex-start;
 }
 
 .about-body:not(.expanded) {

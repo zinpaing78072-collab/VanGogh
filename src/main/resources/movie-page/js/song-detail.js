@@ -1,11 +1,13 @@
 /* Song detail view (the page behind a music card click).
  *
- * One content form for now: the design's Music Details screen (left column
- * artwork + info + credits, middle lyrics, right related rail) and the demo
- * player bar. Data arrives from the Genius detail command — the request kicks
- * off the IO-pool fetch, this module polls `pollSongDetail`, and the view
- * paints once the reply is done. Lyrics, duration and audio are dummy data
- * (the backend marks them so); the player is a UI-only timer.
+ * One content form for now, assembled as the bento layout from
+ * prototypes/song-detail-layouts/bento.html: a 12-column dashboard of tiles
+ * (cover / identity / details on top, lyrics + About in the middle, credits +
+ * related below), every component visible at once. Data arrives from the
+ * Genius detail command — the request kicks off the IO-pool fetch, this module
+ * polls `pollSongDetail`, and the view paints once the reply is done. Lyrics,
+ * duration and audio are dummy data (the backend marks them so); the player is
+ * a UI-only timer.
  *
  * What Genius fills beyond the basics: the full credit bill (behind an
  * expander), the editorial "About this song" text, listen/watch links, the
@@ -127,24 +129,31 @@ function backRow() {
 
 function loadingMarkup(song) {
     return `${backRow()}
-        <div class="song-layout">
-            <div class="song-column">
+        <div class="song-bento">
+            <div class="song-tile t-cover">
                 <div class="song-artwork loading">
                     <div class="poster-placeholder">${DISC}</div>
                 </div>
-                <div class="song-info">
-                    <h1 class="song-title">${escapeHtml(song.title || "Untitled")}</h1>
-                    <div class="song-artist">${escapeHtml(song.artist || "")}</div>
-                    <p class="song-loading-note">Loading song details&hellip;</p>
+            </div>
+            <div class="song-tile t-head">
+                <div class="song-kicker"><span>Song</span></div>
+                <h1 class="song-title">${escapeHtml(song.title || "Untitled")}</h1>
+                <div class="song-artist">${escapeHtml(song.artist || "")}</div>
+                <p class="song-loading-note">Loading song details&hellip;</p>
+            </div>
+            <div class="song-tile t-details">
+                <div class="song-panel-head"><h2>Details</h2></div>
+                <div class="lyrics-skeleton">
+                    ${Array.from({ length: 4 }, (_, i) => `<div class="skeleton-line" style="width:${70 - i * 8}%"></div>`).join("")}
                 </div>
             </div>
-            <section class="song-panel lyrics-panel">
+            <section class="song-tile t-lyrics">
                 <div class="song-panel-head"><h2>Lyrics</h2></div>
                 <div class="lyrics-skeleton">
                     ${Array.from({ length: 8 }, (_, i) => `<div class="skeleton-line" style="width:${88 - i * 6}%"></div>`).join("")}
                 </div>
             </section>
-            <aside class="song-panel related-panel">
+            <aside class="song-tile t-related">
                 <div class="song-panel-head"><h2>Related Songs</h2></div>
                 <div class="related-skeleton">
                     ${Array.from({ length: 5 }, () => `<div class="related-skeleton-row"><div class="skeleton-thumb"></div><div class="skeleton-line" style="width:60%"></div></div>`).join("")}
@@ -180,6 +189,26 @@ function paletteStyle(detail) {
     ].filter(([, value]) => HEX_COLOR.test(String(value || "")));
     if (!vars.length) return "";
     return ` style="${vars.map(([name, value]) => `${name}:${value}`).join(";")}"`;
+}
+
+/* Identity kicker above the title: what kind of page this is, the album and
+ * the year, all of which Genius already supplies. */
+function kickerMarkup(detail) {
+    const parts = ["<span>Song</span>"];
+    if (detail.album) parts.push(`<span class="chip">${escapeHtml(detail.album)}</span>`);
+    if (detail.year) parts.push(`<span class="chip">${escapeHtml(String(detail.year))}</span>`);
+    return `<div class="song-kicker">${parts.join("")}</div>`;
+}
+
+/* The artwork's own palette, shown as three swatches in the Details tile.
+ * Purely informational, so it disappears when Genius carries no colours. */
+function paletteMarkup(detail) {
+    const colors = [detail.artPrimaryColor, detail.artSecondaryColor, detail.artTextColor]
+        .filter((value) => HEX_COLOR.test(String(value || "")));
+    if (!colors.length) return "";
+    return `<div class="song-palette" aria-label="Artwork palette">
+        ${colors.map((color) => `<span class="palette-chip" style="background:${color}" title="${color}"></span>`).join("")}
+    </div>`;
 }
 
 function artistMarkup(detail) {
@@ -330,7 +359,7 @@ function aboutMarkup(detail) {
     if (!paragraphs.length) return "";
     // Collapse only when there is actually something hidden behind the fade.
     const needsToggle = paragraphs.length > 2 || paragraphs[0].length > 420;
-    return `<section class="song-panel song-about" aria-labelledby="aboutHeading">
+    return `<section class="song-tile t-about" aria-labelledby="aboutHeading">
                 <div class="song-panel-head">
                     <h2 id="aboutHeading">About this song</h2>
                     <span class="song-panel-sub">Genius editorial</span>
@@ -345,9 +374,10 @@ function aboutMarkup(detail) {
 function detailMarkup(s) {
     const d = s.detail;
     const featured = creditNames(d.featuredArtists);
+    const geniusHref = secureLink(d.geniusUrl);
     return `${backRow()}
-        <div class="song-layout">
-            <div class="song-column">
+        <div class="song-bento">
+            <div class="song-tile t-cover">
                 <div class="song-artwork"${paletteStyle(d)}>
                     <img class="song-art-img hidden" alt="${escapeHtml(d.title)} cover">
                     <div class="poster-placeholder">${DISC}</div>
@@ -355,39 +385,47 @@ function detailMarkup(s) {
                     <span class="song-tag">SONG${d.year ? " &middot; " + d.year : ""}</span>
                     <button type="button" class="song-play" data-action="play" aria-label="Play">${PLAY_ICON}</button>
                 </div>
-                <div class="song-info">
-                    <h1 class="song-title">${escapeHtml(d.title)}</h1>
-                    <div class="song-artist-row">
-                        ${artistMarkup(d)}
-                        ${d.lyricsState === "complete" ? `<span class="song-chip">Lyrics on Genius</span>` : ""}
-                    </div>
-                    <div class="song-meta-grid">
-                        ${albumCell(d)}
-                        <div class="song-meta-cell"><span class="k">Released</span><span class="v">${escapeHtml(d.releaseDateDisplay || d.releaseDate || "–")}</span></div>
-                        <div class="song-meta-cell"><span class="k">Pageviews</span><span class="v">${formatCount(d.pageviews)}</span></div>
-                        <div class="song-meta-cell"><span class="k">Duration</span><span class="v">${formatTime(d.durationSeconds)} <span class="dummy-mark">demo</span></span></div>
-                        ${d.recordingLocation ? `<div class="song-meta-cell wide"><span class="k">Recorded at</span><span class="v">${escapeHtml(d.recordingLocation)}</span></div>` : ""}
-                    </div>
-                    <div class="song-actions">
-                        <button type="button" class="song-action" data-action="favorite">
-                            <span aria-hidden="true">&#9825;</span> Favorite
-                        </button>
-                        <button type="button" class="song-action" data-action="playlist">
-                            <span aria-hidden="true">+</span> Add to playlist
-                        </button>
-                    </div>
-                    ${listenMarkup(d.media)}
-                    ${statsMarkup(d)}
-                </div>
-                <div class="song-credits">
-                    <div class="credit-row"><span class="k">WRITTEN BY</span><span class="v">${escapeHtml(creditNames(d.writers))}</span></div>
-                    <div class="credit-row"><span class="k">PRODUCED BY</span><span class="v">${escapeHtml(creditNames(d.producers))}</span></div>
-                    ${featured !== "–" ? `<div class="credit-row"><span class="k">FEATURING</span><span class="v">${escapeHtml(featured)}</span></div>` : ""}
-                    ${creditsMarkup(d.credits)}
-                </div>
             </div>
 
-            <section class="song-panel lyrics-panel" aria-labelledby="lyricsHeading">
+            <div class="song-tile t-head">
+                ${kickerMarkup(d)}
+                <h1 class="song-title">${escapeHtml(d.title)}</h1>
+                <div class="song-artist-row">
+                    ${artistMarkup(d)}
+                    ${d.lyricsState === "complete" ? `<span class="song-chip">Lyrics on Genius</span>` : ""}
+                </div>
+                <div class="song-actions">
+                    <button type="button" class="song-action song-action-primary" data-action="play">
+                        <span aria-hidden="true">${PLAY_ICON}</span> Play
+                    </button>
+                    <button type="button" class="song-action" data-action="favorite">
+                        <span aria-hidden="true">&#9825;</span> Favorite
+                    </button>
+                    <button type="button" class="song-action" data-action="playlist">
+                        <span aria-hidden="true">+</span> Add to playlist
+                    </button>
+                    ${geniusHref ? `<a class="song-action" href="${geniusHref}" target="_blank" rel="noopener">Genius <span aria-hidden="true">&#8599;</span></a>` : ""}
+                </div>
+                ${listenMarkup(d.media)}
+            </div>
+
+            <div class="song-tile t-details" aria-labelledby="detailsHeading">
+                <div class="song-panel-head">
+                    <h2 id="detailsHeading">Details</h2>
+                    <span class="song-panel-sub">Genius</span>
+                </div>
+                <div class="song-meta-grid">
+                    ${albumCell(d)}
+                    <div class="song-meta-cell"><span class="k">Released</span><span class="v">${escapeHtml(d.releaseDateDisplay || d.releaseDate || "–")}</span></div>
+                    <div class="song-meta-cell"><span class="k">Pageviews</span><span class="v">${formatCount(d.pageviews)}</span></div>
+                    <div class="song-meta-cell"><span class="k">Duration</span><span class="v">${formatTime(d.durationSeconds)} <span class="dummy-mark">demo</span></span></div>
+                    ${d.recordingLocation ? `<div class="song-meta-cell wide"><span class="k">Recorded at</span><span class="v">${escapeHtml(d.recordingLocation)}</span></div>` : ""}
+                </div>
+                ${statsMarkup(d)}
+                ${paletteMarkup(d)}
+            </div>
+
+            <section class="song-tile t-lyrics" aria-labelledby="lyricsHeading">
                 <div class="song-panel-head">
                     <h2 id="lyricsHeading">Lyrics</h2>
                     <span class="song-panel-meta">
@@ -398,7 +436,22 @@ function detailMarkup(s) {
                 <div class="lyrics-list">${lyricsMarkup(d)}</div>
             </section>
 
-            <aside class="song-panel related-panel" aria-labelledby="relatedHeading">
+            ${aboutMarkup(d)}
+
+            <div class="song-tile t-credits" aria-labelledby="creditsHeading">
+                <div class="song-panel-head">
+                    <h2 id="creditsHeading">Credits</h2>
+                    <span class="song-panel-sub">${(d.credits || []).length ? (d.credits || []).length + " on Genius" : "Genius"}</span>
+                </div>
+                <div class="song-credits">
+                    <div class="credit-row"><span class="k">WRITTEN BY</span><span class="v">${escapeHtml(creditNames(d.writers))}</span></div>
+                    <div class="credit-row"><span class="k">PRODUCED BY</span><span class="v">${escapeHtml(creditNames(d.producers))}</span></div>
+                    ${featured !== "–" ? `<div class="credit-row"><span class="k">FEATURING</span><span class="v">${escapeHtml(featured)}</span></div>` : ""}
+                    ${creditsMarkup(d.credits)}
+                </div>
+            </div>
+
+            <aside class="song-tile t-related" aria-labelledby="relatedHeading">
                 <div class="song-panel-head">
                     <h2 id="relatedHeading">Related Songs</h2>
                     <span class="song-panel-sub">${(d.related || []).length} from Genius</span>
@@ -406,8 +459,6 @@ function detailMarkup(s) {
                 <div class="related-list">${relatedMarkup(d.related)}</div>
                 ${relatedAllMarkup(d)}
             </aside>
-
-            ${aboutMarkup(d)}
         </div>`;
 }
 

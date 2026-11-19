@@ -522,6 +522,10 @@ const TESTS = [
                 stats: document.querySelectorAll("#songView .song-stat").length,
                 palette: (document.querySelector("#songView .song-artwork") || {getAttribute: function () { return ""; }})
                     .getAttribute("style") || "",
+                tiles: document.querySelectorAll("#songView .song-bento > .song-tile").length,
+                paletteChips: document.querySelectorAll("#songView .song-palette .palette-chip").length,
+                headPlay: document.querySelectorAll("#songView .t-head .song-action-primary").length,
+                headGenius: document.querySelectorAll("#songView .t-head a.song-action").length,
                 overflow: Math.max(0, document.getElementById("songView").scrollWidth
                     - document.getElementById("songView").clientWidth)
             })`));
@@ -578,6 +582,13 @@ const TESTS = [
                     d.albumCover + "/" + d.recorded + "/" + d.stats),
                 check("artwork palette is applied to the hero",
                     d.palette.indexOf("--song-primary") !== -1, d.palette),
+                check("detail lays out as seven bento tiles",
+                    d.tiles === 7, d.tiles),
+                check("details tile shows the three palette swatches",
+                    d.paletteChips === 3, d.paletteChips),
+                check("identity tile carries the Play pill and Genius link",
+                    d.headPlay === 1 && d.headGenius === 1,
+                    d.headPlay + "/" + d.headGenius),
                 check("player shows the dummy 4:12 length",
                     d.playerVisible && d.playerDuration === "4:12", d.playerDuration),
                 check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),

@@ -75,7 +75,15 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
 - `js/domains/{movie,game,music,book}.js` — one row per form: IPC names, labels, card class, id field, `card(item, idx, onOpen)`, `detail(item)`
 - `js/domains.js` — `DOMAINS` registry (`Object.fromEntries` over the rows) and `DOMAIN_KEYS`
 - `js/artwork.js` `js/detail.js` `js/render.js` `js/content.js` `js/ui.js` — artwork routing, the `openDetail` seam, rendering (incl. the active sidebar button), request lifecycle, search + sidebar switching/collapse
-- `js/song-detail.js` + `music-detail.css` — the song-detail view behind a music card: loading/error/ready states, the full-credits expander, the About panel, listen links, the lyrics panel, the related rail (with Genius' View-all link) and the demo player. It paints itself (`paintSongView`/`closeSongView`); `render.js` only decides visibility, so it never imports `render.js`.
+- `js/song-detail.js` + `music-detail.css` — the song-detail view behind a
+  music card: loading/error/ready states, the full-credits expander, the About
+  panel, listen links, the lyrics panel, the related rail (with Genius'
+  View-all link) and the demo player. The ready state is the bento layout from
+  `prototypes/song-detail-layouts/bento.html`: a 12-column tile grid (cover /
+  identity / details on top, lyrics + About in the middle, credits + related
+  below) that folds to 6 columns with the sidebar open and to one stack when
+  narrow. It paints itself (`paintSongView`/`closeSongView`); `render.js` only
+  decides visibility, so it never imports `render.js`.
 
 Rules that keep the graph acyclic: builders take the row as a parameter
 (`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click
