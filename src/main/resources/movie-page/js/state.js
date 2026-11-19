@@ -7,7 +7,7 @@
  */
 
 export const state = {
-    view: "browse",   // "browse" | "song" — render() dispatches on it
+    view: "browse",   // "browse" | "song" | "settings" — render() dispatches on it
     domain: "movie",
     title: "Trending Movies",
     status: "idle",   // "idle" | "loading" | "ready" | "error"

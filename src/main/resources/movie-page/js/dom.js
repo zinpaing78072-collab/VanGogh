@@ -11,6 +11,21 @@ export const sectionTitle = document.getElementById("sectionTitle");
 export const sidebar = document.getElementById("sidebar");
 export const sidebarToggle = document.getElementById("sidebarToggle");
 export const sidebarNav = document.getElementById("sidebarNav");
+export const settingsNavItem = document.getElementById("settingsNav");
+
+/* Settings view — the AI configuration form. Painted/closed by settings.js,
+ * shown/hidden by render.js from state.view. */
+export const settingsView = document.getElementById("settingsView");
+export const settingsForm = document.getElementById("settingsForm");
+export const settingsBaseUrl = document.getElementById("settingsBaseUrl");
+export const settingsModel = document.getElementById("settingsModel");
+export const settingsApiKey = document.getElementById("settingsApiKey");
+export const settingsReveal = document.getElementById("settingsReveal");
+export const settingsTimeout = document.getElementById("settingsTimeout");
+export const settingsTitles = document.getElementById("settingsTitles");
+export const settingsStatus = document.getElementById("settingsStatus");
+export const settingsTest = document.getElementById("settingsTest");
+export const settingsCancel = document.getElementById("settingsCancel");
 
 /* Browse vs. song detail: browseView holds the card grid, songView is painted
  * by song-detail.js, playerBar is the demo transport pinned to the bottom. */

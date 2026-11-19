@@ -47,8 +47,10 @@ search reports `llm: no API key: set OPENAI_API_KEY or add apiKey to
 
 `LlmConfig` resolves each setting from the environment first, then
 `~/.van-gogh/llm.conf`, then the default. The file is `key=value` lines with
-`#`/`;` comments — the same file a later Settings page would write, so that
-slice only adds an editor.
+`#`/`;` comments. The Settings page (sidebar foot) renders these five values in
+a form, but it is UI only for now: Save and Test connection report that the
+openai-java integration owns those paths, so this file remains the source of
+truth.
 
 | File key | Environment | Default | Meaning |
 |---|---|---|---|

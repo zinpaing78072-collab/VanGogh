@@ -604,8 +604,7 @@ const TESTS = [
         run: async (page) => {
             const shell = async () => JSON.parse(await page.evaluate(`JSON.stringify({
                 forms: document.querySelectorAll("#sidebarNav [data-domain]").length,
-                inert: document.querySelectorAll("#sidebarNav [data-nav]").length
-                    + document.querySelectorAll(".sidebar-foot [data-nav]").length,
+                inert: document.querySelectorAll('[data-nav][aria-disabled="true"]').length,
                 labels: [...document.querySelectorAll("#sidebarNav .nav-label")]
                     .map(el => el.textContent.trim()).join(" / "),
                 active: (document.querySelector("#sidebarNav .nav-item.active") || {dataset: {}}).dataset.domain || "",
@@ -636,7 +635,7 @@ const TESTS = [
 
             return [
                 check("four form buttons in the sidebar", open.forms === 4, open.forms),
-                check("four not-yet-wired items", open.inert === 4, open.inert),
+                check("three not-yet-wired items", open.inert === 3, open.inert),
                 check("Menu and Library are section labels", open.labels === "Menu / Library", open.labels),
                 check("the form on screen is the active button", open.active === "movie", open.active),
                 check("a dummy item fires no request", afterDummy.generation === beforeDummy.generation,
@@ -728,6 +727,89 @@ const TESTS = [
                 check("an empty AI search falls back to trending",
                     empty.kind === "trending" && empty.query === "",
                     empty.kind + " / " + empty.query)
+            ];
+        }
+    },
+    {
+        name: "settings: AI form paints, presets, masked key, saves nothing",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+            const before = await page.stats();
+            const gridBefore = (await page.dom()).cards;
+
+            await page.evaluate(`document.getElementById("settingsNav").click(); true`);
+
+            const view = async () => JSON.parse(await page.evaluate(`JSON.stringify({
+                open: !document.getElementById("settingsView").classList.contains("hidden"),
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                navActive: document.getElementById("settingsNav").classList.contains("active"),
+                formActive: document.querySelectorAll("#sidebarNav .nav-item.active").length,
+                heading: document.getElementById("settingsTitle").textContent,
+                baseUrl: document.getElementById("settingsBaseUrl").value,
+                model: document.getElementById("settingsModel").value,
+                timeout: document.getElementById("settingsTimeout").value,
+                titles: document.getElementById("settingsTitles").value,
+                keyType: document.getElementById("settingsApiKey").type,
+                keyValue: document.getElementById("settingsApiKey").value,
+                preset: [...document.querySelectorAll(".provider-chip")]
+                    .filter(b => b.getAttribute("aria-pressed") === "true")
+                    .map(b => b.dataset.provider).join(","),
+                status: document.getElementById("settingsStatus").textContent
+            })`));
+
+            const open = await view();
+
+            // Reveal is a field toggle only: it must never fill or read the key.
+            await page.evaluate(`document.getElementById("settingsReveal").click(); true`);
+            const revealed = await view();
+            await page.evaluate(`document.getElementById("settingsReveal").click(); true`);
+            const remasked = await view();
+
+            // A preset fills the base URL and moves the pressed marker.
+            await page.evaluate(`document.querySelector('.provider-chip[data-provider="openai"]').click(); true`);
+            const preset = await view();
+
+            // Save must say what it did, and must not fire a request.
+            await page.evaluate(`document.getElementById("settingsSave").click(); true`);
+            const saved = await view();
+            const afterSave = await page.stats();
+
+            // Escape leaves the page and the grid is the one that was there.
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            const closed = await view();
+            const d = await page.dom();
+
+            return [
+                check("Settings opens from the sidebar",
+                    open.open && open.browseHidden && open.navActive === true
+                        && open.formActive === 0,
+                    open.open + " / nav " + open.navActive + " / forms " + open.formActive),
+                check("the form mirrors the documented defaults",
+                    open.heading === "Settings"
+                        && open.baseUrl === "https://openrouter.ai/api/v1"
+                        && open.model === "baidu/ernie-5.5-flash-preview:free"
+                        && open.timeout === "60" && open.titles === "10",
+                    open.baseUrl + " / " + open.model + " / " + open.timeout + " / " + open.titles),
+                check("the key field starts empty and masked",
+                    open.keyValue === "" && open.keyType === "password",
+                    open.keyType + " / " + (open.keyValue === "" ? "empty" : "filled")),
+                check("Reveal toggles the field, never the key",
+                    revealed.keyType === "text" && remasked.keyType === "password"
+                        && revealed.keyValue === "" && remasked.keyValue === "",
+                    revealed.keyType + " → " + remasked.keyType),
+                check("a provider preset fills the base URL",
+                    preset.baseUrl === "https://api.openai.com/v1" && preset.preset === "openai",
+                    preset.baseUrl + " / " + preset.preset),
+                check("Save reports that nothing is persisted",
+                    /Not saved/.test(saved.status), saved.status),
+                check("opening and saving fire no request",
+                    afterSave.generation === before.generation,
+                    before.generation + " → " + afterSave.generation),
+                check("Escape returns to the intact grid",
+                    !closed.open && closed.navActive === false && closed.formActive === 1
+                        && d.cards === gridBefore && d.title === "Trending Movies",
+                    closed.open + " / nav " + closed.navActive + " / " + d.cards + " cards, " + d.title)
             ];
         }
     },

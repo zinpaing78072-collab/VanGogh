@@ -10,7 +10,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 - **Input**: A keyword or content name (e.g. `"Inception"`, `"Taylor Swift"`, `"Minecraft"`)
 - **Output**: Related content across Movies, Music, Books, and Games (all four wired)
 - **Mechanism**: The frontend invokes `requestMovies` / `requestGames` / `requestMusic` / `requestBooks` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` drains (`pending` / `done` / `error` / `superseded`); artwork streams through the `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` / `pollBookCovers` drains (emitting `"poster"` / `"gamePoster"` / `"musicPoster"` / `"bookCover"`). Skeleton cards show while a fetch is in flight.
-- **Navigation**: a collapsible sidebar switches the content form with one button per form (Music / Movies / Books / Games) — all four connect to their APIs (TMDB, TheGamesDB, MusicBrainz, Open Library). The other menu items (Home, My Lists, Favorites, Settings) and the notification/profile buttons are shell chrome with no backend yet; `Menu` and `Library` are section labels, not destinations.
+- **Navigation**: a collapsible sidebar switches the content form with one button per form (Music / Movies / Books / Games) — all four connect to their APIs (TMDB, TheGamesDB, MusicBrainz, Open Library). **Settings** (sidebar foot) opens a real AI-configuration page, but it is UI only for now: it paints the values `LlmConfig` reads and saves nothing until the openai-java integration adds the write path. The other menu items (Home, My Lists, Favorites) and the notification/profile buttons are shell chrome with no backend yet; `Menu` and `Library` are section labels, not destinations.
 
 ### Tech stack
 - **Language**: Java 25 (LTS), compiled with `--release 25`
@@ -60,7 +60,8 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
     `.nav-item[data-domain]` button per form (it replaced the old dropdown).
     The active form lives in `state.domain` in `js/state.js`; `render.js` paints
     the active button from it, and `js/ui.js` turns a click into the trending
-    load. Buttons without `data-domain` are inert shell chrome. The header AI
+    load. Buttons without `data-domain` are inert shell chrome, except
+    Settings, which opens the AI-configuration page. The header AI
     toggle (`#aiToggle`, `state.ai`) is opt-in and only changes the `kind` a
     search sends (`recommend` instead of `search`); it survives a form switch.
 - **Features pending**: the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
@@ -87,6 +88,14 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   below) that folds to 6 columns with the sidebar open and to one stack when
   narrow. It paints itself (`paintSongView`/`closeSongView`); `render.js` only
   decides visibility, so it never imports `render.js`.
+- `js/settings.js` + `settings.css` — the Settings destination: the AI
+  recommendations form (provider presets, base URL, model, masked key with a
+  reveal toggle, timeout, titles, and the env → file → default precedence note).
+  UI only in this slice — Save and Test connection report that the openai-java
+  integration owns the write and test path, and the module never touches
+  `window.krema`. `render.js` shows it from `state.view === "settings"`; the
+  sidebar item is active exactly then, and Escape or Cancel returns to the
+  intact grid.
 
 Rules that keep the graph acyclic: builders take the row as a parameter
 (`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click
@@ -215,8 +224,9 @@ self-disables when a bridge is present, so no app code changes for this.
 unreproducible (skeletons, empty, error, missing artwork). Fixtures are keyed to
 the real resolved-item shapes and survive the LLM engine slice. `node
 preview/check.js` (Zed task "check UI (headless)") is the same harness driven
-headless: 59 assertions over the card grid, the sidebar (form buttons, inert
-items, section labels, collapse/reflow), search and every scenario, exit 1 on
+headless: 89 assertions over the card grid, the sidebar (form buttons, inert
+items, section labels, collapse/reflow), search, the Settings form (defaults,
+presets, masked key, no request on save) and every scenario, exit 1 on
 failure. Full guide: `docs/preview-harness.md`. Layout,
 styling and page JS go through the preview; shell, IPC and network code still
 need a real app run.
