@@ -604,8 +604,7 @@ const TESTS = [
         run: async (page) => {
             const shell = async () => JSON.parse(await page.evaluate(`JSON.stringify({
                 forms: document.querySelectorAll("#sidebarNav [data-domain]").length,
-                inert: document.querySelectorAll("#sidebarNav [data-nav]").length
-                    + document.querySelectorAll(".sidebar-foot [data-nav]").length,
+                inert: document.querySelectorAll('[data-nav][aria-disabled="true"]').length,
                 labels: [...document.querySelectorAll("#sidebarNav .nav-label")]
                     .map(el => el.textContent.trim()).join(" / "),
                 active: (document.querySelector("#sidebarNav .nav-item.active") || {dataset: {}}).dataset.domain || "",
@@ -636,7 +635,7 @@ const TESTS = [
 
             return [
                 check("four form buttons in the sidebar", open.forms === 4, open.forms),
-                check("four not-yet-wired items", open.inert === 4, open.inert),
+                check("three not-yet-wired items", open.inert === 3, open.inert),
                 check("Menu and Library are section labels", open.labels === "Menu / Library", open.labels),
                 check("the form on screen is the active button", open.active === "movie", open.active),
                 check("a dummy item fires no request", afterDummy.generation === beforeDummy.generation,
@@ -728,6 +727,152 @@ const TESTS = [
                 check("an empty AI search falls back to trending",
                     empty.kind === "trending" && empty.query === "",
                     empty.kind + " / " + empty.query)
+            ];
+        }
+    },
+    {
+        name: "settings: loads the stored config, validates, saves, keeps the key",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+            const before = await page.stats();
+            const gridBefore = (await page.dom()).cards;
+
+            await page.evaluate(`document.getElementById("settingsNav").click(); true`);
+            // The form paints from the backend reply, not from the markup.
+            await page.waitFor("window.__preview.stats().settingsLoads > 0");
+
+            const view = async () => JSON.parse(await page.evaluate(`JSON.stringify({
+                open: !document.getElementById("settingsView").classList.contains("hidden"),
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                navActive: document.getElementById("settingsNav").classList.contains("active"),
+                formActive: document.querySelectorAll("#sidebarNav .nav-item.active").length,
+                heading: document.getElementById("settingsTitle").textContent,
+                baseUrl: document.getElementById("settingsBaseUrl").value,
+                model: document.getElementById("settingsModel").value,
+                timeout: document.getElementById("settingsTimeout").value,
+                titles: document.getElementById("settingsTitles").value,
+                keyType: document.getElementById("settingsApiKey").type,
+                keyValue: document.getElementById("settingsApiKey").value,
+                keyPlaceholder: document.getElementById("settingsApiKey").placeholder,
+                revealDisabled: document.getElementById("settingsReveal").disabled,
+                path: document.getElementById("settingsPath").textContent,
+                preset: [...document.querySelectorAll(".provider-chip")]
+                    .filter(b => b.getAttribute("aria-pressed") === "true")
+                    .map(b => b.dataset.provider).join(","),
+                status: document.getElementById("settingsStatus").textContent,
+                statusError: document.getElementById("settingsStatus").classList.contains("is-error")
+            })`));
+
+            const open = await view();
+
+            // A preset fills the base URL and moves the pressed marker.
+            await page.evaluate(`document.querySelector('.provider-chip[data-provider="openai"]').click(); true`);
+            const preset = await view();
+
+            // Saving without a key (none stored, none typed) is refused by the
+            // backend, and nothing is written.
+            await page.evaluate(`document.getElementById("settingsSave").click(); true`);
+            await page.waitFor(`document.getElementById("settingsStatus").classList.contains("is-error")`);
+            const refused = await view();
+            const afterRefusal = await page.stats();
+
+            // Typing a key enables Reveal; the key is only ever sent on Save.
+            await page.evaluate(`
+                const key = document.getElementById("settingsApiKey");
+                key.value = "sk-test-key";
+                key.dispatchEvent(new Event("input"));
+                true`);
+            const typed = await view();
+
+            // Save succeeds, the key leaves the field, and the page says the
+            // stored key is now on the engine's side of the bridge.
+            await page.evaluate(`document.getElementById("settingsSave").click(); true`);
+            await page.waitFor("window.__preview.stats().settingsSaves === 1");
+            const saved = await view();
+            const afterSave = await page.stats();
+
+            // Leaving and reopening loads the stored state, still without the key.
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            const closed = await view();
+            await page.evaluate(`document.getElementById("settingsNav").click(); true`);
+            await page.waitFor("window.__preview.stats().settingsLoads > 1");
+            const reopened = await view();
+
+            // A blank key on a second save keeps the secret the page cannot read.
+            await page.evaluate(`
+                document.getElementById("settingsModel").value = "model-b";
+                document.getElementById("settingsSave").click();
+                true`);
+            await page.waitFor("window.__preview.stats().settingsSaves === 2");
+            const kept = await page.stats();
+
+            // Reveal is a field toggle only: it never fills or reads the key.
+            await page.evaluate(`document.getElementById("settingsReveal").click(); true`);
+            const revealed = await view();
+            await page.evaluate(`document.getElementById("settingsReveal").click(); true`);
+            const remasked = await view();
+
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            const d = await page.dom();
+
+            return [
+                check("Settings opens from the sidebar",
+                    open.open && open.browseHidden && open.navActive === true
+                        && open.formActive === 0,
+                    open.open + " / nav " + open.navActive + " / forms " + open.formActive),
+                check("the form paints the loaded config, not markup defaults",
+                    open.heading === "Settings"
+                        && open.baseUrl === "https://openrouter.ai/api/v1"
+                        && open.model === "baidu/ernie-5.5-flash-preview:free"
+                        && open.timeout === "60" && open.titles === "10"
+                        && open.path === "~/.van-gogh/llm.conf",
+                    open.baseUrl + " / " + open.model + " / " + open.timeout + " / "
+                        + open.titles + " / " + open.path),
+                check("no stored key: empty field, nothing to reveal",
+                    open.keyValue === "" && open.keyType === "password"
+                        && open.revealDisabled === true
+                        && open.keyPlaceholder === "sk-…",
+                    open.keyType + " / " + (open.keyValue === "" ? "empty" : "filled")
+                        + " / reveal " + open.revealDisabled),
+                check("a provider preset fills the base URL",
+                    preset.baseUrl === "https://api.openai.com/v1" && preset.preset === "openai",
+                    preset.baseUrl + " / " + preset.preset),
+                check("saving with no key anywhere is an error, not a write",
+                    refused.statusError && /apiKey/.test(refused.status)
+                        && afterRefusal.settingsSaves === 0,
+                    refused.status + " / saves " + afterRefusal.settingsSaves),
+                check("typing a key enables Reveal",
+                    typed.revealDisabled === false && typed.keyValue === "sk-test-key",
+                    "reveal " + typed.revealDisabled),
+                check("Save writes the file and reports the stored values",
+                    !saved.statusError && /Saved/.test(saved.status)
+                        && afterSave.settingsSaves === 1 && afterSave.settingsHasKey === true,
+                    saved.status + " / saves " + afterSave.settingsSaves),
+                check("the key leaves the field and the stored-key hint appears",
+                    saved.keyValue === ""
+                        && /Key saved/.test(saved.keyPlaceholder)
+                        && saved.revealDisabled === false,
+                    saved.keyValue + " / " + saved.keyPlaceholder),
+                check("reopening loads the saved config, still without the key",
+                    reopened.baseUrl === "https://api.openai.com/v1"
+                        && reopened.keyValue === "" && reopened.keyType === "password"
+                        && /Key saved/.test(reopened.keyPlaceholder),
+                    reopened.baseUrl + " / " + (reopened.keyValue === "" ? "empty" : "filled")),
+                check("a blank key on a later save keeps the stored one",
+                    kept.settingsSaves === 2 && kept.settingsHasKey === true,
+                    "saves " + kept.settingsSaves + " / key " + kept.settingsHasKey),
+                check("Reveal toggles the field, never the key",
+                    revealed.keyType === "text" && remasked.keyType === "password"
+                        && revealed.keyValue === "" && remasked.keyValue === "",
+                    revealed.keyType + " → " + remasked.keyType),
+                check("opening and saving fire no browse request",
+                    afterSave.generation === before.generation,
+                    before.generation + " → " + afterSave.generation),
+                check("Escape returns to the intact grid",
+                    !closed.open && closed.navActive === false && closed.formActive === 1
+                        && d.cards === gridBefore && d.title === "Trending Movies",
+                    closed.open + " / nav " + closed.navActive + " / " + d.cards + " cards, " + d.title)
             ];
         }
     },

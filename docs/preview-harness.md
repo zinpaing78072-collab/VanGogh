@@ -148,13 +148,18 @@ node preview/check.js            # pass/fail, exit 1 on any failure
 node preview/check.js --verbose  # also prints each test's preview stats
 ```
 
-59 assertions across 10 groups: trending render, the sidebar (four form buttons,
+94 assertions across 11 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
 active marker), the switcher across all four forms, search hit and miss, the AI
 toggle (off by default, `kind=recommend` when on, survives a form switch, empty
-box falls back to trending), the empty / error / no-posters / slow scenarios,
-and a rapid form-switch that exercises the supersede guard. Exit code 1 on any
-failure, so it can gate a commit.
+box falls back to trending), the Settings form (opens from the sidebar, paints
+the loaded config, fills the base URL from a preset, refuses a save with no key,
+saves and clears the field, keeps the stored key off the page and on a second
+blank-key save, toggles Reveal without reading the key, and fires no browse
+request), the
+empty / error / no-posters / slow scenarios, and a rapid form-switch that
+exercises the supersede guard. Exit code 1 on any failure, so it can gate a
+commit.
 
 It is self-contained: it boots the preview server on an ephemeral port, drives a
 headless Chromium over the DevTools protocol, and shuts both down. No npm

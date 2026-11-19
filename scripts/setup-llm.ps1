@@ -37,7 +37,7 @@ if (-not $Key) {
 New-Item -ItemType Directory -Force $dir | Out-Null
 
 $lines = @(
-    "# VanGogh LLM settings - created $(Get-Date -Format 'yyyy-MM-dd'). Env variables override these.",
+    "# VanGogh LLM settings - created $(Get-Date -Format 'yyyy-MM-dd'). The Settings page writes this file too.",
     "apiKey = $Key"
 )
 if ($BaseUrl) { $lines += "baseUrl = $BaseUrl" }
@@ -51,3 +51,4 @@ $lines += "# timeoutSeconds = 60", "# titles = 10"
 
 Write-Host "Wrote $file"
 Write-Host "Restart VanGogh, press AI in the search bar, and search a title or a vibe."
+Write-Host "Or edit these values later in Settings - a saved change needs no restart."

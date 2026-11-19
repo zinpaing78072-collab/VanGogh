@@ -9,6 +9,8 @@
  *   invoke("request<Form>", { kind, query })  → generation (kicks off a fetch)
  *   invoke("poll<Form>Data", { generation })  → { status, items?, error? }
  *   invoke("poll<Form>Art", {})               → remaining posters, −1 when done
+ *   invoke("loadLlmSettings", {})             → { status, baseUrl, model, …, hasApiKey }
+ *   invoke("saveLlmSettings", { … })          → the stored values, never the key
  *   on("<artEvent>", handler)                 → { payload: { id, dataUri }, timestamp }
  *
  * Because pacing stays pending→done like the real drains, the skeleton cards
@@ -89,6 +91,20 @@
     // Detail has its own generation counter, like the real controller: opening
     // a song must not supersede the browse request (or its artwork stream).
     var detail = { gen: 0, polls: 0, status: "idle", id: null };
+
+    // Settings: an in-memory stand-in for ~/.van-gogh/llm.conf, with the same
+    // contract as SettingsController — the key never comes back out, and a
+    // blank key on save keeps the stored one.
+    var llm = {
+        baseUrl: "https://openrouter.ai/api/v1",
+        model: "baidu/ernie-5.5-flash-preview:free",
+        timeoutSeconds: 60,
+        titles: 10,
+        apiKey: null,
+        loads: 0,
+        saves: 0
+    };
+    var LLM_CONFIG_PATH = "~/.van-gogh/llm.conf";
 
     // ---------------------------------------------------------------- artwork
 
@@ -353,6 +369,69 @@
         };
     }
 
+    function llmReply() {
+        return {
+            status: "ok",
+            error: null,
+            baseUrl: llm.baseUrl,
+            model: llm.model,
+            timeoutSeconds: llm.timeoutSeconds,
+            titles: llm.titles,
+            hasApiKey: !!llm.apiKey,
+            configPath: LLM_CONFIG_PATH
+        };
+    }
+
+    function llmError(field, reason) {
+        return {
+            status: "error",
+            error: field + ": " + reason,
+            baseUrl: null,
+            model: null,
+            timeoutSeconds: 0,
+            titles: 0,
+            hasApiKey: !!llm.apiKey,
+            configPath: LLM_CONFIG_PATH
+        };
+    }
+
+    function loadLlm() {
+        llm.loads += 1;
+        return llmReply();
+    }
+
+    function saveLlm(args) {
+        args = args || {};
+        var typed = typeof args.apiKey === "string" ? args.apiKey.trim() : "";
+        var key = typed || llm.apiKey;
+        if (!key) {
+            return llmError("apiKey", "required — enter a key");
+        }
+        var baseUrl = String(args.baseUrl || "").trim().replace(/\/+$/, "");
+        var model = String(args.model || "").trim();
+        if (!baseUrl) {
+            return llmError("baseUrl", "required");
+        }
+        if (!model) {
+            return llmError("model", "required");
+        }
+
+        // Same normalization the record applies, so the harness sees the
+        // clamped values the page will paint.
+        llm.apiKey = key;
+        llm.baseUrl = baseUrl;
+        llm.model = model;
+        llm.timeoutSeconds = clamp(Number(args.timeoutSeconds) || 60, 10, 300);
+        llm.titles = clamp(Number(args.titles) || 10, 1, 50);
+        llm.saves += 1;
+        console.log("[preview] settings saved, hasApiKey=" + !!llm.apiKey);
+        return llmReply();
+    }
+
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, Math.round(value)));
+    }
+
     window.krema = {
         invoke: function (command, args) {
             var form;
@@ -372,6 +451,12 @@
             }
             if (command === "pollSongDetail") {
                 return Promise.resolve(pollDetail(args));
+            }
+            if (command === "loadLlmSettings") {
+                return Promise.resolve(loadLlm());
+            }
+            if (command === "saveLlmSettings") {
+                return Promise.resolve(saveLlm(args));
             }
 
             console.warn("[preview] unmocked command: " + command);
@@ -407,7 +492,10 @@
                 artDone: !!artDone[g],
                 detailGeneration: detail.gen,
                 detailStatus: detail.status,
-                detailPolls: detail.polls
+                detailPolls: detail.polls,
+                settingsLoads: llm.loads,
+                settingsSaves: llm.saves,
+                settingsHasKey: !!llm.apiKey
             };
         }
     };
