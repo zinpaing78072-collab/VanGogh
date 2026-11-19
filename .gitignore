@@ -32,3 +32,7 @@ bin/
 
 # Vendored jcefmaven CEF bundle (downloaded at first app run, ~100 MB)
 jcef-bundle/
+
+# Real LLM credentials — only scripts/llm.conf.example is tracked
+llm.conf
+.van-gogh/

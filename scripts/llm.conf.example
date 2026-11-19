@@ -1,0 +1,22 @@
+# VanGogh LLM settings — example, safe to commit.
+#
+# Copy this file to the per-user location:
+#   macOS/Linux : ~/.van-gogh/llm.conf
+#   Windows     : %USERPROFILE%\.van-gogh\llm.conf
+#
+# Or run the setup script, which writes it for you:
+#   macOS/Linux : scripts/setup-llm.sh
+#   Windows     : powershell -ExecutionPolicy Bypass -File scripts\setup-llm.ps1
+#
+# Environment variables override the values in this file:
+#   OPENAI_API_KEY / OPENROUTER_API_KEY, OPENAI_BASE_URL,
+#   LLM_MODEL, LLM_TIMEOUT_SECONDS, LLM_TITLES
+
+# Required. Any OpenAI-compatible provider's key.
+apiKey = sk-or-v1-...
+
+# Optional — defaults shown.
+# baseUrl = https://openrouter.ai/api/v1
+# model   = baidu/ernie-5.5-flash-preview:free
+# timeoutSeconds = 60
+# titles = 10

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import vangogh.error.FetchError;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -93,6 +94,22 @@ class LlmConfigTest {
         LlmConfig clamped = LlmConfig.load(file, Map.of()).get();
         assertEquals(10, clamped.timeoutSeconds());
         assertEquals(1, clamped.titles());
+    }
+
+    @Test
+    void aWindowsFileWithBomAndCrLfLoads() throws Exception {
+        // Notepad on Windows writes UTF-8 with a BOM and CRLF line endings.
+        // Left in place, the BOM becomes part of the first key name and the
+        // config silently reads as empty — the "no API key" report on a file
+        // that visibly has one.
+        Path file = temp.resolve("windows.conf");
+        Files.write(file, ("\uFEFFapiKey = win-key\r\nmodel = win-model\r\n")
+                .getBytes(StandardCharsets.UTF_8));
+
+        LlmConfig config = LlmConfig.load(file, Map.of()).get();
+
+        assertEquals("win-key", config.apiKey());
+        assertEquals("win-model", config.model());
     }
 
     @Test
