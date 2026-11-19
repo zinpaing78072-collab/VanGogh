@@ -247,6 +247,26 @@
         music: music,
         book: books,
 
+        /* Song-detail dummy media: the real backend sends the same shape
+         * (DummyMedia) — lyrics lines + a fixed length + no audio — so the
+         * preview exercises the real detail view, not a lookalike. */
+        songDetail: {
+            durationSeconds: 252,
+            audioUrl: "",
+            lyrics: [
+                { time: "0:00", text: "Demo lyrics — the lyrics source is not connected yet." },
+                { time: "0:12", text: "Starlight on the water, city lights below," },
+                { time: "0:20", text: "we were only passing through the afterglow." },
+                { time: "0:28", text: "Every quiet corner keeps a little flame," },
+                { time: "0:36", text: "every open window calls me by my name." },
+                { time: "0:46", text: "Hold the night a little longer," },
+                { time: "0:54", text: "let the morning wait its turn." },
+                { time: "1:02", text: "Demo lyrics — end of placeholder." }
+            ],
+            writers: ["Preview Writer", "Preview Composer"],
+            producers: ["Preview Producer"]
+        },
+
         /* The plural + label the app shows in the section title, so the mock can
          * honour the same wording the real controllers produce. */
         labels: {

@@ -60,6 +60,7 @@ skeletons and the staggered artwork stream are both exercised.
 | `requestMovies` / `requestGames` / `requestMusic` / `requestBooks` | request generation (kicks off a fetch) |
 | `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` | `{ status: "pending" \| "done" \| "error" \| "superseded", items?, error? }` |
 | `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` / `pollBookCovers` | remaining count, `-1` when done |
+| `requestSongDetail` / `pollSongDetail` | song-detail generation, then `{ status, detail?, artDataUri?, error? }` |
 | `on("poster" \| "gamePoster" \| "musicPoster" \| "bookCover")` | `{ payload: { id, dataUri }, timestamp }` |
 
 A superseded generation answers `superseded`, so the `requestSeq` guard in
@@ -127,9 +128,10 @@ Settled-state assertions worth copying:
   .filter(e => e.scrollHeight > e.clientHeight + 2).length                          // 0
 ```
 
-Note that `openDetail` in `js/detail.js` still calls `alert()`, which blocks the
-page in an automated tab. Dismiss it with `browser.dialog`, or read `DOMAINS`
-directly when the detail-view slice replaces that seam.
+Music cards now open the song-detail view (`js/song-detail.js`) through
+`openDetail`, so no dialog blocks the page. The other three forms still call
+`alert()` there until their detail slices land — dismiss it with
+`browser.dialog`, or read `DOMAINS` directly.
 
 Those checks are codified in `preview/check.js` (see below), so prefer running
 it over pasting the snippets by hand.
@@ -141,12 +143,13 @@ node preview/check.js            # pass/fail, exit 1 on any failure
 node preview/check.js --verbose  # also prints each test's preview stats
 ```
 
-52 assertions across 9 groups: trending render, the sidebar (four form buttons,
+63 assertions across 10 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
-active marker), the switcher across all four forms, search hit and miss, the
-empty / error / no-posters / slow scenarios, and a rapid form-switch that
-exercises the supersede guard. Exit code 1 on any failure, so it can gate a
-commit.
+active marker), the switcher across all four forms, the music song-detail view
+(open from a card, title/artist/credits/lyrics/related/player, back to the
+intact grid), search hit and miss, the empty / error / no-posters / slow
+scenarios, and a rapid form-switch that exercises the supersede guard. Exit code
+1 on any failure, so it can gate a commit.
 
 It is self-contained: it boots the preview server on an ephemeral port, drives a
 headless Chromium over the DevTools protocol, and shuts both down. No npm

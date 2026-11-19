@@ -86,6 +86,10 @@
     var status = {};      // generation → "pending" | "done" | "error"
     var artDone = {};     // generation → the artwork drain reported −1
 
+    // Detail has its own generation counter, like the real controller: opening
+    // a song must not supersede the browse request (or its artwork stream).
+    var detail = { gen: 0, polls: 0, status: "idle", id: null };
+
     // ---------------------------------------------------------------- artwork
 
     function initialsOf(title) {
@@ -242,6 +246,89 @@
         return artQueue[generation].length;
     }
 
+    // ----------------------------------------------------------- song detail
+
+    function detailFor(id) {
+        var list = fixtures.music || [];
+        var item = list.filter(function (x) { return String(x.id) === String(id); })[0] || list[0];
+        if (!item) {
+            return null;
+        }
+        var dummy = fixtures.songDetail || {};
+        var related = list
+            .filter(function (x) { return x.id !== item.id; })
+            .slice(0, 5)
+            .map(function (x, i) {
+                return {
+                    id: x.id,
+                    title: x.title,
+                    artist: x.artist || "Unknown Artist",
+                    relation: i % 2 ? "Remix" : "Cover",
+                    posterUrl: "",
+                    durationSeconds: 180 + i * 13
+                };
+            });
+        return {
+            id: item.id,
+            title: item.title,
+            artist: item.artist || "Unknown Artist",
+            album: item.title + " (Preview Album)",
+            releaseDate: String(item.year) + "-01-01",
+            year: item.year,
+            writers: dummy.writers || [],
+            producers: dummy.producers || [],
+            featuredArtists: [],
+            geniusUrl: "https://genius.com",
+            pageviews: 2364330,
+            lyricsState: "complete",
+            artUrl: "",
+            lyrics: dummy.lyrics || [],
+            durationSeconds: dummy.durationSeconds || 252,
+            audioUrl: dummy.audioUrl || "",
+            related: related
+        };
+    }
+
+    function requestDetail(args) {
+        detail = {
+            gen: detail.gen + 1,
+            polls: 0,
+            status: "pending",
+            id: (args && args.id) || null
+        };
+        console.log("[preview] song detail request gen=" + detail.gen + " id=" + detail.id);
+        return detail.gen;
+    }
+
+    function pollDetail(args) {
+        var generation = args && args.generation;
+        if (generation !== detail.gen) {
+            return { generation: generation, status: "superseded", detail: null };
+        }
+        detail.polls += 1;
+        var ticks = scenario === "slow" ? 20 : 2;
+        if (detail.polls <= ticks) {
+            return { generation: generation, status: "pending", detail: null };
+        }
+        if (scenario === "error") {
+            detail.status = "error";
+            return { generation: generation, status: "error", error: "Simulated song fetch failure (scenario=error).", detail: null };
+        }
+        var song = detailFor(detail.id);
+        if (!song) {
+            detail.status = "error";
+            return { generation: generation, status: "error", error: "No song fixture for id " + detail.id, detail: null };
+        }
+        detail.status = "done";
+        console.log("[preview] song detail done gen=" + generation + " title=" + song.title);
+        return {
+            generation: generation,
+            status: "done",
+            detail: song,
+            artDataUri: svgCover(song.title, 600, 600, hueOf(song.id))
+        };
+    }
+
     window.krema = {
         invoke: function (command, args) {
             var form;
@@ -255,6 +342,12 @@
             }
             if (FORM_BY_ART[command]) {
                 return Promise.resolve(pollArt(FORM_BY_ART[command]));
+            }
+            if (command === "requestSongDetail") {
+                return Promise.resolve(requestDetail(args));
+            }
+            if (command === "pollSongDetail") {
+                return Promise.resolve(pollDetail(args));
             }
 
             console.warn("[preview] unmocked command: " + command);
@@ -285,7 +378,10 @@
                 dataPolls: polls[g] || 0,
                 delivered: (delivered[g] || []).length,
                 artworkEmitted: emitted[g] || 0,
-                artDone: !!artDone[g]
+                artDone: !!artDone[g],
+                detailGeneration: detail.gen,
+                detailStatus: detail.status,
+                detailPolls: detail.polls
             };
         }
     };

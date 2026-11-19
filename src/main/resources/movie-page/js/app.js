@@ -10,6 +10,9 @@
  *                               items?, error? }
  *   invoke("pollMoviePosters" | "pollGamePosters" | "pollMusicPosters" |
  *          "pollBookCovers", {}) → artwork drain progress (-1 when done)
+ *   invoke("requestSongDetail", { id }) → song-detail generation
+ *   invoke("pollSongDetail", { generation })
+ *          → { status, detail?, artDataUri?, error? }
  *   on("poster" | "gamePoster" | "musicPoster" | "bookCover", { payload })
  *
  * The drains run as synchronous commands on the UI thread — the Windows Krema

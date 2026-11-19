@@ -68,6 +68,12 @@ public class GeniusClient {
         return send(url);
     }
 
+    /** One song by its Genius id — the detail page's data source. */
+    public Try<ApiResponse> song(String id) {
+        String path = (id == null) ? "" : URLEncoder.encode(id.trim(), StandardCharsets.UTF_8);
+        return send(BASE + "/songs/" + path);
+    }
+
     public Try<ApiResponse> searchSongs(String query) {
         return search(query);
     }

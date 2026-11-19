@@ -483,6 +483,61 @@ const TESTS = [
         }
     },
     {
+        name: "music card opens the song detail",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+            await page.selectForm("music");
+
+            await page.evaluate(`document.querySelector("#movieGrid .music-card").click(); true`);
+            await page.waitFor(`document.querySelectorAll("#songView .lyrics-line").length > 0`);
+
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                songVisible: !document.getElementById("songView").classList.contains("hidden"),
+                title: ((document.querySelector("#songView .song-title") || {}).textContent || "").trim(),
+                artist: ((document.querySelector("#songView .song-artist") || {}).textContent || "").trim(),
+                credits: document.querySelectorAll("#songView .credit-row").length,
+                lyrics: document.querySelectorAll("#songView .lyrics-line").length,
+                related: document.querySelectorAll("#songView .related-row").length,
+                dummyMarks: document.querySelectorAll("#songView .dummy-mark").length,
+                playerVisible: !document.getElementById("playerBar").classList.contains("hidden"),
+                playerDuration: document.getElementById("playerDuration").textContent,
+                artShown: !!document.querySelector("#songView .song-art-img:not(.hidden)"),
+                overflow: Math.max(0, document.getElementById("songView").scrollWidth
+                    - document.getElementById("songView").clientWidth)
+            })`));
+
+            await page.evaluate(`document.querySelector('#songView [data-action="back"]').click(); true`);
+            await page.waitFor(`!document.getElementById("browseView").classList.contains("hidden")
+                && document.getElementById("songView").classList.contains("hidden")`);
+            const back = JSON.parse(await page.evaluate(`JSON.stringify({
+                cards: document.querySelectorAll("#movieGrid .movie-card").length,
+                playerHidden: document.getElementById("playerBar").classList.contains("hidden"),
+                title: document.getElementById("sectionTitle").textContent
+            })`));
+
+            return [
+                check("clicking a music card opens the detail view",
+                    d.browseHidden && d.songVisible, d.browseHidden + "/" + d.songVisible),
+                check("detail shows the song title and artist",
+                    d.title === "Rumours" && d.artist === "Fleetwood Mac",
+                    d.title + " / " + d.artist),
+                check("detail streams the hero artwork", d.artShown, d.artShown),
+                check("credits rows rendered", d.credits >= 2, d.credits),
+                check("dummy lyrics render with timings", d.lyrics >= 6, d.lyrics),
+                check("related rail resolves rows", d.related === 5, d.related),
+                check("duration is marked as demo data", d.dummyMarks === 1, d.dummyMarks),
+                check("player shows the dummy 4:12 length",
+                    d.playerVisible && d.playerDuration === "4:12", d.playerDuration),
+                check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),
+                check("back returns to the intact card grid",
+                    back.cards === 6 && back.title === "Trending Music", back.cards + " / " + back.title),
+                check("back hides the player", back.playerHidden, back.playerHidden)
+            ];
+        }
+    },
+    {
         name: "sidebar: form buttons, inert items, collapse",
         path: "/movie-page/index.html",
         run: async (page) => {

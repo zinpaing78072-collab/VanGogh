@@ -65,6 +65,131 @@ public class GeniusMusicService {
                         .flatMap(this::parseSearch);
     }
 
+    /** One song with the fields the detail page needs, plus dummy media data. */
+    public Either<FetchError, SongDetail> songDetail(String id) {
+        return client.song(id)
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Transport("Genius song", e))
+                .flatMap(res -> requireSuccess("Genius song", res))
+                .flatMap(this::parseSongDetail);
+    }
+
+    private Either<FetchError, SongDetail> parseSongDetail(String body) {
+        return Try.of(() -> {
+            JsonObject root = JsonParser.parseString(body).getAsJsonObject();
+            JsonObject song = root.getAsJsonObject("response").getAsJsonObject("song");
+            return toSongDetail(song);
+        }).toEither().mapLeft(e -> new FetchError.Payload("Genius", "song payload shape", e));
+    }
+
+    private SongDetail toSongDetail(JsonObject s) {
+        String id = optString(s, "id");
+        String title = Option.of(optString(s, "title"))
+                .filter(x -> !x.isEmpty())
+                .getOrElse("Untitled");
+        JsonObject album = s.has("album") && s.get("album").isJsonObject()
+                ? s.getAsJsonObject("album") : new JsonObject();
+        String releaseDate = firstNonEmpty(
+                optString(s, "release_date"),
+                optString(album, "release_date_for_display"));
+        long pageviews = Option.of(s.get("stats"))
+                .filter(j -> j != null && j.isJsonObject())
+                .map(j -> j.getAsJsonObject())
+                .map(stats -> optLong(stats, "pageviews"))
+                .getOrElse(0L);
+        return new SongDetail(
+                id.isEmpty() ? "0" : id,
+                title,
+                artistName(s),
+                optString(album, "name"),
+                releaseDate,
+                parseYear(releaseDate),
+                names(s, "writer_artists"),
+                names(s, "producer_artists"),
+                names(s, "featured_artists"),
+                optString(s, "url"),
+                pageviews,
+                optString(s, "lyrics_state"),
+                firstNonEmpty(
+                        optString(s, "song_art_image_url"),
+                        optString(s, "header_image_url"),
+                        optString(s, "song_art_image_thumbnail_url")),
+                DummyMedia.LYRICS,
+                DummyMedia.DURATION_SECONDS,
+                DummyMedia.AUDIO_URL,
+                relatedSongs(s));
+    }
+
+    /** Artist names from an array of {@code {name: ...}} objects, empty when absent. */
+    private static java.util.List<String> names(JsonObject s, String key) {
+        JsonElement el = s.get(key);
+        if (el == null || !el.isJsonArray()) {
+            return java.util.List.of();
+        }
+        return List.ofAll(el.getAsJsonArray())
+                .map(JsonElement::getAsJsonObject)
+                .map(a -> optString(a, "name"))
+                .filter(n -> !n.isEmpty())
+                .toJavaList();
+    }
+
+    /**
+     * Flatten Genius' song relationships into rail rows. Covers, remixes and
+     * samples are the useful neighbours for a recommendation rail; translations
+     * are a huge, low-signal set and are skipped.
+     */
+    private static java.util.List<RelatedSong> relatedSongs(JsonObject s) {
+        JsonElement el = s.get("song_relationships");
+        if (el == null || !el.isJsonArray()) {
+            return java.util.List.of();
+        }
+        java.util.Map<String, RelatedSong> rows = new java.util.LinkedHashMap<>();
+        for (JsonElement group : el.getAsJsonArray()) {
+            JsonObject rel = group.getAsJsonObject();
+            String type = optString(rel, "type");
+            String label = relationLabel(type);
+            if (label.isEmpty() || !rel.has("songs") || !rel.get("songs").isJsonArray()) {
+                continue;
+            }
+            for (JsonElement item : rel.getAsJsonArray("songs")) {
+                JsonObject song = item.getAsJsonObject();
+                String id = optString(song, "id");
+                if (id.isEmpty() || rows.containsKey(id)) {
+                    continue;
+                }
+                rows.put(id, new RelatedSong(
+                        id,
+                        Option.of(optString(song, "title")).filter(t -> !t.isEmpty()).getOrElse("Untitled"),
+                        firstNonEmpty(optString(song, "artist_names"), artistName(song)),
+                        label,
+                        firstNonEmpty(
+                                optString(song, "song_art_image_thumbnail_url"),
+                                optString(song, "header_image_thumbnail_url")),
+                        DummyMedia.relatedDurationSeconds(id)));
+            }
+        }
+        return List.ofAll(rows.values()).take(8).toJavaList();
+    }
+
+    private static String relationLabel(String type) {
+        return switch (type) {
+            case "covered_by" -> "Cover";
+            case "remixed_by" -> "Remix";
+            case "sampled_in" -> "Sample";
+            case "interpolated_by" -> "Interpolation";
+            default -> "";
+        };
+    }
+
+    private static long optLong(JsonObject o, String key) {
+        return Option.of(o.get(key))
+                .filter(j -> j != null && !j.isJsonNull())
+                .map(j -> {
+                    try { return j.getAsLong(); } catch (Exception e) { return 0L; }
+                })
+                .getOrElse(0L);
+    }
+
     // Aliases for callers/tests that use other naming.
     public Either<FetchError, java.util.List<Song>> searchAlbums(String query) {
         return searchSongs(query);
