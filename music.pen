@@ -1,0 +1,4099 @@
+{
+  "version": "2.22",
+  "children": [
+    {
+      "type": "frame",
+      "id": "QNZRn",
+      "x": 80,
+      "y": 40,
+      "name": "Nav Item / Default",
+      "reusable": true,
+      "cornerRadius": 10,
+      "gap": 12,
+      "padding": [
+        10,
+        14
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "pvrUf",
+          "name": "Icon",
+          "width": 18,
+          "height": 18,
+          "icon": "house",
+          "library": "lucide",
+          "fill": "$text-secondary"
+        },
+        {
+          "type": "text",
+          "id": "KsT0U",
+          "name": "Label",
+          "fill": "$text-secondary",
+          "content": "Home",
+          "fontFamily": "$font-body",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "NHYA9",
+      "x": 334,
+      "y": 40,
+      "name": "Nav Item / Active",
+      "reusable": true,
+      "fill": "#F5C75E2E",
+      "cornerRadius": 10,
+      "gap": 12,
+      "padding": [
+        10,
+        14
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "qaKkW",
+          "name": "Icon",
+          "width": 18,
+          "height": 18,
+          "icon": "music",
+          "library": "lucide",
+          "fill": "$gold"
+        },
+        {
+          "type": "text",
+          "id": "k94D5",
+          "name": "Label",
+          "fill": "$cream",
+          "content": "Music",
+          "fontFamily": "$font-body",
+          "fontSize": 14,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "xp682",
+      "x": 588,
+      "y": 40,
+      "name": "Filter Chip / Default",
+      "reusable": true,
+      "fill": "$glass",
+      "cornerRadius": 999,
+      "stroke": "$glass-border",
+      "strokeWidth": 1,
+      "padding": [
+        8,
+        16
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "COUr7",
+          "name": "Label",
+          "fill": "$text-secondary",
+          "content": "All",
+          "fontFamily": "$font-body",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "WxaTA",
+      "x": 742,
+      "y": 40,
+      "name": "Filter Chip / Active",
+      "reusable": true,
+      "fill": "$gold",
+      "cornerRadius": 999,
+      "padding": [
+        8,
+        16
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "oWuiP",
+          "name": "Label",
+          "fill": "$midnight",
+          "content": "Music",
+          "fontFamily": "$font-body",
+          "fontSize": 13,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "SpjUr",
+      "x": 896,
+      "y": 40,
+      "name": "Icon Button / Glass",
+      "reusable": true,
+      "width": 40,
+      "height": 40,
+      "fill": "$glass",
+      "cornerRadius": 999,
+      "stroke": "$glass-border",
+      "strokeWidth": 1,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "RtSbt",
+          "name": "Icon",
+          "width": 18,
+          "height": 18,
+          "icon": "bell",
+          "library": "lucide",
+          "fill": "$text-primary"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "cDie6",
+      "x": 1000,
+      "y": 40,
+      "name": "Section Header",
+      "reusable": true,
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "sVZ2V",
+          "name": "Title",
+          "fill": "$text-primary",
+          "content": "Trending Now",
+          "fontFamily": "$font-display",
+          "fontSize": 19,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "jSymo",
+          "name": "View All",
+          "fill": "$gold",
+          "content": "View all →",
+          "fontFamily": "$font-body",
+          "fontSize": 11.5,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "AYTMY",
+      "x": 1484,
+      "y": 40,
+      "name": "Mood Card",
+      "reusable": true,
+      "height": 88,
+      "fill": [
+        {
+          "type": "gradient",
+          "gradientType": "linear",
+          "enabled": true,
+          "rotation": 180,
+          "size": {
+            "height": 1
+          },
+          "colors": [
+            {
+              "color": "#244B87",
+              "position": 0
+            },
+            {
+              "color": "#101A35",
+              "position": 1
+            }
+          ]
+        },
+        "$glass"
+      ],
+      "cornerRadius": 16,
+      "stroke": "$glass-border",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "gap": 5,
+      "padding": 12,
+      "children": [
+        {
+          "type": "icon",
+          "id": "qwW9a",
+          "name": "Icon",
+          "width": 20,
+          "height": 20,
+          "icon": "smile",
+          "library": "lucide",
+          "fill": "$gold"
+        },
+        {
+          "type": "text",
+          "id": "MrGyC",
+          "name": "Label",
+          "fill": "$text-primary",
+          "content": "Happy",
+          "fontFamily": "$font-body",
+          "fontSize": 13,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "x06obh",
+          "name": "Count",
+          "fill": "$text-secondary",
+          "content": "128 songs",
+          "fontFamily": "$font-body",
+          "fontSize": 9.5,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "u0jiBG",
+      "x": 80,
+      "y": 220,
+      "name": "Music · Starry Night",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": [
+        {
+          "type": "image",
+          "enabled": true,
+          "url": "src/main/resources/movie-page/starry.png",
+          "mode": "cover"
+        },
+        {
+          "type": "gradient",
+          "gradientType": "linear",
+          "enabled": true,
+          "rotation": 180,
+          "size": {
+            "height": 1
+          },
+          "colors": [
+            {
+              "color": "#0B1230DE",
+              "position": 0
+            },
+            {
+              "color": "#101A356E",
+              "position": 0.45
+            },
+            {
+              "color": "#0B1230EA",
+              "position": 1
+            }
+          ]
+        }
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "uCNvG",
+          "name": "Sidebar",
+          "width": 236,
+          "height": "fill_container",
+          "fill": "$glass-dark",
+          "stroke": "$glass-border",
+          "strokeWidth": {
+            "right": 1
+          },
+          "effect": {
+            "type": "background_blur",
+            "radius": 28
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": [
+            24,
+            16,
+            20,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "idqx3",
+              "name": "Logo Row",
+              "gap": 10,
+              "padding": [
+                4,
+                8,
+                22,
+                8
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "Qnai7",
+                  "name": "Logo Star",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "sparkles",
+                  "library": "lucide",
+                  "fill": "$gold"
+                },
+                {
+                  "type": "text",
+                  "id": "Gd7dc",
+                  "name": "Wordmark",
+                  "fill": "$text-primary",
+                  "content": "VANGOGH",
+                  "fontFamily": "$font-body",
+                  "fontSize": 15,
+                  "fontWeight": "700",
+                  "letterSpacing": 3
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OFqM4",
+              "name": "Nav Section MENU",
+              "width": "fill_container",
+              "padding": [
+                14,
+                8,
+                4,
+                8
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "MoBVX",
+                  "name": "Label",
+                  "fill": "$text-muted",
+                  "content": "MENU",
+                  "fontFamily": "$font-body",
+                  "fontSize": 10,
+                  "fontWeight": "600",
+                  "letterSpacing": 1.5
+                }
+              ]
+            },
+            {
+              "id": "FY9KD",
+              "type": "ref",
+              "ref": "QNZRn",
+              "name": "Nav · Home",
+              "width": "fill_container",
+              "descendants": {
+                "pvrUf": {
+                  "icon": "house"
+                },
+                "KsT0U": {
+                  "content": "Home"
+                }
+              }
+            },
+            {
+              "id": "iZjJH",
+              "type": "ref",
+              "ref": "QNZRn",
+              "name": "Nav · Discover",
+              "width": "fill_container",
+              "descendants": {
+                "pvrUf": {
+                  "icon": "compass"
+                },
+                "KsT0U": {
+                  "content": "Discover"
+                }
+              }
+            },
+            {
+              "id": "Ecd7Q",
+              "type": "ref",
+              "ref": "NHYA9",
+              "name": "Nav · Music",
+              "width": "fill_container",
+              "descendants": {
+                "qaKkW": {
+                  "icon": "music"
+                },
+                "k94D5": {
+                  "content": "Music"
+                }
+              }
+            },
+            {
+              "id": "rKuHN",
+              "type": "ref",
+              "ref": "QNZRn",
+              "name": "Nav · Movies",
+              "width": "fill_container",
+              "descendants": {
+                "pvrUf": {
+                  "icon": "clapperboard"
+                },
+                "KsT0U": {
+                  "content": "Movies"
+                }
+              }
+            },
+            {
+              "id": "dJxI8",
+              "type": "ref",
+              "ref": "QNZRn",
+              "name": "Nav · Books",
+              "width": "fill_container",
+              "descendants": {
+                "pvrUf": {
+                  "icon": "book-open"
+                },
+                "KsT0U": {
+                  "content": "Books"
+                }
+              }
+            },
+            {
+              "id": "X7py7",
+              "type": "ref",
+              "ref": "QNZRn",
+              "name": "Nav · Games",
+              "width": "fill_container",
+              "descendants": {
+                "pvrUf": {
+                  "icon": "gamepad-2"
+                },
+                "KsT0U": {
+                  "content": "Games"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "z8SDQS",
+              "name": "Nav Section LIBRARY",
+              "width": "fill_container",
+              "padding": [
+                14,
+                8,
+                4,
+                8
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "tAYhm",
+                  "name": "Label",
+                  "fill": "$text-muted",
+                  "content": "LIBRARY",
+                  "fontFamily": "$font-body",
+                  "fontSize": 10,
+                  "fontWeight": "600",
+                  "letterSpacing": 1.5
+                }
+              ]
+            },
+            {
+              "id": "FRm34",
+              "type": "ref",
+              "ref": "QNZRn",
+              "name": "Nav · My Library",
+              "width": "fill_container",
+              "descendants": {
+                "pvrUf": {
+                  "icon": "library"
+                },
+                "KsT0U": {
+                  "content": "My Library"
+                }
+              }
+            },
+            {
+              "id": "d4ZtCs",
+              "type": "ref",
+              "ref": "QNZRn",
+              "name": "Nav · Playlists",
+              "width": "fill_container",
+              "descendants": {
+                "pvrUf": {
+                  "icon": "list-music"
+                },
+                "KsT0U": {
+                  "content": "Playlists"
+                }
+              }
+            },
+            {
+              "id": "ltkgj",
+              "type": "ref",
+              "ref": "QNZRn",
+              "name": "Nav · Favorites",
+              "width": "fill_container",
+              "descendants": {
+                "pvrUf": {
+                  "icon": "heart"
+                },
+                "KsT0U": {
+                  "content": "Favorites"
+                }
+              }
+            },
+            {
+              "id": "O2NyfG",
+              "type": "ref",
+              "ref": "QNZRn",
+              "name": "Nav · Recently Played",
+              "width": "fill_container",
+              "descendants": {
+                "pvrUf": {
+                  "icon": "history"
+                },
+                "KsT0U": {
+                  "content": "Recently Played"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "HiPa4",
+              "name": "Sidebar Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            },
+            {
+              "id": "OzYTH",
+              "type": "ref",
+              "ref": "QNZRn",
+              "name": "Nav · Settings",
+              "width": "fill_container",
+              "descendants": {
+                "pvrUf": {
+                  "icon": "settings"
+                },
+                "KsT0U": {
+                  "content": "Settings"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "iwnfu",
+          "name": "Main Column",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "P0F6o",
+              "name": "Top Bar",
+              "width": "fill_container",
+              "height": 64,
+              "fill": "#0B1230A6",
+              "stroke": "$glass-border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "effect": {
+                "type": "background_blur",
+                "radius": 18
+              },
+              "gap": 20,
+              "padding": [
+                0,
+                32
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "PAPhg",
+                  "name": "Search Field",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "$glass",
+                  "cornerRadius": 12,
+                  "stroke": "$glass-border",
+                  "strokeWidth": 1,
+                  "gap": 10,
+                  "padding": [
+                    0,
+                    18
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "rzS5D",
+                      "name": "Search Icon",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "search",
+                      "library": "lucide",
+                      "fill": "$text-muted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "X5s4yD",
+                      "name": "Placeholder",
+                      "fill": "$text-muted",
+                      "content": "Search songs, artists, albums...",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "jEAiC",
+                  "name": "Content Filter",
+                  "width": 150,
+                  "height": 44,
+                  "fill": "$glass",
+                  "cornerRadius": 12,
+                  "stroke": "$glass-border",
+                  "strokeWidth": 1,
+                  "gap": 10,
+                  "padding": [
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "cCR1i",
+                      "name": "Grid Icon",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "layout-grid",
+                      "library": "lucide",
+                      "fill": "$text-muted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "zdd8k",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Music",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13.5,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "aiv9t",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$gold"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ZrJj2",
+                  "name": "Header Actions",
+                  "gap": 14,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "U2pcY",
+                      "type": "ref",
+                      "ref": "SpjUr",
+                      "name": "Notifications"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "H1kYzB",
+                      "name": "Avatar",
+                      "width": 36,
+                      "height": 36,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1633340784226-4ab9b7bfefbe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTQ4MzMzMzh8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 999,
+                      "stroke": "$gold",
+                      "strokeWidth": 1.5
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sbeof",
+              "name": "Scroll Content",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "padding": [
+                20,
+                28,
+                104,
+                28
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "NO6g7",
+                  "name": "Hero",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": [
+                    14,
+                    0,
+                    2,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "VhedY",
+                      "name": "Hero Copy",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "iAJyx",
+                          "name": "Eyebrow",
+                          "fill": "$gold",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#0B1230A6",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 8
+                          },
+                          "content": "MUSIC DISCOVERY",
+                          "fontFamily": "$font-body",
+                          "fontSize": 11,
+                          "fontWeight": "600",
+                          "letterSpacing": 2.5
+                        },
+                        {
+                          "type": "text",
+                          "id": "sso0D",
+                          "name": "Heading",
+                          "fill": "$text-primary",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#0B1230B3",
+                            "offset": {
+                              "x": 0,
+                              "y": 2
+                            },
+                            "blur": 14
+                          },
+                          "content": "Discover Your Sound",
+                          "fontFamily": "$font-display",
+                          "fontSize": 40,
+                          "fontWeight": "600",
+                          "letterSpacing": -0.5
+                        },
+                        {
+                          "type": "text",
+                          "id": "UiiEL",
+                          "name": "Subtitle",
+                          "fill": "$text-secondary",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#0B1230A6",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 8
+                          },
+                          "content": "Let the stars guide your next favorite song.",
+                          "fontFamily": "$font-body",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ptHuE",
+                      "name": "Hero Stars",
+                      "width": "fill_container",
+                      "height": 34,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "pgPMa",
+                          "layoutPosition": "absolute",
+                          "x": 24,
+                          "y": 3,
+                          "name": "Star",
+                          "opacity": 0.9,
+                          "width": 14,
+                          "height": 14,
+                          "icon": "star",
+                          "library": "lucide",
+                          "fill": "$gold"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "r2t2M",
+                          "layoutPosition": "absolute",
+                          "x": 168,
+                          "y": 14,
+                          "name": "Star",
+                          "opacity": 0.6,
+                          "width": 10,
+                          "height": 10,
+                          "icon": "star",
+                          "library": "lucide",
+                          "fill": "$gold"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "M3fM4",
+                          "layoutPosition": "absolute",
+                          "x": 420,
+                          "y": 6,
+                          "name": "Star",
+                          "opacity": 0.7,
+                          "width": 9,
+                          "height": 9,
+                          "icon": "star",
+                          "library": "lucide",
+                          "fill": "$gold"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "om8MJ",
+                          "layoutPosition": "absolute",
+                          "x": 700,
+                          "y": 16,
+                          "name": "Star",
+                          "opacity": 0.5,
+                          "width": 12,
+                          "height": 12,
+                          "icon": "star",
+                          "library": "lucide",
+                          "fill": "$gold"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "DzBOH",
+                          "layoutPosition": "absolute",
+                          "x": 980,
+                          "y": 4,
+                          "name": "Star",
+                          "opacity": 0.8,
+                          "width": 11,
+                          "height": 11,
+                          "icon": "star",
+                          "library": "lucide",
+                          "fill": "$gold"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "zpXsL",
+                          "layoutPosition": "absolute",
+                          "x": 1180,
+                          "y": 15,
+                          "name": "Star",
+                          "opacity": 0.55,
+                          "width": 8,
+                          "height": 8,
+                          "icon": "star",
+                          "library": "lucide",
+                          "fill": "$gold"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "dyd0x",
+                  "name": "Trending Now Section",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "id": "V2pHnN",
+                      "type": "ref",
+                      "ref": "cDie6",
+                      "name": "Section Header",
+                      "width": "fill_container",
+                      "descendants": {
+                        "sVZ2V": {
+                          "content": "Trending Now"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "B8pVPI",
+                      "name": "Track Cards",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Zymk5",
+                          "name": "Track Card · Hover",
+                          "width": "fill_container",
+                          "fill": "$glass-strong",
+                          "cornerRadius": 16,
+                          "stroke": "$glass-border",
+                          "strokeWidth": 1,
+                          "effect": [
+                            {
+                              "type": "background_blur",
+                              "radius": 22
+                            },
+                            {
+                              "type": "shadow",
+                              "shadowType": "outer",
+                              "color": "#00000059",
+                              "offset": {
+                                "x": 0,
+                                "y": 14
+                              },
+                              "blur": 32
+                            }
+                          ],
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 10,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "F430M",
+                              "name": "Artwork",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": [
+                                {
+                                  "type": "image",
+                                  "enabled": true,
+                                  "url": "music-assets/covers/blinding-lights.jpg",
+                                  "mode": "cover"
+                                },
+                                "$glass"
+                              ],
+                              "cornerRadius": 10,
+                              "padding": 12,
+                              "justifyContent": "end",
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "nnAex",
+                                  "name": "Artwork Actions",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "IqRQX",
+                                      "name": "More Button",
+                                      "width": 24,
+                                      "height": 24,
+                                      "fill": "$glass-dark",
+                                      "cornerRadius": 999,
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "lno4h",
+                                          "name": "More Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "more-horizontal",
+                                          "library": "lucide",
+                                          "fill": "$text-primary"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "BpCDw",
+                                      "name": "Play Button",
+                                      "width": 30,
+                                      "height": 30,
+                                      "fill": "$gold",
+                                      "cornerRadius": 999,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#F5C75E66",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 4
+                                        },
+                                        "blur": 16
+                                      },
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "x0A5o",
+                                          "name": "Play Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "play",
+                                          "library": "lucide",
+                                          "fill": "$midnight"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "ywfZI",
+                              "name": "Title",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Blinding Lights",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13.5,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "B9ERt",
+                              "name": "Artist",
+                              "fill": "$text-secondary",
+                              "content": "The Weeknd",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "IkB7Z",
+                              "name": "Meta Row",
+                              "width": "fill_container",
+                              "padding": [
+                                2,
+                                0,
+                                0,
+                                0
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "n9iP64",
+                                  "name": "Duration",
+                                  "fill": "$text-muted",
+                                  "content": "3:20",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "cE7YI",
+                                  "name": "Rating",
+                                  "fill": "$gold",
+                                  "content": "★ 4.9",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "DSO2r",
+                          "name": "Track Card · Kito Sonder",
+                          "width": "fill_container",
+                          "fill": "$glass",
+                          "cornerRadius": 16,
+                          "stroke": "$glass-border",
+                          "strokeWidth": 1,
+                          "effect": [
+                            {
+                              "type": "background_blur",
+                              "radius": 22
+                            },
+                            {
+                              "type": "shadow",
+                              "shadowType": "outer",
+                              "color": "#00000033",
+                              "offset": {
+                                "x": 0,
+                                "y": 8
+                              },
+                              "blur": 20
+                            }
+                          ],
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 10,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "sgb5o",
+                              "name": "Artwork",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": [
+                                {
+                                  "type": "image",
+                                  "enabled": true,
+                                  "url": "music-assets/covers/anti-hero.jpg",
+                                  "mode": "cover"
+                                },
+                                "$glass"
+                              ],
+                              "cornerRadius": 10,
+                              "padding": 12,
+                              "justifyContent": "end",
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "NflR9",
+                                  "name": "Artwork Actions",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "tmhue",
+                                      "name": "More Button",
+                                      "width": 24,
+                                      "height": 24,
+                                      "fill": "$glass-dark",
+                                      "cornerRadius": 999,
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "iLDVJ",
+                                          "name": "More Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "more-horizontal",
+                                          "library": "lucide",
+                                          "fill": "$text-primary"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "bliNp",
+                                      "name": "Play Button",
+                                      "width": 30,
+                                      "height": 30,
+                                      "fill": "$gold",
+                                      "cornerRadius": 999,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#F5C75E66",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 4
+                                        },
+                                        "blur": 16
+                                      },
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "UL8Id",
+                                          "name": "Play Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "play",
+                                          "library": "lucide",
+                                          "fill": "$midnight"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "K69Q1D",
+                              "name": "Title",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Anti-Hero",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13.5,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "CXl58",
+                              "name": "Artist",
+                              "fill": "$text-secondary",
+                              "content": "Taylor Swift",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "R53lL",
+                              "name": "Meta Row",
+                              "width": "fill_container",
+                              "padding": [
+                                2,
+                                0,
+                                0,
+                                0
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "jpBY2",
+                                  "name": "Duration",
+                                  "fill": "$text-muted",
+                                  "content": "3:20",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "LIIVY",
+                                  "name": "Rating",
+                                  "fill": "$gold",
+                                  "content": "★ 4.7",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "eH7mX",
+                          "name": "Track Card · Mara Vance",
+                          "width": "fill_container",
+                          "fill": "$glass",
+                          "cornerRadius": 16,
+                          "stroke": "$glass-border",
+                          "strokeWidth": 1,
+                          "effect": [
+                            {
+                              "type": "background_blur",
+                              "radius": 22
+                            },
+                            {
+                              "type": "shadow",
+                              "shadowType": "outer",
+                              "color": "#00000033",
+                              "offset": {
+                                "x": 0,
+                                "y": 8
+                              },
+                              "blur": 20
+                            }
+                          ],
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 10,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "bRRlI",
+                              "name": "Artwork",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": [
+                                {
+                                  "type": "image",
+                                  "enabled": true,
+                                  "url": "music-assets/covers/as-it-was.jpg",
+                                  "mode": "cover"
+                                },
+                                "$glass"
+                              ],
+                              "cornerRadius": 10,
+                              "padding": 12,
+                              "justifyContent": "end",
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "PqWsz",
+                                  "name": "Artwork Actions",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "fylbi",
+                                      "name": "More Button",
+                                      "width": 24,
+                                      "height": 24,
+                                      "fill": "$glass-dark",
+                                      "cornerRadius": 999,
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "tVY4q",
+                                          "name": "More Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "more-horizontal",
+                                          "library": "lucide",
+                                          "fill": "$text-primary"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "KKmO0",
+                                      "name": "Play Button",
+                                      "width": 30,
+                                      "height": 30,
+                                      "fill": "$gold",
+                                      "cornerRadius": 999,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#F5C75E66",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 4
+                                        },
+                                        "blur": 16
+                                      },
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "Tf9Sq",
+                                          "name": "Play Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "play",
+                                          "library": "lucide",
+                                          "fill": "$midnight"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "o3KGZE",
+                              "name": "Title",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "As It Was",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13.5,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "qOE4B",
+                              "name": "Artist",
+                              "fill": "$text-secondary",
+                              "content": "Harry Styles",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ZgSmR",
+                              "name": "Meta Row",
+                              "width": "fill_container",
+                              "padding": [
+                                2,
+                                0,
+                                0,
+                                0
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "qUbED",
+                                  "name": "Duration",
+                                  "fill": "$text-muted",
+                                  "content": "2:47",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "A37tGV",
+                                  "name": "Rating",
+                                  "fill": "$gold",
+                                  "content": "★ 4.8",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Qh6be",
+                          "name": "Track Card · The Velvet Hour",
+                          "width": "fill_container",
+                          "fill": "$glass",
+                          "cornerRadius": 16,
+                          "stroke": "$glass-border",
+                          "strokeWidth": 1,
+                          "effect": [
+                            {
+                              "type": "background_blur",
+                              "radius": 22
+                            },
+                            {
+                              "type": "shadow",
+                              "shadowType": "outer",
+                              "color": "#00000033",
+                              "offset": {
+                                "x": 0,
+                                "y": 8
+                              },
+                              "blur": 20
+                            }
+                          ],
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 10,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "tAMPQ",
+                              "name": "Artwork",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": [
+                                {
+                                  "type": "image",
+                                  "enabled": true,
+                                  "url": "music-assets/covers/flowers.jpg",
+                                  "mode": "cover"
+                                },
+                                "$glass"
+                              ],
+                              "cornerRadius": 10,
+                              "padding": 12,
+                              "justifyContent": "end",
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "STcNn",
+                                  "name": "Artwork Actions",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "Y01xym",
+                                      "name": "More Button",
+                                      "width": 24,
+                                      "height": 24,
+                                      "fill": "$glass-dark",
+                                      "cornerRadius": 999,
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "BKsil",
+                                          "name": "More Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "more-horizontal",
+                                          "library": "lucide",
+                                          "fill": "$text-primary"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "UTy2U",
+                                      "name": "Play Button",
+                                      "width": 30,
+                                      "height": 30,
+                                      "fill": "$gold",
+                                      "cornerRadius": 999,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#F5C75E66",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 4
+                                        },
+                                        "blur": 16
+                                      },
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "iuSUK",
+                                          "name": "Play Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "play",
+                                          "library": "lucide",
+                                          "fill": "$midnight"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "wshhe",
+                              "name": "Title",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Flowers",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13.5,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Or5I7",
+                              "name": "Artist",
+                              "fill": "$text-secondary",
+                              "content": "Miley Cyrus",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "fPgLp",
+                              "name": "Meta Row",
+                              "width": "fill_container",
+                              "padding": [
+                                2,
+                                0,
+                                0,
+                                0
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "JRXth",
+                                  "name": "Duration",
+                                  "fill": "$text-muted",
+                                  "content": "3:20",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "H3ZSHT",
+                                  "name": "Rating",
+                                  "fill": "$gold",
+                                  "content": "★ 4.6",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "XtNkm",
+                          "name": "Track Card · Sable Sun",
+                          "width": "fill_container",
+                          "fill": "$glass",
+                          "cornerRadius": 16,
+                          "stroke": "$glass-border",
+                          "strokeWidth": 1,
+                          "effect": [
+                            {
+                              "type": "background_blur",
+                              "radius": 22
+                            },
+                            {
+                              "type": "shadow",
+                              "shadowType": "outer",
+                              "color": "#00000033",
+                              "offset": {
+                                "x": 0,
+                                "y": 8
+                              },
+                              "blur": 20
+                            }
+                          ],
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 10,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "bqESg",
+                              "name": "Artwork",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": [
+                                {
+                                  "type": "image",
+                                  "enabled": true,
+                                  "url": "music-assets/covers/sunflower.jpg",
+                                  "mode": "cover"
+                                },
+                                "$glass"
+                              ],
+                              "cornerRadius": 10,
+                              "padding": 12,
+                              "justifyContent": "end",
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "qlN6S",
+                                  "name": "Artwork Actions",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "NdEqN",
+                                      "name": "More Button",
+                                      "width": 24,
+                                      "height": 24,
+                                      "fill": "$glass-dark",
+                                      "cornerRadius": 999,
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "lJOb8",
+                                          "name": "More Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "more-horizontal",
+                                          "library": "lucide",
+                                          "fill": "$text-primary"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "x0Ed3k",
+                                      "name": "Play Button",
+                                      "width": 30,
+                                      "height": 30,
+                                      "fill": "$gold",
+                                      "cornerRadius": 999,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#F5C75E66",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 4
+                                        },
+                                        "blur": 16
+                                      },
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "o5kjo",
+                                          "name": "Play Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "play",
+                                          "library": "lucide",
+                                          "fill": "$midnight"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "xDUKJ",
+                              "name": "Title",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Sunflower",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13.5,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ZSvcf",
+                              "name": "Artist",
+                              "fill": "$text-secondary",
+                              "content": "Post Malone, Swae Lee",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "fWy5g",
+                              "name": "Meta Row",
+                              "width": "fill_container",
+                              "padding": [
+                                2,
+                                0,
+                                0,
+                                0
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "XczAk",
+                                  "name": "Duration",
+                                  "fill": "$text-muted",
+                                  "content": "2:38",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "N7r2Mq",
+                                  "name": "Rating",
+                                  "fill": "$gold",
+                                  "content": "★ 4.5",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "LlPcY",
+                  "name": "Showcase Row",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "yCmGR",
+                      "name": "Made For You Section",
+                      "width": 975,
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "id": "n1EN4Y",
+                          "type": "ref",
+                          "ref": "cDie6",
+                          "name": "Section Header",
+                          "width": "fill_container",
+                          "descendants": {
+                            "sVZ2V": {
+                              "content": "Made For You"
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yAAQI",
+                          "name": "Playlist Cards",
+                          "width": "fill_container",
+                          "gap": 16,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "y0nQbB",
+                              "name": "Playlist Card · Daily Mix 01",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 8,
+                              "padding": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "b45du",
+                                  "name": "Artwork",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 120,
+                                  "fill": [
+                                    {
+                                      "type": "image",
+                                      "enabled": true,
+                                      "url": "music-assets/covers/blinding-lights.jpg",
+                                      "mode": "cover"
+                                    },
+                                    "$glass"
+                                  ],
+                                  "cornerRadius": 10,
+                                  "padding": 12,
+                                  "justifyContent": "end",
+                                  "alignItems": "end",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "P3cy6E",
+                                      "name": "Shuffle Button",
+                                      "width": 30,
+                                      "height": 30,
+                                      "fill": "$glass-dark",
+                                      "cornerRadius": 999,
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "mcfy7",
+                                          "name": "Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "shuffle",
+                                          "library": "lucide",
+                                          "fill": "$text-primary"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "cVVKp",
+                                  "name": "Title",
+                                  "fill": "$text-primary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Today's Top Hits",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "SSp42",
+                                  "name": "Subtitle",
+                                  "fill": "$text-secondary",
+                                  "content": "The Weeknd is on top of the Hottest 50",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "UyoGc",
+                              "name": "Playlist Card · Late Night Vibes",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 8,
+                              "padding": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "MvZAW",
+                                  "name": "Artwork",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 120,
+                                  "fill": [
+                                    {
+                                      "type": "image",
+                                      "enabled": true,
+                                      "url": "music-assets/covers/flowers.jpg",
+                                      "mode": "cover"
+                                    },
+                                    "$glass"
+                                  ],
+                                  "cornerRadius": 10,
+                                  "padding": 12,
+                                  "justifyContent": "end",
+                                  "alignItems": "end",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "l9kFre",
+                                      "name": "Shuffle Button",
+                                      "width": 30,
+                                      "height": 30,
+                                      "fill": "$glass-dark",
+                                      "cornerRadius": 999,
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "PcvK3",
+                                          "name": "Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "shuffle",
+                                          "library": "lucide",
+                                          "fill": "$text-primary"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "yAOgZ",
+                                  "name": "Title",
+                                  "fill": "$text-primary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Discover Weekly",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "p4l1oD",
+                                  "name": "Subtitle",
+                                  "fill": "$text-secondary",
+                                  "content": "Your weekly mixtape of fresh music",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "sMMGT",
+                              "name": "Playlist Card · Your Favorites",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 8,
+                              "padding": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "RR2FU",
+                                  "name": "Artwork",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 120,
+                                  "fill": [
+                                    {
+                                      "type": "image",
+                                      "enabled": true,
+                                      "url": "music-assets/covers/as-it-was.jpg",
+                                      "mode": "cover"
+                                    },
+                                    "$glass"
+                                  ],
+                                  "cornerRadius": 10,
+                                  "padding": 12,
+                                  "justifyContent": "end",
+                                  "alignItems": "end",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "ww5cR",
+                                      "name": "Shuffle Button",
+                                      "width": 30,
+                                      "height": 30,
+                                      "fill": "$glass-dark",
+                                      "cornerRadius": 999,
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "AfQmN",
+                                          "name": "Icon",
+                                          "width": 12,
+                                          "height": 12,
+                                          "icon": "shuffle",
+                                          "library": "lucide",
+                                          "fill": "$text-primary"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "P5PJm",
+                                  "name": "Title",
+                                  "fill": "$text-primary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Chill Hits",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "i4VCI",
+                                  "name": "Subtitle",
+                                  "fill": "$text-secondary",
+                                  "content": "Comforting melodies for your day",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Gc27H",
+                      "name": "Explore By Mood Section",
+                      "width": 630,
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "id": "HJiNr",
+                          "type": "ref",
+                          "ref": "cDie6",
+                          "name": "Section Header",
+                          "width": "fill_container",
+                          "descendants": {
+                            "sVZ2V": {
+                              "content": "Explore By Mood"
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "lkyaq",
+                          "name": "Mood Grid",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "L76sLU",
+                              "name": "Mood Row 1",
+                              "width": "fill_container",
+                              "gap": 8,
+                              "children": [
+                                {
+                                  "id": "N4QTmY",
+                                  "type": "ref",
+                                  "ref": "AYTMY",
+                                  "name": "Mood · Happy",
+                                  "width": "fill_container",
+                                  "fill": [
+                                    {
+                                      "type": "gradient",
+                                      "gradientType": "linear",
+                                      "enabled": true,
+                                      "rotation": 180,
+                                      "size": {
+                                        "height": 1
+                                      },
+                                      "colors": [
+                                        {
+                                          "color": "#F5C75E4D",
+                                          "position": 0
+                                        },
+                                        {
+                                          "color": "#244B87",
+                                          "position": 1
+                                        }
+                                      ]
+                                    },
+                                    "$glass"
+                                  ],
+                                  "descendants": {
+                                    "qwW9a": {
+                                      "icon": "smile"
+                                    },
+                                    "MrGyC": {
+                                      "content": "Happy"
+                                    },
+                                    "x06obh": {
+                                      "content": "128 songs"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "Lbtcw",
+                                  "type": "ref",
+                                  "ref": "AYTMY",
+                                  "name": "Mood · Sad",
+                                  "width": "fill_container",
+                                  "fill": [
+                                    {
+                                      "type": "gradient",
+                                      "gradientType": "linear",
+                                      "enabled": true,
+                                      "rotation": 180,
+                                      "size": {
+                                        "height": 1
+                                      },
+                                      "colors": [
+                                        {
+                                          "color": "#2C3E6B",
+                                          "position": 0
+                                        },
+                                        {
+                                          "color": "#0B1230",
+                                          "position": 1
+                                        }
+                                      ]
+                                    },
+                                    "$glass"
+                                  ],
+                                  "descendants": {
+                                    "qwW9a": {
+                                      "icon": "cloud-rain"
+                                    },
+                                    "MrGyC": {
+                                      "content": "Sad"
+                                    },
+                                    "x06obh": {
+                                      "content": "96 songs"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "p6I5TW",
+                                  "type": "ref",
+                                  "ref": "AYTMY",
+                                  "name": "Mood · Chill",
+                                  "width": "fill_container",
+                                  "fill": [
+                                    {
+                                      "type": "gradient",
+                                      "gradientType": "linear",
+                                      "enabled": true,
+                                      "rotation": 180,
+                                      "size": {
+                                        "height": 1
+                                      },
+                                      "colors": [
+                                        {
+                                          "color": "#244B87",
+                                          "position": 0
+                                        },
+                                        {
+                                          "color": "#101A35",
+                                          "position": 1
+                                        }
+                                      ]
+                                    },
+                                    "$glass"
+                                  ],
+                                  "descendants": {
+                                    "qwW9a": {
+                                      "icon": "coffee"
+                                    },
+                                    "MrGyC": {
+                                      "content": "Chill"
+                                    },
+                                    "x06obh": {
+                                      "content": "154 songs"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "WCeBq",
+                              "name": "Mood Row 2",
+                              "width": "fill_container",
+                              "gap": 8,
+                              "children": [
+                                {
+                                  "id": "QsUP3",
+                                  "type": "ref",
+                                  "ref": "AYTMY",
+                                  "name": "Mood · Romantic",
+                                  "width": "fill_container",
+                                  "fill": [
+                                    {
+                                      "type": "gradient",
+                                      "gradientType": "linear",
+                                      "enabled": true,
+                                      "rotation": 180,
+                                      "size": {
+                                        "height": 1
+                                      },
+                                      "colors": [
+                                        {
+                                          "color": "#6E3A52",
+                                          "position": 0
+                                        },
+                                        {
+                                          "color": "#101A35",
+                                          "position": 1
+                                        }
+                                      ]
+                                    },
+                                    "$glass"
+                                  ],
+                                  "descendants": {
+                                    "qwW9a": {
+                                      "icon": "heart"
+                                    },
+                                    "MrGyC": {
+                                      "content": "Romantic"
+                                    },
+                                    "x06obh": {
+                                      "content": "87 songs"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "EFJgI",
+                                  "type": "ref",
+                                  "ref": "AYTMY",
+                                  "name": "Mood · Focus",
+                                  "width": "fill_container",
+                                  "fill": [
+                                    {
+                                      "type": "gradient",
+                                      "gradientType": "linear",
+                                      "enabled": true,
+                                      "rotation": 180,
+                                      "size": {
+                                        "height": 1
+                                      },
+                                      "colors": [
+                                        {
+                                          "color": "#172B55",
+                                          "position": 0
+                                        },
+                                        {
+                                          "color": "#0B1230",
+                                          "position": 1
+                                        }
+                                      ]
+                                    },
+                                    "$glass"
+                                  ],
+                                  "descendants": {
+                                    "qwW9a": {
+                                      "icon": "target"
+                                    },
+                                    "MrGyC": {
+                                      "content": "Focus"
+                                    },
+                                    "x06obh": {
+                                      "content": "112 songs"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "cFNXz",
+                                  "type": "ref",
+                                  "ref": "AYTMY",
+                                  "name": "Mood · Energetic",
+                                  "width": "fill_container",
+                                  "fill": [
+                                    {
+                                      "type": "gradient",
+                                      "gradientType": "linear",
+                                      "enabled": true,
+                                      "rotation": 180,
+                                      "size": {
+                                        "height": 1
+                                      },
+                                      "colors": [
+                                        {
+                                          "color": "#D99A3D",
+                                          "position": 0
+                                        },
+                                        {
+                                          "color": "#101A35",
+                                          "position": 1
+                                        }
+                                      ]
+                                    },
+                                    "$glass"
+                                  ],
+                                  "descendants": {
+                                    "qwW9a": {
+                                      "icon": "zap"
+                                    },
+                                    "MrGyC": {
+                                      "content": "Energetic"
+                                    },
+                                    "x06obh": {
+                                      "content": "143 songs"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "otwUt",
+                  "name": "Discovery Row",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "GLGmN",
+                      "name": "New Releases Section",
+                      "width": 975,
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "id": "rX13f",
+                          "type": "ref",
+                          "ref": "cDie6",
+                          "name": "Section Header",
+                          "width": "fill_container",
+                          "descendants": {
+                            "sVZ2V": {
+                              "content": "New Releases"
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "YOz0X",
+                          "name": "Release Cards",
+                          "width": "fill_container",
+                          "gap": 16,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "T8nWr",
+                              "name": "Release Card · Velvet Static",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 7,
+                              "padding": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "jQRjT",
+                                  "name": "Artwork",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 110,
+                                  "fill": [
+                                    {
+                                      "type": "image",
+                                      "enabled": true,
+                                      "url": "music-assets/covers/short-n-sweet.jpg",
+                                      "mode": "cover"
+                                    },
+                                    "$glass"
+                                  ],
+                                  "cornerRadius": 10,
+                                  "padding": 12,
+                                  "justifyContent": "end",
+                                  "alignItems": "end"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "tGuDs",
+                                  "name": "Title Row",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "Y9J4O0",
+                                      "name": "Title",
+                                      "fill": "$text-primary",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Short n' Sweet",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "X49VFe",
+                                      "name": "New Badge",
+                                      "fill": "$gold",
+                                      "cornerRadius": 999,
+                                      "padding": [
+                                        2,
+                                        8
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "a2MryK",
+                                          "name": "Label",
+                                          "fill": "$midnight",
+                                          "content": "NEW",
+                                          "fontFamily": "$font-body",
+                                          "fontSize": 9,
+                                          "fontWeight": "700",
+                                          "letterSpacing": 1
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "XHQOy",
+                                  "name": "Artist",
+                                  "fill": "$text-secondary",
+                                  "content": "Sabrina Carpenter",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "XAFaJ",
+                                  "name": "Release Date",
+                                  "fill": "$text-muted",
+                                  "content": "Aug 23, 2024",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "zNIbS",
+                              "name": "Release Card · Night Geometry",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 7,
+                              "padding": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "yccKL",
+                                  "name": "Artwork",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 110,
+                                  "fill": [
+                                    {
+                                      "type": "image",
+                                      "enabled": true,
+                                      "url": "music-assets/covers/hit-me-hard-and-soft.jpg",
+                                      "mode": "cover"
+                                    },
+                                    "$glass"
+                                  ],
+                                  "cornerRadius": 10,
+                                  "padding": 12,
+                                  "justifyContent": "end",
+                                  "alignItems": "end"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "e8xmHs",
+                                  "name": "Title Row",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "jnXxq",
+                                      "name": "Title",
+                                      "fill": "$text-primary",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Hit Me Hard and Soft",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "vdiwW",
+                                      "name": "New Badge",
+                                      "fill": "$gold",
+                                      "cornerRadius": 999,
+                                      "padding": [
+                                        2,
+                                        8
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "h9jyD",
+                                          "name": "Label",
+                                          "fill": "$midnight",
+                                          "content": "NEW",
+                                          "fontFamily": "$font-body",
+                                          "fontSize": 9,
+                                          "fontWeight": "700",
+                                          "letterSpacing": 1
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "kJPay",
+                                  "name": "Artist",
+                                  "fill": "$text-secondary",
+                                  "content": "Billie Eilish",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "uFSWl",
+                                  "name": "Release Date",
+                                  "fill": "$text-muted",
+                                  "content": "May 17, 2024",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "sRvnO",
+                              "name": "Release Card · Paper Crowns (Live)",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 7,
+                              "padding": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "kG9QS",
+                                  "name": "Artwork",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 110,
+                                  "fill": [
+                                    {
+                                      "type": "image",
+                                      "enabled": true,
+                                      "url": "music-assets/covers/tortured-poets.jpg",
+                                      "mode": "cover"
+                                    },
+                                    "$glass"
+                                  ],
+                                  "cornerRadius": 10,
+                                  "padding": 12,
+                                  "justifyContent": "end",
+                                  "alignItems": "end"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "uysgj",
+                                  "name": "Title Row",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "NjNbU",
+                                      "name": "Title",
+                                      "fill": "$text-primary",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "The Tortured Poets Department",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Q8A97",
+                                      "name": "New Badge",
+                                      "fill": "$gold",
+                                      "cornerRadius": 999,
+                                      "padding": [
+                                        2,
+                                        8
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "l4qsYi",
+                                          "name": "Label",
+                                          "fill": "$midnight",
+                                          "content": "NEW",
+                                          "fontFamily": "$font-body",
+                                          "fontSize": 9,
+                                          "fontWeight": "700",
+                                          "letterSpacing": 1
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "j6gdCN",
+                                  "name": "Artist",
+                                  "fill": "$text-secondary",
+                                  "content": "Taylor Swift",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "nlcwX",
+                                  "name": "Release Date",
+                                  "fill": "$text-muted",
+                                  "content": "Apr 19, 2024",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "DhYgJ",
+                              "name": "Release Card · After Midnight",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 7,
+                              "padding": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "AvxjL",
+                                  "name": "Artwork",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 110,
+                                  "fill": [
+                                    {
+                                      "type": "image",
+                                      "enabled": true,
+                                      "url": "music-assets/covers/cowboy-carter.jpg",
+                                      "mode": "cover"
+                                    },
+                                    "$glass"
+                                  ],
+                                  "cornerRadius": 10,
+                                  "padding": 12,
+                                  "justifyContent": "end",
+                                  "alignItems": "end"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "S9f7L",
+                                  "name": "Title Row",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "q91Eb",
+                                      "name": "Title",
+                                      "fill": "$text-primary",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "COWBOY CARTER",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "w3Aisq",
+                                      "name": "New Badge",
+                                      "fill": "$gold",
+                                      "cornerRadius": 999,
+                                      "padding": [
+                                        2,
+                                        8
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "s4esZp",
+                                          "name": "Label",
+                                          "fill": "$midnight",
+                                          "content": "NEW",
+                                          "fontFamily": "$font-body",
+                                          "fontSize": 9,
+                                          "fontWeight": "700",
+                                          "letterSpacing": 1
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "vnokH",
+                                  "name": "Artist",
+                                  "fill": "$text-secondary",
+                                  "content": "Beyoncé",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "aCCJk",
+                                  "name": "Release Date",
+                                  "fill": "$text-muted",
+                                  "content": "Mar 29, 2024",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "FCWFD",
+                              "name": "Release Card · Low Tide Lullaby",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 7,
+                              "padding": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "fVyu2",
+                                  "name": "Artwork",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "height": 110,
+                                  "fill": [
+                                    {
+                                      "type": "image",
+                                      "enabled": true,
+                                      "url": "music-assets/covers/chromakopia.jpg",
+                                      "mode": "cover"
+                                    },
+                                    "$glass"
+                                  ],
+                                  "cornerRadius": 10,
+                                  "padding": 12,
+                                  "justifyContent": "end",
+                                  "alignItems": "end"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "m9v0K",
+                                  "name": "Title Row",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "twxT2",
+                                      "name": "Title",
+                                      "fill": "$text-primary",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "CHROMAKOPIA",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "kMcyw",
+                                      "name": "New Badge",
+                                      "fill": "$gold",
+                                      "cornerRadius": 999,
+                                      "padding": [
+                                        2,
+                                        8
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "I51P6Q",
+                                          "name": "Label",
+                                          "fill": "$midnight",
+                                          "content": "NEW",
+                                          "fontFamily": "$font-body",
+                                          "fontSize": 9,
+                                          "fontWeight": "700",
+                                          "letterSpacing": 1
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "jMqnQ",
+                                  "name": "Artist",
+                                  "fill": "$text-secondary",
+                                  "content": "Tyler, The Creator",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "XGUz9",
+                                  "name": "Release Date",
+                                  "fill": "$text-muted",
+                                  "content": "Oct 28, 2024",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 10,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ri9V3",
+                      "name": "Popular Artists Section",
+                      "width": 630,
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "id": "lPASD",
+                          "type": "ref",
+                          "ref": "cDie6",
+                          "name": "Section Header",
+                          "width": "fill_container",
+                          "descendants": {
+                            "sVZ2V": {
+                              "content": "Popular Artists"
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "pC7CR",
+                          "name": "Artist Cards",
+                          "width": "fill_container",
+                          "gap": 16,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "hYRGd",
+                              "name": "Artist Card · Aurora Vale",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 6,
+                              "padding": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "v2L64",
+                                  "name": "Photo",
+                                  "clip": true,
+                                  "width": 70,
+                                  "height": 70,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "music-assets/artists/the-weeknd.jpg",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 999,
+                                  "stroke": "$gold",
+                                  "strokeWidth": 1.5
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "f4M8SN",
+                                  "name": "Name",
+                                  "fill": "$text-primary",
+                                  "content": "The Weeknd",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "pqO6P",
+                                  "name": "Listeners",
+                                  "fill": "$text-muted",
+                                  "content": "108M monthly listeners",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 9.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "GVEdu",
+                              "name": "Artist Card · Kito Sonder",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 6,
+                              "padding": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "VHF2A",
+                                  "name": "Photo",
+                                  "clip": true,
+                                  "width": 70,
+                                  "height": 70,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "music-assets/artists/taylor-swift.jpg",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 999,
+                                  "stroke": "$gold",
+                                  "strokeWidth": 1.5
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "R9qJOs",
+                                  "name": "Name",
+                                  "fill": "$text-primary",
+                                  "content": "Taylor Swift",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ZIJnb",
+                                  "name": "Listeners",
+                                  "fill": "$text-muted",
+                                  "content": "104M monthly listeners",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 9.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "AUaca",
+                              "name": "Artist Card · Mara Vance",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 6,
+                              "padding": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "V8dSWv",
+                                  "name": "Photo",
+                                  "clip": true,
+                                  "width": 70,
+                                  "height": 70,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "music-assets/artists/billie-eilish.jpg",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 999,
+                                  "stroke": "$gold",
+                                  "strokeWidth": 1.5
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "YNIdw",
+                                  "name": "Name",
+                                  "fill": "$text-primary",
+                                  "content": "Billie Eilish",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "U3LKSL",
+                                  "name": "Listeners",
+                                  "fill": "$text-muted",
+                                  "content": "96M monthly listeners",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 9.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "PbINO",
+                              "name": "Artist Card · The Velvet Hour",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 6,
+                              "padding": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "pfiUC",
+                                  "name": "Photo",
+                                  "clip": true,
+                                  "width": 70,
+                                  "height": 70,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "music-assets/artists/drake.jpg",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 999,
+                                  "stroke": "$gold",
+                                  "strokeWidth": 1.5
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "S4gbJ6",
+                                  "name": "Name",
+                                  "fill": "$text-primary",
+                                  "content": "Drake",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "UVvfR",
+                                  "name": "Listeners",
+                                  "fill": "$text-muted",
+                                  "content": "88M monthly listeners",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 9.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "HHoqE",
+                              "name": "Artist Card · Sable Sun",
+                              "width": "fill_container",
+                              "fill": "$glass",
+                              "cornerRadius": 16,
+                              "stroke": "$glass-border",
+                              "strokeWidth": 1,
+                              "effect": [
+                                {
+                                  "type": "background_blur",
+                                  "radius": 22
+                                },
+                                {
+                                  "type": "shadow",
+                                  "shadowType": "outer",
+                                  "color": "#00000033",
+                                  "offset": {
+                                    "x": 0,
+                                    "y": 8
+                                  },
+                                  "blur": 20
+                                }
+                              ],
+                              "layout": "vertical",
+                              "gap": 6,
+                              "padding": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "WafA9",
+                                  "name": "Photo",
+                                  "clip": true,
+                                  "width": 70,
+                                  "height": 70,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "music-assets/artists/bad-bunny.jpg",
+                                    "mode": "cover"
+                                  },
+                                  "cornerRadius": 999,
+                                  "stroke": "$gold",
+                                  "strokeWidth": 1.5
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "P63cwb",
+                                  "name": "Name",
+                                  "fill": "$text-primary",
+                                  "content": "Bad Bunny",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "OcvJL",
+                                  "name": "Listeners",
+                                  "fill": "$text-muted",
+                                  "content": "52M monthly listeners",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 9.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "b06tUL",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 988,
+              "name": "Music Player",
+              "width": 1684,
+              "height": 92,
+              "fill": "#0B1230C9",
+              "stroke": "$glass-border",
+              "strokeWidth": {
+                "top": 1
+              },
+              "effect": [
+                {
+                  "type": "background_blur",
+                  "radius": 28
+                },
+                {
+                  "type": "shadow",
+                  "shadowType": "outer",
+                  "color": "#00000052",
+                  "offset": {
+                    "x": 0,
+                    "y": -8
+                  },
+                  "blur": 32
+                }
+              ],
+              "gap": 24,
+              "padding": [
+                0,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "inXsE",
+                  "name": "Now Playing",
+                  "width": 300,
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "eDCoy",
+                      "name": "Player Artwork",
+                      "clip": true,
+                      "width": 56,
+                      "height": 56,
+                      "fill": [
+                        {
+                          "type": "image",
+                          "enabled": true,
+                          "url": "music-assets/covers/blinding-lights.jpg",
+                          "mode": "cover"
+                        },
+                        "$glass"
+                      ],
+                      "cornerRadius": 10
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bSm7s",
+                      "name": "Now Playing Copy",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "DG9MQ",
+                          "name": "Track",
+                          "fill": "$text-primary",
+                          "content": "Blinding Lights",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wtiF7",
+                          "name": "Artist",
+                          "fill": "$text-secondary",
+                          "content": "The Weeknd",
+                          "fontFamily": "$font-body",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "gnhm5",
+                      "name": "Favorite",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "heart",
+                      "library": "lucide",
+                      "fill": "$gold"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xo80H",
+                  "name": "Playback Center",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Hzuoy",
+                      "name": "Controls",
+                      "gap": 18,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "Ii8Do",
+                          "name": "shuffle",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "shuffle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "FZFhv",
+                          "name": "skip-back",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "skip-back",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "cvH1k",
+                          "name": "Play Pause",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$gold",
+                          "cornerRadius": 999,
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#F5C75E73",
+                            "offset": {
+                              "x": 0,
+                              "y": 4
+                            },
+                            "blur": 18
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "T1sWv",
+                              "name": "Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "pause",
+                              "library": "lucide",
+                              "fill": "$midnight"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "uibdg",
+                          "name": "skip-forward",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "skip-forward",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "M2pWPF",
+                          "name": "repeat",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "repeat",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "PG4Hb",
+                      "name": "Progress Row",
+                      "width": "fill_container",
+                      "gap": 10,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "CGLwO",
+                          "name": "Elapsed",
+                          "fill": "$text-muted",
+                          "content": "1:12",
+                          "fontFamily": "$font-body",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JeYoU",
+                          "name": "Progress Track",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 4,
+                          "fill": "#FFFFFF26",
+                          "cornerRadius": 999,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "kPBRp",
+                              "layoutPosition": "absolute",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Elapsed Fill",
+                              "width": 190,
+                              "height": 4,
+                              "fill": "$gold",
+                              "cornerRadius": 999
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "q39kT",
+                          "name": "Total",
+                          "fill": "$text-muted",
+                          "content": "3:20",
+                          "fontFamily": "$font-body",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "LGhU5",
+                  "name": "Player Utilities",
+                  "width": 240,
+                  "gap": 14,
+                  "justifyContent": "end",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "k0Hae",
+                      "name": "Volume",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "volume-2",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "iFRJQ",
+                      "name": "Volume Track",
+                      "clip": true,
+                      "width": 82,
+                      "height": 4,
+                      "fill": "#FFFFFF26",
+                      "cornerRadius": 999,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "UqHAS",
+                          "layoutPosition": "absolute",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Volume Fill",
+                          "width": 56,
+                          "height": 4,
+                          "fill": "$text-secondary",
+                          "cornerRadius": 999
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "y8SmEJ",
+                      "name": "list-music",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "list-music",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "hxgAX",
+                      "name": "maximize-2",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "maximize-2",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "AeNeJ",
+          "layoutPosition": "absolute",
+          "x": 1628,
+          "y": 66,
+          "name": "Filter Dropdown · Open",
+          "width": 190,
+          "fill": "#0B1230E6",
+          "cornerRadius": 14,
+          "stroke": "$glass-border",
+          "strokeWidth": 1,
+          "effect": [
+            {
+              "type": "background_blur",
+              "radius": 24
+            },
+            {
+              "type": "shadow",
+              "shadowType": "outer",
+              "color": "#00000066",
+              "offset": {
+                "x": 0,
+                "y": 16
+              },
+              "blur": 40
+            }
+          ],
+          "layout": "vertical",
+          "gap": 4,
+          "padding": 8,
+          "children": [
+            {
+              "type": "frame",
+              "id": "dZ6nS",
+              "name": "Filter Option · All",
+              "width": "fill_container",
+              "cornerRadius": 8,
+              "gap": 10,
+              "padding": [
+                9,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "X7zQos",
+                  "name": "Icon",
+                  "width": 15,
+                  "height": 15,
+                  "icon": "layout-grid",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "LrK1o",
+                  "name": "Label",
+                  "fill": "$text-secondary",
+                  "content": "All",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PgYof",
+              "name": "Filter Option · Movies",
+              "width": "fill_container",
+              "cornerRadius": 8,
+              "gap": 10,
+              "padding": [
+                9,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "UN7kK",
+                  "name": "Icon",
+                  "width": 15,
+                  "height": 15,
+                  "icon": "clapperboard",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "U4ZcQc",
+                  "name": "Label",
+                  "fill": "$text-secondary",
+                  "content": "Movies",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FB748",
+              "name": "Filter Option · Music",
+              "width": "fill_container",
+              "fill": "#F5C75E2E",
+              "cornerRadius": 8,
+              "gap": 10,
+              "padding": [
+                9,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "Vgf1B",
+                  "name": "Icon",
+                  "width": 15,
+                  "height": 15,
+                  "icon": "music",
+                  "library": "lucide",
+                  "fill": "$gold"
+                },
+                {
+                  "type": "text",
+                  "id": "RCDl3",
+                  "name": "Label",
+                  "fill": "$cream",
+                  "content": "Music",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "g38eh",
+              "name": "Filter Option · Books",
+              "width": "fill_container",
+              "cornerRadius": 8,
+              "gap": 10,
+              "padding": [
+                9,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "OUvqs",
+                  "name": "Icon",
+                  "width": 15,
+                  "height": 15,
+                  "icon": "book-open",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "YM3hP",
+                  "name": "Label",
+                  "fill": "$text-secondary",
+                  "content": "Books",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eTb7m",
+              "name": "Filter Option · Games",
+              "width": "fill_container",
+              "cornerRadius": 8,
+              "gap": 10,
+              "padding": [
+                9,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "qna8O",
+                  "name": "Icon",
+                  "width": 15,
+                  "height": 15,
+                  "icon": "gamepad-2",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "I6x6D",
+                  "name": "Label",
+                  "fill": "$text-secondary",
+                  "content": "Games",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "text-primary": {
+      "type": "color",
+      "value": "#F3EBDD"
+    },
+    "text-secondary": {
+      "type": "color",
+      "value": "#A9B4D6"
+    },
+    "font-body": {
+      "type": "string",
+      "value": "Inter"
+    },
+    "radius-sm": {
+      "type": "number",
+      "value": 10
+    },
+    "radius-md": {
+      "type": "number",
+      "value": 14
+    },
+    "midnight": {
+      "type": "color",
+      "value": "#101A35"
+    },
+    "starry": {
+      "type": "color",
+      "value": "#172B55"
+    },
+    "cobalt": {
+      "type": "color",
+      "value": "#244B87"
+    },
+    "gold": {
+      "type": "color",
+      "value": "#F5C75E"
+    },
+    "cream": {
+      "type": "color",
+      "value": "#F3EBDD"
+    },
+    "glass": {
+      "type": "color",
+      "value": "#FFFFFF1A"
+    },
+    "glass-strong": {
+      "type": "color",
+      "value": "#FFFFFF26"
+    },
+    "glass-border": {
+      "type": "color",
+      "value": "#FFFFFF30"
+    },
+    "glass-dark": {
+      "type": "color",
+      "value": "#0B1230B8"
+    },
+    "text-muted": {
+      "type": "color",
+      "value": "#7E8BB4"
+    },
+    "font-display": {
+      "type": "string",
+      "value": "Fraunces"
+    },
+    "radius-lg": {
+      "type": "number",
+      "value": 20
+    }
+  },
+  "fileToken": "8ae204f3-518d-444f-babc-a10f4eb225a0"
+}

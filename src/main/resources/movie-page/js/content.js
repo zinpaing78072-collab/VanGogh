@@ -5,7 +5,7 @@
  * never blocks on network), then the data drain is polled until this
  * generation resolves. Artwork drains double as the completion signal.
  */
-import { state, nextRequest, isCurrent } from "./state.js";
+import { state, nextRequest, isCurrent, cancelDetailRequest } from "./state.js";
 import { render } from "./render.js";
 import { DOMAINS } from "./domains.js";
 import { messageOf } from "./util.js";
@@ -14,6 +14,11 @@ export async function loadContent(domainKey, kind, term) {
     const domain = DOMAINS[domainKey];
     const seq = nextRequest();
 
+    // A browse load always leaves the song detail: drop any pending detail
+    // reply so it cannot paint over the newly requested grid.
+    cancelDetailRequest();
+    state.view = "browse";
+    state.song = null;
     state.domain = domainKey;
     state.title = kind === "search" ? "Search Results" : `Trending ${domain.plural}`;
     state.status = "loading";
