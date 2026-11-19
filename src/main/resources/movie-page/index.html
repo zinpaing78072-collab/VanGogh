@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Van Gogh</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="music-detail.css">
 </head>
 <body>
 
@@ -141,7 +142,7 @@
             </div>
         </header>
 
-        <main class="container">
+        <main class="container" id="browseView">
             <section class="trending-section">
                 <h2 class="section-title" id="sectionTitle">Trending Movies</h2>
                 <div class="card-grid" id="movieGrid">
@@ -149,6 +150,40 @@
                 </div>
             </section>
         </main>
+
+        <!-- Song detail (opened from a music card). Painted by
+             js/song-detail.js from state.song; hidden while browsing. -->
+        <section class="song-view hidden" id="songView" aria-live="polite"></section>
+
+        <!-- Song player — a UI-only demo transport until an audio source is
+             wired (the detail payload says so). Pinned to the bottom of the
+             content column while the detail page scrolls. -->
+        <div class="player-bar hidden" id="playerBar" aria-label="Song player">
+            <div class="player-now">
+                <div class="player-art" id="playerArt"></div>
+                <div class="player-copy">
+                    <div class="player-title" id="playerTitle"></div>
+                    <div class="player-artist" id="playerArtist"></div>
+                </div>
+            </div>
+            <div class="player-center">
+                <div class="player-controls">
+                    <button type="button" class="player-btn" id="playerRestart" aria-label="Restart">&#8634;</button>
+                    <button type="button" class="player-btn player-play" id="playerToggle" aria-label="Play">&#9654;</button>
+                </div>
+                <div class="player-progress">
+                    <span id="playerElapsed">0:00</span>
+                    <div class="player-track" id="playerTrack" role="slider" tabindex="0"
+                         aria-label="Seek" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+                        <div class="player-fill" id="playerFill"></div>
+                    </div>
+                    <span id="playerDuration">0:00</span>
+                </div>
+            </div>
+            <div class="player-right">
+                <span class="demo-badge" title="No audio source is wired yet">Demo audio</span>
+            </div>
+        </div>
     </div>
 </div>
 

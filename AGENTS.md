@@ -42,6 +42,14 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
   - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming
   - `MusicController`, `MusicBrainzService`, and `MusicBrainzClient` — MusicBrainz release-group search (album cards), curated trending MBID list, Cover Art Archive cover streaming; MBZ requests are paced (~1/s) with a 503 backoff-retry — see `docs/music-domain.md`
+  - `GeniusController`, `GeniusMusicService`, and `GeniusClient` — Genius
+    chart/search song lists; `requestSongDetail` / `pollSongDetail` resolve one
+    song for the detail page: credits (written/produced/featuring plus the full
+    `custom_performances` bill), album, release date, pageviews, the editorial
+    About copy, listen/watch links, language + translation count, artwork
+    palette, artist/album identity, recording location, community stats and
+    related songs (lyrics, duration and audio are dummy data in `DummyMedia`
+    until those sources land)
   - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail)
   - Frontend: ES modules under `src/main/resources/movie-page/js/` (entry
     `js/app.js`, one file per seam — see "Frontend modules" below): shared card
@@ -67,6 +75,15 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
 - `js/domains/{movie,game,music,book}.js` — one row per form: IPC names, labels, card class, id field, `card(item, idx, onOpen)`, `detail(item)`
 - `js/domains.js` — `DOMAINS` registry (`Object.fromEntries` over the rows) and `DOMAIN_KEYS`
 - `js/artwork.js` `js/detail.js` `js/render.js` `js/content.js` `js/ui.js` — artwork routing, the `openDetail` seam, rendering (incl. the active sidebar button), request lifecycle, search + sidebar switching/collapse
+- `js/song-detail.js` + `music-detail.css` — the song-detail view behind a
+  music card: loading/error/ready states, the full-credits expander, the About
+  panel, listen links, the lyrics panel, the related rail (with Genius'
+  View-all link) and the demo player. The ready state is the bento layout from
+  `prototypes/song-detail-layouts/bento.html`: a 12-column tile grid (cover /
+  identity / details on top, lyrics + About in the middle, credits + related
+  below) that folds to 6 columns with the sidebar open and to one stack when
+  narrow. It paints itself (`paintSongView`/`closeSongView`); `render.js` only
+  decides visibility, so it never imports `render.js`.
 
 Rules that keep the graph acyclic: builders take the row as a parameter
 (`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click
@@ -247,7 +264,10 @@ To run:
   `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` and
   posters through `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` /
   `pollBookCovers` (which doubles as the completion signal, returning −1 when
-  nothing is pending) — all synchronous UI-thread commands. Drop the dance
+  nothing is pending) — all synchronous UI-thread commands. The song detail
+  follows the same rule with its own generation pair (`requestSongDetail` /
+  `pollSongDetail`), so opening a song cannot supersede the browse request or
+  its artwork stream. Drop the dance
   when the project can move to a Krema release whose eval is thread-safe on
   Windows (0.3.3+ source does not fix it either; nothing newer is published on
   Maven Central).
