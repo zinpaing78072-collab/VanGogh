@@ -504,8 +504,38 @@ const TESTS = [
                 playerVisible: !document.getElementById("playerBar").classList.contains("hidden"),
                 playerDuration: document.getElementById("playerDuration").textContent,
                 artShown: !!document.querySelector("#songView .song-art-img:not(.hidden)"),
+                language: ((document.querySelector("#songView .song-lang") || {}).textContent || "")
+                    .replace(/\\s+/g, " ").trim(),
+                relatedAll: (document.querySelector("#songView .related-all") || {}).href || "",
+                creditsToggle: document.querySelectorAll("#songView .credits-toggle").length,
+                creditsHidden: (function () {
+                    var panel = document.querySelector("#songView .credit-all");
+                    return !!panel && panel.classList.contains("hidden");
+                })(),
+                listenLinks: document.querySelectorAll("#songView .song-listen-link").length,
+                aboutParas: document.querySelectorAll("#songView .about-body p").length,
+                hasAboutToggle: document.querySelectorAll('#songView [data-action="about"]').length,
+                verified: document.querySelectorAll("#songView .artist-verified").length,
+                avatar: document.querySelectorAll("#songView .artist-avatar").length,
+                albumCover: document.querySelectorAll("#songView .meta-cover").length,
+                recorded: document.querySelectorAll("#songView .song-meta-cell.wide").length,
+                stats: document.querySelectorAll("#songView .song-stat").length,
+                palette: (document.querySelector("#songView .song-artwork") || {getAttribute: function () { return ""; }})
+                    .getAttribute("style") || "",
                 overflow: Math.max(0, document.getElementById("songView").scrollWidth
                     - document.getElementById("songView").clientWidth)
+            })`));
+
+            await page.evaluate(`document.querySelector('#songView [data-action="credits"]').click(); true`);
+            const creditsOpen = JSON.parse(await page.evaluate(`JSON.stringify({
+                open: !document.querySelector("#songView .credit-all").classList.contains("hidden"),
+                rows: document.querySelectorAll("#songView .credit-all-row").length
+            })`));
+
+            await page.evaluate(`document.querySelector('#songView [data-action="about"]').click(); true`);
+            const aboutOpen = JSON.parse(await page.evaluate(`JSON.stringify({
+                expanded: document.querySelector("#songView .about-body").classList.contains("expanded"),
+                label: document.querySelector('#songView [data-action="about"]').textContent.trim()
             })`));
 
             await page.evaluate(`document.querySelector('#songView [data-action="back"]').click(); true`);
@@ -528,6 +558,26 @@ const TESTS = [
                 check("dummy lyrics render with timings", d.lyrics >= 6, d.lyrics),
                 check("related rail resolves rows", d.related === 5, d.related),
                 check("duration is marked as demo data", d.dummyMarks === 1, d.dummyMarks),
+                check("language pill carries the translation count",
+                    d.language === "English · 22 translations", d.language),
+                check("related rail links Genius' full relationships page",
+                    d.relatedAll.indexOf("/relationships") !== -1, d.relatedAll),
+                check("all-credits expander opens with the full bill",
+                    d.creditsToggle === 1 && d.creditsHidden
+                        && creditsOpen.open && creditsOpen.rows === 3,
+                    d.creditsToggle + "/" + creditsOpen.rows),
+                check("listen links render per provider", d.listenLinks === 2, d.listenLinks),
+                check("About this song is collapsed behind Read more",
+                    d.aboutParas === 3 && d.hasAboutToggle === 1
+                        && aboutOpen.expanded && aboutOpen.label === "Show less",
+                    d.aboutParas + "/" + aboutOpen.label),
+                check("artist identity shows avatar and verified badge",
+                    d.avatar === 1 && d.verified === 1, d.avatar + "/" + d.verified),
+                check("album cover, recording location and community stats render",
+                    d.albumCover === 1 && d.recorded === 1 && d.stats === 4,
+                    d.albumCover + "/" + d.recorded + "/" + d.stats),
+                check("artwork palette is applied to the hero",
+                    d.palette.indexOf("--song-primary") !== -1, d.palette),
                 check("player shows the dummy 4:12 length",
                     d.playerVisible && d.playerDuration === "4:12", d.playerDuration),
                 check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),

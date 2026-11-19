@@ -44,8 +44,11 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
   - `MusicController`, `MusicBrainzService`, and `MusicBrainzClient` — MusicBrainz release-group search (album cards), curated trending MBID list, Cover Art Archive cover streaming; MBZ requests are paced (~1/s) with a 503 backoff-retry — see `docs/music-domain.md`
   - `GeniusController`, `GeniusMusicService`, and `GeniusClient` — Genius
     chart/search song lists; `requestSongDetail` / `pollSongDetail` resolve one
-    song's credits, album, pageviews, related songs and artwork for the song
-    detail page (lyrics, duration and audio are dummy data in `DummyMedia`
+    song for the detail page: credits (written/produced/featuring plus the full
+    `custom_performances` bill), album, release date, pageviews, the editorial
+    About copy, listen/watch links, language + translation count, artwork
+    palette, artist/album identity, recording location, community stats and
+    related songs (lyrics, duration and audio are dummy data in `DummyMedia`
     until those sources land)
   - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail)
   - Frontend: ES modules under `src/main/resources/movie-page/js/` (entry
@@ -72,7 +75,7 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
 - `js/domains/{movie,game,music,book}.js` — one row per form: IPC names, labels, card class, id field, `card(item, idx, onOpen)`, `detail(item)`
 - `js/domains.js` — `DOMAINS` registry (`Object.fromEntries` over the rows) and `DOMAIN_KEYS`
 - `js/artwork.js` `js/detail.js` `js/render.js` `js/content.js` `js/ui.js` — artwork routing, the `openDetail` seam, rendering (incl. the active sidebar button), request lifecycle, search + sidebar switching/collapse
-- `js/song-detail.js` + `music-detail.css` — the song-detail view behind a music card: loading/error/ready states, the lyrics panel, the related rail and the demo player. It paints itself (`paintSongView`/`closeSongView`); `render.js` only decides visibility, so it never imports `render.js`.
+- `js/song-detail.js` + `music-detail.css` — the song-detail view behind a music card: loading/error/ready states, the full-credits expander, the About panel, listen links, the lyrics panel, the related rail (with Genius' View-all link) and the demo player. It paints itself (`paintSongView`/`closeSongView`); `render.js` only decides visibility, so it never imports `render.js`.
 
 Rules that keep the graph acyclic: builders take the row as a parameter
 (`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click

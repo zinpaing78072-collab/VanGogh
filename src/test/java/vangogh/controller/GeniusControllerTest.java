@@ -1,7 +1,9 @@
 package vangogh.controller;
 
 import vangogh.error.FetchError;
+import vangogh.music.Credit;
 import vangogh.music.GeniusMusicService;
+import vangogh.music.MediaLink;
 import vangogh.music.SongDetail;
 import org.junit.jupiter.api.Test;
 import io.vavr.control.Either;
@@ -26,7 +28,19 @@ class GeniusControllerTest {
             "https://images.genius.com/anti-hero.1000x1000x1.jpg",
             java.util.List.of(),
             252, "",
-            java.util.List.of());
+            java.util.List.of(),
+            "October 21, 2022", "English", 22,
+            "https://genius.com/albums/Taylor-swift/Midnights/relationships",
+            java.util.List.of(new Credit("Label", java.util.List.of("Republic Records"))),
+            java.util.List.of(new MediaLink("YouTube", "video", "https://www.youtube.com/watch?v=dQw4w9WgXcQ", 0)),
+            "#b98d55", "#744a19", "#fff",
+            "Anti-Hero is the lead single from Midnights.",
+            "https://genius.com/albums/Taylor-swift/Midnights",
+            "https://images.genius.com/album.1000x1000x1.jpg",
+            "https://images.genius.com/artist.1000x1000x1.jpg",
+            "https://genius.com/artists/Taylor-swift", true,
+            "Electric Lady Studios, New York, NY",
+            224, 4, 16, 17, 81);
 
     /** Stub service that sleeps, simulating a slow Genius round-trip. */
     static class SlowService extends GeniusMusicService {

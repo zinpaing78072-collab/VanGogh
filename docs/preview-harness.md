@@ -86,6 +86,11 @@ Artwork: movies reuse the real posters in `movie-page/posters/`; the other forms
 get generated SVG gradient covers, coloured from a hash of the item id, so cards
 are visually distinct instead of a wall of identical grey boxes.
 
+`songDetail` holds the song-detail extras the Genius payload supplies — dummy
+lyrics/duration/audio plus credits, listen links, the About paragraphs, the
+language and translation count, the artwork palette and the community stats — so
+the detail test exercises the real view rather than a lookalike.
+
 The fixtures deliberately include the cases CSS breaks on first: a long title, an
 unbreakable 55-character word, a null rating, an empty artist, a book with no
 page count, and a movie with no artwork (`The Shawshank Redemption`, id 278) so
@@ -143,13 +148,15 @@ node preview/check.js            # pass/fail, exit 1 on any failure
 node preview/check.js --verbose  # also prints each test's preview stats
 ```
 
-63 assertions across 10 groups: trending render, the sidebar (four form buttons,
+71 assertions across 10 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
 active marker), the switcher across all four forms, the music song-detail view
-(open from a card, title/artist/credits/lyrics/related/player, back to the
-intact grid), search hit and miss, the empty / error / no-posters / slow
-scenarios, and a rapid form-switch that exercises the supersede guard. Exit code
-1 on any failure, so it can gate a commit.
+(open from a card, title/artist/credits/lyrics/related/player, the credits
+expander, the collapsed About panel, listen links, artist and album identity,
+community stats, the artwork palette, and back to the intact grid), search hit
+and miss, the empty / error / no-posters / slow scenarios, and a rapid
+form-switch that exercises the supersede guard. Exit code 1 on any failure, so
+it can gate a commit.
 
 It is self-contained: it boots the preview server on an ephemeral port, drives a
 headless Chromium over the DevTools protocol, and shuts both down. No npm

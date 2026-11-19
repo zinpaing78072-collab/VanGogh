@@ -268,12 +268,14 @@
                     durationSeconds: 180 + i * 13
                 };
             });
+        var stats = dummy.stats || {};
         return {
             id: item.id,
             title: item.title,
             artist: item.artist || "Unknown Artist",
             album: item.title + " (Preview Album)",
             releaseDate: String(item.year) + "-01-01",
+            releaseDateDisplay: "January 1, " + item.year,
             year: item.year,
             writers: dummy.writers || [],
             producers: dummy.producers || [],
@@ -285,7 +287,29 @@
             lyrics: dummy.lyrics || [],
             durationSeconds: dummy.durationSeconds || 252,
             audioUrl: dummy.audioUrl || "",
-            related: related
+            related: related,
+
+            language: dummy.language || "",
+            translationCount: dummy.translationCount || 0,
+            relationshipsIndexUrl: "https://genius.com/albums/preview/relationships",
+            credits: dummy.credits || [],
+            media: dummy.media || [],
+            artPrimaryColor: "#b98d55",
+            artSecondaryColor: "#744a19",
+            artTextColor: "#fff",
+
+            about: dummy.about || "",
+            albumUrl: "https://genius.com/albums/preview",
+            albumCoverUrl: svgCover("Album", 64, 64, 40),
+            artistImageUrl: svgCover("Artist", 64, 64, 200),
+            artistUrl: "https://genius.com/artists/preview",
+            artistVerified: true,
+            recordingLocation: dummy.recordingLocation || "",
+            contributors: stats.contributors || 0,
+            transcribers: stats.transcribers || 0,
+            acceptedAnnotations: stats.acceptedAnnotations || 0,
+            annotationCount: stats.annotationCount || 0,
+            pyongsCount: stats.pyongsCount || 0
         };
     }
 

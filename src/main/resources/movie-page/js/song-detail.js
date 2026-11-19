@@ -7,6 +7,11 @@
  * paints once the reply is done. Lyrics, duration and audio are dummy data
  * (the backend marks them so); the player is a UI-only timer.
  *
+ * What Genius fills beyond the basics: the full credit bill (behind an
+ * expander), the editorial "About this song" text, listen/watch links, the
+ * language + translation count, the artwork palette, the artist and album
+ * identity, the recording location and the community stats.
+ *
  * No render.js import: this module paints itself, and render.js calls
  * paintSongView()/closeSongView() to keep browse and detail in sync.
  */
@@ -25,6 +30,10 @@ const DISC = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke
 const PLAY_ICON = "&#9654;";
 const PAUSE_ICON = "&#10073;&#10073;";
 
+// Only a real hex colour is written into the style attribute (the backend
+// already validates, this is the page-side half of the same rule).
+const HEX_COLOR = /^#[0-9a-fA-F]{3,8}$/;
+
 // ------------------------------------------------------------------ player
 
 const player = { seconds: 0, duration: 0, timer: null };
@@ -39,6 +48,11 @@ function formatCount(value) {
     if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
     if (n >= 1_000) return Math.round(n / 1_000) + "K";
     return n > 0 ? String(n) : "–";
+}
+
+function formatStat(value) {
+    const n = Number(value) || 0;
+    return n > 0 ? n.toLocaleString("en-US") : "";
 }
 
 function syncPlayer() {
@@ -152,6 +166,52 @@ function creditNames(list) {
     return (list || []).length ? list.join(", ") : "–";
 }
 
+function secureLink(href) {
+    return /^https?:\/\//i.test(String(href || "")) ? escapeHtml(href) : "";
+}
+
+/* Style attribute carrying the artwork palette. Missing colours fall back to
+ * the theme's gold in CSS, so a song without a palette keeps today's look. */
+function paletteStyle(detail) {
+    const vars = [
+        ["--song-primary", detail.artPrimaryColor],
+        ["--song-secondary", detail.artSecondaryColor],
+        ["--song-text", detail.artTextColor],
+    ].filter(([, value]) => HEX_COLOR.test(String(value || "")));
+    if (!vars.length) return "";
+    return ` style="${vars.map(([name, value]) => `${name}:${value}`).join(";")}"`;
+}
+
+function artistMarkup(detail) {
+    const name = escapeHtml(detail.artist || "Unknown Artist");
+    const avatar = detail.artistImageUrl
+        ? `<img class="artist-avatar" src="${escapeHtml(detail.artistImageUrl)}" alt="" loading="lazy" decoding="async">`
+        : "";
+    const href = secureLink(detail.artistUrl);
+    const label = href
+        ? `<a class="song-artist" href="${href}" target="_blank" rel="noopener">${name}</a>`
+        : `<span class="song-artist">${name}</span>`;
+    const verified = detail.artistVerified
+        ? `<span class="artist-verified" title="Verified artist on Genius"><span aria-hidden="true">&#10003;</span> Verified</span>`
+        : "";
+    return avatar + label + verified;
+}
+
+function albumCell(detail) {
+    const name = escapeHtml(detail.album || "–");
+    const href = secureLink(detail.albumUrl);
+    const cover = detail.albumCoverUrl
+        ? `<img class="meta-cover" src="${escapeHtml(detail.albumCoverUrl)}" alt="" loading="lazy" decoding="async">`
+        : "";
+    const label = href
+        ? `<a class="meta-link" href="${href}" target="_blank" rel="noopener">${name}</a>`
+        : name;
+    return `<div class="song-meta-cell album-cell">
+                <span class="k">Album</span>
+                <span class="v">${cover}${label}</span>
+            </div>`;
+}
+
 function lyricsMarkup(detail) {
     const lines = detail.lyrics || [];
     if (!lines.length) {
@@ -185,13 +245,110 @@ function relatedMarkup(related) {
         </button>`).join("");
 }
 
+/* The rail only shows Genius' first handful; their own page has the rest. */
+function relatedAllMarkup(detail) {
+    const href = secureLink(detail.relationshipsIndexUrl);
+    if (!href) return "";
+    return `<a class="related-all" href="${href}" target="_blank" rel="noopener">
+                View all related on Genius <span aria-hidden="true">&#8599;</span>
+            </a>`;
+}
+
+/* ---- Tier 1: full credits, listen links, language, palette ---- */
+
+function creditsMarkup(credits) {
+    if (!credits || !credits.length) return "";
+    return `<button type="button" class="credits-toggle" data-action="credits" aria-expanded="false">
+                All credits <span class="credits-count">${credits.length}</span>
+                <span class="chev" aria-hidden="true">&#8964;</span>
+            </button>
+            <div class="credit-all hidden">
+                ${credits.map((credit) => `
+                    <div class="credit-all-row">
+                        <span class="k">${escapeHtml(credit.label)}</span>
+                        <span class="v">${escapeHtml(creditNames(credit.names))}</span>
+                    </div>`).join("")}
+            </div>`;
+}
+
+function mediaHref(media) {
+    const url = String(media.url || "");
+    const start = Number(media.startSeconds) || 0;
+    if (start <= 0 || !/youtube/i.test(media.provider || "")) return url;
+    return url + (url.includes("?") ? "&" : "?") + "t=" + start + "s";
+}
+
+function mediaType(media) {
+    return media.type === "video" ? "Video" : media.type === "audio" ? "Audio" : "Link";
+}
+
+function listenMarkup(media) {
+    const links = (media || []).filter((item) => secureLink(item.url));
+    if (!links.length) return "";
+    return `<div class="song-listen" aria-label="Listen and watch">
+        ${links.map((item) => `
+            <a class="song-listen-link" href="${secureLink(mediaHref(item))}"
+               target="_blank" rel="noopener">
+                <span class="listen-provider">${escapeHtml(item.provider || "Link")}</span>
+                <span class="listen-type">${mediaType(item)}</span>
+            </a>`).join("")}
+    </div>`;
+}
+
+function languageMarkup(detail) {
+    if (!detail.language) return "";
+    const translations = Number(detail.translationCount) || 0;
+    const count = translations > 0
+        ? `<span class="lang-count">&middot; ${translations} translations</span>`
+        : "";
+    return `<span class="song-lang" title="Genius' language for this lyric page">
+                ${escapeHtml(detail.language)} ${count}
+            </span>`;
+}
+
+/* ---- Tier 2: community stats, About this song ---- */
+
+function statsMarkup(detail) {
+    const stats = [
+        [detail.contributors, "contributors"],
+        [detail.annotationCount, "annotations"],
+        [detail.pyongsCount, "pyongs"],
+        [detail.transcribers, "transcribers"],
+    ].map(([value, label]) => [formatStat(value), label])
+        .filter(([value]) => value !== "");
+    if (!stats.length) return "";
+    return `<div class="song-stats" aria-label="Genius community">
+        ${stats.map(([value, label]) => `<span class="song-stat"><strong>${value}</strong> ${label}</span>`).join("")}
+    </div>`;
+}
+
+function aboutMarkup(detail) {
+    const paragraphs = String(detail.about || "")
+        .split(/\n{2,}/)
+        .map((text) => text.trim())
+        .filter(Boolean);
+    if (!paragraphs.length) return "";
+    // Collapse only when there is actually something hidden behind the fade.
+    const needsToggle = paragraphs.length > 2 || paragraphs[0].length > 420;
+    return `<section class="song-panel song-about" aria-labelledby="aboutHeading">
+                <div class="song-panel-head">
+                    <h2 id="aboutHeading">About this song</h2>
+                    <span class="song-panel-sub">Genius editorial</span>
+                </div>
+                <div class="about-body${needsToggle ? "" : " expanded"}">
+                    ${paragraphs.map((text) => `<p>${escapeHtml(text)}</p>`).join("")}
+                </div>
+                ${needsToggle ? `<button type="button" class="about-toggle" data-action="about">Read more</button>` : ""}
+            </section>`;
+}
+
 function detailMarkup(s) {
     const d = s.detail;
     const featured = creditNames(d.featuredArtists);
     return `${backRow()}
         <div class="song-layout">
             <div class="song-column">
-                <div class="song-artwork">
+                <div class="song-artwork"${paletteStyle(d)}>
                     <img class="song-art-img hidden" alt="${escapeHtml(d.title)} cover">
                     <div class="poster-placeholder">${DISC}</div>
                     <div class="song-art-shade" aria-hidden="true"></div>
@@ -201,14 +358,15 @@ function detailMarkup(s) {
                 <div class="song-info">
                     <h1 class="song-title">${escapeHtml(d.title)}</h1>
                     <div class="song-artist-row">
-                        <span class="song-artist">${escapeHtml(d.artist)}</span>
+                        ${artistMarkup(d)}
                         ${d.lyricsState === "complete" ? `<span class="song-chip">Lyrics on Genius</span>` : ""}
                     </div>
                     <div class="song-meta-grid">
-                        <div class="song-meta-cell"><span class="k">Album</span><span class="v">${escapeHtml(d.album || "–")}</span></div>
-                        <div class="song-meta-cell"><span class="k">Released</span><span class="v">${escapeHtml(d.releaseDate || "–")}</span></div>
+                        ${albumCell(d)}
+                        <div class="song-meta-cell"><span class="k">Released</span><span class="v">${escapeHtml(d.releaseDateDisplay || d.releaseDate || "–")}</span></div>
                         <div class="song-meta-cell"><span class="k">Pageviews</span><span class="v">${formatCount(d.pageviews)}</span></div>
                         <div class="song-meta-cell"><span class="k">Duration</span><span class="v">${formatTime(d.durationSeconds)} <span class="dummy-mark">demo</span></span></div>
+                        ${d.recordingLocation ? `<div class="song-meta-cell wide"><span class="k">Recorded at</span><span class="v">${escapeHtml(d.recordingLocation)}</span></div>` : ""}
                     </div>
                     <div class="song-actions">
                         <button type="button" class="song-action" data-action="favorite">
@@ -218,18 +376,24 @@ function detailMarkup(s) {
                             <span aria-hidden="true">+</span> Add to playlist
                         </button>
                     </div>
+                    ${listenMarkup(d.media)}
+                    ${statsMarkup(d)}
                 </div>
                 <div class="song-credits">
                     <div class="credit-row"><span class="k">WRITTEN BY</span><span class="v">${escapeHtml(creditNames(d.writers))}</span></div>
                     <div class="credit-row"><span class="k">PRODUCED BY</span><span class="v">${escapeHtml(creditNames(d.producers))}</span></div>
                     ${featured !== "–" ? `<div class="credit-row"><span class="k">FEATURING</span><span class="v">${escapeHtml(featured)}</span></div>` : ""}
+                    ${creditsMarkup(d.credits)}
                 </div>
             </div>
 
             <section class="song-panel lyrics-panel" aria-labelledby="lyricsHeading">
                 <div class="song-panel-head">
                     <h2 id="lyricsHeading">Lyrics</h2>
-                    <span class="song-panel-sub">Demo copy &middot; placeholder timings</span>
+                    <span class="song-panel-meta">
+                        ${languageMarkup(d)}
+                        <span class="song-panel-sub">Demo copy &middot; placeholder timings</span>
+                    </span>
                 </div>
                 <div class="lyrics-list">${lyricsMarkup(d)}</div>
             </section>
@@ -240,7 +404,10 @@ function detailMarkup(s) {
                     <span class="song-panel-sub">${(d.related || []).length} from Genius</span>
                 </div>
                 <div class="related-list">${relatedMarkup(d.related)}</div>
+                ${relatedAllMarkup(d)}
             </aside>
+
+            ${aboutMarkup(d)}
         </div>`;
 }
 
@@ -269,6 +436,7 @@ export function paintSongView() {
     songView.innerHTML = detailMarkup(song);
     paintArtwork(song);
     paintRelatedArt(song.detail.related);
+    paintExtras(song.detail);
     resetPlayer(song.detail, song.artDataUri || song.detail.artUrl || "");
 }
 
@@ -301,6 +469,14 @@ function paintRelatedArt(related) {
         img.addEventListener("load", () => {
             row.querySelector(".related-placeholder").classList.add("hidden");
         }, { once: true });
+    });
+}
+
+// Artist avatar and album thumb are direct Genius CDN URLs: if either fails,
+// drop the image and keep the text, never a broken icon.
+function paintExtras(detail) {
+    songView.querySelectorAll(".artist-avatar, .meta-cover").forEach((img) => {
+        img.addEventListener("error", () => img.remove(), { once: true });
     });
 }
 
@@ -427,6 +603,22 @@ songView.addEventListener("click", (e) => {
         case "playlist":
             action.classList.toggle("active");
             break;
+        case "credits": {
+            const open = action.getAttribute("aria-expanded") === "true";
+            action.setAttribute("aria-expanded", String(!open));
+            const panel = songView.querySelector(".credit-all");
+            if (panel) panel.classList.toggle("hidden", open);
+            const chev = action.querySelector(".chev");
+            if (chev) chev.style.transform = open ? "" : "rotate(180deg)";
+            break;
+        }
+        case "about": {
+            const body = songView.querySelector(".about-body");
+            if (!body) break;
+            const expanded = body.classList.toggle("expanded");
+            action.textContent = expanded ? "Show less" : "Read more";
+            break;
+        }
         case "related":
             openSongDetail({
                 id: action.dataset.id,
