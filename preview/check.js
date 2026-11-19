@@ -564,6 +564,58 @@ const TESTS = [
         }
     },
     {
+        name: "AI toggle: opt-in, recommend kind, survives form switch",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+
+            const toggleState = () => page.evaluate(
+                `document.getElementById("aiToggle").getAttribute("aria-pressed")`);
+            const initial = await toggleState();
+
+            // Off by default: the box stays a direct catalog search.
+            await page.search("dreams");
+            const off = await page.stats();
+
+            await page.evaluate(`document.getElementById("aiToggle").click(); true`);
+            const pressed = await toggleState();
+
+            await page.search("dreams");
+            const on = await page.stats();
+            const d = await page.dom();
+
+            // A form switch reloads trending; it must not silently flip AI off.
+            await page.selectForm("book");
+            const afterSwitch = await toggleState();
+
+            // Empty box with AI on: trending, never a model call.
+            const beforeEmpty = (await page.stats()).generation;
+            await page.evaluate(`document.getElementById("searchInput").value = "";
+                document.getElementById("searchBtn").click(); true`);
+            await page.waitFor(`window.__preview.stats().generation > ${beforeEmpty}`);
+            await page.settle();
+            const empty = await page.stats();
+
+            return [
+                check("AI mode starts off", initial === "false", initial),
+                check("AI off sends a direct search",
+                    off.kind === "search" && off.query === "dreams",
+                    off.kind + " / " + off.query),
+                check("the toggle reports its pressed state", pressed === "true", pressed),
+                check("AI on sends kind=recommend",
+                    on.kind === "recommend" && on.query === "dreams",
+                    on.kind + " / " + on.query),
+                check('AI results are titled "AI Recommendations"',
+                    d.title === "AI Recommendations" && d.cards === 6,
+                    d.title + " / " + d.cards + " cards"),
+                check("the toggle survives a form switch", afterSwitch === "true", afterSwitch),
+                check("an empty AI search falls back to trending",
+                    empty.kind === "trending" && empty.query === "",
+                    empty.kind + " / " + empty.query)
+            ];
+        }
+    },
+    {
         name: "scenario: empty",
         path: "/movie-page/index.html?scenario=empty",
         run: async (page) => {

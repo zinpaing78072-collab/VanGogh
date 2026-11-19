@@ -116,6 +116,12 @@
         <header class="app-header">
             <div class="search-bar">
                 <input type="text" id="searchInput" class="search-input" placeholder="Search movies, books, music, games…">
+                <!-- AI mode: the search box asks the LLM for recommendations and
+                     resolves the picks against the active form's catalog. Off by
+                     default; a plain button, never a native popup (the macOS
+                     NSMenu trap). -->
+                <button type="button" id="aiToggle" class="ai-toggle" aria-pressed="false"
+                        aria-label="AI recommendations" title="AI recommendations off">AI</button>
                 <button id="searchBtn" class="search-btn">Search</button>
             </div>
 

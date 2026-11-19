@@ -15,7 +15,9 @@ export async function loadContent(domainKey, kind, term) {
     const seq = nextRequest();
 
     state.domain = domainKey;
-    state.title = kind === "search" ? "Search Results" : `Trending ${domain.plural}`;
+    state.title = kind === "recommend" ? "AI Recommendations"
+        : kind === "search" ? "Search Results"
+        : `Trending ${domain.plural}`;
     state.status = "loading";
     state.items = [];
     state.error = null;

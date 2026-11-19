@@ -65,6 +65,14 @@ public class GeniusController {
         resetPosterTracking();
         pendingData.set(null);
 
+        // The AI toggle ships before this form's engine slice. Say so instead
+        // of quietly running a direct search behind an AI-looking toggle.
+        if ("recommend".equalsIgnoreCase(kind)) {
+            pendingData.set(new PendingData(gen, Either.left(new FetchError.BadInput(
+                    "kind", "AI recommendations are not wired for this form yet"))));
+            return gen;
+        }
+
         Future.of(executor, () -> fetchSongs(kind, query))
                 .onComplete(result -> deliverData(gen, result));
         return gen;

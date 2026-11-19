@@ -280,6 +280,8 @@
             return {
                 scenario: scenario,
                 form: active.form,
+                kind: active.kind,
+                query: active.query,
                 generation: g,
                 status: status[g] || "idle",
                 dataPolls: polls[g] || 0,
