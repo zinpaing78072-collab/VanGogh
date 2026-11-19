@@ -48,9 +48,9 @@ function albumDetail(album) {
 
 export const musicDomain = {
     key: "music",
-    request: "requestMusic",
-    data: "pollMusicData",
-    art: "pollMusicPosters",
+    request: "requestGeniusMusic",
+    data: "pollGeniusMusicData",
+    art: "pollGeniusMusicPosters",
     event: "musicPoster",
     plural: "Music",
     emptyLabel: "albums",

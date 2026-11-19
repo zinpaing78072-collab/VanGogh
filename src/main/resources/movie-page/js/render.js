@@ -1,7 +1,7 @@
 /* Rendering: state goes in, DOM comes out. Everything that paints the browse
  * view lives here; content.js only changes state and asks for a render.
  */
-import { grid, sectionTitle } from "./dom.js";
+import { grid, sectionTitle, sidebarNav } from "./dom.js";
 import { state } from "./state.js";
 import { DOMAINS } from "./domains.js";
 import { openDetail } from "./detail.js";
@@ -15,6 +15,7 @@ export function render() {
 
 function renderBrowse() {
     sectionTitle.textContent = state.title;
+    paintActiveNav(state.domain);
     if (state.status === "loading") {
         renderSkeletonGrid();
     } else if (state.status === "error") {
@@ -22,6 +23,21 @@ function renderBrowse() {
     } else if (state.status === "ready") {
         renderCards(state.domain, state.items);
     }
+}
+
+// The sidebar's content-form buttons are the switcher; the active one is
+// painted from state.domain on every render (never from a click handler), so a
+// superseded request or a failed load cannot leave two buttons active.
+function paintActiveNav(domainKey) {
+    sidebarNav.querySelectorAll(".nav-item[data-domain]").forEach((item) => {
+        const active = item.dataset.domain === domainKey;
+        item.classList.toggle("active", active);
+        if (active) {
+            item.setAttribute("aria-current", "page");
+        } else {
+            item.removeAttribute("aria-current");
+        }
+    });
 }
 
 function renderCards(domainKey, items) {
