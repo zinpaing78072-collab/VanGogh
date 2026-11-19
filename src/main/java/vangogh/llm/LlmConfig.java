@@ -87,6 +87,12 @@ public record LlmConfig(
         Map<String, String> values = new java.util.HashMap<>();
         for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
             String stripped = line.strip();
+            // Windows editors (Notepad) like to prepend a UTF-8 BOM. Left in
+            // place it becomes part of the first key name and the config
+            // silently reads as empty.
+            if (!stripped.isEmpty() && stripped.charAt(0) == '\uFEFF') {
+                stripped = stripped.substring(1).strip();
+            }
             if (stripped.isEmpty() || stripped.startsWith("#") || stripped.startsWith(";")) {
                 continue;
             }
