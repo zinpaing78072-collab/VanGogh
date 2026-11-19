@@ -37,7 +37,8 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 ### Project state
 - **Features wired**:
   - `VanGoghApp` — Krema window builder (title, identifier, size, debug mode, assets, events, commands)
-  - `MovieController` — `@KremaCommand requestMovies(kind, query)` (non-blocking kickoff, returns the generation), data + poster drains, generation-counted poster streaming via `events.emit("poster", ...)`
+  - `MovieController` — `@KremaCommand requestMovies(kind, query)` (non-blocking kickoff, returns the generation), data + poster drains, generation-counted poster streaming via `events.emit("poster", ...)`; `kind=recommend` routes through the LLM engine (below)
+  - `vangogh.llm` (`LlmConfig`, `LlmClient`, `PromptFactory`, `Pick`, `TitleParser`, `Normalize`), `vangogh.recommend` (`PickResolver`, `RecommendationService`), and `MovieResolver` — the AI recommendation engine (movies wired): one model request composes `title | disambiguator` picks, TMDB resolves them in parallel. Config in `~/.van-gogh/llm.conf` with env overrides; the AI toggle is opt-in, so direct search and trending are unchanged. The other three forms reject `kind=recommend` until their slices land — see `docs/llm-engine.md`
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
   - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming
@@ -59,7 +60,9 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
     `.nav-item[data-domain]` button per form (it replaced the old dropdown).
     The active form lives in `state.domain` in `js/state.js`; `render.js` paints
     the active button from it, and `js/ui.js` turns a click into the trending
-    load. Buttons without `data-domain` are inert shell chrome.
+    load. Buttons without `data-domain` are inert shell chrome. The header AI
+    toggle (`#aiToggle`, `state.ai`) is opt-in and only changes the `kind` a
+    search sends (`recommend` instead of `search`); it survives a form switch.
 - **Features pending**: the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
 
 ### Frontend modules (ES modules, both shells over loopback HTTP)
@@ -128,6 +131,7 @@ models, prompt design) are left to each builder slice.
 
 ### Related project notes
 - `architecture.md` — how to add new content domains (Music, Book, Game, TV)
+- `docs/llm-engine.md` — LLM recommendation engine: config, request kinds, error text, quota, tests
 - `repos/krema/` — vendored Krema source (read-only reference)
 - Vault counterpart of this description: `10 Projects/VanGogh/description.md`
   (keep in sync when this section changes)
@@ -211,7 +215,7 @@ self-disables when a bridge is present, so no app code changes for this.
 unreproducible (skeletons, empty, error, missing artwork). Fixtures are keyed to
 the real resolved-item shapes and survive the LLM engine slice. `node
 preview/check.js` (Zed task "check UI (headless)") is the same harness driven
-headless: 52 assertions over the card grid, the sidebar (form buttons, inert
+headless: 59 assertions over the card grid, the sidebar (form buttons, inert
 items, section labels, collapse/reflow), search and every scenario, exit 1 on
 failure. Full guide: `docs/preview-harness.md`. Layout,
 styling and page JS go through the preview; shell, IPC and network code still

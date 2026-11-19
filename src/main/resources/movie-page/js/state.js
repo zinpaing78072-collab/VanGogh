@@ -11,6 +11,7 @@ export const state = {
     domain: "movie",
     title: "Trending Movies",
     status: "idle",   // "idle" | "loading" | "ready" | "error"
+    ai: false,        // AI recommendation mode (the header toggle)
     items: [],
     error: null,
     // The open song detail: { status, id, title, artist, detail, artDataUri, error }

@@ -148,16 +148,13 @@ node preview/check.js            # pass/fail, exit 1 on any failure
 node preview/check.js --verbose  # also prints each test's preview stats
 ```
 
-74 assertions across 10 groups: trending render, the sidebar (four form buttons,
+59 assertions across 10 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
-active marker), the switcher across all four forms, the music song-detail view
-(open from a card, the bento tile grid with its palette swatches and Play pill,
-title/artist/credits/lyrics/related/player, the credits expander, the collapsed
-About panel, listen links, artist and album identity, community stats, the
-artwork palette, and back to the intact grid), search hit
-and miss, the empty / error / no-posters / slow scenarios, and a rapid
-form-switch that exercises the supersede guard. Exit code 1 on any failure, so
-it can gate a commit.
+active marker), the switcher across all four forms, search hit and miss, the AI
+toggle (off by default, `kind=recommend` when on, survives a form switch, empty
+box falls back to trending), the empty / error / no-posters / slow scenarios,
+and a rapid form-switch that exercises the supersede guard. Exit code 1 on any
+failure, so it can gate a commit.
 
 It is self-contained: it boots the preview server on an ephemeral port, drives a
 headless Chromium over the DevTools protocol, and shuts both down. No npm
