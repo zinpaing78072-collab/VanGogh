@@ -62,6 +62,14 @@ public class TmdbMovieService {
                         .flatMap(this::parseRows);
     }
 
+    /**
+     * The recommendation engine's resolver, sharing this service's client —
+     * so a controller (and its tests) can never end up with two TMDB clients.
+     */
+    public MovieResolver resolver() {
+        return new MovieResolver(client);
+    }
+
     private Either<FetchError, String> requireSuccess(String api, ApiResponse res) {
         return res.isSuccess()
                 ? Either.right(res.body)
@@ -89,7 +97,12 @@ public class TmdbMovieService {
         return parseRows(json).getOrElse(List.of());
     }
 
-    private Movie toMovie(JsonObject m) {
+    /**
+     * Row builder shared with {@link MovieResolver}: a recommended card must be
+     * identical to a trending or search card. Static because it only reads the
+     * payload — no service state involved.
+     */
+    public static Movie toMovie(JsonObject m) {
         int id = Option.of(m.get("id"))
                 .filter(j -> !j.isJsonNull())
                 .map(j -> j.getAsInt())

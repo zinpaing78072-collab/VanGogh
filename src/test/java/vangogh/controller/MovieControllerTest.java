@@ -2,16 +2,23 @@ package vangogh.controller;
 
 import build.krema.core.event.EventEmitter;
 import build.krema.core.event.KremaEvent;
+import io.vavr.control.Either;
+import io.vavr.control.Try;
+import vangogh.llm.LlmClient;
+import vangogh.llm.LlmConfig;
 import vangogh.movie.Movie;
 import vangogh.movie.TmdbMovieService;
 import vangogh.net.ApiResponse;
 import vangogh.net.TmdbClient;
+import vangogh.recommend.RecommendationService;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Unit tests for MovieController — the Krema IPC command handler that backs
@@ -34,8 +41,8 @@ class MovieControllerTest {
           "total_results": 1,
           "results": [
             { "id": 27205, "title": "Inception", "release_date": "2010-07-16",
-              "vote_average": 8.8, "genre_ids": [28, 878], "overview": "A dream-heist story.",
-              "poster_path": "/x.jpg" }
+              "vote_average": 8.8, "vote_count": 35000, "genre_ids": [28, 878],
+              "overview": "A dream-heist story.", "poster_path": "/x.jpg" }
           ]
         }
         """;
@@ -87,6 +94,41 @@ class MovieControllerTest {
 
     private MovieController controllerWith(TmdbMovieService service) {
         return new MovieController(service); // package-private ctor
+    }
+
+    /** Stub model call: returns a canned chat-completions reply or a failure. */
+    static class StubLlm extends LlmClient {
+        final Try<ApiResponse> result;
+
+        StubLlm(Try<ApiResponse> result) {
+            this.result = result;
+        }
+
+        @Override
+        public Try<ApiResponse> complete(LlmConfig config, String system, String user) {
+            return result;
+        }
+    }
+
+    private static String llmReply(String content) {
+        var message = new com.google.gson.JsonObject();
+        message.addProperty("role", "assistant");
+        message.addProperty("content", content);
+        var choice = new com.google.gson.JsonObject();
+        choice.add("message", message);
+        var choices = new com.google.gson.JsonArray();
+        choices.add(choice);
+        var root = new com.google.gson.JsonObject();
+        root.add("choices", choices);
+        return root.toString();
+    }
+
+    /** Controller wired to the engine with a stubbed model call. */
+    private MovieController recommendController(StubClient client, Try<ApiResponse> llmResult,
+                                                ExecutorService io) {
+        RecommendationService engine = new RecommendationService(io, new StubLlm(llmResult),
+                () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 10)));
+        return new MovieController(serviceWith(client), io, engine);
     }
 
     /** Drains pollMovieData until this generation's fetch resolves (2s deadline). */
@@ -268,5 +310,87 @@ class MovieControllerTest {
             }
         }
         assertEquals(-1, result);
+    }
+
+    @Test
+    void requestMoviesWithRecommendKindRunsTheModelAndResolvesItsPicks() throws Exception {
+        StubClient client = new StubClient();
+        client.searchResponse = new ApiResponse(200, VALID_JSON, null);
+        ExecutorService io = Executors.newFixedThreadPool(4);
+
+        try {
+            MovieController controller = recommendController(client,
+                    Try.success(new ApiResponse(200,
+                            llmReply("Inception | 2010\nNot A Real Film | 1999"), null)), io);
+
+            int gen = controller.requestMovies("recommend", "dream heist");
+            MovieController.MovieDataReply reply = drainData(controller, gen);
+
+            assertEquals("done", reply.status());
+            assertEquals(1, reply.items().size());   // the unresolvable pick is dropped
+            assertEquals("Inception", reply.items().get(0).title());
+            assertEquals(2010, reply.items().get(0).year());
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void recommendWithoutAQueryIsABadInputError() throws Exception {
+        StubClient client = new StubClient();
+        ExecutorService io = Executors.newFixedThreadPool(4);
+
+        try {
+            // The page never sends this (an empty box is trending), but the
+            // engine must not spend a model call on nothing.
+            MovieController controller = recommendController(client,
+                    Try.success(new ApiResponse(200, llmReply("Inception | 2010"), null)), io);
+
+            int gen = controller.requestMovies("recommend", "  ");
+            MovieController.MovieDataReply reply = drainData(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("AI recommendations need a query"), reply.error());
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void aModelFailureSurfacesOnTheDataDrain() throws Exception {
+        StubClient client = new StubClient();
+        ExecutorService io = Executors.newFixedThreadPool(4);
+
+        try {
+            MovieController controller = recommendController(client,
+                    Try.failure(new RuntimeException("offline")), io);
+
+            int gen = controller.requestMovies("recommend", "dream heist");
+            MovieController.MovieDataReply reply = drainData(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("LLM request failed: offline"), reply.error());
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void aModelHttpErrorSurfacesWithItsStatus() throws Exception {
+        StubClient client = new StubClient();
+        ExecutorService io = Executors.newFixedThreadPool(4);
+
+        try {
+            MovieController controller = recommendController(client,
+                    Try.success(new ApiResponse(401, "{\"error\":\"bad key\"}", null)), io);
+
+            int gen = controller.requestMovies("recommend", "dream heist");
+            MovieController.MovieDataReply reply = drainData(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("LLM failed: HTTP 401"), reply.error());
+        } finally {
+            io.shutdownNow();
+        }
     }
 }

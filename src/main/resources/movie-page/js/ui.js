@@ -1,24 +1,41 @@
-/* Shell interactions: the search box, the sidebar's content-form buttons and
- * the sidebar collapse toggle.
+/* Shell interactions: the search box, the AI toggle, the sidebar's
+ * content-form buttons and the sidebar collapse toggle.
  *
- * The content-form buttons replaced the old custom dropdown. They carry
- * data-domain (the same keys as js/domains.js); everything else in the menu is
- * shell chrome with no backend yet and stays inert. The active button is
- * painted by render.js from state.domain, so this module never guesses which
- * form is on screen.
+ * AI mode is opt-in: the toggle only changes the `kind` a search sends
+ * ("recommend" instead of "search"), so direct search and trending keep their
+ * existing behavior. An empty box is always trending — no model call.
+ *
+ * The content-form buttons carry data-domain (the same keys as js/domains.js);
+ * everything else in the menu is shell chrome with no backend yet and stays
+ * inert. The active button is painted by render.js from state.domain, so this
+ * module never guesses which form is on screen.
  *
  * No native <select> anywhere: its macOS NSMenu popup traps the AppKit thread
  * and freezes the window. Plain buttons carry no such risk.
  */
-import { searchInput, searchBtn, sidebar, sidebarToggle, sidebarNav } from "./dom.js";
+import { searchInput, searchBtn, aiToggle, sidebar, sidebarToggle, sidebarNav } from "./dom.js";
 import { state } from "./state.js";
 import { DOMAINS } from "./domains.js";
 import { loadContent } from "./content.js";
 
 function submitSearch() {
     const term = searchInput.value.trim();
-    loadContent(state.domain, term === "" ? "trending" : "search", term);
+    const kind = term === "" ? "trending" : state.ai ? "recommend" : "search";
+    loadContent(state.domain, kind, term);
 }
+
+function paintAiToggle() {
+    aiToggle.setAttribute("aria-pressed", String(state.ai));
+    // aria-pressed carries the state; the tooltip names it for pointer users.
+    aiToggle.title = state.ai ? "AI recommendations on" : "AI recommendations off";
+}
+
+aiToggle.addEventListener("click", () => {
+    state.ai = !state.ai;
+    paintAiToggle();
+});
+
+paintAiToggle();
 
 searchBtn.addEventListener("click", submitSearch);
 

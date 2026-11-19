@@ -121,6 +121,18 @@ class GameControllerTest {
     }
 
     @Test
+    void recommendKindIsRejectedUntilThisFormsEngineSliceLands() throws Exception {
+        GameController controller = new GameController(new SlowService());
+
+        int gen = controller.requestGames("recommend", "cozy games");
+        GameController.GameDataReply reply = drainData(controller, gen);
+
+        // Never a silent direct search behind an AI-looking toggle.
+        assertEquals("error", reply.status());
+        assertEquals("kind: AI recommendations are not wired for this form yet", reply.error());
+    }
+
+    @Test
     void pollGameDataOlderGenerationIsSupersededByANewerRequest() throws Exception {
         GameController controller = new GameController(new SlowService());
 

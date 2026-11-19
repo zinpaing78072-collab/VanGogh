@@ -7,8 +7,11 @@ import io.vavr.control.Either;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 import vangogh.error.FetchError;
+import vangogh.llm.Form;
 import vangogh.movie.Movie;
 import vangogh.movie.TmdbMovieService;
+import vangogh.recommend.PickResolver;
+import vangogh.recommend.RecommendationService;
 
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,8 @@ public class MovieController {
     private volatile EventEmitter events;
     private final TmdbMovieService service;
     private final ExecutorService executor;
+    private final PickResolver<Movie> resolver;
+    private final RecommendationService recommendations;
 
     private final AtomicInteger generation = new AtomicInteger();
     private volatile Future<?> currentFetch;
@@ -61,14 +66,23 @@ public class MovieController {
     }
 
     public MovieController(TmdbMovieService service) {
-        this.service = service;
-        this.executor = Executors.newFixedThreadPool(IO_THREADS);
+        this(service, Executors.newFixedThreadPool(IO_THREADS), null);
     }
 
     /** Package-private constructor used by tests. */
     MovieController(TmdbMovieService service, ExecutorService executor) {
+        this(service, executor, null);
+    }
+
+    /** Package-private seam: tests inject the engine and its stubbed model call. */
+    MovieController(TmdbMovieService service, ExecutorService executor,
+                    RecommendationService recommendations) {
         this.service = service;
         this.executor = executor;
+        this.resolver = service.resolver();
+        this.recommendations = recommendations != null
+                ? recommendations
+                : new RecommendationService(executor);
     }
 
     public void setEventEmitter(EventEmitter events) {
@@ -76,8 +90,13 @@ public class MovieController {
     }
 
     /**
-     * Kicks off the TMDB fetch on the IO pool and returns the request's
-     * generation immediately — never blocks on network I/O.
+     * Kicks off the fetch on the IO pool and returns the request's generation
+     * immediately — never blocks on network I/O.
+     *
+     * <p>{@code kind="recommend"} runs the LLM recommendation pipeline (one
+     * model request, then parallel TMDB resolution); {@code "search"} is the
+     * direct catalog lookup; anything else loads trending. AI mode is opt-in
+     * from the page's toggle, so the direct paths stay byte-for-byte as before.
      */
     @KremaCommand
     public int requestMovies(String kind, String query) {
@@ -85,15 +104,19 @@ public class MovieController {
         resetPosterTracking();
         pendingData.set(null);
 
+        Future.of(executor, () -> fetchMovies(kind, query))
+                .onComplete(result -> deliverData(gen, result));
+        return gen;
+    }
+
+    private Either<FetchError, java.util.List<Movie>> fetchMovies(String kind, String query) {
+        if ("recommend".equalsIgnoreCase(kind)) {
+            return recommendations.recommend(Form.MOVIE, query, resolver);
+        }
         boolean search = "search".equalsIgnoreCase(kind)
                 && query != null && !query.trim().isEmpty();
         String term = query == null ? "" : query.trim();
-
-        Future.of(executor, () -> search
-                        ? service.searchMovies(term)
-                        : service.fetchTrending())
-                .onComplete(result -> deliverData(gen, result));
-        return gen;
+        return search ? service.searchMovies(term) : service.fetchTrending();
     }
 
     /**
