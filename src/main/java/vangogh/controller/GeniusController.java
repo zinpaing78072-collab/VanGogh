@@ -10,6 +10,7 @@ import io.vavr.control.Try;
 import vangogh.error.FetchError;
 import vangogh.music.GeniusMusicService;
 import vangogh.music.Song;
+import vangogh.music.SongDetail;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -39,8 +40,14 @@ public class GeniusController {
 
     private final AtomicReference<PendingData> pendingData = new AtomicReference<>();
 
+    private record PendingDetail(int generation, Either<FetchError, SongDetail> result, String artDataUri) {}
+
+    private final AtomicInteger detailGeneration = new AtomicInteger();
+    private final AtomicReference<PendingDetail> pendingDetail = new AtomicReference<>();
+
     public record MusicDataReply(int generation, String status, String error, java.util.List<Song> items) {}
-    public record GeniusMusicDataReply(int generation, String status, String error, java.util.List<Song> items) {}
+    public record SongDetailReply(int generation, String status, String error,
+                                  SongDetail detail, String artDataUri) {}
 
     public GeniusController() {
         this(new GeniusMusicService());
@@ -116,6 +123,57 @@ public class GeniusController {
         return pending.result().fold(
                 error -> new MusicDataReply(pending.generation(), "error", FetchError.uiMessage(error), null),
                 songs -> new MusicDataReply(pending.generation(), "done", null, songs));
+    }
+
+    /**
+     * Kick off the song-detail fetch and return its generation at once (the UI
+     * thread never blocks on network I/O). The page then polls
+     * {@link #pollSongDetail(int)} until the detail or an error arrives.
+     *
+     * <p>Uses its own generation counter: opening a detail must not supersede a
+     * list request (or its poster stream) that is still in flight.
+     */
+    @KremaCommand
+    public int requestSongDetail(String id) {
+        int gen = detailGeneration.incrementAndGet();
+        pendingDetail.set(null);
+
+        Future.of(executor, () -> {
+            Either<FetchError, SongDetail> result = service.songDetail(id);
+            String art = result.isRight()
+                    ? service.posterDataUri(result.get().artUrl()).getOrElse("")
+                    : "";
+            return new PendingDetail(gen, result, art);
+        }).onComplete(result -> deliverDetail(gen, result));
+        return gen;
+    }
+
+    private void deliverDetail(int gen, Try<PendingDetail> result) {
+        if (detailGeneration.get() != gen) {
+            return;
+        }
+        PendingDetail pending = result.isFailure()
+                ? new PendingDetail(gen,
+                        Either.left(new FetchError.Transport("Genius song", result.getCause())), "")
+                : result.get();
+        pendingDetail.set(pending);
+    }
+
+    @KremaCommand
+    public SongDetailReply pollSongDetail(int generation) {
+        PendingDetail pending = pendingDetail.get();
+        if (pending == null) {
+            return new SongDetailReply(generation, "pending", null, null, null);
+        }
+        if (pending.generation() > generation) {
+            return new SongDetailReply(pending.generation(), "superseded", null, null, null);
+        }
+        pendingDetail.set(null);
+        return pending.result().fold(
+                error -> new SongDetailReply(pending.generation(),
+                        "error", FetchError.uiMessage(error), null, null),
+                detail -> new SongDetailReply(pending.generation(),
+                        "done", null, detail, pending.artDataUri()));
     }
 
     @KremaCommand

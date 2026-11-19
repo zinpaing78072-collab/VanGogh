@@ -60,6 +60,7 @@ skeletons and the staggered artwork stream are both exercised.
 | `requestMovies` / `requestGames` / `requestMusic` / `requestBooks` | request generation (kicks off a fetch) |
 | `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` | `{ status: "pending" \| "done" \| "error" \| "superseded", items?, error? }` |
 | `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` / `pollBookCovers` | remaining count, `-1` when done |
+| `requestSongDetail` / `pollSongDetail` | song-detail generation, then `{ status, detail?, artDataUri?, error? }` |
 | `on("poster" \| "gamePoster" \| "musicPoster" \| "bookCover")` | `{ payload: { id, dataUri }, timestamp }` |
 
 A superseded generation answers `superseded`, so the `requestSeq` guard in
@@ -84,6 +85,11 @@ card objects.
 Artwork: movies reuse the real posters in `movie-page/posters/`; the other forms
 get generated SVG gradient covers, coloured from a hash of the item id, so cards
 are visually distinct instead of a wall of identical grey boxes.
+
+`songDetail` holds the song-detail extras the Genius payload supplies — dummy
+lyrics/duration/audio plus credits, listen links, the About paragraphs, the
+language and translation count, the artwork palette and the community stats — so
+the detail test exercises the real view rather than a lookalike.
 
 The fixtures deliberately include the cases CSS breaks on first: a long title, an
 unbreakable 55-character word, a null rating, an empty artist, a book with no
@@ -127,9 +133,10 @@ Settled-state assertions worth copying:
   .filter(e => e.scrollHeight > e.clientHeight + 2).length                          // 0
 ```
 
-Note that `openDetail` in `js/detail.js` still calls `alert()`, which blocks the
-page in an automated tab. Dismiss it with `browser.dialog`, or read `DOMAINS`
-directly when the detail-view slice replaces that seam.
+Music cards now open the song-detail view (`js/song-detail.js`) through
+`openDetail`, so no dialog blocks the page. The other three forms still call
+`alert()` there until their detail slices land — dismiss it with
+`browser.dialog`, or read `DOMAINS` directly.
 
 Those checks are codified in `preview/check.js` (see below), so prefer running
 it over pasting the snippets by hand.

@@ -7,16 +7,19 @@
  */
 
 export const state = {
-    view: "browse",   // future views dispatch in render(); only "browse" exists
+    view: "browse",   // "browse" | "song" — render() dispatches on it
     domain: "movie",
     title: "Trending Movies",
     status: "idle",   // "idle" | "loading" | "ready" | "error"
     ai: false,        // AI recommendation mode (the header toggle)
     items: [],
     error: null,
+    // The open song detail: { status, id, title, artist, detail, artDataUri, error }
+    song: null,
 };
 
 let requestSeq = 0;
+let detailSeq = 0;
 
 export function nextRequest() {
     return ++requestSeq;
@@ -24,4 +27,18 @@ export function nextRequest() {
 
 export function isCurrent(seq) {
     return seq === requestSeq;
+}
+
+// The detail view has its own sequence so opening a song never cancels the
+// browse grid (or its artwork stream), and vice versa.
+export function nextDetailRequest() {
+    return ++detailSeq;
+}
+
+export function isCurrentDetail(seq) {
+    return seq === detailSeq;
+}
+
+export function cancelDetailRequest() {
+    detailSeq += 1;
 }
