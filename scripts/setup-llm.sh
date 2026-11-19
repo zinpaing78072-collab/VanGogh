@@ -33,7 +33,8 @@ umask 077
 mkdir -p "${conf_dir}"
 
 cat > "${conf}" <<EOF
-# VanGogh LLM settings — created $(date +%Y-%m-%d). Env variables override these.
+# VanGogh LLM settings — created $(date +%Y-%m-%d).
+# The Settings page writes this file too; it is the only source of truth.
 apiKey = ${key}
 # baseUrl = https://openrouter.ai/api/v1
 # model   = baidu/ernie-5.5-flash-preview:free
@@ -45,3 +46,4 @@ chmod 600 "${conf}"
 
 echo "Wrote ${conf}"
 echo "Restart VanGogh, press AI in the search bar, and search a title or a vibe."
+echo "Or edit these values later in Settings — a saved change needs no restart."
