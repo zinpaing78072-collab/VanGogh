@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Van Gogh · Book detail prototypes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="book-detail.css">
+</head>
+<body>
+
+<div class="sky" aria-hidden="true"></div>
+<div class="veil" aria-hidden="true"></div>
+
+<div class="app-shell">
+    <aside class="sidebar" aria-label="Sidebar">
+        <div class="sidebar-head">
+            <div class="brand"><span class="brand-mark" aria-hidden="true">✶</span><span class="brand-text">Van Gogh</span></div>
+            <button type="button" class="icon-btn sidebar-toggle" aria-label="Collapse sidebar" title="Collapse sidebar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Main navigation">
+            <p class="nav-label">Menu</p>
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+                <span class="nav-text">Home</span>
+            </button>
+            <button type="button" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <span class="nav-text">Music</span>
+            </button>
+            <button type="button" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+                <span class="nav-text">Movies</span>
+            </button>
+            <button type="button" class="nav-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span class="nav-text">Books</span>
+            </button>
+            <button type="button" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+                <span class="nav-text">Games</span>
+            </button>
+
+            <p class="nav-label nav-label-spaced">Library</p>
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+                <span class="nav-text">My Lists</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                <span class="nav-text">Favorites</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-foot">
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span class="nav-text">Settings</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="main-column">
+        <header class="app-header">
+            <div class="search-bar">
+                <i data-icon="search" class="search-glyph" aria-hidden="true"></i>
+                <input type="text" class="search-input" placeholder="Search movies, books, music, games…" aria-label="Search">
+                <button type="button" class="search-btn">Search</button>
+            </div>
+            <div class="quick-actions">
+                <button type="button" class="icon-btn round" aria-label="Notifications"><i data-icon="bell"></i></button>
+                <button type="button" class="icon-btn round avatar" aria-label="Profile"><i data-icon="user"></i></button>
+            </div>
+        </header>
+
+        <main class="detail-wrap">
+            <div class="crumbs">
+                <a href="#"><i data-icon="arrow-left" aria-hidden="true"></i>Books</a>
+                <span class="dot"></span>
+                <span class="context">Detail page prototypes · static build</span>
+                <span class="proto-flag"><i data-icon="compass" aria-hidden="true"></i>Prototype</span>
+            </div>
+
+            <section class="index-intro">
+                <div>
+                    <p class="eyebrow">Books · click-through study</p>
+                    <h1>One book,<br><em>three readings.</em></h1>
+                    <p>
+                        Three directions for the page a Book card opens. Same starry shell as
+                        the app, same Open Library record underneath — the difference is how
+                        the record is staged: a spotlight hero, a magazine spread, or a
+                        librarian's dossier. Every metadata value is real Open Library data;
+                        the one-line blurbs are prototype copy.
+                    </p>
+                </div>
+                <aside class="index-note">
+                    <b>Static prototypes.</b> No IPC, no backend, no navigation wiring.
+                    Fields map 1:1 to the <code>Book</code> record
+                    (<code>workKey</code>, title, author, year, rating, subjects,
+                    firstSentence, pages, editionCount, coverUrl) plus the cover ID.
+                    Cover artwork comes from Open Library Covers.
+                </aside>
+            </section>
+
+            <section class="layout-grid" aria-label="Detail layout directions">
+                <a class="layout-card" href="v1-spotlight.html">
+                    <div class="layout-cover">
+                        <img src="assets/covers/left-hand-of-darkness.jpg" alt="Cover of The Left Hand of Darkness">
+                        <span class="layout-tag">01 · Spotlight</span>
+                    </div>
+                    <div class="layout-body">
+                        <p class="layout-eyebrow">Layout 01</p>
+                        <p class="layout-name">The spotlight</p>
+                        <p class="layout-book">The Left Hand of Darkness · Ursula K. Le Guin</p>
+                        <p class="layout-desc">
+                            Centered on the artwork: a large cover, big serif title, rating and
+                            first line, with a compact facts panel riding alongside. The most
+                            familiar streaming-service shape.
+                        </p>
+                        <span class="layout-cta">Open prototype<i data-icon="arrow-right" aria-hidden="true"></i></span>
+                    </div>
+                </a>
+
+                <a class="layout-card" href="v2-editorial.html">
+                    <div class="layout-cover">
+                        <img src="assets/covers/project-hail-mary.jpg" alt="Cover of Project Hail Mary">
+                        <span class="layout-tag">02 · Editorial</span>
+                    </div>
+                    <div class="layout-body">
+                        <p class="layout-eyebrow">Layout 02</p>
+                        <p class="layout-name">The editorial</p>
+                        <p class="layout-book">Project Hail Mary · Andy Weir</p>
+                        <p class="layout-desc">
+                            The cover becomes atmosphere behind a magazine-style spread: a
+                            sticky action rail, the opening line set as a pull quote, and the
+                            catalog record read as prose with data.
+                        </p>
+                        <span class="layout-cta">Open prototype<i data-icon="arrow-right" aria-hidden="true"></i></span>
+                    </div>
+                </a>
+
+                <a class="layout-card" href="v3-dossier.html">
+                    <div class="layout-cover">
+                        <img src="assets/covers/beloved.jpg" alt="Cover of Beloved">
+                        <span class="layout-tag">03 · Dossier</span>
+                    </div>
+                    <div class="layout-body">
+                        <p class="layout-eyebrow">Layout 03</p>
+                        <p class="layout-name">The dossier</p>
+                        <p class="layout-book">Beloved · Toni Morrison</p>
+                        <p class="layout-desc">
+                            A librarian's record card: monospace file header, numbered memo
+                            sections, a data sheet, and the subject index as a typeset list.
+                            Dense, archival, very readable.
+                        </p>
+                        <span class="layout-cta">Open prototype<i data-icon="arrow-right" aria-hidden="true"></i></span>
+                    </div>
+                </a>
+            </section>
+
+            <section class="catalogue">
+                <div class="section-head">
+                    <div>
+                        <p class="section-kicker">Source material</p>
+                        <h2 class="section-title">Records used in this build</h2>
+                    </div>
+                    <a class="section-link" href="https://openlibrary.org" target="_blank" rel="noopener noreferrer">
+                        Open Library<i data-icon="external-link" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="book-strip">
+                    <a class="mini-card" href="https://openlibrary.org/works/OL59800W" target="_blank" rel="noopener noreferrer">
+                        <div class="mini-cover"><img src="assets/covers/left-hand-of-darkness.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">The Left Hand of Darkness</p>
+                            <p class="mini-author">Ursula K. Le Guin</p>
+                            <p class="mini-meta">1969 · ★ 4.3</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="https://openlibrary.org/works/OL21745884W" target="_blank" rel="noopener noreferrer">
+                        <div class="mini-cover"><img src="assets/covers/project-hail-mary.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">Project Hail Mary</p>
+                            <p class="mini-author">Andy Weir</p>
+                            <p class="mini-meta">2021 · ★ 4.5</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="https://openlibrary.org/works/OL50548W" target="_blank" rel="noopener noreferrer">
+                        <div class="mini-cover"><img src="assets/covers/beloved.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">Beloved</p>
+                            <p class="mini-author">Toni Morrison</p>
+                            <p class="mini-meta">1987 · ★ 3.9</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="https://openlibrary.org/works/OL35616W" target="_blank" rel="noopener noreferrer">
+                        <div class="mini-cover"><img src="assets/covers/kindred.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">Kindred</p>
+                            <p class="mini-author">Octavia E. Butler</p>
+                            <p class="mini-meta">1979 · ★ 4.4</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="https://openlibrary.org/works/OL17202418W" target="_blank" rel="noopener noreferrer">
+                        <div class="mini-cover"><img src="assets/covers/station-eleven.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">Station Eleven</p>
+                            <p class="mini-author">Emily St. John Mandel</p>
+                            <p class="mini-meta">2014 · ★ 4.1</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="https://openlibrary.org/works/OL20893680W" target="_blank" rel="noopener noreferrer">
+                        <div class="mini-cover"><img src="assets/covers/piranesi.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">Piranesi</p>
+                            <p class="mini-author">Susanna Clarke</p>
+                            <p class="mini-meta">2020 · ★ 4.3</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="https://openlibrary.org/works/OL16509148W" target="_blank" rel="noopener noreferrer">
+                        <div class="mini-cover"><img src="assets/covers/song-of-achilles.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">The Song of Achilles</p>
+                            <p class="mini-author">Madeline Miller</p>
+                            <p class="mini-meta">2011 · ★ 4.3</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="https://openlibrary.org/works/OL59048W" target="_blank" rel="noopener noreferrer">
+                        <div class="mini-cover"><img src="assets/covers/remains-of-the-day.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">The Remains of the Day</p>
+                            <p class="mini-author">Kazuo Ishiguro</p>
+                            <p class="mini-meta">1989 · ★ 4.2</p>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <footer class="index-foot">
+                <span>Van Gogh · Book detail prototypes · static sample, not wired to the app</span>
+                <span class="source-links">
+                    <a href="v1-spotlight.html">Spotlight</a>
+                    <a href="v2-editorial.html">Editorial</a>
+                    <a href="v3-dossier.html">Dossier</a>
+                </span>
+            </footer>
+        </main>
+    </div>
+</div>
+
+<script src="icons.js"></script>
+</body>
+</html>

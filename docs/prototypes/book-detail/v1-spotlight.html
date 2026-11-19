@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Van Gogh · Book detail prototype — The spotlight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="book-detail.css">
+</head>
+<body class="v1">
+
+<div class="sky" aria-hidden="true"></div>
+<div class="veil" aria-hidden="true"></div>
+
+<div class="app-shell">
+    <aside class="sidebar" aria-label="Sidebar">
+        <div class="sidebar-head">
+            <div class="brand"><span class="brand-mark" aria-hidden="true">✶</span><span class="brand-text">Van Gogh</span></div>
+            <button type="button" class="icon-btn sidebar-toggle" aria-label="Collapse sidebar" title="Collapse sidebar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Main navigation">
+            <p class="nav-label">Menu</p>
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+                <span class="nav-text">Home</span>
+            </button>
+            <button type="button" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <span class="nav-text">Music</span>
+            </button>
+            <button type="button" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+                <span class="nav-text">Movies</span>
+            </button>
+            <button type="button" class="nav-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span class="nav-text">Books</span>
+            </button>
+            <button type="button" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+                <span class="nav-text">Games</span>
+            </button>
+
+            <p class="nav-label nav-label-spaced">Library</p>
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+                <span class="nav-text">My Lists</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                <span class="nav-text">Favorites</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-foot">
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span class="nav-text">Settings</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="main-column">
+        <header class="app-header">
+            <div class="search-bar">
+                <i data-icon="search" class="search-glyph" aria-hidden="true"></i>
+                <input type="text" class="search-input" placeholder="Search movies, books, music, games…" aria-label="Search">
+                <button type="button" class="search-btn">Search</button>
+            </div>
+            <div class="quick-actions">
+                <button type="button" class="icon-btn round" aria-label="Notifications"><i data-icon="bell"></i></button>
+                <button type="button" class="icon-btn round avatar" aria-label="Profile"><i data-icon="user"></i></button>
+            </div>
+        </header>
+
+        <main class="detail-wrap">
+            <div class="crumbs">
+                <a href="index.html"><i data-icon="arrow-left" aria-hidden="true"></i>Books</a>
+                <span class="dot"></span>
+                <span class="context">Trending this week</span>
+                <span class="dot"></span>
+                <span class="context">The Left Hand of Darkness</span>
+                <span class="proto-flag"><i data-icon="compass" aria-hidden="true"></i>Prototype 01 · Spotlight</span>
+            </div>
+
+            <section class="spotlight">
+                <div class="cover-col">
+                    <figure class="cover-frame">
+                        <img src="assets/covers/left-hand-of-darkness.jpg" alt="Cover of The Left Hand of Darkness">
+                    </figure>
+                    <p class="cover-note"><i data-icon="book-open" aria-hidden="true"></i>Open Library cover · ID 10618463</p>
+                </div>
+
+                <div class="spotlight-main">
+                    <div class="badges">
+                        <span class="form-badge"><i data-icon="book-open" aria-hidden="true"></i>BOOK</span>
+                        <span class="engine-note"><i data-icon="sparkles" aria-hidden="true"></i>Resolved from Open Library · OL59800W</span>
+                    </div>
+
+                    <div class="title-block">
+                        <p class="eyebrow">Ursula K. Le Guin</p>
+                        <h1 class="display-title">The Left Hand of Darkness</h1>
+                        <div class="meta-row">
+                            <span>First published 1969</span>
+                            <span class="dot"></span>
+                            <span>304 pages</span>
+                            <span class="dot"></span>
+                            <span>92 editions catalogued</span>
+                        </div>
+                    </div>
+
+                    <div class="rating-panel">
+                        <div class="rating-line">
+                            <span class="rating-value">4.3</span>
+                            <span class="rating-scale">/ 5</span>
+                            <span class="stars" aria-label="4.3 out of 5">
+                                <i data-icon="star"></i><i data-icon="star"></i><i data-icon="star"></i><i data-icon="star"></i><i data-icon="star" class="dim"></i>
+                            </span>
+                        </div>
+                        <div class="rating-bar" aria-hidden="true"><span style="width:85.4%"></span></div>
+                        <p class="rating-caption">Open Library ratings average · 59 votes</p>
+                    </div>
+
+                    <p class="catalog-note">
+                        An envoy from the Ekumen arrives on Winter, a world of permanent ice where
+                        people have no fixed sex — and the mission turns on learning how to trust
+                        someone whose language has no word for his kind of certainty.
+                    </p>
+
+                    <div class="chips" aria-label="Subjects">
+                        <span class="chip"><i data-icon="tag" aria-hidden="true"></i>Science fiction</span>
+                        <span class="chip"><i data-icon="tag" aria-hidden="true"></i>Gender identity</span>
+                        <span class="chip"><i data-icon="tag" aria-hidden="true"></i>Space travel</span>
+                        <span class="chip"><i data-icon="tag" aria-hidden="true"></i>Ice age</span>
+                        <span class="chip"><i data-icon="tag" aria-hidden="true"></i>Human-alien encounters</span>
+                        <span class="chip quiet">+1 more</span>
+                    </div>
+
+                    <div class="actions">
+                        <button type="button" class="btn btn-primary"><i data-icon="bookmark-plus" aria-hidden="true"></i>Add to My Lists</button>
+                        <button type="button" class="btn"><i data-icon="heart" aria-hidden="true"></i>Favorite</button>
+                        <button type="button" class="btn btn-icon" aria-label="Share"><i data-icon="share-2" aria-hidden="true"></i></button>
+                        <button type="button" class="btn btn-ghost"><i data-icon="external-link" aria-hidden="true"></i>Open Library record</button>
+                    </div>
+                </div>
+
+                <aside class="panel facts-panel" aria-label="At a glance">
+                    <h2>At a glance</h2>
+                    <dl class="fact-list">
+                        <div class="fact-row"><dt>Author</dt><dd>Ursula K. Le Guin</dd></div>
+                        <div class="fact-row"><dt>First published</dt><dd>1969</dd></div>
+                        <div class="fact-row"><dt>Median pages</dt><dd>304</dd></div>
+                        <div class="fact-row"><dt>Editions</dt><dd>92 catalogued</dd></div>
+                        <div class="fact-row"><dt>Rating</dt><dd>4.3 / 5</dd></div>
+                        <div class="fact-row"><dt>Work key</dt><dd class="mono">OL59800W</dd></div>
+                    </dl>
+                    <div class="divider"></div>
+                    <p class="rating-caption" style="margin-top:10px">Source: Open Library work record. No live availability data.</p>
+                </aside>
+            </section>
+
+            <section class="lower" aria-label="About the work">
+                <div class="panel quote-panel">
+                    <div class="quote-attr"><i data-icon="quote" aria-hidden="true"></i>Opening line</div>
+                    <blockquote class="quote">
+                        “I'LL MAKE my report as if I told a story, for I was taught as a child on my
+                        homeworld that Truth is a matter of the imagination.”
+                    </blockquote>
+                    <p class="rating-caption" style="margin-top:16px">First sentence as served by Open Library · English edition</p>
+                </div>
+
+                <div class="panel subjects-panel">
+                    <p class="section-kicker">Subject index</p>
+                    <div class="chips">
+                        <span class="chip">Science fiction</span>
+                        <span class="chip">Gender identity</span>
+                        <span class="chip">Space travel</span>
+                        <span class="chip">Ice age</span>
+                        <span class="chip">Human-alien encounters</span>
+                        <span class="chip">Loyalty</span>
+                    </div>
+                    <p>
+                        Six of the 38 subject tags attached to this work. The card only surfaces
+                        the first three; the detail page has room for the rest.
+                    </p>
+                    <button type="button" class="btn btn-ghost" style="align-self:flex-start;padding-left:0"><i data-icon="chevron-right" aria-hidden="true"></i>All subjects</button>
+                </div>
+            </section>
+
+            <section class="related" aria-label="More books">
+                <div class="section-head">
+                    <div>
+                        <p class="section-kicker">From the same shelves</p>
+                        <h2 class="section-title">More books the engine might pair</h2>
+                    </div>
+                    <a class="section-link" href="v2-editorial.html">Next layout: editorial<i data-icon="arrow-right" aria-hidden="true"></i></a>
+                </div>
+                <div class="book-strip">
+                    <a class="mini-card" href="v3-dossier.html">
+                        <div class="mini-cover"><img src="assets/covers/kindred.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">Kindred</p>
+                            <p class="mini-author">Octavia E. Butler</p>
+                            <p class="mini-meta">1979 · ★ 4.4</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="v2-editorial.html">
+                        <div class="mini-cover"><img src="assets/covers/station-eleven.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">Station Eleven</p>
+                            <p class="mini-author">Emily St. John Mandel</p>
+                            <p class="mini-meta">2014 · ★ 4.1</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="v2-editorial.html">
+                        <div class="mini-cover"><img src="assets/covers/piranesi.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">Piranesi</p>
+                            <p class="mini-author">Susanna Clarke</p>
+                            <p class="mini-meta">2020 · ★ 4.3</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="v2-editorial.html">
+                        <div class="mini-cover"><img src="assets/covers/song-of-achilles.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">The Song of Achilles</p>
+                            <p class="mini-author">Madeline Miller</p>
+                            <p class="mini-meta">2011 · ★ 4.3</p>
+                        </div>
+                    </a>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<script src="icons.js"></script>
+</body>
+</html>
