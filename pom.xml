@@ -29,6 +29,14 @@
             <artifactId>vavr</artifactId>
             <version>1.0.1</version>
         </dependency>
+        <!-- LLM transport: official OpenAI Java SDK. The base URL is overridden
+             per request config, so any OpenAI-compatible endpoint (OpenRouter,
+             local servers) works without a second client implementation. -->
+        <dependency>
+            <groupId>com.openai</groupId>
+            <artifactId>openai-java</artifactId>
+            <version>4.109.0</version>
+        </dependency>
         <!-- JCEF experiment: Chromium Embedded Framework shell (swap for Krema system webview).
              Natives are downloaded automatically on first run (~100 MB per platform). -->
         <dependency>

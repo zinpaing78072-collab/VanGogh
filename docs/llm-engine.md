@@ -59,8 +59,10 @@ slice only adds an editor.
 | `titles` | `LLM_TITLES` | `10` | Titles asked of the model, clamped to 1–50 |
 
 The key lives outside the working tree and is never committed. Any
-OpenAI-compatible endpoint works — no provider SDK, no JSON mode (the contract
-is plain text, and many compatible servers lack structured outputs).
+OpenAI-compatible endpoint works: transport is the official
+`com.openai:openai-java` SDK, pointed at the configured `baseUrl` (so no
+provider lock-in and no hand-rolled HTTP). JSON mode / structured outputs stay
+off — the contract is plain text, and many compatible servers lack them.
 
 ## The three request kinds
 
@@ -104,6 +106,13 @@ Classes: `vangogh.llm` (`LlmConfig`, `LlmClient`, `Form`, `PromptFactory`,
 `Pick`, `TitleParser`, `Normalize`), `vangogh.recommend`
 (`PickResolver`, `RecommendationService`), and `vangogh.movie.MovieResolver`.
 
+`LlmClient` owns the wire: one cached `OpenAIClient` per (baseUrl, key,
+timeout), `maxRetries(4)`, and the SDK's typed errors mapped onto `FetchError`
+values (`RateLimitException` → the friendly message, other
+`OpenAIServiceException`s → `HttpStatus`, IO errors → `Transport`, unreadable
+2xx replies → `Payload`). It returns the assistant text as
+`Either<FetchError, String>`, so the service never touches HTTP types.
+
 The prompt is a measured contract, pinned by `PromptFactoryTest`: format rules
 in the system message, then `List <N> <noun> titles related to: <query>` and
 `Format each line as: title | <label>`. The music noun is **song** (Genius
@@ -140,8 +149,9 @@ errored.
 
 - **One model request per AI search.** Nothing calls the model in the
   background; an empty box never spends quota.
-- Free providers throttle hard: 429/5xx are retried at 3/8/20/45 s, honoring
-  `Retry-After`. A final 429 gets the friendly message above.
+- Free providers throttle hard: the SDK retries 429/5xx four times with
+  exponential backoff, honoring `Retry-After`; a final 429 gets the friendly
+  message above. Tests inject a no-wait `Sleeper`, so the suite never sleeps.
 - Expected latency on the free tier: 3–20 s for the model plus about a second
   for 10 parallel catalog searches. Skeleton cards already cover the wait.
 - Resolution cost scales with picks (10 picks = up to 10 catalog searches).
@@ -154,7 +164,8 @@ errored.
 
 - `vangogh.llm`: prompt pinning, parser tolerance/violations, normalization,
   config precedence and clamping, chat-completions transport against a local
-  `com.sun.net.httpserver.HttpServer` (200/429/500/401, key never logged).
+  `com.sun.net.httpserver.HttpServer` (200/401/500/429, retry count and the
+  `Retry-After` delay recorded by a fake `Sleeper`, key never logged).
 - `vangogh.movie.MovieResolverTest`: top-5, year mismatch, vote floor,
   normalization, HTTP/transport/payload errors.
 - `vangogh.recommend.RecommendationServiceTest`: one model call, partial

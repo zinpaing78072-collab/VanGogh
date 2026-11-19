@@ -4,6 +4,7 @@ import build.krema.core.event.EventEmitter;
 import build.krema.core.event.KremaEvent;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
+import vangogh.error.FetchError;
 import vangogh.llm.LlmClient;
 import vangogh.llm.LlmConfig;
 import vangogh.movie.Movie;
@@ -96,35 +97,22 @@ class MovieControllerTest {
         return new MovieController(service); // package-private ctor
     }
 
-    /** Stub model call: returns a canned chat-completions reply or a failure. */
+    /** Stub model call: returns a canned reply or a mapped failure. */
     static class StubLlm extends LlmClient {
-        final Try<ApiResponse> result;
+        final Either<FetchError, String> result;
 
-        StubLlm(Try<ApiResponse> result) {
+        StubLlm(Either<FetchError, String> result) {
             this.result = result;
         }
 
         @Override
-        public Try<ApiResponse> complete(LlmConfig config, String system, String user) {
+        public Either<FetchError, String> complete(LlmConfig config, String system, String user) {
             return result;
         }
     }
 
-    private static String llmReply(String content) {
-        var message = new com.google.gson.JsonObject();
-        message.addProperty("role", "assistant");
-        message.addProperty("content", content);
-        var choice = new com.google.gson.JsonObject();
-        choice.add("message", message);
-        var choices = new com.google.gson.JsonArray();
-        choices.add(choice);
-        var root = new com.google.gson.JsonObject();
-        root.add("choices", choices);
-        return root.toString();
-    }
-
     /** Controller wired to the engine with a stubbed model call. */
-    private MovieController recommendController(StubClient client, Try<ApiResponse> llmResult,
+    private MovieController recommendController(StubClient client, Either<FetchError, String> llmResult,
                                                 ExecutorService io) {
         RecommendationService engine = new RecommendationService(io, new StubLlm(llmResult),
                 () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 10)));
@@ -320,8 +308,7 @@ class MovieControllerTest {
 
         try {
             MovieController controller = recommendController(client,
-                    Try.success(new ApiResponse(200,
-                            llmReply("Inception | 2010\nNot A Real Film | 1999"), null)), io);
+                    Either.right("Inception | 2010\nNot A Real Film | 1999"), io);
 
             int gen = controller.requestMovies("recommend", "dream heist");
             MovieController.MovieDataReply reply = drainData(controller, gen);
@@ -344,7 +331,7 @@ class MovieControllerTest {
             // The page never sends this (an empty box is trending), but the
             // engine must not spend a model call on nothing.
             MovieController controller = recommendController(client,
-                    Try.success(new ApiResponse(200, llmReply("Inception | 2010"), null)), io);
+                    Either.right("Inception | 2010"), io);
 
             int gen = controller.requestMovies("recommend", "  ");
             MovieController.MovieDataReply reply = drainData(controller, gen);
@@ -363,7 +350,8 @@ class MovieControllerTest {
 
         try {
             MovieController controller = recommendController(client,
-                    Try.failure(new RuntimeException("offline")), io);
+                    Either.left(new FetchError.Transport(
+                            "LLM request", new RuntimeException("offline"))), io);
 
             int gen = controller.requestMovies("recommend", "dream heist");
             MovieController.MovieDataReply reply = drainData(controller, gen);
@@ -382,7 +370,7 @@ class MovieControllerTest {
 
         try {
             MovieController controller = recommendController(client,
-                    Try.success(new ApiResponse(401, "{\"error\":\"bad key\"}", null)), io);
+                    Either.left(new FetchError.HttpStatus("LLM", 401, "{\"error\":\"bad key\"}")), io);
 
             int gen = controller.requestMovies("recommend", "dream heist");
             MovieController.MovieDataReply reply = drainData(controller, gen);

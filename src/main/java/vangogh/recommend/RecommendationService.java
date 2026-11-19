@@ -12,7 +12,6 @@ import vangogh.llm.LlmConfig;
 import vangogh.llm.Pick;
 import vangogh.llm.PromptFactory;
 import vangogh.llm.TitleParser;
-import vangogh.net.ApiResponse;
 
 import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
@@ -66,29 +65,10 @@ public class RecommendationService {
     }
 
     private Either<FetchError, String> complete(LlmConfig config, Form form, String query) {
-        Try<ApiResponse> call = llm.complete(
+        return llm.complete(
                 config,
                 PromptFactory.SYSTEM,
                 PromptFactory.user(form, query, config.titles()));
-
-        if (call.isFailure()) {
-            return Either.left(new FetchError.Transport("LLM request", call.getCause()));
-        }
-        ApiResponse response = call.get();
-        if (response.statusCode == 429) {
-            // The free tier's most common answer. Name it in demo language
-            // instead of leaking a raw HTTP status onto the card grid.
-            return Either.left(new FetchError.BadInput(
-                    "AI recommendations", "rate-limited — try again in a minute"));
-        }
-        if (!response.isSuccess()) {
-            return Either.left(new FetchError.HttpStatus(
-                    "LLM", response.statusCode, truncate(response.body, 300)));
-        }
-        return Try.of(() -> LlmClient.contentOf(response.body))
-                .toEither()
-                .mapLeft(error -> (FetchError) new FetchError.Payload(
-                        "LLM", "chat completions", error));
     }
 
     private <T> Either<FetchError, java.util.List<T>> resolve(
@@ -122,12 +102,5 @@ public class RecommendationService {
                 .recover(error -> Either.<FetchError, Option<T>>left(
                         new FetchError.Transport("recommendation resolve", error)))
                 .get();
-    }
-
-    private static String truncate(String value, int max) {
-        if (value == null) {
-            return "null";
-        }
-        return value.length() > max ? value.substring(0, max) + "…" : value;
     }
 }
