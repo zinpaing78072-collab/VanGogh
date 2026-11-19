@@ -160,9 +160,10 @@
             </section>
         </main>
 
-        <!-- Settings (sidebar foot). UI-only for now: the form shows the five
-             values the engine reads today, but nothing is saved — the write
-             path belongs to the openai-java integration (js/settings.js). -->
+        <!-- Settings (sidebar foot). Reads and writes ~/.van-gogh/llm.conf
+             through loadLlmSettings / saveLlmSettings (js/settings.js). The
+             stored key never crosses the bridge: the form only learns whether
+             one exists. -->
         <section class="settings-view hidden" id="settingsView" aria-labelledby="settingsTitle">
             <div class="settings-inner">
                 <header class="settings-head">
@@ -176,7 +177,6 @@
                             <h2 class="settings-section-title">AI recommendations</h2>
                             <p class="settings-section-sub">The model composes the picks; the content sources resolve them into cards.</p>
                         </div>
-                        <span class="settings-badge" title="Nothing on this page is saved yet">Preview</span>
                     </div>
 
                     <div class="settings-field">
@@ -215,8 +215,9 @@
                             <button type="button" class="settings-reveal" id="settingsReveal"
                                     aria-pressed="false" aria-label="Show API key" title="Show API key">Show</button>
                         </div>
-                        <p class="settings-hint" id="settingsKeyHint">Lives in <code>~/.van-gogh/llm.conf</code>,
-                            never in the repository. <code>OPENAI_API_KEY</code> overrides it.</p>
+                        <p class="settings-hint" id="settingsKeyHint">Stored in
+                            <code id="settingsPath">~/.van-gogh/llm.conf</code>, never in the repository.
+                            Leave blank to keep the saved key.</p>
                     </div>
 
                     <div class="settings-row">
@@ -234,23 +235,15 @@
                         </div>
                     </div>
 
-                    <div class="settings-precedence">
-                        <h3 class="settings-precedence-title">Where these values come from</h3>
-                        <p>Environment first, then the config file, then the defaults shown here:</p>
-                        <ul>
-                            <li><code>OPENAI_BASE_URL</code></li>
-                            <li><code>OPENAI_API_KEY</code> or <code>OPENROUTER_API_KEY</code></li>
-                            <li><code>LLM_MODEL</code></li>
-                            <li><code>LLM_TIMEOUT_SECONDS</code> · <code>LLM_TITLES</code></li>
-                        </ul>
-                        <p class="settings-hint">An environment variable silently wins over this form, so a value
-                            saved here can look ignored.</p>
+                    <div class="settings-note">
+                        <h3 class="settings-note-title">One source of truth</h3>
+                        <p>Saved here, read on the next AI search — no restart, and no environment variable
+                            quietly overriding it.</p>
                     </div>
 
                     <p class="settings-status" id="settingsStatus" role="status" aria-live="polite"></p>
 
                     <div class="settings-actions">
-                        <button type="button" class="settings-btn" id="settingsTest">Test connection</button>
                         <div class="settings-buttons">
                             <button type="button" class="settings-btn" id="settingsCancel">Cancel</button>
                             <button type="submit" class="settings-btn primary" id="settingsSave">Save</button>

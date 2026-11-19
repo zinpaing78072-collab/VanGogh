@@ -21,50 +21,77 @@ Design and the measured probe data:
 
 1. Get a key from any OpenAI-compatible provider. The default model is
    OpenRouter's free `baidu/ernie-5.5-flash-preview:free`.
-2. Create the config file outside the repo — one command per OS:
+2. Open **Settings** in the sidebar foot, paste the key, press **Save** — that
+   is the whole setup. The page writes `~/.van-gogh/llm.conf`
+   (`%USERPROFILE%\.van-gogh\llm.conf` on Windows) with owner-only permissions,
+   and the next AI search picks the change up without a restart.
+
+   Headless setup works too, with one command per OS:
 
    | OS | Command |
    |---|---|
    | macOS / Linux | `scripts/setup-llm.sh` |
    | Windows (PowerShell) | `powershell -ExecutionPolicy Bypass -File scripts\setup-llm.ps1` |
 
-   Both prompt for the key with the input hidden and write
-   `~/.van-gogh/llm.conf` or `%USERPROFILE%\.van-gogh\llm.conf`. For scripted
-   setup, pass the key as the first argument (`sh`) or `-Key` (`ps1`), or set
-   `VANGOGH_LLM_KEY`. A manual setup is fine too: copy
-   `scripts/llm.conf.example` to that path and fill in `apiKey`. The example is
-   the only tracked copy — a real `llm.conf` is gitignored. The reader accepts
-   CRLF line endings and a UTF-8 BOM, because Notepad writes both.
+   Both prompt for the key with the input hidden. For scripted setup, pass the
+   key as the first argument (`sh`) or `-Key` (`ps1`). A manual setup is fine
+   too: copy `scripts/llm.conf.example` to that path and fill in `apiKey`. The
+   example is the only tracked copy — a real `llm.conf` is gitignored. The
+   reader accepts CRLF line endings and a UTF-8 BOM, because Notepad writes
+   both.
 
-3. Restart the app, press **AI**, type a title or a vibe
-   ("movies that feel like rain on a window"), press **Search**.
+3. Press **AI**, type a title or a vibe ("movies that feel like rain on a
+   window"), press **Search**.
 
 Without a key nothing breaks: normal search and trending still work, and an AI
-search reports `llm: no API key: set OPENAI_API_KEY or add apiKey to
-~/.van-gogh/llm.conf`.
+search reports `llm: no API key: add apiKey to ~/.van-gogh/llm.conf or save one
+in Settings`.
 
-## Config file and environment
+## Config file — the only source of truth
 
-`LlmConfig` resolves each setting from the environment first, then
-`~/.van-gogh/llm.conf`, then the default. The file is `key=value` lines with
-`#`/`;` comments. The Settings page (sidebar foot) renders these five values in
-a form, but it is UI only for now: Save and Test connection report that the
-openai-java integration owns those paths, so this file remains the source of
-truth.
+`LlmConfig` reads `~/.van-gogh/llm.conf` and falls back to the defaults below.
+The file is `key=value` lines with `#`/`;` comments. **Environment variables are
+not consulted**: `OPENAI_API_KEY` and friends no longer exist in the code, so a
+key typed into Settings is always the key the engine uses. The Settings page
+(sidebar foot) reads the file through `loadLlmSettings` and writes it through
+`saveLlmSettings`.
 
-| File key | Environment | Default | Meaning |
-|---|---|---|---|
-| `baseUrl` | `OPENAI_BASE_URL` | `https://openrouter.ai/api/v1` | OpenAI-compatible API root (no trailing slash needed) |
-| `apiKey` | `OPENAI_API_KEY` or `OPENROUTER_API_KEY` | — | Required; never logged (`toString` prints `***`) |
-| `model` | `LLM_MODEL` | `baidu/ernie-5.5-flash-preview:free` | Chat model id |
-| `timeoutSeconds` | `LLM_TIMEOUT_SECONDS` | `60` | Per-request timeout, clamped to 10–300 |
-| `titles` | `LLM_TITLES` | `10` | Titles asked of the model, clamped to 1–50 |
+| File key | Default | Meaning |
+|---|---|---|
+| `baseUrl` | `https://openrouter.ai/api/v1` | OpenAI-compatible API root (trailing slash stripped) |
+| `apiKey` | — | Required; never logged (`toString` prints `***`) and never returned to the page |
+| `model` | `baidu/ernie-5.5-flash-preview:free` | Chat model id |
+| `timeoutSeconds` | `60` | Per-request timeout, clamped to 10–300 |
+| `titles` | `10` | Titles asked of the model, clamped to 1–50 |
 
 The key lives outside the working tree and is never committed. Any
 OpenAI-compatible endpoint works: transport is the official
 `com.openai:openai-java` SDK, pointed at the configured `baseUrl` (so no
 provider lock-in and no hand-rolled HTTP). JSON mode / structured outputs stay
 off — the contract is plain text, and many compatible servers lack them.
+
+Writing is atomic (temp file + `ATOMIC_MOVE`) and re-applies owner-only
+permissions, so a crash mid-save cannot truncate the file and a half-written
+config never becomes current.
+
+## Settings page
+
+`SettingsController` is the page's backend — two synchronous `@KremaCommand`
+methods, no drains (one small file read/write needs no IO pool):
+
+| Command | Args | Reply |
+|---|---|---|
+| `loadLlmSettings` | — | `{ status, error, baseUrl, model, timeoutSeconds, titles, hasApiKey, configPath }` |
+| `saveLlmSettings` | `{ baseUrl, model, apiKey, timeoutSeconds, titles }` | the same shape, painted from the stored, normalized values |
+
+The stored key never crosses the bridge: load replies with `hasApiKey` only, so
+the field starts empty with the hint "Key saved — type a new one to replace
+it". A blank `apiKey` on save keeps the stored secret, which is what makes
+"change the model, keep the key" work. Failing validation returns
+`status: "error"` with `FetchError.uiMessage` text; nothing is written.
+
+`RecommendationService` calls `LlmConfig.load()` per request, so a save applies
+to the next AI search — no app restart.
 
 ## The three request kinds
 
@@ -132,7 +159,7 @@ the page shows one readable line instead of a stack trace.
 
 | Situation | Text |
 |---|---|
-| No key / config | `llm: no API key: set OPENAI_API_KEY or add apiKey to …/llm.conf` |
+| No key / config | `llm: no API key: add apiKey to …/llm.conf or save one in Settings` |
 | Final 429 after backoff | `AI recommendations: rate-limited — try again in a minute` |
 | Other HTTP status | `LLM failed: HTTP <status> <body excerpt>` |
 | Transport failure / timeout | `LLM request failed: <cause>` |
@@ -165,9 +192,14 @@ errored.
 `mvn -q test` is fully offline: the model and every catalog are stubbed.
 
 - `vangogh.llm`: prompt pinning, parser tolerance/violations, normalization,
-  config precedence and clamping, chat-completions transport against a local
+  config read/clamp/save (atomic replace, owner-only permissions, validation,
+  Windows BOM/CRLF), chat-completions transport against a local
   `com.sun.net.httpserver.HttpServer` (200/401/500/429, retry count and the
   `Retry-After` delay recorded by a fake `Sleeper`, key never logged).
+- `vangogh.controller.SettingsControllerTest`: load without a file paints
+  defaults and no key, the reply never contains the stored key, save writes and
+  returns the normalized values, a blank key keeps the stored one, missing
+  input is an error value and writes nothing.
 - `vangogh.movie.MovieResolverTest`: top-5, year mismatch, vote floor,
   normalization, HTTP/transport/payload errors.
 - `vangogh.recommend.RecommendationServiceTest`: one model call, partial
@@ -178,7 +210,8 @@ errored.
 - `GameControllerTest`: an unwired form rejects `recommend` with `BadInput`.
 - `preview/check.js`: the toggle defaults off, flips `aria-pressed`, sends
   `kind=recommend`, stays on across a form switch, and an empty AI search
-  sends `trending`.
+  sends `trending`; the Settings page loads/saves through the mocked commands
+  and never lets the stored key into the field.
 
 ## Adding the next form
 

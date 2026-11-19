@@ -24,7 +24,8 @@ export const settingsReveal = document.getElementById("settingsReveal");
 export const settingsTimeout = document.getElementById("settingsTimeout");
 export const settingsTitles = document.getElementById("settingsTitles");
 export const settingsStatus = document.getElementById("settingsStatus");
-export const settingsTest = document.getElementById("settingsTest");
+export const settingsPath = document.getElementById("settingsPath");
+export const settingsSave = document.getElementById("settingsSave");
 export const settingsCancel = document.getElementById("settingsCancel");
 
 /* Browse vs. song detail: browseView holds the card grid, songView is painted

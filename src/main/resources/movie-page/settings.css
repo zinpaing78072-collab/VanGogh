@@ -74,21 +74,6 @@
     color: var(--text-muted);
 }
 
-/* "Preview" — the same honesty as the player's "Demo audio" badge: this page
- * does not save yet. */
-.settings-badge {
-    flex: 0 0 auto;
-    padding: 3px 9px;
-    border: 1px solid rgba(244, 211, 94, 0.45);
-    border-radius: 999px;
-    background-color: rgba(216, 169, 49, 0.12);
-    color: var(--star-gold-lt);
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-}
-
 /* ------------------------------------------------------------------ fields */
 
 .settings-field {
@@ -110,8 +95,7 @@
     color: var(--text-muted);
 }
 
-.settings-hint code,
-.settings-precedence code {
+.settings-hint code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 11.5px;
     padding: 1px 5px;
@@ -190,6 +174,13 @@
     border-color: rgba(244, 211, 94, 0.4);
 }
 
+/* No stored key and nothing typed: there is nothing to reveal. */
+.settings-reveal[disabled] {
+    color: var(--border);
+    border-color: transparent;
+    cursor: default;
+}
+
 /* Provider presets — same shape as the header's AI toggle */
 .provider-chips {
     display: flex;
@@ -229,9 +220,9 @@
     gap: 16px;
 }
 
-/* -------------------------------------------------------------- precedence */
-
-.settings-precedence {
+/* The saved-state note. Replaced the old environment-precedence block: the
+ * config file is the only source of truth now. */
+.settings-note {
     margin: 4px 0 18px;
     padding: 14px 16px;
     background-color: var(--panel-inset);
@@ -239,25 +230,17 @@
     border-radius: 6px;
 }
 
-.settings-precedence-title {
+.settings-note-title {
     font-size: 13px;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 4px;
 }
 
-.settings-precedence p {
+.settings-note p {
     font-size: 12.5px;
     line-height: 1.5;
     color: var(--text-muted);
-}
-
-.settings-precedence ul {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 14px;
-    margin: 8px 0;
 }
 
 /* ---------------------------------------------------------------- actions */
@@ -267,6 +250,17 @@
     font-size: 12.5px;
     line-height: 1.45;
     color: var(--star-gold-lt);
+}
+
+/* Save succeeded — say what was written, quietly. */
+.settings-status.is-ok {
+    color: var(--text-muted);
+}
+
+/* Bad input or an unwritable file: the backend's message is the only text the
+ * user gets, so it must not look like a success. */
+.settings-status.is-error {
+    color: #ef8f8f;
 }
 
 .settings-actions {
