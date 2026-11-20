@@ -370,6 +370,21 @@ class Page {
         return JSON.parse(await this.evaluate(DOM_STATS));
     }
 
+    /** Emulate a viewport — the only way to exercise a CSS breakpoint without
+     *  relaunching the browser with a different --window-size. */
+    async resize(width, height) {
+        await this.send("Emulation.setDeviceMetricsOverride", {
+            width: width,
+            height: height || 860,
+            deviceScaleFactor: 1,
+            mobile: false
+        });
+    }
+
+    async resetViewport() {
+        await this.send("Emulation.clearDeviceMetricsOverride");
+    }
+
     async settle(timeoutMs) {
         await this.waitFor(SETTLE, timeoutMs);
         return this.stats();
@@ -408,6 +423,46 @@ class Page {
 
 function check(label, ok, detail) {
     return { label: label, ok: !!ok, detail: detail === undefined ? "" : String(detail) };
+}
+
+// One reading of the card grid at the current viewport. The responsive tests
+// walk a ladder of widths, so they need the column count and the overflow
+// numbers rather than the page's own DOM stats.
+const GRID_PROBE = `JSON.stringify((() => {
+    const grid = document.getElementById("movieGrid");
+    const card = grid.querySelector(".movie-card:not(.skeleton-card)");
+    if (!card) return null;
+    const cr = card.getBoundingClientRect();
+    const text = [...card.querySelectorAll(".card-title, .card-subtitle, .card-meta-item")];
+    return {
+        vw: Math.round(window.innerWidth),
+        columns: getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).length,
+        cardWidth: Math.round(cr.width),
+        gridOverflow: Math.max(0, grid.scrollWidth - grid.clientWidth),
+        pageOverflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
+        escaping: text.filter((el) => {
+            const r = el.getBoundingClientRect();
+            return r.right > cr.right + 1 || r.left < cr.left - 1 || r.bottom > cr.bottom + 1;
+        }).length
+    };
+})())`;
+
+async function measureGrid(page, width) {
+    await page.resize(width, 860);
+    // js/ui.js collapses the sidebar below 900px, and that rail animates: wait
+    // until it has stopped moving before trusting the card widths.
+    await page.evaluate(`(async () => {
+        const rail = document.querySelector(".sidebar");
+        let last = -1;
+        for (let i = 0; i < 80; i++) {
+            await new Promise((r) => requestAnimationFrame(r));
+            const w = Math.round(rail.getBoundingClientRect().width);
+            if (w === last) return true;
+            last = w;
+        }
+        return false;
+    })()`);
+    return JSON.parse(await page.evaluate(GRID_PROBE));
 }
 
 // Every rendered card should finish with real artwork or a visible placeholder,
@@ -604,8 +659,7 @@ const TESTS = [
         run: async (page) => {
             const shell = async () => JSON.parse(await page.evaluate(`JSON.stringify({
                 forms: document.querySelectorAll("#sidebarNav [data-domain]").length,
-                inert: document.querySelectorAll("#sidebarNav [data-nav]").length
-                    + document.querySelectorAll(".sidebar-foot [data-nav]").length,
+                inert: document.querySelectorAll('[data-nav][aria-disabled="true"]').length,
                 labels: [...document.querySelectorAll("#sidebarNav .nav-label")]
                     .map(el => el.textContent.trim()).join(" / "),
                 active: (document.querySelector("#sidebarNav .nav-item.active") || {dataset: {}}).dataset.domain || "",
@@ -636,7 +690,7 @@ const TESTS = [
 
             return [
                 check("four form buttons in the sidebar", open.forms === 4, open.forms),
-                check("four not-yet-wired items", open.inert === 4, open.inert),
+                check("three not-yet-wired items", open.inert === 3, open.inert),
                 check("Menu and Library are section labels", open.labels === "Menu / Library", open.labels),
                 check("the form on screen is the active button", open.active === "movie", open.active),
                 check("a dummy item fires no request", afterDummy.generation === beforeDummy.generation,
@@ -732,6 +786,152 @@ const TESTS = [
         }
     },
     {
+        name: "settings: loads the stored config, validates, saves, keeps the key",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+            const before = await page.stats();
+            const gridBefore = (await page.dom()).cards;
+
+            await page.evaluate(`document.getElementById("settingsNav").click(); true`);
+            // The form paints from the backend reply, not from the markup.
+            await page.waitFor("window.__preview.stats().settingsLoads > 0");
+
+            const view = async () => JSON.parse(await page.evaluate(`JSON.stringify({
+                open: !document.getElementById("settingsView").classList.contains("hidden"),
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                navActive: document.getElementById("settingsNav").classList.contains("active"),
+                formActive: document.querySelectorAll("#sidebarNav .nav-item.active").length,
+                heading: document.getElementById("settingsTitle").textContent,
+                baseUrl: document.getElementById("settingsBaseUrl").value,
+                model: document.getElementById("settingsModel").value,
+                timeout: document.getElementById("settingsTimeout").value,
+                titles: document.getElementById("settingsTitles").value,
+                keyType: document.getElementById("settingsApiKey").type,
+                keyValue: document.getElementById("settingsApiKey").value,
+                keyPlaceholder: document.getElementById("settingsApiKey").placeholder,
+                revealDisabled: document.getElementById("settingsReveal").disabled,
+                path: document.getElementById("settingsPath").textContent,
+                preset: [...document.querySelectorAll(".provider-chip[data-provider]")]
+                    .filter(b => b.getAttribute("aria-pressed") === "true")
+                    .map(b => b.dataset.provider).join(","),
+                status: document.getElementById("settingsStatus").textContent,
+                statusError: document.getElementById("settingsStatus").classList.contains("is-error")
+            })`));
+
+            const open = await view();
+
+            // A preset fills the base URL and moves the pressed marker.
+            await page.evaluate(`document.querySelector('.provider-chip[data-provider="openai"]').click(); true`);
+            const preset = await view();
+
+            // Saving without a key (none stored, none typed) is refused by the
+            // backend, and nothing is written.
+            await page.evaluate(`document.getElementById("settingsSave").click(); true`);
+            await page.waitFor(`document.getElementById("settingsStatus").classList.contains("is-error")`);
+            const refused = await view();
+            const afterRefusal = await page.stats();
+
+            // Typing a key enables Reveal; the key is only ever sent on Save.
+            await page.evaluate(`
+                const key = document.getElementById("settingsApiKey");
+                key.value = "sk-test-key";
+                key.dispatchEvent(new Event("input"));
+                true`);
+            const typed = await view();
+
+            // Save succeeds, the key leaves the field, and the page says the
+            // stored key is now on the engine's side of the bridge.
+            await page.evaluate(`document.getElementById("settingsSave").click(); true`);
+            await page.waitFor("window.__preview.stats().settingsSaves === 1");
+            const saved = await view();
+            const afterSave = await page.stats();
+
+            // Leaving and reopening loads the stored state, still without the key.
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            const closed = await view();
+            await page.evaluate(`document.getElementById("settingsNav").click(); true`);
+            await page.waitFor("window.__preview.stats().settingsLoads > 1");
+            const reopened = await view();
+
+            // A blank key on a second save keeps the secret the page cannot read.
+            await page.evaluate(`
+                document.getElementById("settingsModel").value = "model-b";
+                document.getElementById("settingsSave").click();
+                true`);
+            await page.waitFor("window.__preview.stats().settingsSaves === 2");
+            const kept = await page.stats();
+
+            // Reveal is a field toggle only: it never fills or reads the key.
+            await page.evaluate(`document.getElementById("settingsReveal").click(); true`);
+            const revealed = await view();
+            await page.evaluate(`document.getElementById("settingsReveal").click(); true`);
+            const remasked = await view();
+
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            const d = await page.dom();
+
+            return [
+                check("Settings opens from the sidebar",
+                    open.open && open.browseHidden && open.navActive === true
+                        && open.formActive === 0,
+                    open.open + " / nav " + open.navActive + " / forms " + open.formActive),
+                check("the form paints the loaded config, not markup defaults",
+                    open.heading === "Settings"
+                        && open.baseUrl === "https://openrouter.ai/api/v1"
+                        && open.model === "baidu/ernie-5.5-flash-preview:free"
+                        && open.timeout === "60" && open.titles === "10"
+                        && open.path === "~/.van-gogh/llm.conf",
+                    open.baseUrl + " / " + open.model + " / " + open.timeout + " / "
+                        + open.titles + " / " + open.path),
+                check("no stored key: empty field, nothing to reveal",
+                    open.keyValue === "" && open.keyType === "password"
+                        && open.revealDisabled === true
+                        && open.keyPlaceholder === "sk-…",
+                    open.keyType + " / " + (open.keyValue === "" ? "empty" : "filled")
+                        + " / reveal " + open.revealDisabled),
+                check("a provider preset fills the base URL",
+                    preset.baseUrl === "https://api.openai.com/v1" && preset.preset === "openai",
+                    preset.baseUrl + " / " + preset.preset),
+                check("saving with no key anywhere is an error, not a write",
+                    refused.statusError && /apiKey/.test(refused.status)
+                        && afterRefusal.settingsSaves === 0,
+                    refused.status + " / saves " + afterRefusal.settingsSaves),
+                check("typing a key enables Reveal",
+                    typed.revealDisabled === false && typed.keyValue === "sk-test-key",
+                    "reveal " + typed.revealDisabled),
+                check("Save writes the file and reports the stored values",
+                    !saved.statusError && /Saved/.test(saved.status)
+                        && afterSave.settingsSaves === 1 && afterSave.settingsHasKey === true,
+                    saved.status + " / saves " + afterSave.settingsSaves),
+                check("the key leaves the field and the stored-key hint appears",
+                    saved.keyValue === ""
+                        && /Key saved/.test(saved.keyPlaceholder)
+                        && saved.revealDisabled === false,
+                    saved.keyValue + " / " + saved.keyPlaceholder),
+                check("reopening loads the saved config, still without the key",
+                    reopened.baseUrl === "https://api.openai.com/v1"
+                        && reopened.keyValue === "" && reopened.keyType === "password"
+                        && /Key saved/.test(reopened.keyPlaceholder),
+                    reopened.baseUrl + " / " + (reopened.keyValue === "" ? "empty" : "filled")),
+                check("a blank key on a later save keeps the stored one",
+                    kept.settingsSaves === 2 && kept.settingsHasKey === true,
+                    "saves " + kept.settingsSaves + " / key " + kept.settingsHasKey),
+                check("Reveal toggles the field, never the key",
+                    revealed.keyType === "text" && remasked.keyType === "password"
+                        && revealed.keyValue === "" && remasked.keyValue === "",
+                    revealed.keyType + " → " + remasked.keyType),
+                check("opening and saving fire no browse request",
+                    afterSave.generation === before.generation,
+                    before.generation + " → " + afterSave.generation),
+                check("Escape returns to the intact grid",
+                    !closed.open && closed.navActive === false && closed.formActive === 1
+                        && d.cards === gridBefore && d.title === "Trending Movies",
+                    closed.open + " / nav " + closed.navActive + " / " + d.cards + " cards, " + d.title)
+            ];
+        }
+    },
+    {
         name: "scenario: empty",
         path: "/movie-page/index.html?scenario=empty",
         run: async (page) => {
@@ -809,6 +1009,224 @@ const TESTS = [
                 check("no stale cards from the superseded forms",
                     d.cards === 6 && !d.cardClass.match(/game-card|music-card/), d.cardClass)
             ].concat(artworkInvariants(d));
+        }
+    },
+    {
+        name: "theme: the picker applies, saves and survives reopening",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+            await page.evaluate(`document.getElementById("settingsNav").click(); true`);
+            await page.waitFor("window.__preview.stats().themeLoads > 0");
+
+            // Everything the Appearance card promises, read back from the page.
+            const view = async () => JSON.parse(await page.evaluate(`JSON.stringify({
+                open: !document.getElementById("settingsView").classList.contains("hidden"),
+                chips: [...document.querySelectorAll("#themeChips .theme-chip")]
+                    .map(c => ({ id: c.dataset.themeId, label: c.textContent.trim(),
+                                 pressed: c.getAttribute("aria-pressed") })),
+                theme: document.documentElement.dataset.theme,
+                skin: document.getElementById("themeSkin").getAttribute("href"),
+                status: document.getElementById("themeStatus").textContent,
+                statusError: document.getElementById("themeStatus").classList.contains("is-error"),
+                header: getComputedStyle(document.querySelector(".app-header")).backgroundColor,
+                cardBorder: getComputedStyle(document.querySelector("#movieGrid .movie-card")).borderColor,
+                toggleColor: getComputedStyle(document.getElementById("aiToggle")).color,
+                sky: getComputedStyle(document.querySelector(".sky")).backgroundImage,
+                overlap: (() => {
+                    const a = document.getElementById("aiToggle").getBoundingClientRect();
+                    const b = document.getElementById("searchBtn").getBoundingClientRect();
+                    return a.right > b.left + 1;   // 1px rounding guard
+                })()
+            })`));
+
+            const starry = await view();
+
+            await page.evaluate(`document.querySelector('#themeChips .theme-chip[data-theme-id="liquidneon"]').click(); true`);
+            await page.waitFor("window.__preview.stats().themeSaves === 1");
+            // Swapping the theme <link> is instant, but the browser fetches the
+            // new sheet asynchronously — read the painted colours only once it
+            // has landed, or every comparison sees the old skin.
+            const skinLoaded = await page.evaluate(`new Promise((resolve) => {
+                const hrefs = () => [...document.styleSheets].map((s) => String(s.href || ""));
+                const active = () => hrefs().some((h) => h.indexOf("theme-liquidneon.css") !== -1)
+                    && !hrefs().some((h) => h.indexOf("theme-starry.css") !== -1);
+                if (active()) return resolve(true);
+                const tick = setInterval(() => { if (active()) { clearInterval(tick); resolve(true); } }, 25);
+                setTimeout(() => { clearInterval(tick); resolve(false); }, 3000);
+            })`);
+            // The controls transition their colours (0.2s), and a transition only
+            // starts on the first style recalc — which is the read itself. Force
+            // that recalc, then let the fade finish before comparing skins.
+            await page.evaluate(`getComputedStyle(document.getElementById("aiToggle")).color`);
+            await page.evaluate(`new Promise((resolve) => setTimeout(resolve, 350))`);
+            const neon = await view();
+            const saved = await page.stats();
+
+            // Leaving and reopening must paint the stored choice as pressed.
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.evaluate(`document.getElementById("settingsNav").click(); true`);
+            const reopened = await view();
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+
+            return [
+                check("the Appearance card lists one chip per known theme",
+                    starry.open && starry.chips.length === 2
+                        && starry.chips[0].id === "starry"
+                        && starry.chips[1].id === "liquidneon"
+                        && starry.chips[0].label === "Starry Night"
+                        && starry.chips[1].label === "Liquid Neon",
+                    JSON.stringify(starry.chips)),
+                check("Starry Night is the default and is pressed",
+                    starry.theme === "starry" && starry.skin === "theme-starry.css"
+                        && starry.chips[0].pressed === "true"
+                        && starry.chips[1].pressed === "false",
+                    starry.theme + " / " + starry.skin),
+                check("picking Liquid Neon repaints the whole shell",
+                    skinLoaded && neon.theme === "liquidneon" && neon.skin === "theme-liquidneon.css"
+                        && neon.header !== starry.header
+                        && neon.cardBorder !== starry.cardBorder
+                        && neon.sky.indexOf("liquidneon.png") !== -1,
+                    [neon.theme, neon.skin, "loaded " + skinLoaded, neon.header,
+                        neon.cardBorder, neon.sky.slice(-46)].join(" / ")),
+                check("the AI toggle is styled by whichever theme is active",
+                    starry.toggleColor !== neon.toggleColor
+                        && neon.toggleColor === "rgb(0, 240, 255)",
+                    starry.toggleColor + " → " + neon.toggleColor),
+                check("the AI toggle never sits under the Search button",
+                    !starry.overlap && !neon.overlap,
+                    "starry overlap " + starry.overlap + " / neon overlap " + neon.overlap),
+                check("the pick is saved at once, exactly once",
+                    saved.themeSaves === 1 && saved.theme === "liquidneon"
+                        && !neon.statusError && /saved/i.test(neon.status),
+                    "saves " + saved.themeSaves + " / " + neon.status),
+                check("reopening shows the saved theme pressed",
+                    reopened.chips[1].pressed === "true"
+                        && reopened.chips[0].pressed === "false"
+                        && reopened.theme === "liquidneon",
+                    JSON.stringify(reopened.chips.map(c => c.pressed)))
+            ];
+        }
+    },
+    {
+        name: "theme: a stored theme is painted at launch",
+        path: "/movie-page/index.html?theme=liquidneon",
+        run: async (page) => {
+            await page.settle();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                theme: document.documentElement.dataset.theme,
+                skin: document.getElementById("themeSkin").getAttribute("href"),
+                sky: getComputedStyle(document.querySelector(".sky")).backgroundImage,
+                cardBorder: getComputedStyle(document.querySelector("#movieGrid .movie-card")).borderColor,
+                toggle: getComputedStyle(document.getElementById("aiToggle")).color,
+                aiToggleStyled: getComputedStyle(document.getElementById("aiToggle")).borderTopWidth
+            })`));
+
+            return [
+                check("the saved skin is the one loaded",
+                    d.theme === "liquidneon" && d.skin === "theme-liquidneon.css",
+                    d.theme + " / " + d.skin),
+                check("the backdrop is the Liquid Neon image",
+                    d.sky.indexOf("liquidneon.png") !== -1, d.sky),
+                check("the neon tokens reached the cards and the AI toggle",
+                    d.cardBorder === "rgba(0, 240, 255, 0.2)"
+                        && d.toggle === "rgb(0, 240, 255)"
+                        && d.aiToggleStyled === "1px",
+                    d.cardBorder + " / " + d.toggle + " / border " + d.aiToggleStyled)
+            ];
+        }
+    },
+    {
+        name: "theme: an unknown stored id falls back to Starry Night",
+        path: "/movie-page/index.html?theme=vaporwave",
+        run: async (page) => {
+            await page.settle();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                theme: document.documentElement.dataset.theme,
+                skin: document.getElementById("themeSkin").getAttribute("href")
+            })`));
+
+            return [
+                check("an unknown id reads as the default skin",
+                    d.theme === "starry" && d.skin === "theme-starry.css",
+                    d.theme + " / " + d.skin)
+            ];
+        }
+    },
+    {
+        name: "responsive: one grid ladder serves every width",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+
+            // [viewport width, expected columns] — base.css owns the ladder.
+            const LADDER = [[1280, 5], [1180, 4], [1000, 4], [900, 3], [800, 3], [768, 2], [600, 2]];
+            const rows = [];
+            for (const [width, columns] of LADDER) {
+                const m = await measureGrid(page, width);
+                rows.push({ expected: columns, ...m });
+            }
+
+            // Every card shape must survive both ends of the ladder, not only
+            // movies: the book meta ("Author · N pages") is a prose phrase and
+            // the music subtitle is nowrap, so they stress the tightest column
+            // count differently.
+            const forms = [];
+            for (const form of ["game", "music", "book"]) {
+                await page.selectForm(form);
+                const wide = await measureGrid(page, 1280);
+                const narrow = await measureGrid(page, 600);
+                forms.push({ form: form, wide: wide, narrow: narrow });
+            }
+            await page.resetViewport();
+
+            const squeezed = rows.filter((r) => r.cardWidth < 150).map((r) => r.vw + "→" + r.cardWidth);
+            const escaping = rows.filter((r) => r.escaping > 0 || r.gridOverflow > 0 || r.pageOverflow > 0);
+
+            const clean = (m) => m.escaping === 0 && m.gridOverflow === 0 && m.pageOverflow === 0;
+
+            return rows.map((r) => check(
+                r.vw + "px shows " + r.expected + " columns",
+                r.columns === r.expected,
+                r.columns + " columns / card " + r.cardWidth + "px"))
+                .concat([
+                    check("every step keeps a readable card", squeezed.length === 0,
+                        squeezed.length ? squeezed.join(", ") : rows.map((r) => r.cardWidth).join(", ")),
+                    check("no card text escapes at any width", escaping.length === 0,
+                        escaping.length
+                            ? escaping.map((r) => r.vw + "px escape=" + r.escaping
+                                + " grid=" + r.gridOverflow + " page=" + r.pageOverflow).join("; ")
+                            : rows.map((r) => r.cardWidth).join(", "))
+                ])
+                .concat(forms.map((f) => check(
+                    "the " + f.form + " cards fit five columns and two",
+                    f.wide.columns === 5 && f.narrow.columns === 2 && clean(f.wide) && clean(f.narrow),
+                    f.wide.columns + " cols/" + f.wide.escaping + " escape → "
+                        + f.narrow.columns + " cols/" + f.narrow.escaping + " escape")));
+        }
+    },
+    {
+        name: "responsive: the neon skin reflows exactly like Starry Night",
+        path: "/movie-page/index.html?theme=liquidneon",
+        run: async (page) => {
+            await page.settle();
+            const widths = [1280, 1180, 1000, 900, 800, 768, 600];
+            const columns = [];
+            const widths_ = [];
+            for (const width of widths) {
+                const m = await measureGrid(page, width);
+                columns.push(m.columns);
+                widths_.push(m.cardWidth);
+            }
+            await page.resetViewport();
+
+            return [
+                check("the shared ladder is the only ladder",
+                    columns.join(" ") === "5 4 4 3 3 2 2",
+                    columns.join(" ")),
+                check("neon cards are never squeezed below the default skin's floor",
+                    Math.min(...widths_) >= 150, widths_.join(", "))
+            ];
         }
     }
 ];

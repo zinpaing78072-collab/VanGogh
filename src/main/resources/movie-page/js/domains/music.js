@@ -1,6 +1,6 @@
-/* Music row: MusicBrainz release groups, square album covers, artist as the
- * subtitle line, type/tags instead of a rating (MusicBrainz has no numeric
- * ratings). */
+/* Music row: Genius songs, square artwork, artist as the subtitle line, and a
+ * "Song" type label instead of a rating (Genius has no numeric score). The
+ * same row renders direct search/trending and AI-recommended songs. */
 import { baseCard, wireCard } from "../cards.js";
 import { escapeHtml } from "../util.js";
 
@@ -53,7 +53,7 @@ export const musicDomain = {
     art: "pollGeniusMusicPosters",
     event: "musicPoster",
     plural: "Music",
-    emptyLabel: "albums",
+    emptyLabel: "songs",
     cardClass: "movie-card music-card",
     artClass: "card-cover",
     idField: "id",

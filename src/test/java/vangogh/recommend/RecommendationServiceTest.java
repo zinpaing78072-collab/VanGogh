@@ -2,7 +2,6 @@ package vangogh.recommend;
 
 import io.vavr.control.Either;
 import io.vavr.control.Option;
-import io.vavr.control.Try;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +11,6 @@ import vangogh.llm.LlmClient;
 import vangogh.llm.LlmConfig;
 import vangogh.llm.Pick;
 import vangogh.movie.Movie;
-import vangogh.net.ApiResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +32,7 @@ class RecommendationServiceTest {
 
     /** Stub client: records the prompt and returns a canned reply. */
     static class StubLlm extends LlmClient {
-        Try<ApiResponse> result = Try.success(new ApiResponse(200, reply("A | 2000"), null));
+        Either<FetchError, String> result = Either.right("A | 2000");
         final List<String> users = new ArrayList<>();
         int calls;
 
@@ -43,7 +41,7 @@ class RecommendationServiceTest {
         }
 
         @Override
-        public Try<ApiResponse> complete(LlmConfig config, String system, String user) {
+        public Either<FetchError, String> complete(LlmConfig config, String system, String user) {
             calls++;
             users.add(user);
             return result;
@@ -70,19 +68,6 @@ class RecommendationServiceTest {
         return new RecommendationService(io, llm, config);
     }
 
-    private static String reply(String content) {
-        var message = new com.google.gson.JsonObject();
-        message.addProperty("role", "assistant");
-        message.addProperty("content", content);
-        var choice = new com.google.gson.JsonObject();
-        choice.add("message", message);
-        var choices = new com.google.gson.JsonArray();
-        choices.add(choice);
-        var root = new com.google.gson.JsonObject();
-        root.add("choices", choices);
-        return root.toString();
-    }
-
     private static Movie movie(int id, String title) {
         return new Movie(id, title, 2000, 7.5, "Drama", "A story.", "https://img.test/p.jpg");
     }
@@ -100,8 +85,7 @@ class RecommendationServiceTest {
 
     @Test
     void oneModelCallComposesThePicksAndResolvesThem() {
-        llm.result = Try.success(new ApiResponse(200,
-                reply("Alpha | 2000\nBeta | 2001\nGamma | 2002"), null));
+        llm.result = Either.right("Alpha | 2000\nBeta | 2001\nGamma | 2002");
 
         Either<FetchError, List<Movie>> result = service().recommend(
                 Form.MOVIE, "dreams", resolves(
@@ -117,8 +101,7 @@ class RecommendationServiceTest {
 
     @Test
     void unresolvedPicksAreDroppedWithoutFailingTheList() {
-        llm.result = Try.success(new ApiResponse(200,
-                reply("Alpha | 2000\nMissing | 2001\nGamma | 2002"), null));
+        llm.result = Either.right("Alpha | 2000\nMissing | 2001\nGamma | 2002");
 
         Either<FetchError, List<Movie>> result = service().recommend(
                 Form.MOVIE, "dreams", resolves(movie(1, "Alpha"), movie(3, "Gamma")));
@@ -129,7 +112,8 @@ class RecommendationServiceTest {
 
     @Test
     void aTransportFailureIsALeft() {
-        llm.result = Try.failure(new RuntimeException("offline"));
+        llm.result = Either.left(new FetchError.Transport(
+                "LLM request", new RuntimeException("offline")));
 
         Either<FetchError, List<Movie>> result = service().recommend(
                 Form.MOVIE, "dreams", resolves(movie(1, "Alpha")));
@@ -141,7 +125,8 @@ class RecommendationServiceTest {
 
     @Test
     void aFinal429IsRenderedAsAFriendlyRateLimitMessage() {
-        llm.result = Try.success(new ApiResponse(429, "rate limited", null));
+        llm.result = Either.left(new FetchError.BadInput(
+                "AI recommendations", "rate-limited — try again in a minute"));
 
         Either<FetchError, List<Movie>> result = service().recommend(
                 Form.MOVIE, "dreams", resolves(movie(1, "Alpha")));
@@ -154,7 +139,7 @@ class RecommendationServiceTest {
 
     @Test
     void anyOtherHttpStatusIsCarriedThrough() {
-        llm.result = Try.success(new ApiResponse(502, "bad gateway", null));
+        llm.result = Either.left(new FetchError.HttpStatus("LLM", 502, "bad gateway"));
 
         Either<FetchError, List<Movie>> result = service().recommend(
                 Form.MOVIE, "dreams", resolves(movie(1, "Alpha")));
@@ -167,7 +152,7 @@ class RecommendationServiceTest {
 
     @Test
     void aReplyWithoutAnyTitlesIsAPayloadError() {
-        llm.result = Try.success(new ApiResponse(200, reply("Here are some picks:"), null));
+        llm.result = Either.right("Here are some picks:");
 
         Either<FetchError, List<Movie>> result = service().recommend(
                 Form.MOVIE, "dreams", resolves(movie(1, "Alpha")));
@@ -203,8 +188,7 @@ class RecommendationServiceTest {
         PickResolver<Movie> failing = pick -> Either.left(
                 new FetchError.HttpStatus("TMDB search", 503, "down"));
 
-        llm.result = Try.success(new ApiResponse(200,
-                reply("Alpha | 2000\nBeta | 2001"), null));
+        llm.result = Either.right("Alpha | 2000\nBeta | 2001");
 
         Either<FetchError, List<Movie>> result =
                 service().recommend(Form.MOVIE, "dreams", failing);
@@ -219,8 +203,7 @@ class RecommendationServiceTest {
                 ? Either.right(Option.some(movie(1, "Alpha")))
                 : Either.left(new FetchError.HttpStatus("TMDB search", 503, "down"));
 
-        llm.result = Try.success(new ApiResponse(200,
-                reply("Alpha | 2000\nBeta | 2001"), null));
+        llm.result = Either.right("Alpha | 2000\nBeta | 2001");
 
         Either<FetchError, List<Movie>> result = service().recommend(Form.MOVIE, "dreams", mixed);
 
@@ -237,8 +220,7 @@ class RecommendationServiceTest {
             return Either.right(Option.some(movie(1, "Alpha")));
         };
 
-        llm.result = Try.success(new ApiResponse(200,
-                reply("Alpha | 2000\nBeta | 2001"), null));
+        llm.result = Either.right("Alpha | 2000\nBeta | 2001");
 
         Either<FetchError, List<Movie>> result = service().recommend(Form.MOVIE, "dreams", throwing);
 
@@ -249,7 +231,7 @@ class RecommendationServiceTest {
     @Test
     void theConfiguredTitleCountReachesThePrompt() {
         config = () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "m", 10, 3));
-        llm.result = Try.success(new ApiResponse(200, reply("Alpha | 2000"), null));
+        llm.result = Either.right("Alpha | 2000");
 
         service().recommend(Form.MUSIC, "rainy nights", resolves(movie(1, "Alpha")));
 

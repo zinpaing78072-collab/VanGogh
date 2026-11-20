@@ -1,7 +1,7 @@
 /* Rendering: state goes in, DOM comes out. Everything that paints the browse
  * view lives here; content.js only changes state and asks for a render.
  */
-import { grid, sectionTitle, sidebarNav, browseView } from "./dom.js";
+import { grid, sectionTitle, sidebarNav, browseView, settingsView, settingsNavItem } from "./dom.js";
 import { state } from "./state.js";
 import { DOMAINS } from "./domains.js";
 import { openDetail } from "./detail.js";
@@ -9,6 +9,16 @@ import { paintSongView, closeSongView } from "./song-detail.js";
 import { escapeHtml } from "./util.js";
 
 export function render() {
+    if (state.view === "settings") {
+        // Settings replaces the browse page; a song detail (and its player)
+        // must not stay painted underneath.
+        closeSongView();
+        browseView.classList.add("hidden");
+        settingsView.classList.remove("hidden");
+        paintActiveNav(null);
+        return;
+    }
+    settingsView.classList.add("hidden");
     if (state.view === "song") {
         browseView.classList.add("hidden");
         paintSongView();
@@ -33,7 +43,9 @@ function renderBrowse() {
 
 // The sidebar's content-form buttons are the switcher; the active one is
 // painted from state.domain on every render (never from a click handler), so a
-// superseded request or a failed load cannot leave two buttons active.
+// superseded request or a failed load cannot leave two buttons active. Settings
+// is the one destination outside the form switcher: it is active exactly when
+// state.view is "settings", and then no form button is.
 function paintActiveNav(domainKey) {
     sidebarNav.querySelectorAll(".nav-item[data-domain]").forEach((item) => {
         const active = item.dataset.domain === domainKey;
@@ -44,6 +56,14 @@ function paintActiveNav(domainKey) {
             item.removeAttribute("aria-current");
         }
     });
+
+    const onSettings = state.view === "settings";
+    settingsNavItem.classList.toggle("active", onSettings);
+    if (onSettings) {
+        settingsNavItem.setAttribute("aria-current", "page");
+    } else {
+        settingsNavItem.removeAttribute("aria-current");
+    }
 }
 
 function renderCards(domainKey, items) {

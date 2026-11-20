@@ -8,9 +8,12 @@ import io.vavr.control.Either;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 import vangogh.error.FetchError;
+import vangogh.llm.Form;
 import vangogh.music.GeniusMusicService;
 import vangogh.music.Song;
 import vangogh.music.SongDetail;
+import vangogh.recommend.PickResolver;
+import vangogh.recommend.RecommendationService;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -26,6 +29,8 @@ public class GeniusController {
     private volatile EventEmitter events;
     private final GeniusMusicService service;
     private final ExecutorService executor;
+    private final PickResolver<Song> resolver;
+    private final RecommendationService recommendations;
 
     private final AtomicInteger generation = new AtomicInteger();
 
@@ -53,9 +58,29 @@ public class GeniusController {
         this(new GeniusMusicService());
     }
 
+    /** Package-private constructor used by tests. */
     GeniusController(GeniusMusicService service) {
+        this(service, newIoPool());
+    }
+
+    /** Package-private seam: lets a test inject the pool it will shut down. */
+    GeniusController(GeniusMusicService service, ExecutorService executor) {
+        this(service, executor, null);
+    }
+
+    /** Package-private seam: tests inject the engine and its stubbed model call. */
+    GeniusController(GeniusMusicService service, ExecutorService executor,
+                     RecommendationService recommendations) {
         this.service = service;
-        this.executor = Executors.newFixedThreadPool(IO_THREADS, runnable -> {
+        this.executor = executor;
+        this.resolver = service.resolver();
+        this.recommendations = recommendations != null
+                ? recommendations
+                : new RecommendationService(executor);
+    }
+
+    private static ExecutorService newIoPool() {
+        return Executors.newFixedThreadPool(IO_THREADS, runnable -> {
             Thread thread = new Thread(runnable, "van-gogh-io");
             thread.setDaemon(true);
             return thread;
@@ -72,21 +97,19 @@ public class GeniusController {
         resetPosterTracking();
         pendingData.set(null);
 
-        // The AI toggle ships before this form's engine slice. Say so instead
-        // of quietly running a direct search behind an AI-looking toggle.
-        if ("recommend".equalsIgnoreCase(kind)) {
-            pendingData.set(new PendingData(gen, Either.left(new FetchError.BadInput(
-                    "kind", "AI recommendations are not wired for this form yet"))));
-            return gen;
-        }
-
         Future.of(executor, () -> fetchSongs(kind, query))
                 .onComplete(result -> deliverData(gen, result));
         return gen;
     }
 
     private Either<FetchError, java.util.List<Song>> fetchSongs(String kind, String query) {
-        return "search".equals(kind)
+        if ("recommend".equalsIgnoreCase(kind)) {
+            return recommendations.recommend(Form.MUSIC, query, resolver)
+                    .map(songs -> List.ofAll(songs)
+                            .distinctBy(Song::id)
+                            .toJavaList());
+        }
+        return "search".equalsIgnoreCase(kind)
                 ? service.searchSongs(query)
                 : service.fetchTrending();
     }

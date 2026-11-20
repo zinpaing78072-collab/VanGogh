@@ -21,46 +21,77 @@ Design and the measured probe data:
 
 1. Get a key from any OpenAI-compatible provider. The default model is
    OpenRouter's free `baidu/ernie-5.5-flash-preview:free`.
-2. Create the config file outside the repo — one command per OS:
+2. Open **Settings** in the sidebar foot, paste the key, press **Save** — that
+   is the whole setup. The page writes `~/.van-gogh/llm.conf`
+   (`%USERPROFILE%\.van-gogh\llm.conf` on Windows) with owner-only permissions,
+   and the next AI search picks the change up without a restart.
+
+   Headless setup works too, with one command per OS:
 
    | OS | Command |
    |---|---|
    | macOS / Linux | `scripts/setup-llm.sh` |
    | Windows (PowerShell) | `powershell -ExecutionPolicy Bypass -File scripts\setup-llm.ps1` |
 
-   Both prompt for the key with the input hidden and write
-   `~/.van-gogh/llm.conf` or `%USERPROFILE%\.van-gogh\llm.conf`. For scripted
-   setup, pass the key as the first argument (`sh`) or `-Key` (`ps1`), or set
-   `VANGOGH_LLM_KEY`. A manual setup is fine too: copy
-   `scripts/llm.conf.example` to that path and fill in `apiKey`. The example is
-   the only tracked copy — a real `llm.conf` is gitignored. The reader accepts
-   CRLF line endings and a UTF-8 BOM, because Notepad writes both.
+   Both prompt for the key with the input hidden. For scripted setup, pass the
+   key as the first argument (`sh`) or `-Key` (`ps1`). A manual setup is fine
+   too: copy `scripts/llm.conf.example` to that path and fill in `apiKey`. The
+   example is the only tracked copy — a real `llm.conf` is gitignored. The
+   reader accepts CRLF line endings and a UTF-8 BOM, because Notepad writes
+   both.
 
-3. Restart the app, press **AI**, type a title or a vibe
-   ("movies that feel like rain on a window"), press **Search**.
+3. Press **AI**, type a title or a vibe ("movies that feel like rain on a
+   window"), press **Search**.
 
 Without a key nothing breaks: normal search and trending still work, and an AI
-search reports `llm: no API key: set OPENAI_API_KEY or add apiKey to
-~/.van-gogh/llm.conf`.
+search reports `llm: no API key: add apiKey to ~/.van-gogh/llm.conf or save one
+in Settings`.
 
-## Config file and environment
+## Config file — the only source of truth
 
-`LlmConfig` resolves each setting from the environment first, then
-`~/.van-gogh/llm.conf`, then the default. The file is `key=value` lines with
-`#`/`;` comments — the same file a later Settings page would write, so that
-slice only adds an editor.
+`LlmConfig` reads `~/.van-gogh/llm.conf` and falls back to the defaults below.
+The file is `key=value` lines with `#`/`;` comments. **Environment variables are
+not consulted**: `OPENAI_API_KEY` and friends no longer exist in the code, so a
+key typed into Settings is always the key the engine uses. The Settings page
+(sidebar foot) reads the file through `loadLlmSettings` and writes it through
+`saveLlmSettings`.
 
-| File key | Environment | Default | Meaning |
-|---|---|---|---|
-| `baseUrl` | `OPENAI_BASE_URL` | `https://openrouter.ai/api/v1` | OpenAI-compatible API root (no trailing slash needed) |
-| `apiKey` | `OPENAI_API_KEY` or `OPENROUTER_API_KEY` | — | Required; never logged (`toString` prints `***`) |
-| `model` | `LLM_MODEL` | `baidu/ernie-5.5-flash-preview:free` | Chat model id |
-| `timeoutSeconds` | `LLM_TIMEOUT_SECONDS` | `60` | Per-request timeout, clamped to 10–300 |
-| `titles` | `LLM_TITLES` | `10` | Titles asked of the model, clamped to 1–50 |
+| File key | Default | Meaning |
+|---|---|---|
+| `baseUrl` | `https://openrouter.ai/api/v1` | OpenAI-compatible API root (trailing slash stripped) |
+| `apiKey` | — | Required; never logged (`toString` prints `***`) and never returned to the page |
+| `model` | `baidu/ernie-5.5-flash-preview:free` | Chat model id |
+| `timeoutSeconds` | `60` | Per-request timeout, clamped to 10–300 |
+| `titles` | `10` | Titles asked of the model, clamped to 1–50 |
 
 The key lives outside the working tree and is never committed. Any
-OpenAI-compatible endpoint works — no provider SDK, no JSON mode (the contract
-is plain text, and many compatible servers lack structured outputs).
+OpenAI-compatible endpoint works: transport is the official
+`com.openai:openai-java` SDK, pointed at the configured `baseUrl` (so no
+provider lock-in and no hand-rolled HTTP). JSON mode / structured outputs stay
+off — the contract is plain text, and many compatible servers lack them.
+
+Writing is atomic (temp file + `ATOMIC_MOVE`) and re-applies owner-only
+permissions, so a crash mid-save cannot truncate the file and a half-written
+config never becomes current.
+
+## Settings page
+
+`SettingsController` is the page's backend — two synchronous `@KremaCommand`
+methods, no drains (one small file read/write needs no IO pool):
+
+| Command | Args | Reply |
+|---|---|---|
+| `loadLlmSettings` | — | `{ status, error, baseUrl, model, timeoutSeconds, titles, hasApiKey, configPath }` |
+| `saveLlmSettings` | `{ baseUrl, model, apiKey, timeoutSeconds, titles }` | the same shape, painted from the stored, normalized values |
+
+The stored key never crosses the bridge: load replies with `hasApiKey` only, so
+the field starts empty with the hint "Key saved — type a new one to replace
+it". A blank `apiKey` on save keeps the stored secret, which is what makes
+"change the model, keep the key" work. Failing validation returns
+`status: "error"` with `FetchError.uiMessage` text; nothing is written.
+
+`RecommendationService` calls `LlmConfig.load()` per request, so a save applies
+to the next AI search — no app restart.
 
 ## The three request kinds
 
@@ -82,11 +113,15 @@ back to a direct search — the error names the cause.
 
 | Form | AI recommendations | Notes |
 |---|---|---|
-| Movies | wired | TMDB `/search/movie` resolution |
-| Music, Books, Games | explicitly rejected | `kind: AI recommendations are not wired for this form yet` until their slices land |
+| Movies | wired | TMDB `/search/movie` resolution (`MovieResolver`) |
+| Music | wired | Genius `/search` song resolution (`SongResolver`) through `requestGeniusMusic` |
+| Books | wired | Open Library structured + containment resolution (`BookResolver`) |
+| Games | wired | TheGamesDB exact-name resolution (`GameResolver`) |
 
-The rejection is deliberate: without it, an AI-looking toggle would quietly run
-a database search on those forms and contradict the feature.
+All four content forms now run the engine. Music is wired on
+`GeniusController` — the music form's live controller. `MusicController` (the
+earlier MusicBrainz album slice) is not the page's music path and keeps its
+`recommend` rejection until it is retired or rewired.
 
 ## Pipeline
 
@@ -102,7 +137,16 @@ request<Form>(kind="recommend", query)        UI thread, returns generation at o
 
 Classes: `vangogh.llm` (`LlmConfig`, `LlmClient`, `Form`, `PromptFactory`,
 `Pick`, `TitleParser`, `Normalize`), `vangogh.recommend`
-(`PickResolver`, `RecommendationService`), and `vangogh.movie.MovieResolver`.
+(`PickResolver`, `RecommendationService`), `vangogh.movie.MovieResolver`,
+`vangogh.music.SongResolver`, `vangogh.book.BookResolver`, and
+`vangogh.game.GameResolver`.
+
+`LlmClient` owns the wire: one cached `OpenAIClient` per (baseUrl, key,
+timeout), `maxRetries(4)`, and the SDK's typed errors mapped onto `FetchError`
+values (`RateLimitException` → the friendly message, other
+`OpenAIServiceException`s → `HttpStatus`, IO errors → `Transport`, unreadable
+2xx replies → `Payload`). It returns the assistant text as
+`Either<FetchError, String>`, so the service never touches HTTP types.
 
 The prompt is a measured contract, pinned by `PromptFactoryTest`: format rules
 in the system message, then `List <N> <noun> titles related to: <query>` and
@@ -114,6 +158,31 @@ results, the release year must match when the model supplied one, the highest
 `vote_count` wins, and rows under 10 votes are rejected. Recommended cards are
 built by the same `TmdbMovieService.toMovie` as trending/search cards.
 
+Song resolution is the music form's equivalent: exact normalized title among
+the top 5 **song** hits (Genius' mixed hit list also carries albums and
+artists), the model-supplied artist must match when present, and the first hit
+in Genius' relevance order wins. Presentation-only suffixes ("(feat. …)",
+"[Remastered 2011]", "feat. …") are ignored for matching, so a clean title and
+a featured version resolve to the same song; a bare year in the disambiguator
+slot is treated as a format slip, not an artist. Recommended cards use the same
+`GeniusMusicService.toSong` as trending/search cards.
+
+Book resolution has two passes. First a structured Open Library search with
+`title=` and, when the model supplied one, `author=`; the normalized title must
+match exactly and the highest `edition_count` wins. If that misses, a free-text
+`q=` search is tried, accepting a candidate title contained in the model's
+title (so "The Hobbit" can resolve "The Hobbit, or There and Back Again") only
+when the candidate has at least 6 characters or 2 words — "Dune" must not
+swallow "Dune Messiah" — again ranked by `edition_count`. Recommended cards use
+`OpenLibraryBookService.toBook`.
+
+Game resolution is exact normalized `game_title`, the release year must match
+when the model supplied one, duplicate ids collapse, and the first matching row
+wins. TheGamesDB has no popularity data, so there is no vote/edition floor.
+Recommended cards use `TgdbGameService.toGame`, including the front-boxart URL.
+A bare year in the disambiguator slot is accepted for games and ignored for
+books (where the disambiguator is an author).
+
 ## Error messages
 
 Every failure is a `FetchError` value rendered by `FetchError.uiMessage`, so
@@ -121,15 +190,15 @@ the page shows one readable line instead of a stack trace.
 
 | Situation | Text |
 |---|---|
-| No key / config | `llm: no API key: set OPENAI_API_KEY or add apiKey to …/llm.conf` |
+| No key / config | `llm: no API key: add apiKey to …/llm.conf or save one in Settings` |
 | Final 429 after backoff | `AI recommendations: rate-limited — try again in a minute` |
 | Other HTTP status | `LLM failed: HTTP <status> <body excerpt>` |
 | Transport failure / timeout | `LLM request failed: <cause>` |
 | Reply is not chat-completions | `LLM payload unreadable (chat completions)` |
 | Reply has no usable titles | `LLM payload unreadable (reply contained no titles)` |
-| Every pick failed to resolve | the first catalog error (e.g. `TMDB search failed: HTTP 503 …`) |
+| Every pick failed to resolve | the first catalog error (e.g. `TMDB search failed: HTTP 503 …`, `Genius search failed: HTTP 503 …`, `OpenLibrary search failed: HTTP 503 …` or `TheGamesDB search failed: HTTP 503 …`) |
 | Blank AI query | `query: AI recommendations need a query` (the page sends `trending` instead) |
-| Unwired form | `kind: AI recommendations are not wired for this form yet` |
+| Unwired form | `kind: AI recommendations are not wired for this form yet` (only the legacy MusicBrainz `MusicController` path remains) |
 
 A reply with some unresolvable titles is still a success: those picks are
 dropped, and fewer than 10 cards is normal. The request is an error only when
@@ -140,8 +209,9 @@ errored.
 
 - **One model request per AI search.** Nothing calls the model in the
   background; an empty box never spends quota.
-- Free providers throttle hard: 429/5xx are retried at 3/8/20/45 s, honoring
-  `Retry-After`. A final 429 gets the friendly message above.
+- Free providers throttle hard: the SDK retries 429/5xx four times with
+  exponential backoff, honoring `Retry-After`; a final 429 gets the friendly
+  message above. Tests inject a no-wait `Sleeper`, so the suite never sleeps.
 - Expected latency on the free tier: 3–20 s for the model plus about a second
   for 10 parallel catalog searches. Skeleton cards already cover the wait.
 - Resolution cost scales with picks (10 picks = up to 10 catalog searches).
@@ -153,24 +223,43 @@ errored.
 `mvn -q test` is fully offline: the model and every catalog are stubbed.
 
 - `vangogh.llm`: prompt pinning, parser tolerance/violations, normalization,
-  config precedence and clamping, chat-completions transport against a local
-  `com.sun.net.httpserver.HttpServer` (200/429/500/401, key never logged).
+  config read/clamp/save (atomic replace, owner-only permissions, validation,
+  Windows BOM/CRLF), chat-completions transport against a local
+  `com.sun.net.httpserver.HttpServer` (200/401/500/429, retry count and the
+  `Retry-After` delay recorded by a fake `Sleeper`, key never logged).
+- `vangogh.controller.SettingsControllerTest`: load without a file paints
+  defaults and no key, the reply never contains the stored key, save writes and
+  returns the normalized values, a blank key keeps the stored one, missing
+  input is an error value and writes nothing.
 - `vangogh.movie.MovieResolverTest`: top-5, year mismatch, vote floor,
   normalization, HTTP/transport/payload errors.
+- `vangogh.music.SongResolverTest`: exact title + artist, feature/remaster
+  suffix handling, artist mismatch, mixed non-song hits, top-5 window,
+  HTTP/transport/payload errors.
+- `vangogh.book.BookResolverTest`: strict title + author, edition-count
+  tiebreak, guarded containment fallback (short titles rejected), sparse rows
+  without authors, bare-year disambiguator, HTTP/transport/payload errors.
+- `vangogh.game.GameResolverTest`: exact name + year, year mismatch, duplicate
+  ids, missing release dates, HTTP/transport/payload errors.
 - `vangogh.recommend.RecommendationServiceTest`: one model call, partial
   lists, zero-resolved-with-error → error, blank query and missing config
   never call the model, a throwing resolver is contained.
 - `MovieControllerTest`: `kind=recommend` end to end through the drain, blank
   query, model failure and HTTP failure.
-- `GameControllerTest`: an unwired form rejects `recommend` with `BadInput`.
+- `GeniusControllerTest`: `kind=recommend` end to end through the music drain,
+  blank query, model failure and HTTP failure.
+- `BookControllerTest` and `GameControllerTest`: `kind=recommend` end to end
+  through their drains (partial resolution, blank query, model failure, model
+  HTTP failure, and a total catalog failure surfacing its own error).
 - `preview/check.js`: the toggle defaults off, flips `aria-pressed`, sends
   `kind=recommend`, stays on across a form switch, and an empty AI search
-  sends `trending`.
+  sends `trending`; the Settings page loads/saves through the mocked commands
+  and never lets the stored key into the field.
 
-## Adding the next form
+## Adding a new form
 
-The engine is generic over `PickResolver<T>`; a new form is one resolver class
-plus its controller branch (slices S3–S5 in the spec). Reuse the service's row
-mapper (`toSong` / `toBook` / `toGame`) so a recommended card is identical to a
-trending card, and delete that form's `recommend` rejection block. Music must
-also change its empty-state label from "albums" to "songs".
+The engine is generic over `PickResolver<T>`; a new form (e.g. TV) is one
+resolver class plus its controller branch (the slice plan in the spec). Reuse
+the service's row mapper (`toSong` / `toBook` / `toGame` / `toMovie`) so a
+recommended card is identical to a trending card, and delete any `recommend`
+rejection block that form still has.

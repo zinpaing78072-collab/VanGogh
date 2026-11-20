@@ -291,7 +291,7 @@
         labels: {
             movie: { plural: "Movies", empty: "movies" },
             game: { plural: "Games", empty: "games" },
-            music: { plural: "Music", empty: "albums" },
+            music: { plural: "Music", empty: "songs" },
             book: { plural: "Books", empty: "books" }
         }
     };

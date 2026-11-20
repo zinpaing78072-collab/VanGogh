@@ -8,6 +8,13 @@ status: current
 
 # Music domain — MusicBrainz upstream constraints and design decisions
 
+> **Status:** the page's live music form is Genius (`GeniusController` /
+> `GeniusMusicService`, songs). This note records the earlier MusicBrainz
+> release-group slice's upstream constraints; it still documents
+> `MusicController` and `MusicBrainzClient`, but it is not the active music
+> path. AI music recommendations also resolve through Genius — see
+> `docs/llm-engine.md`.
+
 The music slice follows the movie/game architecture exactly: `requestMusic`
 kicks off the IO-pool fetch and returns a generation, `pollMusicData` drains the
 card list, and `pollMusicPosters` drains cover art while emitting

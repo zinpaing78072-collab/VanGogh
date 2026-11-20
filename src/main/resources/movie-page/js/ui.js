@@ -13,10 +13,11 @@
  * No native <select> anywhere: its macOS NSMenu popup traps the AppKit thread
  * and freezes the window. Plain buttons carry no such risk.
  */
-import { searchInput, searchBtn, aiToggle, sidebar, sidebarToggle, sidebarNav } from "./dom.js";
+import { searchInput, searchBtn, aiToggle, sidebar, sidebarToggle, sidebarNav, settingsNavItem } from "./dom.js";
 import { state } from "./state.js";
 import { DOMAINS } from "./domains.js";
 import { loadContent } from "./content.js";
+import { openSettings } from "./settings.js";
 
 function submitSearch() {
     const term = searchInput.value.trim();
@@ -48,8 +49,8 @@ searchInput.addEventListener("keydown", (e) => {
 });
 
 // One listener for the whole menu. Buttons without data-domain are the
-// not-yet-wired areas (Home, Library, My Lists, Favorites, Settings): they are
-// deliberately inert, so a click falls through without changing the page.
+// not-yet-wired areas (Home, My Lists, Favorites): they are deliberately inert,
+// so a click falls through without changing the page.
 sidebarNav.addEventListener("click", (e) => {
     const item = e.target.closest(".nav-item[data-domain]");
     if (!item) return;
@@ -57,6 +58,10 @@ sidebarNav.addEventListener("click", (e) => {
     if (!DOMAINS[key]) return;
     loadContent(key, "trending", "");
 });
+
+// Settings sits in the sidebar foot, outside the form switcher: it opens the
+// AI configuration page (UI only for now, see js/settings.js).
+settingsNavItem.addEventListener("click", openSettings);
 
 function setCollapsed(collapsed) {
     sidebar.classList.toggle("collapsed", collapsed);

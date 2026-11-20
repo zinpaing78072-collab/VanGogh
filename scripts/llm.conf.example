@@ -8,9 +8,8 @@
 #   macOS/Linux : scripts/setup-llm.sh
 #   Windows     : powershell -ExecutionPolicy Bypass -File scripts\setup-llm.ps1
 #
-# Environment variables override the values in this file:
-#   OPENAI_API_KEY / OPENROUTER_API_KEY, OPENAI_BASE_URL,
-#   LLM_MODEL, LLM_TIMEOUT_SECONDS, LLM_TITLES
+# Or open Settings inside the app: it reads and writes this same file. That is
+# the only source of truth — environment variables are not consulted.
 
 # Required. Any OpenAI-compatible provider's key.
 apiKey = sk-or-v1-...

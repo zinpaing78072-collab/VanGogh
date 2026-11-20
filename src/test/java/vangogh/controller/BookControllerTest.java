@@ -1,10 +1,17 @@
 package vangogh.controller;
 
 import vangogh.book.Book;
+import vangogh.book.BookResolver;
 import vangogh.book.OpenLibraryBookService;
 import vangogh.error.FetchError;
+import vangogh.llm.LlmClient;
+import vangogh.llm.LlmConfig;
+import vangogh.net.ApiResponse;
+import vangogh.net.OpenLibraryClient;
+import vangogh.recommend.RecommendationService;
 import org.junit.jupiter.api.Test;
 import io.vavr.control.Either;
+import io.vavr.control.Try;
 import static org.junit.jupiter.api.Assertions.*;
 
 import build.krema.core.event.EventEmitter;
@@ -13,6 +20,8 @@ import build.krema.core.event.KremaEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Unit tests for BookController — the Krema IPC command handler that backs
@@ -83,6 +92,82 @@ class BookControllerTest {
         public io.vavr.control.Option<String> coverDataUri(String coverUrl) {
             return io.vavr.control.Option.some("data:image/jpeg;base64,stubbed");
         }
+    }
+
+    /** Open Library client with canned search replies (no network). */
+    static class StubOlClient extends OpenLibraryClient {
+        final String structured;
+        final String free;
+        int structuredCalls;
+
+        StubOlClient(String structured, String free) {
+            this.structured = structured;
+            this.free = free;
+        }
+
+        @Override
+        public Try<ApiResponse> searchBooksByTitleAuthor(String title, String author) {
+            structuredCalls++;
+            return Try.success(new ApiResponse(200, structured, null));
+        }
+
+        @Override
+        public Try<ApiResponse> searchBooks(String query) {
+            return Try.success(new ApiResponse(200, free, null));
+        }
+    }
+
+    /** Stub service whose resolver uses the canned client, covers served instantly. */
+    static class RecommendingService extends SlowService {
+        private final BookResolver resolver;
+
+        RecommendingService(BookResolver resolver) {
+            this.resolver = resolver;
+        }
+
+        @Override
+        public BookResolver resolver() {
+            return resolver;
+        }
+
+        @Override
+        public io.vavr.control.Option<String> coverDataUri(String coverUrl) {
+            return io.vavr.control.Option.some("data:image/jpeg;base64,stubbed");
+        }
+    }
+
+    /** Stub model call: returns a canned reply or a mapped failure. */
+    static class StubLlm extends LlmClient {
+        final Either<FetchError, String> result;
+        int calls;
+
+        StubLlm(Either<FetchError, String> result) {
+            this.result = result;
+        }
+
+        @Override
+        public Either<FetchError, String> complete(LlmConfig config, String system, String user) {
+            calls++;
+            return result;
+        }
+    }
+
+    private static final String HOBBIT_DOC = """
+            {"key":"/works/OL27482W","title":"The Hobbit",\
+            "author_name":["J.R.R. Tolkien"],"first_publish_year":1937,\
+            "edition_count":482,"cover_i":14627509}
+            """;
+
+    private static String docs(String... rows) {
+        return "{\"docs\":[" + String.join(",", rows) + "]}";
+    }
+
+    /** Controller wired to the engine with a stubbed model call. */
+    private BookController recommendController(OpenLibraryBookService service, StubLlm llm,
+                                               ExecutorService io) {
+        RecommendationService engine = new RecommendationService(io, llm,
+                () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 10)));
+        return new BookController(service, io, engine);
     }
 
     /** Stub service returning one covered book whose cover never loads. */
@@ -231,5 +316,118 @@ class BookControllerTest {
         // Skipped covers are counted against the total, so the drain must
         // reach the -1 completion signal promptly instead of hanging.
         assertEquals(-1, drainCovers(controller));
+    }
+
+    @Test
+    void requestBooksWithRecommendKindRunsTheModelAndResolvesItsPicks() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            StubLlm llm = new StubLlm(Either.right(
+                    "The Hobbit | J.R.R. Tolkien\nNot A Real Book | Nobody At All"));
+            BookController controller = recommendController(
+                    new RecommendingService(new BookResolver(
+                            new StubOlClient(docs(HOBBIT_DOC), docs()))), llm, io);
+
+            int gen = controller.requestBooks("recommend", "comforting fantasy");
+            BookController.BookDataReply reply = drainData(controller, gen);
+
+            assertEquals("done", reply.status());
+            assertNull(reply.error());
+            assertEquals(1, reply.items().size());   // the unresolvable pick is dropped
+            assertEquals("The Hobbit", reply.items().get(0).title());
+            assertEquals("J.R.R. Tolkien", reply.items().get(0).author());
+            assertEquals(1937, reply.items().get(0).year());
+            assertEquals(1, llm.calls);
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void recommendWithoutAQueryIsABadInputError() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            // The page never sends this (an empty box is trending), but the
+            // engine must not spend a model call on nothing.
+            StubLlm llm = new StubLlm(Either.right("The Hobbit | J.R.R. Tolkien"));
+            BookController controller = recommendController(
+                    new RecommendingService(new BookResolver(
+                            new StubOlClient(docs(HOBBIT_DOC), docs()))), llm, io);
+
+            int gen = controller.requestBooks("recommend", "  ");
+            BookController.BookDataReply reply = drainData(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("AI recommendations need a query"), reply.error());
+            assertEquals(0, llm.calls);
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void aModelFailureSurfacesOnTheDataDrain() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            StubLlm llm = new StubLlm(Either.left(new FetchError.Transport(
+                    "LLM request", new RuntimeException("offline"))));
+            BookController controller = recommendController(
+                    new RecommendingService(new BookResolver(
+                            new StubOlClient(docs(HOBBIT_DOC), docs()))), llm, io);
+
+            int gen = controller.requestBooks("recommend", "comforting fantasy");
+            BookController.BookDataReply reply = drainData(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("LLM request failed: offline"), reply.error());
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void aModelHttpErrorSurfacesWithItsStatus() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            StubLlm llm = new StubLlm(Either.left(
+                    new FetchError.HttpStatus("LLM", 401, "{\"error\":\"bad key\"}")));
+            BookController controller = recommendController(
+                    new RecommendingService(new BookResolver(
+                            new StubOlClient(docs(HOBBIT_DOC), docs()))), llm, io);
+
+            int gen = controller.requestBooks("recommend", "comforting fantasy");
+            BookController.BookDataReply reply = drainData(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("LLM failed: HTTP 401"), reply.error());
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void aCatalogFailureWithNoResolvedPicksSurfacesItsError() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            StubLlm llm = new StubLlm(Either.right("The Hobbit | J.R.R. Tolkien"));
+            OpenLibraryClient failing = new OpenLibraryClient() {
+                @Override
+                public Try<ApiResponse> searchBooksByTitleAuthor(String title, String author) {
+                    return Try.success(new ApiResponse(503, "busy", "try later"));
+                }
+            };
+            BookController controller = recommendController(
+                    new RecommendingService(new BookResolver(failing)), llm, io);
+
+            int gen = controller.requestBooks("recommend", "comforting fantasy");
+            BookController.BookDataReply reply = drainData(controller, gen);
+
+            // "The network ate everything" must not render as "no books".
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("OpenLibrary search failed: HTTP 503"),
+                    reply.error());
+        } finally {
+            io.shutdownNow();
+        }
     }
 }

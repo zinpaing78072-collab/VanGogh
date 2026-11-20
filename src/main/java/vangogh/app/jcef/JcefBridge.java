@@ -5,7 +5,10 @@ import vangogh.controller.GameController;
 import vangogh.controller.GeniusController;
 import vangogh.controller.MovieController;
 import vangogh.controller.MusicController;
+import vangogh.controller.SettingsController;
+import vangogh.controller.ThemeController;
 import vangogh.error.FetchError;
+import vangogh.llm.LlmConfig;
 
 import io.vavr.collection.List;
 import io.vavr.collection.Seq;
@@ -14,6 +17,7 @@ import io.vavr.control.Try;
 import io.vavr.control.Validation;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -62,6 +66,8 @@ public class JcefBridge {
     private final MusicController musicController;
     private final GeniusController geniusController;
     private final BookController bookController;
+    private final SettingsController settingsController;
+    private final ThemeController themeController;
     private JcefEventEmitter emitter;
     private CefMessageRouter router;
     /**
@@ -79,12 +85,15 @@ public class JcefBridge {
 
     public JcefBridge(MovieController movieController, GameController gameController,
                       MusicController musicController, GeniusController geniusController,
-                      BookController bookController) {
+                      BookController bookController, SettingsController settingsController,
+                      ThemeController themeController) {
         this.movieController = movieController;
         this.gameController = gameController;
         this.musicController = musicController;
         this.geniusController = geniusController;
         this.bookController = bookController;
+        this.settingsController = settingsController;
+        this.themeController = themeController;
     }
 
     /**
@@ -202,6 +211,12 @@ public class JcefBridge {
             case "pollMusicPosters" -> Validation.valid(new Command(musicController::pollMusicPosters));
             case "pollGeniusMusicPosters" -> Validation.valid(new Command(geniusController::pollGeniusMusicPosters));
             case "pollBookCovers" -> Validation.valid(new Command(bookController::pollBookCovers));
+            case "loadLlmSettings" ->
+                    Validation.valid(new Command(settingsController::loadLlmSettings));
+            case "saveLlmSettings" -> saveLlmSettingsCommand(args);
+            case "loadTheme" ->
+                    Validation.valid(new Command(themeController::loadTheme));
+            case "saveTheme" -> saveThemeCommand(args);
             default -> Validation.invalid(List.of(
                     new FetchError.BadInput("command", "unknown command: " + name)));
         };
@@ -252,6 +267,44 @@ public class JcefBridge {
                 .toEither()
                 .mapLeft(e -> (FetchError) new FetchError.BadInput("query", "not a string"))
                 .toValidation();
+    }
+
+    /**
+     * The settings form sends every field on each save. A missing number falls
+     * back to the documented default instead of failing the whole save; the
+     * controller owns validation of the strings.
+     */
+    private Validation<Seq<FetchError>, Command> saveThemeCommand(JsonObject args) {
+        if (args == null) {
+            return Validation.invalid(List.of(new FetchError.BadInput("args", "missing")));
+        }
+        return Validation.valid(new Command(() -> themeController.saveTheme(text(args, "theme"))));
+    }
+
+    private Validation<Seq<FetchError>, Command> saveLlmSettingsCommand(JsonObject args) {
+        if (args == null) {
+            return Validation.invalid(List.of(new FetchError.BadInput("args", "missing")));
+        }
+        return Validation.valid(new Command(() -> settingsController.saveLlmSettings(
+                text(args, "baseUrl"),
+                text(args, "model"),
+                text(args, "apiKey"),
+                integer(args, "timeoutSeconds", LlmConfig.DEFAULT_TIMEOUT_SECONDS),
+                integer(args, "titles", LlmConfig.DEFAULT_TITLES))));
+    }
+
+    private static String text(JsonObject args, String field) {
+        return Option.of(args.get(field))
+                .filter(json -> !json.isJsonNull())
+                .map(JsonElement::getAsString)
+                .getOrNull();
+    }
+
+    private static int integer(JsonObject args, String field, int fallback) {
+        return Option.of(args.get(field))
+                .filter(json -> !json.isJsonNull())
+                .map(JsonElement::getAsInt)
+                .getOrElse(fallback);
     }
 
     private Command movieCommand(String kind, String query) {

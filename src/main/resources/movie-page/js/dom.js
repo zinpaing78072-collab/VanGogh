@@ -11,6 +11,25 @@ export const sectionTitle = document.getElementById("sectionTitle");
 export const sidebar = document.getElementById("sidebar");
 export const sidebarToggle = document.getElementById("sidebarToggle");
 export const sidebarNav = document.getElementById("sidebarNav");
+export const settingsNavItem = document.getElementById("settingsNav");
+
+/* Settings view — the AI configuration form. Painted/closed by settings.js,
+ * shown/hidden by render.js from state.view. */
+export const settingsView = document.getElementById("settingsView");
+export const settingsForm = document.getElementById("settingsForm");
+/* Appearance card — chips are painted by js/theme.js from the loadTheme reply. */
+export const themeChips = document.getElementById("themeChips");
+export const themeStatus = document.getElementById("themeStatus");
+export const settingsBaseUrl = document.getElementById("settingsBaseUrl");
+export const settingsModel = document.getElementById("settingsModel");
+export const settingsApiKey = document.getElementById("settingsApiKey");
+export const settingsReveal = document.getElementById("settingsReveal");
+export const settingsTimeout = document.getElementById("settingsTimeout");
+export const settingsTitles = document.getElementById("settingsTitles");
+export const settingsStatus = document.getElementById("settingsStatus");
+export const settingsPath = document.getElementById("settingsPath");
+export const settingsSave = document.getElementById("settingsSave");
+export const settingsCancel = document.getElementById("settingsCancel");
 
 /* Browse vs. song detail: browseView holds the card grid, songView is painted
  * by song-detail.js, playerBar is the demo transport pinned to the bottom. */

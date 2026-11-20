@@ -1,15 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="starry">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Van Gogh</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- Structure first, the theme sheet last: a theme only overrides, so it has
+         to win the cascade without !important. data-theme on <html> mirrors the
+         loaded sheet for scripts and tests (js/theme.js). -->
+    <link rel="stylesheet" href="base.css">
     <link rel="stylesheet" href="music-detail.css">
+    <link rel="stylesheet" href="settings.css">
+    <link rel="stylesheet" id="themeSkin" href="theme-starry.css">
 </head>
 <body>
 
-<!-- Starry Night backdrop: starry.png behind a frosted veil -->
+<!-- Theme backdrop: the active theme sheet paints .sky and .veil -->
 <div class="sky" aria-hidden="true"></div>
 <div class="veil" aria-hidden="true"></div>
 
@@ -102,7 +107,9 @@
         </nav>
 
         <div class="sidebar-foot">
-            <button type="button" class="nav-item" data-nav="settings" aria-disabled="true">
+            <!-- Settings is a real destination now: js/ui.js opens the view,
+                 render.js paints the active marker from state.view. -->
+            <button type="button" class="nav-item" data-nav="settings" id="settingsNav">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="3"/>
@@ -156,6 +163,122 @@
                 </div>
             </section>
         </main>
+
+        <!-- Settings (sidebar foot). Two cards: Appearance (theme, read/written
+             through loadTheme / saveTheme in js/theme.js) and AI recommendations
+             (loadLlmSettings / saveLlmSettings in js/settings.js). The stored key
+             never crosses the bridge: the form only learns whether one exists. -->
+        <section class="settings-view hidden" id="settingsView" aria-labelledby="settingsTitle">
+            <div class="settings-inner">
+                <header class="settings-head">
+                    <h1 class="settings-title" id="settingsTitle">Settings</h1>
+                    <p class="settings-subtitle">How Van Gogh looks and how it turns a search into recommendations.</p>
+                </header>
+
+                <!-- Appearance. Chips are rendered from the loadTheme reply so the
+                     theme list lives in one place (ThemeConfig.KNOWN in Java); this
+                     page never invents an id or a label. A native <select> would
+                     freeze the macOS window, hence chips. -->
+                <section class="settings-card" id="themeCard" aria-labelledby="themeCardTitle">
+                    <div class="settings-card-head">
+                        <div>
+                            <h2 class="settings-section-title" id="themeCardTitle">Appearance</h2>
+                            <p class="settings-section-sub">One skin for the whole app — grid, song detail and this page.</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-field">
+                        <span class="settings-label" id="themeLabel">Theme</span>
+                        <div class="provider-chips" id="themeChips" role="group" aria-labelledby="themeLabel">
+                            <!-- theme chips injected by js/theme.js -->
+                        </div>
+                        <p class="settings-hint">Saved as soon as you pick one, and remembered on the next launch.</p>
+                    </div>
+
+                    <p class="settings-status" id="themeStatus" role="status" aria-live="polite"></p>
+                </section>
+
+                <form class="settings-card" id="settingsForm" novalidate>
+                    <div class="settings-card-head">
+                        <div>
+                            <h2 class="settings-section-title">AI recommendations</h2>
+                            <p class="settings-section-sub">The model composes the picks; the content sources resolve them into cards.</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-field">
+                        <span class="settings-label" id="settingsProviderLabel">Provider</span>
+                        <div class="provider-chips" role="group" aria-labelledby="settingsProviderLabel">
+                            <button type="button" class="provider-chip" data-provider="openrouter"
+                                    aria-pressed="true">OpenRouter</button>
+                            <button type="button" class="provider-chip" data-provider="openai"
+                                    aria-pressed="false">OpenAI</button>
+                            <button type="button" class="provider-chip" data-provider="custom"
+                                    aria-pressed="false">Custom</button>
+                        </div>
+                        <p class="settings-hint">Any OpenAI-compatible endpoint works — a preset only fills in the base URL.</p>
+                    </div>
+
+                    <div class="settings-field">
+                        <label class="settings-label" for="settingsBaseUrl">Base URL</label>
+                        <input class="settings-input mono" id="settingsBaseUrl" name="baseUrl" type="url"
+                               value="https://openrouter.ai/api/v1" spellcheck="false" autocomplete="off">
+                    </div>
+
+                    <div class="settings-field">
+                        <label class="settings-label" for="settingsModel">Model</label>
+                        <input class="settings-input mono" id="settingsModel" name="model" type="text"
+                               value="baidu/ernie-5.5-flash-preview:free" spellcheck="false" autocomplete="off">
+                        <p class="settings-hint">The provider's model id. Free tiers rotate often, so a stale id
+                            fails on the first AI search.</p>
+                    </div>
+
+                    <div class="settings-field">
+                        <label class="settings-label" for="settingsApiKey">API key</label>
+                        <div class="settings-secret">
+                            <input class="settings-input mono" id="settingsApiKey" name="apiKey" type="password"
+                                   placeholder="sk-…" autocomplete="off" spellcheck="false"
+                                   aria-describedby="settingsKeyHint">
+                            <button type="button" class="settings-reveal" id="settingsReveal"
+                                    aria-pressed="false" aria-label="Show API key" title="Show API key">Show</button>
+                        </div>
+                        <p class="settings-hint" id="settingsKeyHint">Stored in
+                            <code id="settingsPath">~/.van-gogh/llm.conf</code>, never in the repository.
+                            Leave blank to keep the saved key.</p>
+                    </div>
+
+                    <div class="settings-row">
+                        <div class="settings-field">
+                            <label class="settings-label" for="settingsTimeout">Timeout (seconds)</label>
+                            <input class="settings-input" id="settingsTimeout" name="timeoutSeconds" type="number"
+                                   min="10" max="300" step="5" value="60">
+                            <p class="settings-hint">10–300. Free tiers can take 20 s.</p>
+                        </div>
+                        <div class="settings-field">
+                            <label class="settings-label" for="settingsTitles">Titles per search</label>
+                            <input class="settings-input" id="settingsTitles" name="titles" type="number"
+                                   min="1" max="50" step="1" value="10">
+                            <p class="settings-hint">1–50 picks, one catalog lookup each.</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-note">
+                        <h3 class="settings-note-title">One source of truth</h3>
+                        <p>Saved here, read on the next AI search — no restart, and no environment variable
+                            quietly overriding it.</p>
+                    </div>
+
+                    <p class="settings-status" id="settingsStatus" role="status" aria-live="polite"></p>
+
+                    <div class="settings-actions">
+                        <div class="settings-buttons">
+                            <button type="button" class="settings-btn" id="settingsCancel">Cancel</button>
+                            <button type="submit" class="settings-btn primary" id="settingsSave">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
 
         <!-- Song detail (opened from a music card). Painted by
              js/song-detail.js from state.song; hidden while browsing. -->

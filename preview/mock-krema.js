@@ -9,6 +9,10 @@
  *   invoke("request<Form>", { kind, query })  → generation (kicks off a fetch)
  *   invoke("poll<Form>Data", { generation })  → { status, items?, error? }
  *   invoke("poll<Form>Art", {})               → remaining posters, −1 when done
+ *   invoke("loadLlmSettings", {})             → { status, baseUrl, model, …, hasApiKey }
+ *   invoke("saveLlmSettings", { … })          → the stored values, never the key
+ *   invoke("loadTheme", {})                   → { status, theme, themes }
+ *   invoke("saveTheme", { theme })            → the stored id + the theme list
  *   on("<artEvent>", handler)                 → { payload: { id, dataUri }, timestamp }
  *
  * Because pacing stays pending→done like the real drains, the skeleton cards
@@ -21,6 +25,10 @@
  *   empty       a done reply with zero items (the empty state)
  *   error       an error reply (the red error state)
  *   noposters   done, artwork never arrives (every card shows its placeholder)
+ *
+ * ?theme=<id> starts the mock with that theme stored, so either skin can be
+ * inspected without clicking through Settings (unknown ids fall back to starry,
+ * exactly like ThemeConfig.read).
  */
 (function () {
     "use strict";
@@ -89,6 +97,37 @@
     // Detail has its own generation counter, like the real controller: opening
     // a song must not supersede the browse request (or its artwork stream).
     var detail = { gen: 0, polls: 0, status: "idle", id: null };
+
+    // Settings: an in-memory stand-in for ~/.van-gogh/llm.conf, with the same
+    // contract as SettingsController — the key never comes back out, and a
+    // blank key on save keeps the stored one.
+    var llm = {
+        baseUrl: "https://openrouter.ai/api/v1",
+        model: "baidu/ernie-5.5-flash-preview:free",
+        timeoutSeconds: 60,
+        titles: 10,
+        apiKey: null,
+        loads: 0,
+        saves: 0
+    };
+    var LLM_CONFIG_PATH = "~/.van-gogh/llm.conf";
+
+    // Theme: one stored id, and the same two-row registry ThemeConfig.KNOWN
+    // holds in Java — the page renders its chips from this reply, so the mock
+    // must not invent a third list either.
+    var THEMES = [
+        { id: "starry", label: "Starry Night" },
+        { id: "liquidneon", label: "Liquid Neon" }
+    ];
+    var theme = {
+        id: new URLSearchParams(location.search).get("theme") || "starry",
+        loads: 0,
+        saves: 0
+    };
+    if (!THEMES.some(function (t) { return t.id === theme.id; })) {
+        theme.id = "starry";
+    }
+    var THEME_CONFIG_PATH = "~/.van-gogh/theme.conf";
 
     // ---------------------------------------------------------------- artwork
 
@@ -353,6 +392,100 @@
         };
     }
 
+    function llmReply() {
+        return {
+            status: "ok",
+            error: null,
+            baseUrl: llm.baseUrl,
+            model: llm.model,
+            timeoutSeconds: llm.timeoutSeconds,
+            titles: llm.titles,
+            hasApiKey: !!llm.apiKey,
+            configPath: LLM_CONFIG_PATH
+        };
+    }
+
+    function llmError(field, reason) {
+        return {
+            status: "error",
+            error: field + ": " + reason,
+            baseUrl: null,
+            model: null,
+            timeoutSeconds: 0,
+            titles: 0,
+            hasApiKey: !!llm.apiKey,
+            configPath: LLM_CONFIG_PATH
+        };
+    }
+
+    function loadLlm() {
+        llm.loads += 1;
+        return llmReply();
+    }
+
+    function themeReply(id) {
+        return {
+            status: "ok",
+            error: null,
+            theme: id || theme.id,
+            themes: THEMES
+        };
+    }
+
+    function loadTheme() {
+        theme.loads += 1;
+        return themeReply();
+    }
+
+    function saveTheme(args) {
+        var id = args && typeof args.theme === "string" ? args.theme.trim() : "";
+        if (!THEMES.some(function (t) { return t.id === id; })) {
+            theme.saves += 1;
+            return {
+                status: "error",
+                error: "theme: unknown theme: " + id,
+                theme: theme.id,
+                themes: THEMES
+            };
+        }
+        theme.id = id;
+        theme.saves += 1;
+        console.log("[preview] theme saved: " + id);
+        return themeReply(id);
+    }
+
+    function saveLlm(args) {
+        args = args || {};
+        var typed = typeof args.apiKey === "string" ? args.apiKey.trim() : "";
+        var key = typed || llm.apiKey;
+        if (!key) {
+            return llmError("apiKey", "required — enter a key");
+        }
+        var baseUrl = String(args.baseUrl || "").trim().replace(/\/+$/, "");
+        var model = String(args.model || "").trim();
+        if (!baseUrl) {
+            return llmError("baseUrl", "required");
+        }
+        if (!model) {
+            return llmError("model", "required");
+        }
+
+        // Same normalization the record applies, so the harness sees the
+        // clamped values the page will paint.
+        llm.apiKey = key;
+        llm.baseUrl = baseUrl;
+        llm.model = model;
+        llm.timeoutSeconds = clamp(Number(args.timeoutSeconds) || 60, 10, 300);
+        llm.titles = clamp(Number(args.titles) || 10, 1, 50);
+        llm.saves += 1;
+        console.log("[preview] settings saved, hasApiKey=" + !!llm.apiKey);
+        return llmReply();
+    }
+
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, Math.round(value)));
+    }
+
     window.krema = {
         invoke: function (command, args) {
             var form;
@@ -372,6 +505,18 @@
             }
             if (command === "pollSongDetail") {
                 return Promise.resolve(pollDetail(args));
+            }
+            if (command === "loadLlmSettings") {
+                return Promise.resolve(loadLlm());
+            }
+            if (command === "saveLlmSettings") {
+                return Promise.resolve(saveLlm(args));
+            }
+            if (command === "loadTheme") {
+                return Promise.resolve(loadTheme());
+            }
+            if (command === "saveTheme") {
+                return Promise.resolve(saveTheme(args));
             }
 
             console.warn("[preview] unmocked command: " + command);
@@ -407,7 +552,14 @@
                 artDone: !!artDone[g],
                 detailGeneration: detail.gen,
                 detailStatus: detail.status,
-                detailPolls: detail.polls
+                detailPolls: detail.polls,
+                settingsLoads: llm.loads,
+                settingsSaves: llm.saves,
+                settingsHasKey: !!llm.apiKey,
+                theme: theme.id,
+                themeLoads: theme.loads,
+                themeSaves: theme.saves,
+                themeConfigPath: THEME_CONFIG_PATH
             };
         }
     };
