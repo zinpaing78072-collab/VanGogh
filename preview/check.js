@@ -686,6 +686,13 @@ const TESTS = [
                 castArt: document.querySelectorAll("#movieView .movie-cast-img:not(.hidden)").length,
                 stillArt: document.querySelectorAll("#movieView .movie-shot-img:not(.hidden)").length,
                 simArt: document.querySelectorAll("#movieView .movie-sim-img:not(.hidden)").length,
+                // The rail card is a <button>; WebKit's UA sheet sets it to
+                // align-items:flex-start, which collapsed this aspect-ratio box
+                // to 2×3px on macOS. Assert the 2:3 shape, not just the event.
+                simPoster: (function () {
+                    var r = document.querySelector("#movieView .movie-sim-poster").getBoundingClientRect();
+                    return { w: Math.round(r.width), h: Math.round(r.height) };
+                })(),
                 visiblePlaceholders: document.querySelectorAll("#movieView .poster-placeholder:not(.hidden)").length,
                 broken: [...document.querySelectorAll("#movieView img")]
                     .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
@@ -749,6 +756,9 @@ const TESTS = [
                 check("every headshot streams into its slot", d.castArt === 8, d.castArt),
                 check("every still streams into its slot", d.stillArt === 3, d.stillArt),
                 check("every similar poster streams into its slot", d.simArt === 5, d.simArt),
+                check("similar rail lays every poster out at 2:3",
+                    d.simPoster.h > 100 && Math.abs(d.simPoster.w / d.simPoster.h - 2 / 3) < 0.02,
+                    d.simPoster.w + "×" + d.simPoster.h),
                 check("artwork replaces every placeholder",
                     d.visiblePlaceholders === 0 && d.broken === 0,
                     d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
@@ -802,6 +812,11 @@ const TESTS = [
                 authorArt: document.querySelectorAll("#bookView .book-author-img:not(.hidden)").length,
                 editionArt: document.querySelectorAll("#bookView .book-edition-img:not(.hidden)").length,
                 simArt: document.querySelectorAll("#bookView .book-sim-img:not(.hidden)").length,
+                // Same button/flex trap as the movie rail (see its comment).
+                simPoster: (function () {
+                    var r = document.querySelector("#bookView .book-sim-poster").getBoundingClientRect();
+                    return { w: Math.round(r.width), h: Math.round(r.height) };
+                })(),
                 visiblePlaceholders: document.querySelectorAll("#bookView .poster-placeholder:not(.hidden)").length,
                 broken: [...document.querySelectorAll("#bookView img")]
                     .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
@@ -861,6 +876,9 @@ const TESTS = [
                 check("the author photo paints the byline and the author tile", d.authorArt === 2, d.authorArt),
                 check("every covered edition streams into its slot", d.editionArt === 3, d.editionArt),
                 check("every similar cover streams into its slot", d.simArt === 5, d.simArt),
+                check("similar rail lays every cover out at 2:3",
+                    d.simPoster.h > 100 && Math.abs(d.simPoster.w / d.simPoster.h - 2 / 3) < 0.02,
+                    d.simPoster.w + "×" + d.simPoster.h),
                 check("a coverless edition keeps its placeholder instead of breaking",
                     d.visiblePlaceholders === 1 && d.broken === 0,
                     d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
