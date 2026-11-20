@@ -77,8 +77,10 @@ skeletons and the staggered artwork stream are both exercised.
 | `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` | `{ status: "pending" \| "done" \| "error" \| "superseded", items?, error? }` |
 | `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` / `pollBookCovers` | remaining count, `-1` when done |
 | `requestSongDetail` / `pollSongDetail` | song-detail generation, then `{ status, detail?, artDataUri?, error? }` |
+| `requestMovieDetail` / `pollMovieDetail` / `pollMovieDetailArt` | movie-detail generation, then `{ status, detail?, error? }`; the art drain returns the remaining count, `-1` when done |
 | `loadTheme` / `saveTheme` | `{ status, theme, themes: [{ id, label }] }` (the same registry `ThemeConfig.KNOWN` holds) |
 | `on("poster" \| "gamePoster" \| "musicPoster" \| "bookCover")` | `{ payload: { id, dataUri }, timestamp }` |
+| `on("movieDetailArt")` | `{ payload: { slot, dataUri }, timestamp }` — slots `poster`, `cast:<i>`, `still:<i>`, `similar:<id>` |
 
 A superseded generation answers `superseded`, so the `requestSeq` guard in
 `js/state.js` is exercised rather than bypassed. An unmocked command rejects
@@ -107,6 +109,12 @@ are visually distinct instead of a wall of identical grey boxes.
 lyrics/duration/audio plus credits, listen links, the About paragraphs, the
 language and translation count, the artwork palette and the community stats — so
 the detail test exercises the real view rather than a lookalike.
+
+`movieDetail` holds the film extras the TMDB payload supplies — tagline, runtime,
+certification, keywords, the facts ledger, cast & crew, stills and the similar
+rail. The mock composes the real `MovieDetail` shape from those plus the clicked
+card, and generates one artwork data URI per slot, so the test drives the same
+`movieDetailArt` stream the controller emits.
 
 The fixtures deliberately include the cases CSS breaks on first: a long title, an
 unbreakable 55-character word, a null rating, an empty artist, a book with no
@@ -151,10 +159,10 @@ Settled-state assertions worth copying:
   .filter(e => e.scrollHeight > e.clientHeight + 2).length                          // 0
 ```
 
-Music cards now open the song-detail view (`js/song-detail.js`) through
-`openDetail`, so no dialog blocks the page. The other three forms still call
-`alert()` there until their detail slices land — dismiss it with
-`browser.dialog`, or read `DOMAINS` directly.
+Music cards open the song-detail view (`js/song-detail.js`) and movie cards open
+the movie-detail view (`js/movie-detail.js`) through `openDetail`, so no dialog
+blocks the page. Games and books still call `alert()` there until their detail
+slices land — dismiss it with `browser.dialog`, or read `DOMAINS` directly.
 
 Those checks are codified in `preview/check.js` (see below), so prefer running
 it over pasting the snippets by hand.
@@ -166,11 +174,13 @@ node preview/check.js            # pass/fail, exit 1 on any failure
 node preview/check.js --verbose  # also prints each test's preview stats
 ```
 
-119 assertions across 16 groups: trending render, the sidebar (four form buttons,
+140 assertions across 18 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
 active marker), the switcher across all four forms, search hit and miss, the AI
 toggle (off by default, `kind=recommend` when on, survives a form switch, empty
-box falls back to trending), the Settings form (opens from the sidebar, paints
+box falls back to trending), the song and movie detail views (each bento tile,
+every streamed artwork slot, actions, Escape back to the grid), the Settings
+form (opens from the sidebar, paints
 the loaded config, fills the base URL from a preset, refuses a save with no key,
 saves and clears the field, keeps the stored key off the page and on a second
 blank-key save, toggles Reveal without reading the key, and fires no browse

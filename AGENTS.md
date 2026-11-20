@@ -37,7 +37,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 ### Project state
 - **Features wired**:
   - `VanGoghApp` — Krema window builder (title, identifier, size, debug mode, assets, events, commands)
-  - `MovieController` — `@KremaCommand requestMovies(kind, query)` (non-blocking kickoff, returns the generation), data + poster drains, generation-counted poster streaming via `events.emit("poster", ...)`; `kind=recommend` routes through the LLM engine (below)
+  - `MovieController` — `@KremaCommand requestMovies(kind, query)` (non-blocking kickoff, returns the generation), data + poster drains, generation-counted poster streaming via `events.emit("poster", ...)`; `kind=recommend` routes through the LLM engine (below). `requestMovieDetail` / `pollMovieDetail` / `pollMovieDetailArt` resolve one film for the detail page (identity, facts ledger, cast & crew, stills, similar rail) with its own generation pair, streaming poster/headshots/stills/similar posters as data URIs through `movieDetailArt` events keyed by slot (`poster`, `cast:<i>`, `still:<i>`, `similar:<id>`)
   - `vangogh.llm` (`LlmConfig`, `LlmClient`, `PromptFactory`, `Pick`, `TitleParser`, `Normalize`), `vangogh.recommend` (`PickResolver`, `RecommendationService`), `MovieResolver`, `SongResolver`, `BookResolver`, and `GameResolver` — the AI recommendation engine (all four forms wired): one model request composes `title | disambiguator` picks, then TMDB resolves movie picks, Genius resolves song picks, Open Library resolves book picks and TheGamesDB resolves game picks in parallel. Config lives in `~/.van-gogh/llm.conf` — the single source of truth, written by the Settings page and re-read on every AI search (no restart, no environment overrides); the AI toggle is opt-in, so direct search and trending are unchanged — see `docs/llm-engine.md`
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
@@ -91,6 +91,18 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   below) that folds to 6 columns with the sidebar open and to one stack when
   narrow. It paints itself (`paintSongView`/`closeSongView`); `render.js` only
   decides visibility, so it never imports `render.js`.
+- `js/movie-detail.js` + `movie-detail.css` — the movie-detail view behind a
+  movie card, the bento layout from `prototypes/movie-detail-layouts/bento.html`:
+  a 12-column tile grid (poster / identity / facts on top, keywords + story,
+  cast and stills in the middle, similar rail below) that folds to 6 columns
+  with the sidebar open and to one stack when narrow. It paints itself
+  (`paintMovieView`/`closeMovieView`) from the `requestMovieDetail` reply, then
+  fills each artwork slot (`poster`, `cast:<i>`, `still:<i>`, `similar:<id>`)
+  from `movieDetailArt` events, so a missing image leaves its placeholder
+  instead of a broken icon. Back / Escape return to the intact grid; the
+  watchlist and favorite pills toggle locally; a similar card opens that film
+  in the same view. `render.js` only decides visibility — it never imports the
+  module.
 - `js/settings.js` + `settings.css` — the Settings destination: the AI
   recommendations form (provider presets, base URL, model, masked key with a
   reveal toggle, timeout, titles). It calls `loadLlmSettings` on open and
@@ -108,8 +120,8 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   registry. `.provider-chip` styling is shared with the AI presets; the two
   groups are told apart by `data-provider` / `data-theme-id`.
 - CSS is layered, not per-component: `base.css` (structure + role tokens'
-  Starry defaults), `music-detail.css`, `settings.css` (both structure only,
-  role tokens only), then the active `theme-<id>.css` last (`#themeSkin`) —
+  Starry defaults), `music-detail.css`, `movie-detail.css`, `settings.css`
+  (structure only, role tokens only), then the active `theme-<id>.css` last (`#themeSkin`) —
   `theme-starry.css`, `theme-liquidneon.css`. A theme owns backdrops, type
   scale, radii and the header offsets; adding one is a CSS file plus a
   `ThemeConfig.KNOWN` row (recipe: `docs/themes.md`).
@@ -260,12 +272,13 @@ unreproducible (skeletons, empty, error, missing artwork), and `?theme=<id>`
 starts the page with that skin stored. Fixtures are keyed to
 the real resolved-item shapes and survive the LLM engine slice. `node
 preview/check.js` (Zed task "check UI (headless)") is the same harness driven
-headless: 105 assertions over the card grid, the sidebar (form buttons, inert
+headless: 140 assertions over the card grid, the sidebar (form buttons, inert
 items, section labels, collapse/reflow), search, the Settings form (loads the
 stored config, refuses a save with no key, saves and keeps the key off the
 page), the theme picker (chips from the reply, live repaint of shell + cards +
 AI toggle, one save, reopening shows it pressed, `?theme=` startup and
-fallback) and every scenario, exit 1 on
+fallback), the song and movie detail views (every bento tile, each artwork
+slot, actions, Escape back to the grid) and every scenario, exit 1 on
 failure. Full guide: `docs/preview-harness.md`. Layout,
 styling and page JS go through the preview; shell, IPC and network code still
 need a real app run.
@@ -317,10 +330,11 @@ To run:
   `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` and
   posters through `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` /
   `pollBookCovers` (which doubles as the completion signal, returning −1 when
-  nothing is pending) — all synchronous UI-thread commands. The song detail
-  follows the same rule with its own generation pair (`requestSongDetail` /
-  `pollSongDetail`), so opening a song cannot supersede the browse request or
-  its artwork stream. Drop the dance
+  nothing is pending) — all synchronous UI-thread commands. The song and movie
+  details follow the same rule with their own generation pairs
+  (`requestSongDetail` / `pollSongDetail`, `requestMovieDetail` /
+  `pollMovieDetail` plus `pollMovieDetailArt`), so opening a detail cannot
+  supersede the browse request or its artwork stream. Drop the dance
   when the project can move to a Krema release whose eval is thread-safe on
   Windows (0.3.3+ source does not fix it either; nothing newer is published on
   Maven Central).

@@ -654,6 +654,118 @@ const TESTS = [
         }
     },
     {
+        name: "movie card opens the movie detail",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+
+            await page.evaluate(`document.querySelector("#movieGrid .movie-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().movieDetailArtDone
+                && document.querySelectorAll("#movieView .movie-facts > div").length > 0`);
+
+            const stats = await page.stats();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                movieVisible: !document.getElementById("movieView").classList.contains("hidden"),
+                title: ((document.querySelector("#movieView .movie-title") || {}).textContent || "").trim(),
+                tagline: ((document.querySelector("#movieView .movie-tagline") || {}).textContent || "").trim(),
+                chips: document.querySelectorAll("#movieView .movie-kicker .chip").length,
+                facts: document.querySelectorAll("#movieView .movie-facts > div").length,
+                firstFact: ((document.querySelector("#movieView .movie-facts dt") || {}).textContent || "").trim()
+                    + " = " + ((document.querySelector("#movieView .movie-facts dd") || {}).textContent || "").trim(),
+                mutedFacts: document.querySelectorAll("#movieView .movie-facts dd.muted").length,
+                keywords: document.querySelectorAll("#movieView .movie-keywords li").length,
+                cast: document.querySelectorAll("#movieView .movie-cast-card").length,
+                crewRoles: document.querySelectorAll("#movieView .movie-cast-meta .role.crew").length,
+                stills: document.querySelectorAll("#movieView .movie-shot").length,
+                similar: document.querySelectorAll("#movieView .movie-sim-card").length,
+                tiles: document.querySelectorAll("#movieView .movie-bento > .movie-tile").length,
+                posterArt: document.querySelectorAll("#movieView .movie-poster-img:not(.hidden)").length,
+                castArt: document.querySelectorAll("#movieView .movie-cast-img:not(.hidden)").length,
+                stillArt: document.querySelectorAll("#movieView .movie-shot-img:not(.hidden)").length,
+                simArt: document.querySelectorAll("#movieView .movie-sim-img:not(.hidden)").length,
+                visiblePlaceholders: document.querySelectorAll("#movieView .poster-placeholder:not(.hidden)").length,
+                broken: [...document.querySelectorAll("#movieView img")]
+                    .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
+                trailer: (document.querySelector("#movieView a.movie-action-primary") || {}).href || "",
+                tmdb: [...document.querySelectorAll("#movieView a.movie-action")]
+                    .map(a => a.href).filter(h => h.indexOf("themoviedb.org") !== -1).length,
+                actions: document.querySelectorAll("#movieView .movie-action").length,
+                overflow: Math.max(0, document.getElementById("movieView").scrollWidth
+                    - document.getElementById("movieView").clientWidth)
+            })`));
+
+            await page.evaluate(`document.querySelector('#movieView [data-action="watchlist"]').click(); true`);
+            const watchlist = JSON.parse(await page.evaluate(`JSON.stringify({
+                pressed: document.querySelector('#movieView [data-action="watchlist"]').getAttribute("aria-pressed"),
+                text: document.querySelector('#movieView [data-action="watchlist"]').textContent.trim()
+            })`));
+
+            // The related rail opens another film through the same detail pair.
+            const firstGen = stats.movieDetailGeneration;
+            const relatedTitle = await page.evaluate(
+                `document.querySelector("#movieView .movie-sim-card").dataset.title`);
+            await page.evaluate(`document.querySelector("#movieView .movie-sim-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().movieDetailGeneration > ${firstGen}
+                && window.__preview.stats().movieDetailStatus === "done"
+                && ((document.querySelector("#movieView .movie-title") || {}).textContent || "").trim()
+                    === ${JSON.stringify(relatedTitle)}`);
+            const related = JSON.parse(await page.evaluate(`JSON.stringify({
+                title: ((document.querySelector("#movieView .movie-title") || {}).textContent || "").trim(),
+                generation: window.__preview.stats().movieDetailGeneration
+            })`));
+
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.getElementById("browseView").classList.contains("hidden")
+                && document.getElementById("movieView").classList.contains("hidden")`);
+            const back = JSON.parse(await page.evaluate(`JSON.stringify({
+                cards: document.querySelectorAll("#movieGrid .movie-card").length,
+                title: document.getElementById("sectionTitle").textContent
+            })`));
+
+            return [
+                check("clicking a movie card opens the detail view",
+                    d.browseHidden && d.movieVisible, d.browseHidden + "/" + d.movieVisible),
+                check("detail shows the clicked film's identity",
+                    d.title === "Inception" && d.tagline.indexOf("Your mind") === 0,
+                    d.title + " / " + d.tagline),
+                check("kicker carries year, certification and runtime", d.chips === 3, d.chips),
+                check("facts ledger renders all twelve rows", d.facts === 12, d.facts),
+                check("facts start with the release date",
+                    d.firstFact === "Release = Jul 16, 2010" && d.mutedFacts === 5,
+                    d.firstFact + " / " + d.mutedFacts + " muted"),
+                check("keywords render as chips", d.keywords === 6, d.keywords),
+                check("cast & crew render with the two crew roles",
+                    d.cast === 8 && d.crewRoles === 2, d.cast + " / " + d.crewRoles),
+                check("artwork stills render", d.stills === 3, d.stills),
+                check("similar rail renders", d.similar === 5, d.similar),
+                check("detail lays out as seven bento tiles", d.tiles === 7, d.tiles),
+                check("poster streams into its slot", d.posterArt === 1, d.posterArt),
+                check("every headshot streams into its slot", d.castArt === 8, d.castArt),
+                check("every still streams into its slot", d.stillArt === 3, d.stillArt),
+                check("every similar poster streams into its slot", d.simArt === 5, d.simArt),
+                check("artwork replaces every placeholder",
+                    d.visiblePlaceholders === 0 && d.broken === 0,
+                    d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
+                check("every queued image was emitted", stats.movieDetailArtEmitted === 17,
+                    stats.movieDetailArtEmitted),
+                check("identity carries trailer, watchlist, favorite and TMDB actions",
+                    d.trailer.indexOf("youtube.com") !== -1 && d.tmdb === 1 && d.actions === 4,
+                    d.trailer + " / " + d.actions),
+                check("watchlist toggles on and says so",
+                    watchlist.pressed === "true" && watchlist.text.indexOf("In watchlist") !== -1,
+                    watchlist.pressed + " / " + watchlist.text),
+                check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),
+                check("a similar card opens that film in the same view",
+                    related.title === relatedTitle && related.generation === firstGen + 1,
+                    related.title + " / gen " + related.generation),
+                check("Escape returns to the intact card grid",
+                    back.cards === 6 && back.title === "Trending Movies",
+                    back.cards + " / " + back.title)
+            ];
+        }
+    },
+    {
         name: "sidebar: form buttons, inert items, collapse",
         path: "/movie-page/index.html",
         run: async (page) => {

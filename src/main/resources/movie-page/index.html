@@ -9,6 +9,7 @@
          loaded sheet for scripts and tests (js/theme.js). -->
     <link rel="stylesheet" href="base.css">
     <link rel="stylesheet" href="music-detail.css">
+    <link rel="stylesheet" href="movie-detail.css">
     <link rel="stylesheet" href="settings.css">
     <link rel="stylesheet" id="themeSkin" href="theme-starry.css">
 </head>
@@ -279,6 +280,10 @@
                 </form>
             </div>
         </section>
+
+        <!-- Movie detail (opened from a movie card). Painted by
+             js/movie-detail.js from state.movie; hidden while browsing. -->
+        <section class="movie-view hidden" id="movieView" aria-live="polite"></section>
 
         <!-- Song detail (opened from a music card). Painted by
              js/song-detail.js from state.song; hidden while browsing. -->

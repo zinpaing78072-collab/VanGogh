@@ -67,6 +67,45 @@ class TmdbClientTest {
         assertTrue(proxied.contains("url=https%3A%2F%2Fimage.tmdb.org%2Ft%2Fp%2Fw342%2Fabc123.jpg"));
     }
 
+    // Detail artwork keeps its requested size (w500): a headshot is cropped in
+    // a 2:3 card and a still runs 16:9, so the grid's w342 rewrite would make
+    // both look soft.
+
+    @Test
+    void detailImageSourcesWithNullReturnsEmpty() {
+        assertTrue(TmdbClient.detailImageSources(null, false).isEmpty());
+    }
+
+    @Test
+    void detailImageSourcesWithUnknownHostReturnsEmpty() {
+        assertTrue(TmdbClient.detailImageSources("https://example.com/still.jpg", false).isEmpty());
+    }
+
+    @Test
+    void detailImageSourcesKeepTheRequestedSize() {
+        List<String> sources = TmdbClient.detailImageSources(POSTER, false);
+
+        assertEquals(2, sources.size());
+        assertEquals(POSTER, sources.get(0));
+        assertTrue(sources.get(1).startsWith("https://wsrv.nl/?url="));
+    }
+
+    @Test
+    void detailImageSourcesProxyFirstPutsProxyAheadOfDirect() {
+        List<String> sources = TmdbClient.detailImageSources(POSTER, true);
+
+        assertEquals(2, sources.size());
+        assertTrue(sources.get(0).startsWith("https://wsrv.nl/?url="));
+        assertEquals(POSTER, sources.get(1));
+    }
+
+    @Test
+    void detailImageSourcesProxyUrlIsEncoded() {
+        String proxied = TmdbClient.detailImageSources(POSTER, false).get(1);
+
+        assertTrue(proxied.contains("url=https%3A%2F%2Fimage.tmdb.org%2Ft%2Fp%2Fw500%2Fabc123.jpg"));
+    }
+
     @Test
     void toDataUriWithNullBytesReturnsNull() {
         assertNull(TmdbClient.toDataUri(null, "image/jpeg"));

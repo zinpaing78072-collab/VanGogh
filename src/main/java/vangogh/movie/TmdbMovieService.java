@@ -63,6 +63,25 @@ public class TmdbMovieService {
     }
 
     /**
+     * The detail page's data: one TMDB request, then {@link MovieDetailMapper}
+     * turns the appended blocks into the record the page paints.
+     */
+    public Either<FetchError, MovieDetail> movieDetail(int id) {
+        return client.movieDetail(id)
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Transport("TMDB movie", e))
+                .flatMap(res -> requireSuccess("TMDB movie", res))
+                .flatMap(body -> MovieDetailMapper.parse(body, id));
+    }
+
+    /** Detail artwork (poster, headshots, stills, similar posters) as a data URI. */
+    public Option<String> detailImageDataUri(String imageUrl) {
+        return Option.of(imageUrl)
+                .filter(u -> !u.isEmpty())
+                .flatMap(client::loadDetailImageDataUri);
+    }
+
+    /**
      * The recommendation engine's resolver, sharing this service's client —
      * so a controller (and its tests) can never end up with two TMDB clients.
      */

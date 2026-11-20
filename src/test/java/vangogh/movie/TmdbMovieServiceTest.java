@@ -184,6 +184,209 @@ class TmdbMovieServiceTest {
         assertEquals(0, result.get(0).year());
     }
 
+    /** One TMDB /movie/:id payload with every appended block the detail page reads. */
+    private static final String DETAIL_JSON = """
+        {
+          "id": 27205,
+          "title": "Inception",
+          "tagline": "Your mind is the scene of the crime.",
+          "overview": "A thief who steals corporate secrets through dream-sharing technology.",
+          "release_date": "2010-07-16",
+          "runtime": 148,
+          "status": "Released",
+          "vote_average": 8.4,
+          "vote_count": 2300000,
+          "budget": 160000000,
+          "revenue": 836800000,
+          "poster_path": "/inception.jpg",
+          "genres": [
+            { "id": 28, "name": "Action" },
+            { "id": 878, "name": "Science Fiction" }
+          ],
+          "keywords": {
+            "keywords": [
+              { "id": 1, "name": "dream" },
+              { "id": 2, "name": "heist" }
+            ]
+          },
+          "credits": {
+            "cast": [
+              { "name": "Leonardo DiCaprio", "character": "Dom Cobb", "profile_path": "/leo.jpg" },
+              { "name": "Joseph Gordon-Levitt", "character": "Arthur", "profile_path": "/jgl.jpg" },
+              { "name": "Elliot Page", "character": "Ariadne", "profile_path": null }
+            ],
+            "crew": [
+              { "name": "Christopher Nolan", "job": "Director", "profile_path": "/nolan.jpg" },
+              { "name": "Christopher Nolan", "job": "Screenplay", "profile_path": "/nolan.jpg" },
+              { "name": "Wally Pfister", "job": "Director of Photography", "profile_path": "/pfister.jpg" },
+              { "name": "Hans Zimmer", "job": "Original Music Composer", "profile_path": "/zimmer.jpg" }
+            ]
+          },
+          "images": {
+            "backdrops": [
+              { "file_path": "/still-01.jpg" },
+              { "file_path": "/still-02.jpg" }
+            ]
+          },
+          "similar": {
+            "results": [
+              {
+                "id": 155,
+                "title": "The Dark Knight",
+                "release_date": "2008-07-18",
+                "vote_average": 8.5,
+                "genre_ids": [28],
+                "poster_path": "/tdk.jpg"
+              },
+              { "id": 27205, "title": "Inception", "release_date": "2010-07-16" }
+            ]
+          },
+          "videos": {
+            "results": [
+              { "site": "YouTube", "type": "Teaser", "key": "teaser-key" },
+              { "site": "YouTube", "type": "Trailer", "key": "trailer-key" }
+            ]
+          },
+          "release_dates": {
+            "results": [
+              { "iso_3166_1": "US", "release_dates": [ { "certification": "PG-13", "type": 3 } ] },
+              { "iso_3166_1": "GB", "release_dates": [ { "certification": "12A", "type": 3 } ] }
+            ]
+          },
+          "production_companies": [
+            { "name": "Warner Bros." },
+            { "name": "Legendary Pictures" }
+          ],
+          "production_countries": [
+            { "name": "United States of America" }
+          ]
+        }
+        """;
+
+    private TmdbMovieService detailService(String body) {
+        return new TmdbMovieService(new TmdbClient("test-key") {
+            @Override
+            public io.vavr.control.Try<ApiResponse> movieDetail(int id) {
+                return io.vavr.control.Try.success(new ApiResponse(200, body, null));
+            }
+        });
+    }
+
+    private static String fact(MovieDetail detail, String label) {
+        return detail.facts().stream()
+                .filter(f -> f.label().equals(label))
+                .map(MovieDetail.Fact::value)
+                .findFirst()
+                .orElse("");
+    }
+
+    @Test
+    void movieDetailMapsIdentityAndFacts() {
+        MovieDetail detail = detailService(DETAIL_JSON).movieDetail(27205).get();
+
+        assertEquals(27205, detail.id());
+        assertEquals("Inception", detail.title());
+        assertEquals("Your mind is the scene of the crime.", detail.tagline());
+        assertEquals(2010, detail.year());
+        assertEquals(148, detail.runtimeMinutes());
+        assertEquals("PG-13", detail.certification());
+        assertEquals(8.4, detail.rating());
+        assertEquals(2300000, detail.voteCount());
+        assertEquals("https://image.tmdb.org/t/p/w500/inception.jpg", detail.posterUrl());
+        assertEquals("https://www.themoviedb.org/movie/27205", detail.tmdbUrl());
+        assertEquals("https://www.youtube.com/watch?v=trailer-key", detail.trailerUrl());
+
+        assertEquals(List.of("Action", "Science Fiction"), detail.genres());
+        assertEquals(List.of("dream", "heist"), detail.keywords());
+
+        assertEquals(12, detail.facts().size());
+        assertEquals("Jul 16, 2010", fact(detail, "Release"));
+        assertEquals("2h 28m", fact(detail, "Runtime"));
+        assertEquals("Christopher Nolan", fact(detail, "Director"));
+        assertEquals("Warner Bros., Legendary Pictures", fact(detail, "Studio"));
+        assertEquals("$160M", fact(detail, "Budget"));
+        assertEquals("$836.8M", fact(detail, "Box office"));
+        assertEquals("PG-13", fact(detail, "Certification"));
+        assertEquals("Released", fact(detail, "Status"));
+    }
+
+    @Test
+    void movieDetailMapsCastCrewStillsAndSimilar() {
+        MovieDetail detail = detailService(DETAIL_JSON).movieDetail(27205).get();
+
+        // Three billed cast rows plus the director and cinematographer.
+        assertEquals(5, detail.cast().size());
+        assertEquals("Leonardo DiCaprio", detail.cast().get(0).name());
+        assertEquals("Dom Cobb", detail.cast().get(0).role());
+        assertFalse(detail.cast().get(0).crew());
+        assertEquals("", detail.cast().get(2).imageUrl());
+        assertEquals("Christopher Nolan", detail.cast().get(3).name());
+        assertEquals("Director", detail.cast().get(3).role());
+        assertTrue(detail.cast().get(3).crew());
+        assertEquals("Cinematography", detail.cast().get(4).role());
+
+        assertEquals(2, detail.stills().size());
+        assertEquals("https://image.tmdb.org/t/p/w500/still-01.jpg", detail.stills().get(0).imageUrl());
+
+        // The film's own id is dropped from its similar rail.
+        assertEquals(1, detail.similar().size());
+        Movie related = detail.similar().get(0).movie();
+        assertEquals(155, related.id());
+        assertEquals("The Dark Knight", related.title());
+        assertEquals(2008, related.year());
+        assertEquals("https://image.tmdb.org/t/p/w500/tdk.jpg", detail.similar().get(0).posterUrl());
+    }
+
+    @Test
+    void movieDetailReturnsPayloadErrorOnMalformedJson() {
+        var result = detailService("not json at all").movieDetail(27205);
+
+        assertTrue(result.isLeft());
+        assertInstanceOf(vangogh.error.FetchError.Payload.class, result.getLeft());
+    }
+
+    @Test
+    void movieDetailReturnsHttpStatusErrorOnNon2xx() {
+        TmdbMovieService service = new TmdbMovieService(new TmdbClient("test-key") {
+            @Override
+            public io.vavr.control.Try<ApiResponse> movieDetail(int id) {
+                return io.vavr.control.Try.success(new ApiResponse(404, "no such movie", null));
+            }
+        });
+
+        var result = service.movieDetail(999);
+
+        assertTrue(result.isLeft());
+        assertInstanceOf(vangogh.error.FetchError.HttpStatus.class, result.getLeft());
+    }
+
+    /** Stub client for detail-art tests: records the URL, returns a fake data URI. */
+    static class DetailArtStubClient extends TmdbClient {
+        final List<String> calls = new ArrayList<>();
+
+        DetailArtStubClient() {
+            super("test-key");
+        }
+
+        @Override
+        public io.vavr.control.Option<String> loadDetailImageDataUri(String imageUrl) {
+            calls.add(imageUrl);
+            return io.vavr.control.Option.some("data:image/jpeg;base64=detail");
+        }
+    }
+
+    @Test
+    void detailImageDataUriDelegatesToTheClient() {
+        DetailArtStubClient client = new DetailArtStubClient();
+        TmdbMovieService service = new TmdbMovieService(client);
+
+        assertEquals("data:image/jpeg;base64=detail",
+                service.detailImageDataUri("https://image.tmdb.org/t/p/w500/leo.jpg").getOrElse(""));
+        assertEquals(List.of("https://image.tmdb.org/t/p/w500/leo.jpg"), client.calls);
+        assertTrue(service.detailImageDataUri(null).isEmpty());
+        assertTrue(service.detailImageDataUri("").isEmpty());
+    }
+
     /** Stub client for poster tests: records loadPosterDataUri calls, returns a fake data URI. */
     static class PosterStubClient extends TmdbClient {
         final List<String> calls = new ArrayList<>();
