@@ -21,17 +21,20 @@ Design and the measured probe data:
 
 1. Get a key from any OpenAI-compatible provider. The default model is
    OpenRouter's free `baidu/ernie-5.5-flash-preview:free`.
-2. Create the config file outside the repo:
+2. Create the config file outside the repo — one command per OS:
 
-   ```sh
-   mkdir -p ~/.van-gogh
-   cat > ~/.van-gogh/llm.conf <<'EOF'
-   apiKey = sk-or-v1-...
-   # baseUrl = https://openrouter.ai/api/v1
-   # model   = baidu/ernie-5.5-flash-preview:free
-   EOF
-   chmod 600 ~/.van-gogh/llm.conf
-   ```
+   | OS | Command |
+   |---|---|
+   | macOS / Linux | `scripts/setup-llm.sh` |
+   | Windows (PowerShell) | `powershell -ExecutionPolicy Bypass -File scripts\setup-llm.ps1` |
+
+   Both prompt for the key with the input hidden and write
+   `~/.van-gogh/llm.conf` or `%USERPROFILE%\.van-gogh\llm.conf`. For scripted
+   setup, pass the key as the first argument (`sh`) or `-Key` (`ps1`), or set
+   `VANGOGH_LLM_KEY`. A manual setup is fine too: copy
+   `scripts/llm.conf.example` to that path and fill in `apiKey`. The example is
+   the only tracked copy — a real `llm.conf` is gitignored. The reader accepts
+   CRLF line endings and a UTF-8 BOM, because Notepad writes both.
 
 3. Restart the app, press **AI**, type a title or a vibe
    ("movies that feel like rain on a window"), press **Search**.
