@@ -8,6 +8,7 @@ import io.vavr.control.Either;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 import vangogh.book.Book;
+import vangogh.book.BookDetail;
 import vangogh.book.OpenLibraryBookService;
 import vangogh.error.FetchError;
 import vangogh.llm.Form;
@@ -56,6 +57,26 @@ public class BookController {
 
     /** The reply the data drain hands the page (Gson-serialized; null fields omitted). */
     public record BookDataReply(int generation, String status, String error, java.util.List<Book> items) {}
+
+    // ------------------------------------------------------------ detail
+
+    /** One-slot holder for the latest completed detail fetch. */
+    private record PendingDetail(int generation, Either<FetchError, BookDetail> result) {}
+
+    private record ArtRef(String slot, String url) {}
+
+    private record PendingArt(String slot, String dataUri) {}
+
+    private final AtomicInteger detailGeneration = new AtomicInteger();
+    private final AtomicReference<PendingDetail> pendingDetail = new AtomicReference<>();
+
+    private final ConcurrentLinkedQueue<PendingArt> detailArtQueue = new ConcurrentLinkedQueue<>();
+    private final AtomicInteger detailArtTotal = new AtomicInteger();
+    private final AtomicInteger detailArtDelivered = new AtomicInteger();
+    private final AtomicInteger detailArtSkipped = new AtomicInteger();
+
+    /** The detail drain's reply; artwork arrives separately as bookDetailArt events. */
+    public record BookDetailReply(int generation, String status, String error, BookDetail detail) {}
 
     public BookController() {
         this(new OpenLibraryBookService());
@@ -196,6 +217,129 @@ public class BookController {
         coverTotal.set(0);
         coverDelivered.set(0);
         coverSkipped.set(0);
+    }
+
+    // -------------------------------------------------------------- detail
+
+    /**
+     * Kicks off the book-detail fetch and returns its generation at once (the
+     * UI thread never blocks on network I/O). The page polls
+     * {@link #pollBookDetail(int)} until the detail or an error arrives, then
+     * {@link #pollBookDetailArt()} for the streamed artwork.
+     *
+     * <p>Its own generation counter means opening a book cannot supersede the
+     * grid request (or its cover stream) and vice versa.
+     */
+    @KremaCommand
+    public int requestBookDetail(String workKey) {
+        int gen = detailGeneration.incrementAndGet();
+        pendingDetail.set(null);
+        resetDetailArt();
+
+        Future.of(executor, () -> service.bookDetail(workKey))
+                .onComplete(result -> deliverDetail(gen, result));
+        return gen;
+    }
+
+    /**
+     * Fans out the artwork fetches. The total is set before the detail drain
+     * can hand the page this request, so a poll issued right after render
+     * never sees a stale count.
+     */
+    private void queueDetailArt(BookDetail detail, int gen) {
+        java.util.List<ArtRef> refs = new java.util.ArrayList<>();
+        addArtRef(refs, "cover", detail.coverUrl());
+        addArtRef(refs, "author", detail.author().photoUrl());
+        java.util.List<BookDetail.Edition> editions = detail.editions();
+        for (int i = 0; i < editions.size(); i++) {
+            addArtRef(refs, "edition:" + i, editions.get(i).coverUrl());
+        }
+        for (Book similar : detail.similar()) {
+            addArtRef(refs, "similar:" + similar.workKey(), similar.coverUrl());
+        }
+
+        detailArtTotal.set(refs.size());
+        Future.traverse(executor, io.vavr.collection.List.ofAll(refs),
+                ref -> Future.run(executor, () -> fetchDetailArt(ref, gen)));
+    }
+
+    private static void addArtRef(java.util.List<ArtRef> refs, String slot, String url) {
+        if (url != null && !url.isEmpty()) {
+            refs.add(new ArtRef(slot, url));
+        }
+    }
+
+    private void deliverDetail(int gen, Try<Either<FetchError, BookDetail>> result) {
+        if (detailGeneration.get() != gen) {
+            return;
+        }
+        Either<FetchError, BookDetail> either = result.isFailure()
+                ? Either.left(new FetchError.Transport("OpenLibrary work", result.getCause()))
+                : result.get();
+
+        either.peek(detail -> queueDetailArt(detail, gen));
+        pendingDetail.set(new PendingDetail(gen, either));
+    }
+
+    /**
+     * The detail drain: the latest completed fetch for the page's generation,
+     * or a pending/superseded marker. Synchronous on the UI thread.
+     */
+    @KremaCommand
+    public BookDetailReply pollBookDetail(int generation) {
+        PendingDetail pending = pendingDetail.get();
+        if (pending == null) {
+            return new BookDetailReply(generation, "pending", null, null);
+        }
+        if (pending.generation() > generation) {
+            return new BookDetailReply(pending.generation(), "superseded", null, null);
+        }
+        pendingDetail.set(null);
+        return pending.result().fold(
+                error -> new BookDetailReply(pending.generation(), "error",
+                        FetchError.uiMessage(error), null),
+                detail -> new BookDetailReply(pending.generation(), "done", null, detail));
+    }
+
+    /**
+     * The artwork drain: emits one {@code bookDetailArt} event per queued
+     * image ({@code {slot, dataUri}}) and returns the outstanding count, or −1
+     * when the stream for this detail is complete.
+     */
+    @KremaCommand
+    public int pollBookDetailArt() {
+        PendingArt pending;
+        while ((pending = detailArtQueue.poll()) != null) {
+            if (events != null) {
+                events.emit("bookDetailArt",
+                        Map.of("slot", pending.slot(), "dataUri", pending.dataUri()));
+            }
+            detailArtDelivered.incrementAndGet();
+        }
+        int outstanding = detailArtTotal.get() - detailArtDelivered.get() - detailArtSkipped.get();
+        if (detailArtQueue.isEmpty() && outstanding <= 0) {
+            return -1;
+        }
+        return Math.max(outstanding, 0);
+    }
+
+    private void resetDetailArt() {
+        detailArtQueue.clear();
+        detailArtTotal.set(0);
+        detailArtDelivered.set(0);
+        detailArtSkipped.set(0);
+    }
+
+    private void fetchDetailArt(ArtRef ref, int gen) {
+        Option<String> uri = service.detailImageDataUri(ref.url())
+                .filter(ignore -> detailGeneration.get() == gen);
+        if (uri.isEmpty()) {
+            if (detailGeneration.get() == gen) {
+                detailArtSkipped.incrementAndGet();
+            }
+            return;
+        }
+        detailArtQueue.offer(new PendingArt(ref.slot(), uri.get()));
     }
 
     private void fetchAndOffer(String workKey, String coverUrl, int gen) {

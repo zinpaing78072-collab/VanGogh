@@ -14,6 +14,9 @@
  *   invoke("requestMovieDetail", { id })      → movie-detail generation
  *   invoke("pollMovieDetail", { generation }) → { status, detail?, error? }
  *   invoke("pollMovieDetailArt", {})          → remaining detail art, −1 when done
+ *   invoke("requestBookDetail", { workKey })  → book-detail generation
+ *   invoke("pollBookDetail", { generation })  → { status, detail?, error? }
+ *   invoke("pollBookDetailArt", {})           → remaining book art, −1 when done
  *   invoke("loadLlmSettings", {})             → { status, baseUrl, model, …, hasApiKey }
  *   invoke("saveLlmSettings", { … })          → the stored values, never the key
  *   invoke("loadTheme", {})                   → { status, theme, themes }
@@ -111,6 +114,20 @@
         polls: 0,
         status: "idle",
         id: null,
+        value: null,
+        delivered: false,
+        artQueue: null,
+        artEmitted: 0,
+        artDone: false
+    };
+
+    // Book detail is its own pair too (work cover, author photo, edition
+    // covers and similar covers stream as data URIs through bookDetailArt).
+    var bookDetail = {
+        gen: 0,
+        polls: 0,
+        status: "idle",
+        workKey: null,
         value: null,
         delivered: false,
         artQueue: null,
@@ -587,6 +604,214 @@
         return movieDetail.artQueue.length;
     }
 
+    // ------------------------------------------------------------ book detail
+
+    function bookDetailFor(workKey) {
+        var list = fixtures.book || [];
+        var item = list.filter(function (x) { return String(x.workKey) === String(workKey); })[0] || list[0];
+        if (!item) {
+            return null;
+        }
+        var extras = fixtures.bookDetail || {};
+        var year = Number(item.year) || 0;
+        var pages = Number(item.pages) || 0;
+        var editionCount = Number(item.editionCount) || 0;
+        var rating = Number(item.rating) || 0;
+        var setting = (extras.settings || {})[item.workKey] || "";
+        var ratingCount = extras.ratingCount || 0;
+
+        var editions = [0, 1, 2, 3].map(function (i) {
+            return {
+                year: year ? String(year + i * 3) : "",
+                pages: pages ? (pages + i * 8) + " pp" : "",
+                isbn: "97800000000" + (10 + i),
+                // The last edition deliberately has no cover, so the preview
+                // keeps one edition placeholder visible.
+                coverUrl: i < 3 ? "https://covers.openlibrary.org/b/id/" + (700000 + i) + "-L.jpg" : ""
+            };
+        });
+
+        var facts = [];
+        function fact(label, value, muted, spanAll) {
+            if (value !== "" && value != null) {
+                facts.push({ label: label, value: String(value), muted: !!muted, spanAll: !!spanAll });
+            }
+        }
+        fact("First published", year, false, false);
+        fact("Pages", pages, false, false);
+        fact("Editions", editionCount, false, false);
+        fact("Setting", setting, false, false);
+        if (rating > 0) {
+            fact("Rating", rating.toFixed(1) + " / 5", false, false);
+        }
+        fact("Ratings", ratingCount, false, false);
+        fact("Featured", item.author + ", " + year, true, true);
+        fact("ISBN", editions[0].isbn, true, true);
+
+        var authorName = item.author || "Unknown author";
+        var author = {
+            name: authorName,
+            dates: (extras.authorDates || {})[authorName] || "",
+            bio: (extras.authorBios || {})[authorName] || "",
+            photoUrl: "https://covers.openlibrary.org/a/id/" + (9000 + year % 100) + "-L.jpg",
+            wikipediaUrl: "https://en.wikipedia.org/wiki/" + encodeURIComponent(authorName.replace(/ /g, "_")),
+            openLibraryUrl: "https://openlibrary.org/authors/OL" + (1000 + year % 900) + "A"
+        };
+
+        var others = list
+            .filter(function (x) { return String(x.workKey) !== String(item.workKey); })
+            .slice(0, 6)
+            .map(function (x, i) {
+                return {
+                    workKey: x.workKey,
+                    title: x.title,
+                    author: x.author || "",
+                    year: Number(x.year) || 0,
+                    rating: Number(x.rating) || 0,
+                    subjects: x.subjects || "",
+                    firstSentence: x.firstSentence || "",
+                    pages: Number(x.pages) || 0,
+                    editionCount: Number(x.editionCount) || 0,
+                    coverUrl: "https://covers.openlibrary.org/b/id/" + (800000 + i) + "-L.jpg"
+                };
+            });
+
+        return {
+            workKey: item.workKey,
+            title: item.title,
+            year: year,
+            pages: pages,
+            editionCount: editionCount,
+            rating: rating,
+            ratingCount: ratingCount,
+            description: (extras.descriptions || {})[item.workKey] || "",
+            firstSentence: item.firstSentence || "",
+            subjects: item.subjects
+                ? String(item.subjects).split(/[,;\u00b7]/).map(function (s) { return s.trim(); })
+                    .filter(Boolean)
+                : [],
+            setting: setting,
+            coverUrl: "https://covers.openlibrary.org/b/id/600000-L.jpg",
+            openLibraryUrl: "https://openlibrary.org/works/" + item.workKey,
+            facts: facts,
+            editions: editions,
+            author: author,
+            similar: others
+        };
+    }
+
+    // One generated image per slot, keyed exactly like the controller's refs:
+    // cover, author, edition:<i>, similar:<workKey>.
+    function buildBookArtQueue(value) {
+        var entries = [];
+        if (value.coverUrl) {
+            entries.push({
+                slot: "cover",
+                dataUri: svgCover(value.title, 500, 750, hueOf(value.workKey))
+            });
+        }
+        if (value.author && value.author.photoUrl) {
+            entries.push({
+                slot: "author",
+                dataUri: svgCover(value.author.name, 300, 450, hueOf(value.author.name))
+            });
+        }
+        (value.editions || []).forEach(function (edition, i) {
+            if (edition.coverUrl) {
+                entries.push({
+                    slot: "edition:" + i,
+                    dataUri: svgCover((edition.year || value.title) + " edition", 300, 450, hueOf("edition" + i))
+                });
+            }
+        });
+        (value.similar || []).forEach(function (book) {
+            if (book.coverUrl) {
+                entries.push({
+                    slot: "similar:" + book.workKey,
+                    dataUri: svgCover(book.title, 300, 450, hueOf(book.workKey))
+                });
+            }
+        });
+        return entries;
+    }
+
+    function requestBookDetail(args) {
+        bookDetail = {
+            gen: bookDetail.gen + 1,
+            polls: 0,
+            status: "pending",
+            workKey: (args && args.workKey) || null,
+            value: null,
+            delivered: false,
+            artQueue: null,
+            artEmitted: 0,
+            artDone: false
+        };
+        console.log("[preview] book detail request gen=" + bookDetail.gen +
+            " workKey=" + bookDetail.workKey);
+        return bookDetail.gen;
+    }
+
+    function pollBookDetail(args) {
+        var generation = args && args.generation;
+        if (generation !== bookDetail.gen) {
+            return { generation: generation, status: "superseded", detail: null };
+        }
+        bookDetail.polls += 1;
+        var ticks = scenario === "slow" ? 20 : 2;
+        if (bookDetail.polls <= ticks) {
+            return { generation: generation, status: "pending", detail: null };
+        }
+        if (scenario === "error") {
+            bookDetail.status = "error";
+            return {
+                generation: generation,
+                status: "error",
+                error: "Simulated book fetch failure (scenario=error).",
+                detail: null
+            };
+        }
+        var value = bookDetailFor(bookDetail.workKey);
+        if (!value) {
+            bookDetail.status = "error";
+            return {
+                generation: generation,
+                status: "error",
+                error: "No book fixture for workKey " + bookDetail.workKey,
+                detail: null
+            };
+        }
+        bookDetail.status = "done";
+        bookDetail.value = value;
+        bookDetail.delivered = true;
+        console.log("[preview] book detail done gen=" + generation +
+            " title=" + value.title);
+        return { generation: generation, status: "done", detail: value };
+    }
+
+    function pollBookDetailArt() {
+        if (!bookDetail.delivered || !bookDetail.value || scenario === "noposters") {
+            bookDetail.artDone = true;
+            return -1;
+        }
+        if (bookDetail.artQueue === null) {
+            bookDetail.artQueue = buildBookArtQueue(bookDetail.value);
+        }
+
+        // Two per drain call, like a network stream landing in bursts.
+        var batch = bookDetail.artQueue.splice(0, 2);
+        batch.forEach(function (entry) {
+            bookDetail.artEmitted += 1;
+            emit("bookDetailArt", { slot: entry.slot, dataUri: entry.dataUri });
+        });
+
+        if (bookDetail.artQueue.length === 0) {
+            bookDetail.artDone = true;
+            return -1;
+        }
+        return bookDetail.artQueue.length;
+    }
+
     function llmReply() {
         return {
             status: "ok",
@@ -710,6 +935,15 @@
             if (command === "pollMovieDetailArt") {
                 return Promise.resolve(pollMovieDetailArt());
             }
+            if (command === "requestBookDetail") {
+                return Promise.resolve(requestBookDetail(args));
+            }
+            if (command === "pollBookDetail") {
+                return Promise.resolve(pollBookDetail(args));
+            }
+            if (command === "pollBookDetailArt") {
+                return Promise.resolve(pollBookDetailArt());
+            }
             if (command === "loadLlmSettings") {
                 return Promise.resolve(loadLlm());
             }
@@ -762,6 +996,11 @@
                 movieDetailPolls: movieDetail.polls,
                 movieDetailArtEmitted: movieDetail.artEmitted,
                 movieDetailArtDone: movieDetail.artDone,
+                bookDetailGeneration: bookDetail.gen,
+                bookDetailStatus: bookDetail.status,
+                bookDetailPolls: bookDetail.polls,
+                bookDetailArtEmitted: bookDetail.artEmitted,
+                bookDetailArtDone: bookDetail.artDone,
                 settingsLoads: llm.loads,
                 settingsSaves: llm.saves,
                 settingsHasKey: !!llm.apiKey,

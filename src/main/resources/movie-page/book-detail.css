@@ -1,0 +1,731 @@
+/* Book detail (the screen behind a book card click).
+ *
+ * Same glass vocabulary as the movie/song detail screens: the tiles reuse
+ * --panel, --border and the gold accent; the sidebar/header are the app shell
+ * and are untouched here. Layout follows
+ * prototypes/book-detail-layouts/bento.html: a 12-column dashboard with
+ * cover / identity / record on the first row, the description beside the
+ * similar rail, then editions beside the author card. The responsive ladder
+ * folds that to 6 columns, then to one stack.
+ *
+ * Role tokens only — a theme decorates this page, it never has to know it.
+ */
+
+/* ------------------------------------------------------------ detail shell */
+
+.book-view {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 20px 28px 28px;
+    animation: bookIn 0.35s cubic-bezier(0.2, 0.7, 0.25, 1) both;
+}
+
+@keyframes bookIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.book-back-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.book-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel-inset);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.book-back:hover {
+    border-color: var(--accent-hover);
+    background-color: var(--panel-hover);
+}
+
+.book-source-note {
+    font-size: 11.5px;
+    color: var(--text-soft);
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 12px rgba(4, 8, 18, 0.95), 0 1px 3px rgba(4, 8, 18, 0.9);
+}
+
+/* ------------------------------------------------------------- bento grid
+ * Named areas, so the same markup reflows from the wide dashboard to a
+ * 6-column tablet arrangement to a single stack without the page-side JS
+ * knowing anything about the layout.
+ */
+
+.book-bento {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-areas:
+        "cover cover cover ident ident ident ident ident ident facts facts facts"
+        "story story story story story story sim sim sim sim sim sim"
+        "editions editions editions editions editions editions author author author author author author";
+    gap: 14px;
+    align-items: stretch;
+}
+
+.book-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    min-height: 0;
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* The cover is its own tile: no surface behind it, the frame carries the
+ * border and shadow. It stretches to the first row's height so it lines up
+ * with the identity tile, like the movie poster. */
+.book-tile.t-cover {
+    grid-area: cover;
+    align-self: stretch;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+.book-tile.t-ident    { grid-area: ident; justify-content: center; gap: 12px; }
+.book-tile.t-facts    { grid-area: facts; }
+.book-tile.t-story    { grid-area: story; }
+.book-tile.t-sim      { grid-area: sim; }
+.book-tile.t-editions { grid-area: editions; }
+.book-tile.t-author   { grid-area: author; }
+
+/* ---------------------------------------------------------------- cover */
+
+.book-cover-frame {
+    position: relative;
+    flex: 1;
+    aspect-ratio: 2 / 3;
+    border-radius: 14px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--placeholder-from) 0%, var(--bg) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 26px 60px -32px rgba(4, 8, 18, 0.95);
+}
+
+.book-cover-img,
+.book-cover-frame .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.book-cover-img {
+    object-fit: cover;
+    display: block;
+}
+
+/* --------------------------------------------------------------- identity */
+
+.book-kicker {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.book-kicker .chip {
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-soft-strong);
+    border: 1px solid var(--border-strong);
+    background: var(--panel-firm-a45);
+}
+
+.book-title {
+    font-size: clamp(24px, 2.5vw, 38px);
+    line-height: 1.04;
+    letter-spacing: -1px;
+    font-weight: 800;
+    color: var(--text);
+    text-shadow: 0 2px 24px rgba(4, 8, 18, 0.75);
+    overflow-wrap: anywhere;
+}
+
+/* Author byline: a small portrait beside the name and dates. */
+.book-byline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.book-byline-photo {
+    position: relative;
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+    background: linear-gradient(135deg, var(--placeholder-from) 0%, var(--bg) 100%);
+}
+
+.book-byline-photo .book-author-img,
+.book-byline-photo .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.book-byline-photo .book-author-img {
+    object-fit: cover;
+    object-position: center 20%;
+}
+
+.book-author-placeholder {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.book-byline-who {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.book-byline-who b {
+    font-size: 14px;
+    color: var(--text);
+}
+
+.book-byline-who span {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+}
+
+/* Score: the number leads, the rating count qualifies it. */
+.book-score-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.book-score {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--rating);
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 20px rgba(4, 8, 18, 0.7);
+}
+
+.book-score .max {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--text-muted);
+}
+
+.book-score .star {
+    font-size: 18px;
+    color: var(--accent);
+}
+
+.book-votes {
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.book-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 2px;
+}
+
+.book-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 15px;
+    border-radius: 10px;
+    border: 1px solid var(--border-strong);
+    background: var(--panel-inset);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.book-action:hover {
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
+    background: var(--accent-a12);
+}
+
+.book-action:active { transform: translateY(1px); }
+
+.book-action.active {
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
+    background: var(--accent-a26);
+}
+
+.book-action-primary {
+    border-color: transparent;
+    background-image: linear-gradient(180deg, var(--accent-hover) 0%, var(--accent) 100%);
+    color: var(--accent-ink);
+    box-shadow: 0 12px 26px -14px rgba(216, 169, 49, 0.9);
+}
+
+.book-action-primary:hover {
+    border-color: transparent;
+    color: var(--accent-ink);
+    filter: brightness(1.06);
+}
+
+/* The "Read sample" panel: the work's opening line, in the voice of the book. */
+.book-sample {
+    max-width: 62ch;
+    padding: 12px 16px;
+    border-left: 2px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    background: var(--panel-inset);
+    font-size: 13px;
+    line-height: 1.7;
+    font-style: italic;
+    color: var(--text-soft-strong);
+    text-wrap: pretty;
+}
+
+/* -------------------------------------------------------------- tile heads */
+
+.book-panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.book-panel-head h2 {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.book-panel-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* ---------------------------------------------------------- record ledger */
+
+.book-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 16px;
+    align-content: start;
+}
+
+.book-facts > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    min-width: 0;
+}
+
+.book-facts > div.span-all {
+    grid-column: 1 / -1;
+}
+
+.book-facts dt {
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.book-facts dd {
+    font-size: 13.5px;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.book-facts dd.muted { color: var(--text-soft-dim); }
+
+/* ----------------------------------------------------------- story tile */
+
+.book-lede {
+    font-size: 13.5px;
+    line-height: 1.66;
+    color: var(--text-soft);
+    text-wrap: pretty;
+    white-space: pre-line;
+}
+
+.book-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    list-style: none;
+    margin-top: 2px;
+}
+
+.book-keywords li {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    color: var(--text-soft-strong);
+    border: 1px solid var(--border);
+    background: var(--panel-inset);
+}
+
+/* ---------------------------------------------------------- similar rail */
+
+.book-sim-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 126px;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x proximity;
+}
+
+.book-sim-card {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    scroll-snap-align: start;
+}
+
+.book-sim-poster {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--panel-deep);
+    border: 1px solid var(--border);
+    box-shadow: 0 18px 40px -30px rgba(4, 8, 18, 0.95);
+}
+
+.book-sim-img,
+.book-sim-poster .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.book-sim-img {
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+}
+
+.book-sim-card:hover .book-sim-img { transform: scale(1.04); }
+
+.book-sim-placeholder svg {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 0;
+}
+
+.book-sim-score {
+    position: absolute;
+    right: 7px;
+    top: 7px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--accent-ink);
+    background: var(--accent-a90);
+    font-variant-numeric: tabular-nums;
+}
+
+.book-sim-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text);
+}
+
+.book-sim-meta {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- editions */
+
+.book-editions-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.book-edition {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.book-edition-art {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--panel-deep);
+    border: 1px solid var(--border);
+    box-shadow: 0 18px 40px -30px rgba(4, 8, 18, 0.95);
+}
+
+.book-edition-img,
+.book-edition-art .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.book-edition-img {
+    object-fit: cover;
+    display: block;
+}
+
+.book-edition-placeholder svg {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 0;
+}
+
+.book-edition-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.book-edition-meta b {
+    font-size: 11.5px;
+    color: var(--text);
+}
+
+.book-edition-meta span {
+    font-size: 9.5px;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* --------------------------------------------------------------- author */
+
+.book-author-card {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.book-author-photo {
+    position: relative;
+    width: 88px;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--placeholder-from) 0%, var(--bg) 100%);
+    border: 1px solid var(--border-strong);
+}
+
+.book-author-photo .book-author-img,
+.book-author-photo .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.book-author-photo .book-author-img {
+    object-fit: cover;
+    object-position: center 20%;
+}
+
+.book-author-who {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.book-author-who .name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.book-author-who .dates {
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.book-author-who p {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-soft);
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-wrap: pretty;
+}
+
+.book-link-quiet {
+    margin-top: 2px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--accent-hover);
+    text-decoration: none;
+}
+
+.book-link-quiet:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------- loading / error */
+
+.book-loading-note {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.book-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 4px;
+}
+
+.book-skeleton .skeleton-line { height: 12px; }
+
+.book-error {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    max-width: 640px;
+    padding: 26px;
+    border-radius: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+}
+
+.book-error p {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-soft);
+}
+
+/* ------------------------------------------------------------- responsive */
+
+/* Default window with the sidebar open lands here: the dashboard folds into
+ * a 6-column arrangement, cover + identity on top and the rest in rows. */
+@media (max-width: 1400px) {
+    .book-bento {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-areas:
+            "cover cover ident ident ident ident"
+            "facts facts facts facts facts facts"
+            "story story story story story story"
+            "sim sim sim sim sim sim"
+            "editions editions editions editions editions editions"
+            "author author author author author author";
+    }
+
+    /* The record tile is full width now, so it has room for four columns. */
+    .book-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1000px) {
+    .book-bento {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "cover"
+            "ident"
+            "facts"
+            "story"
+            "sim"
+            "editions"
+            "author";
+        gap: 12px;
+    }
+
+    .book-tile.t-cover { max-width: 300px; }
+    .book-view { padding: 16px 16px 24px; }
+    .book-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .book-editions-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .book-sim-row { grid-auto-columns: 150px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .book-view { animation: none; }
+    .book-sim-img { transition: none; }
+    .book-sim-card:hover .book-sim-img { transform: none; }
+}

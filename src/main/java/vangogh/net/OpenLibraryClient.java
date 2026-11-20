@@ -28,6 +28,7 @@ import java.util.List;
 public class OpenLibraryClient {
     private static final String BASE = "https://openlibrary.org/";
     private static final String COVER_BASE = "https://covers.openlibrary.org/b/id/";
+    private static final String AUTHOR_BASE = "https://covers.openlibrary.org/a/id/";
     static final String IMAGE_PROXY = "https://wsrv.nl/?url=";
     private static final Duration COVER_TIMEOUT = Duration.ofSeconds(5);
     private static final Path PROXY_MARKER = Path.of(System.getProperty("user.home"), ".van-gogh", "poster-proxy.conf");
@@ -70,6 +71,68 @@ public class OpenLibraryClient {
         return send(url);
     }
 
+    // ------------------------------------------------------- work detail
+
+    /** One work's full record ({@code /works/:key.json}). */
+    public Try<ApiResponse> workDetail(String workKey) {
+        return send(BASE + "works/" + encodeKey(workKey) + ".json");
+    }
+
+    /** One author's record ({@code /authors/:key.json}). */
+    public Try<ApiResponse> authorDetail(String authorKey) {
+        return send(BASE + "authors/" + encodeKey(authorKey) + ".json");
+    }
+
+    /** A work's editions, with covers, page counts and ISBNs. */
+    public Try<ApiResponse> editions(String workKey) {
+        return send(BASE + "works/" + encodeKey(workKey) + "/editions.json?limit=40");
+    }
+
+    /** A work's ratings summary ({@code {summary: {average, count}}}). */
+    public Try<ApiResponse> ratings(String workKey) {
+        return send(BASE + "works/" + encodeKey(workKey) + "/ratings.json");
+    }
+
+    /**
+     * The similar rail's source: a subject search. The same {@code fields=}
+     * list as the grid keeps the payload small, and the service drops the
+     * current work from the hits.
+     */
+    public Try<ApiResponse> searchBySubject(String subject) {
+        String url = BASE + "search.json?subject="
+                + URLEncoder.encode(subject, StandardCharsets.UTF_8)
+                + "&limit=20&fields=" + WORK_FIELDS;
+        return send(url);
+    }
+
+    /** Fallback for works with no subjects: related titles by the same author. */
+    public Try<ApiResponse> searchByAuthor(String author) {
+        String url = BASE + "search.json?author="
+                + URLEncoder.encode(author, StandardCharsets.UTF_8)
+                + "&limit=20&fields=" + WORK_FIELDS;
+        return send(url);
+    }
+
+    /** The work's public page (the detail view's Open Library action). */
+    public static String workPage(String workKey) {
+        return BASE + "works/" + normaliseKey(workKey);
+    }
+
+    /** The author's public page. */
+    public static String authorPage(String authorKey) {
+        return BASE + "authors/" + normaliseKey(authorKey);
+    }
+
+    static String encodeKey(String key) {
+        return URLEncoder.encode(normaliseKey(key), StandardCharsets.UTF_8);
+    }
+
+    private static String normaliseKey(String key) {
+        return key == null ? "" : key.replaceFirst("^/(works|authors)/", "")
+                .replaceFirst("^(works|authors)/", "")
+                .trim();
+    }
+
     private Try<ApiResponse> send(String url) {
         return Try.of(() -> {
                     HttpRequest request = HttpRequest.newBuilder()
@@ -88,7 +151,7 @@ public class OpenLibraryClient {
 
     static List<String> coverSources(String coverUrl, boolean proxyFirst) {
         List<String> sources = new ArrayList<>();
-        if (coverUrl == null || !coverUrl.startsWith(COVER_BASE)) {
+        if (!isCoverImage(coverUrl)) {
             return sources;
         }
         String encoded = URLEncoder.encode(coverUrl, StandardCharsets.UTF_8);
@@ -124,6 +187,27 @@ public class OpenLibraryClient {
         return PosterFailover.firstSuccess(coverSources(coverUrl, preferProxy), this::fetchAsUri)
                 .peek(pair -> rememberCoverSource(pair._1().startsWith(IMAGE_PROXY)))
                 .map(Tuple2::_2);
+    }
+
+    /**
+     * Detail artwork (work cover, author photo, edition covers, similar card
+     * covers) — the same failover and the same preference marker as the grid,
+     * but it accepts both Open Library image hosts.
+     */
+    public Option<String> loadDetailImageDataUri(String imageUrl) {
+        return PosterFailover.firstSuccess(coverSources(imageUrl, preferProxy), this::fetchAsUri)
+                .peek(pair -> rememberCoverSource(pair._1().startsWith(IMAGE_PROXY)))
+                .map(Tuple2::_2);
+    }
+
+    /** Work covers live under {@code /b/id/}, author photos under {@code /a/id/}. */
+    static boolean isCoverImage(String url) {
+        return url != null && (url.startsWith(COVER_BASE) || url.startsWith(AUTHOR_BASE));
+    }
+
+    /** Author photo URL from a numeric photo id (empty string → empty string). */
+    public static String authorPhotoPath(long photoId) {
+        return AUTHOR_BASE + photoId + "-L.jpg";
     }
 
     private String fetchAsUri(String source) throws Exception {
