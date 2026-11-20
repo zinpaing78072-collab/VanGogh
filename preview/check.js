@@ -370,6 +370,21 @@ class Page {
         return JSON.parse(await this.evaluate(DOM_STATS));
     }
 
+    /** Emulate a viewport — the only way to exercise a CSS breakpoint without
+     *  relaunching the browser with a different --window-size. */
+    async resize(width, height) {
+        await this.send("Emulation.setDeviceMetricsOverride", {
+            width: width,
+            height: height || 860,
+            deviceScaleFactor: 1,
+            mobile: false
+        });
+    }
+
+    async resetViewport() {
+        await this.send("Emulation.clearDeviceMetricsOverride");
+    }
+
     async settle(timeoutMs) {
         await this.waitFor(SETTLE, timeoutMs);
         return this.stats();
@@ -408,6 +423,46 @@ class Page {
 
 function check(label, ok, detail) {
     return { label: label, ok: !!ok, detail: detail === undefined ? "" : String(detail) };
+}
+
+// One reading of the card grid at the current viewport. The responsive tests
+// walk a ladder of widths, so they need the column count and the overflow
+// numbers rather than the page's own DOM stats.
+const GRID_PROBE = `JSON.stringify((() => {
+    const grid = document.getElementById("movieGrid");
+    const card = grid.querySelector(".movie-card:not(.skeleton-card)");
+    if (!card) return null;
+    const cr = card.getBoundingClientRect();
+    const text = [...card.querySelectorAll(".card-title, .card-subtitle, .card-meta-item")];
+    return {
+        vw: Math.round(window.innerWidth),
+        columns: getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).length,
+        cardWidth: Math.round(cr.width),
+        gridOverflow: Math.max(0, grid.scrollWidth - grid.clientWidth),
+        pageOverflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
+        escaping: text.filter((el) => {
+            const r = el.getBoundingClientRect();
+            return r.right > cr.right + 1 || r.left < cr.left - 1 || r.bottom > cr.bottom + 1;
+        }).length
+    };
+})())`;
+
+async function measureGrid(page, width) {
+    await page.resize(width, 860);
+    // js/ui.js collapses the sidebar below 900px, and that rail animates: wait
+    // until it has stopped moving before trusting the card widths.
+    await page.evaluate(`(async () => {
+        const rail = document.querySelector(".sidebar");
+        let last = -1;
+        for (let i = 0; i < 80; i++) {
+            await new Promise((r) => requestAnimationFrame(r));
+            const w = Math.round(rail.getBoundingClientRect().width);
+            if (w === last) return true;
+            last = w;
+        }
+        return false;
+    })()`);
+    return JSON.parse(await page.evaluate(GRID_PROBE));
 }
 
 // Every rendered card should finish with real artwork or a visible placeholder,
@@ -1095,6 +1150,82 @@ const TESTS = [
                 check("an unknown id reads as the default skin",
                     d.theme === "starry" && d.skin === "theme-starry.css",
                     d.theme + " / " + d.skin)
+            ];
+        }
+    },
+    {
+        name: "responsive: one grid ladder serves every width",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+
+            // [viewport width, expected columns] — base.css owns the ladder.
+            const LADDER = [[1280, 5], [1180, 4], [1000, 4], [900, 3], [800, 3], [768, 2], [600, 2]];
+            const rows = [];
+            for (const [width, columns] of LADDER) {
+                const m = await measureGrid(page, width);
+                rows.push({ expected: columns, ...m });
+            }
+
+            // Every card shape must survive both ends of the ladder, not only
+            // movies: the book meta ("Author · N pages") is a prose phrase and
+            // the music subtitle is nowrap, so they stress the tightest column
+            // count differently.
+            const forms = [];
+            for (const form of ["game", "music", "book"]) {
+                await page.selectForm(form);
+                const wide = await measureGrid(page, 1280);
+                const narrow = await measureGrid(page, 600);
+                forms.push({ form: form, wide: wide, narrow: narrow });
+            }
+            await page.resetViewport();
+
+            const squeezed = rows.filter((r) => r.cardWidth < 150).map((r) => r.vw + "→" + r.cardWidth);
+            const escaping = rows.filter((r) => r.escaping > 0 || r.gridOverflow > 0 || r.pageOverflow > 0);
+
+            const clean = (m) => m.escaping === 0 && m.gridOverflow === 0 && m.pageOverflow === 0;
+
+            return rows.map((r) => check(
+                r.vw + "px shows " + r.expected + " columns",
+                r.columns === r.expected,
+                r.columns + " columns / card " + r.cardWidth + "px"))
+                .concat([
+                    check("every step keeps a readable card", squeezed.length === 0,
+                        squeezed.length ? squeezed.join(", ") : rows.map((r) => r.cardWidth).join(", ")),
+                    check("no card text escapes at any width", escaping.length === 0,
+                        escaping.length
+                            ? escaping.map((r) => r.vw + "px escape=" + r.escaping
+                                + " grid=" + r.gridOverflow + " page=" + r.pageOverflow).join("; ")
+                            : rows.map((r) => r.cardWidth).join(", "))
+                ])
+                .concat(forms.map((f) => check(
+                    "the " + f.form + " cards fit five columns and two",
+                    f.wide.columns === 5 && f.narrow.columns === 2 && clean(f.wide) && clean(f.narrow),
+                    f.wide.columns + " cols/" + f.wide.escaping + " escape → "
+                        + f.narrow.columns + " cols/" + f.narrow.escaping + " escape")));
+        }
+    },
+    {
+        name: "responsive: the neon skin reflows exactly like Starry Night",
+        path: "/movie-page/index.html?theme=liquidneon",
+        run: async (page) => {
+            await page.settle();
+            const widths = [1280, 1180, 1000, 900, 800, 768, 600];
+            const columns = [];
+            const widths_ = [];
+            for (const width of widths) {
+                const m = await measureGrid(page, width);
+                columns.push(m.columns);
+                widths_.push(m.cardWidth);
+            }
+            await page.resetViewport();
+
+            return [
+                check("the shared ladder is the only ladder",
+                    columns.join(" ") === "5 4 4 3 3 2 2",
+                    columns.join(" ")),
+                check("neon cards are never squeezed below the default skin's floor",
+                    Math.min(...widths_) >= 150, widths_.join(", "))
             ];
         }
     }

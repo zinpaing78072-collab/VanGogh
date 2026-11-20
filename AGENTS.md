@@ -111,6 +111,13 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   `theme-starry.css`, `theme-liquidneon.css`. A theme owns backdrops, type
   scale, radii and the header offsets; adding one is a CSS file plus a
   `ThemeConfig.KNOWN` row (recipe: `docs/themes.md`).
+- **The responsive grid ladder is base-only** — one ladder at the end of
+  `base.css` (5 columns, 4 ≤1180px, 3 ≤900px, 2 ≤768px), never duplicated in a
+  theme file: a theme decorates, it does not reflow. The 900px step matches
+  `NARROW_WIDTH = 900` in `js/ui.js`, where the sidebar auto-collapses, so the
+  grid regains the rail's room on the same boundary — change one, change both.
+  `.card-meta-item` is `nowrap` (tokens stay whole) except in book cards, whose
+  meta is the prose phrase `Author · N pages`.
 
 Rules that keep the graph acyclic: builders take the row as a parameter
 (`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click

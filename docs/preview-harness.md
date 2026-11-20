@@ -166,7 +166,7 @@ node preview/check.js            # pass/fail, exit 1 on any failure
 node preview/check.js --verbose  # also prints each test's preview stats
 ```
 
-105 assertions across 15 groups: trending render, the sidebar (four form buttons,
+119 assertions across 16 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
 active marker), the switcher across all four forms, search hit and miss, the AI
 toggle (off by default, `kind=recommend` when on, survives a form switch, empty
@@ -177,10 +177,21 @@ blank-key save, toggles Reveal without reading the key, and fires no browse
 request), the themes (the Appearance chips come from the reply, Starry Night is
 pressed by default, picking Liquid Neon repaints shell + cards + AI toggle and
 saves exactly once, reopening shows it pressed, a stored theme is painted at
-launch, an unknown stored id falls back), the
+launch, an unknown stored id falls back), the responsive ladder (each step's
+column count from 1280px down to 600px, no card text escaping at any step, all
+three other card shapes at both ends of the ladder, and Liquid Neon stepping in
+lockstep with Starry Night), the
 empty / error / no-posters / slow scenarios, and a rapid form-switch that
 exercises the supersede guard. Exit code 1 on any failure, so it can gate a
 commit.
+
+The responsive groups drive `Emulation.setDeviceMetricsOverride` through
+`page.resize(width, height)` and read the grid back with `measureGrid(page,
+width)`, which returns the column count, the first card's width, and the three
+overflow numbers. Two things make it trustworthy: it waits for the sidebar rail
+to stop animating (below 900px `js/ui.js` collapses it, and the card widths are
+meaningless mid-transition), and it answers "does text fit" by checking text
+boxes against the card box rather than trusting `scrollWidth`.
 
 Two timing traps the theme tests document, because both look like a broken skin:
 the swapped `<link>` loads asynchronously (wait for the new sheet to appear in
@@ -198,8 +209,9 @@ then the Playwright and Puppeteer caches (so a machine that already runs browser
 tests needs nothing installed). Set `CHROME=/path/to/binary` to force one.
 
 Each assertion is a `check(label, ok, detail)` in a test's `run(page)`. The
-`page` helper gives `settle()`, `stats()`, `dom()`, `selectForm()`, `search()`
-and `evaluate()`. To pin new behaviour, add a test object to `TESTS`.
+`page` helper gives `settle()`, `stats()`, `dom()`, `selectForm()`, `search()`,
+`evaluate()`, and `resize(w, h)` / `resetViewport()` for the breakpoint
+ladder. To pin new behaviour, add a test object to `TESTS`.
 
 Two things worth knowing before you write assertions:
 

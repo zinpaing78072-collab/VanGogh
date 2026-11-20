@@ -47,9 +47,10 @@ CSS file and one entry in a Java list.
 - No new theme designs beyond the existing neon skin. `liquidmetal.jpeg` (a
   liquid-chrome backdrop, currently unreferenced and untracked) stays unused —
   it is available for a later theme.
-- **No layout changes for Starry Night.** See "Slice 1 stays pixel-identical"
-  below; the drift between the two skins' responsive rules is deliberately left
-  in place.
+- **No layout changes for Starry Night** *in the theme slice*. See "Slice 1
+  stays pixel-identical" below; the drift between the two skins' responsive
+  rules was deliberately left in place there and reconciled in its own
+  follow-up slice (landed 2026-11-20: one shared ladder in `base.css`).
 - No theme sync across machines, no user accounts, no cloud storage.
 - No change to the `window.krema` command/event contract beyond two new
   synchronous commands.
@@ -204,6 +205,11 @@ stays where it is; `.card-meta-item` spacing stays theme-owned because the two
 disagree. Reconciling the breakpoints is a follow-up with its own before/after,
 not a smuggled change inside a refactor PR.
 
+> **Follow-up landed (2026-11-20).** The breakpoints were reconciled as their
+> own slice: one ladder in `base.css` (5 / 4 @1180 / 3 @900 / 2 @768), both
+> theme files stripped of grid media queries, `.card-meta-item` nowrap moved to
+> base with a `.book-card` exception. See the closed open question below.
+
 ### Settings UI
 
 A new first card in the Settings view, above "AI recommendations":
@@ -336,9 +342,15 @@ reply lands, not to duplicate the source of truth.
   markup that will drift from `index.html` the moment base splits. My
   recommendation is to delete it and let `?theme=liquidneon` in the harness
   replace it, but the file is the user's untracked work, so it is their call.
-- **Should Starry Night get Liquid Neon's responsive breakpoints later?** A
-  4-column grid at 1000–1180px may well be better, but it is a visual change and
-  does not belong in this design. Logged as a follow-up, not built here.
+- ~~**Should Starry Night get Liquid Neon's responsive breakpoints later?**~~
+  **Landed** (2026-11-20, follow-up slice): one shared ladder in `base.css` —
+  5 columns, 4 at `1180px`, 3 at `900px`, 2 at `768px` — with no grid
+  breakpoint left in either theme file, and `.card-meta-item { white-space:
+  nowrap }` moved to base with a book-card exception (the book meta is the
+  phrase `Author · N pages`, not a token). The `900px` step is aligned with
+  `NARROW_WIDTH` in `js/ui.js`, so the grid gains its columns back exactly when
+  the sidebar rail collapses. `preview/check.js` asserts both skins step in
+  lockstep at every stop.
 
 ## What's left to the builder
 

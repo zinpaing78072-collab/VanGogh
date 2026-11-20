@@ -403,11 +403,6 @@
     gap: 10px;
 }
 
-/* Each meta token stays whole: a label never breaks mid-word. */
-.card-meta-item {
-    white-space: nowrap;
-}
-
 .movie-card:hover .card-title {
     color: var(--neon-cyan);
 }
@@ -505,24 +500,4 @@ button:focus-visible, .search-input:focus-visible, .nav-item:focus-visible {
     background-color: var(--accent-hover);
     border-color: var(--accent-hover);
     color: var(--accent-ink);
-}
-
-/* Responsive — neon's denser grid. Starry keeps its own single breakpoint; the
-   two skins deliberately do not share these. */
-@media (max-width: 1180px) {
-    .card-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 900px) {
-    .card-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 768px) {
-    .card-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
 }

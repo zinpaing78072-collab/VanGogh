@@ -441,8 +441,9 @@ body {
 /* Card grid */
 .card-grid {
     display: grid;
-    /* Exactly five cards per row. The sidebar takes horizontal room, so the
-       tracks shrink evenly instead of the row count changing. */
+    /* Five cards per row at desktop width. The sidebar takes horizontal room,
+       so the tracks shrink evenly instead of the row count changing — until the
+       ladder at the end of this file steps the count down. */
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 20px;
 }
@@ -588,6 +589,22 @@ body {
     flex-wrap: wrap;
 }
 
+/* Each meta token ("2010", "Science Fiction", "★ 8.4") stays whole: the row
+ * wraps between tokens, never inside one. The grid ladder below keeps cards
+ * wide enough for the longest token at every breakpoint, so this cannot push
+ * text outside a card — the harness asserts that at each step.
+ *
+ * The book card is the exception: its meta is the prose phrase
+ * "Author · N pages", not a token, and an author name has no length limit.
+ * It wraps instead of overflowing, like the book title above. */
+.card-meta-item {
+    white-space: nowrap;
+}
+
+.book-card .card-meta-item {
+    white-space: normal;
+}
+
 /* Music card subtitle — the artist line under the album title */
 .card-subtitle {
     font-size: 12.5px;
@@ -705,8 +722,33 @@ button:focus-visible, .search-input:focus-visible, .nav-item:focus-visible {
     .skeleton-line { animation: none; }
 }
 
-/* Responsive */
+/* Responsive — one ladder, shared by every skin.
+ *
+ * The step is a property of the grid's room, not of the theme, so no theme file
+ * carries a breakpoint: a theme decorates, it does not reflow. Each value keeps
+ * a card wide enough for a whole meta token and a two-line title:
+ *
+ *   1180px → 4 columns  (five ~160px posters is a contact sheet, not a shelf)
+ *    900px → 3 columns  (js/ui.js collapses the 240px sidebar below 900 too,
+ *                        so the cards get that room back on the same boundary)
+ *    768px → 2 columns  (one row of cards reads better than three cramped)
+ */
+@media (max-width: 1180px) {
+    .card-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
+    .card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
     .app-header {
         gap: 12px;
         padding: 12px 16px;

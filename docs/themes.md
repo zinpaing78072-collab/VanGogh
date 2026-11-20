@@ -114,10 +114,23 @@ when editing, or a stray gold glow reappears in the neon skin.
   Search button and the AI toggle differently; sharing those numbers makes the
   toggle overlap the button in Liquid Neon. The harness asserts the two boxes do
   not overlap under either skin rather than trusting arithmetic.
-- **The responsive breakpoints still differ per skin.** Liquid Neon has
-  `1180px` / `900px` rules and a `white-space: nowrap` card meta; Starry Night
-  keeps its single `768px` breakpoint. Reconciling them is a visual change and
-  has its own follow-up — do not smuggle it into a refactor.
+- **Breakpoints belong to the grid, not to the skin.** The column ladder lives
+  once at the end of `base.css` — 5 columns, 4 at `1180px`, 3 at `900px`, 2 at
+  `768px`: a theme decorates, it never reflows. A `@media (max-width: …)` rule
+  that changes `.card-grid` inside a `theme-*.css` is the bug this replaced; the
+  harness asserts the two skins step in lockstep so the drift cannot come back.
+  (Theme media queries for `prefers-reduced-motion` are decoration, not layout —
+  those stay per-skin.)
+- **The `900px` step is tied to the sidebar.** `js/ui.js` collapses the 240px
+  rail below `NARROW_WIDTH = 900`, so the grid drops to 3 columns on the same
+  boundary and regains the room the rail gave up. Change either number and the
+  other has to move with it, or the ladder steps in a visible seam.
+- **Card meta is `nowrap` for tokens, wrapping for prose.** `.card-meta-item`
+  stays whole (`2010`, `Science Fiction`, `★ 8.5`) so a label never breaks
+  mid-word; the book card overrides it to `normal`, because its meta is the
+  phrase `Author · N pages` and an author name has no length limit. At five
+  columns that phrase is the one thing that cannot fit — it wraps, like the
+  book title.
 - **`cyberpunk.css` / `cyberpunk.html`** are the untracked prototype Liquid Neon
   was derived from. They are superseded (`?theme=liquidneon` in the harness is
   the way to look at that skin now) and should not be edited.
