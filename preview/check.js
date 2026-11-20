@@ -771,6 +771,115 @@ const TESTS = [
         }
     },
     {
+        name: "book card opens the book detail",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.selectForm("book");
+
+            await page.evaluate(`document.querySelector("#movieGrid .book-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().bookDetailArtDone
+                && document.querySelectorAll("#bookView .book-facts > div").length > 0`);
+
+            const stats = await page.stats();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                bookVisible: !document.getElementById("bookView").classList.contains("hidden"),
+                title: ((document.querySelector("#bookView .book-title") || {}).textContent || "").trim(),
+                byline: ((document.querySelector("#bookView .book-byline-who b") || {}).textContent || "").trim(),
+                chips: document.querySelectorAll("#bookView .book-kicker .chip").length,
+                facts: document.querySelectorAll("#bookView .book-facts > div").length,
+                firstFact: ((document.querySelector("#bookView .book-facts dt") || {}).textContent || "").trim()
+                    + " = " + ((document.querySelector("#bookView .book-facts dd") || {}).textContent || "").trim(),
+                spanFacts: document.querySelectorAll("#bookView .book-facts > div.span-all").length,
+                keywords: document.querySelectorAll("#bookView .book-keywords li").length,
+                editions: document.querySelectorAll("#bookView .book-edition").length,
+                expenses: document.querySelectorAll("#bookView .book-edition-meta b").length,
+                similar: document.querySelectorAll("#bookView .book-sim-card").length,
+                tiles: document.querySelectorAll("#bookView .book-bento > .book-tile").length,
+                actions: document.querySelectorAll("#bookView .book-action").length,
+                sample: document.querySelectorAll("#bookView .book-sample").length,
+                coverArt: document.querySelectorAll("#bookView .book-cover-img:not(.hidden)").length,
+                authorArt: document.querySelectorAll("#bookView .book-author-img:not(.hidden)").length,
+                editionArt: document.querySelectorAll("#bookView .book-edition-img:not(.hidden)").length,
+                simArt: document.querySelectorAll("#bookView .book-sim-img:not(.hidden)").length,
+                visiblePlaceholders: document.querySelectorAll("#bookView .poster-placeholder:not(.hidden)").length,
+                broken: [...document.querySelectorAll("#bookView img")]
+                    .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
+                overflow: Math.max(0, document.getElementById("bookView").scrollWidth
+                    - document.getElementById("bookView").clientWidth)
+            })`));
+
+            // The sample toggle reveals the work's opening line, in place.
+            await page.evaluate(`document.querySelector('#bookView [data-action="sample"]').click(); true`);
+            const sample = JSON.parse(await page.evaluate(`JSON.stringify({
+                pressed: document.querySelector('#bookView [data-action="sample"]').getAttribute("aria-pressed"),
+                visible: !document.querySelector("#bookView .book-sample").classList.contains("hidden"),
+                text: document.querySelector("#bookView .book-sample").textContent.trim()
+            })`));
+
+            // The similar rail opens another work through the same detail pair.
+            const firstGen = stats.bookDetailGeneration;
+            const relatedTitle = await page.evaluate(
+                `document.querySelector("#bookView .book-sim-card").dataset.title`);
+            await page.evaluate(`document.querySelector("#bookView .book-sim-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().bookDetailGeneration > ${firstGen}
+                && window.__preview.stats().bookDetailStatus === "done"
+                && ((document.querySelector("#bookView .book-title") || {}).textContent || "").trim()
+                    === ${JSON.stringify(relatedTitle)}`);
+            const related = JSON.parse(await page.evaluate(`JSON.stringify({
+                title: ((document.querySelector("#bookView .book-title") || {}).textContent || "").trim(),
+                generation: window.__preview.stats().bookDetailGeneration
+            })`));
+
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.getElementById("browseView").classList.contains("hidden")
+                && document.getElementById("bookView").classList.contains("hidden")`);
+            const back = JSON.parse(await page.evaluate(`JSON.stringify({
+                cards: document.querySelectorAll("#movieGrid .book-card").length,
+                title: document.getElementById("sectionTitle").textContent
+            })`));
+
+            return [
+                check("clicking a book card opens the detail view",
+                    d.browseHidden && d.bookVisible, d.browseHidden + "/" + d.bookVisible),
+                check("detail shows the clicked work's identity",
+                    d.title === "The Lord of the Rings" && d.byline === "J. R. R. Tolkien",
+                    d.title + " / " + d.byline),
+                check("kicker carries year, pages and edition count", d.chips === 3, d.chips),
+                check("facts ledger renders all eight rows", d.facts === 8, d.facts),
+                check("facts start with the publication year",
+                    d.firstFact === "First published = 1954" && d.spanFacts === 2,
+                    d.firstFact + " / " + d.spanFacts + " full width"),
+                check("subjects render as chips", d.keywords === 3, d.keywords),
+                check("other editions render", d.editions === 4 && d.expenses === 4,
+                    d.editions + " / " + d.expenses),
+                check("similar rail renders", d.similar === 5, d.similar),
+                check("detail lays out as seven bento tiles", d.tiles === 7, d.tiles),
+                check("identity carries sample, want-to-read, favorite and Open Library actions",
+                    d.sample === 1 && d.actions === 4, d.sample + " / " + d.actions),
+                check("cover streams into its slot", d.coverArt === 1, d.coverArt),
+                check("the author photo paints the byline and the author tile", d.authorArt === 2, d.authorArt),
+                check("every covered edition streams into its slot", d.editionArt === 3, d.editionArt),
+                check("every similar cover streams into its slot", d.simArt === 5, d.simArt),
+                check("a coverless edition keeps its placeholder instead of breaking",
+                    d.visiblePlaceholders === 1 && d.broken === 0,
+                    d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
+                check("every queued image was emitted", stats.bookDetailArtEmitted === 10,
+                    stats.bookDetailArtEmitted),
+                check("read sample toggles the opening line in place",
+                    sample.pressed === "true" && sample.visible && sample.text.indexOf("Bilbo Baggins") !== -1,
+                    sample.pressed + " / " + sample.text.slice(0, 40)),
+                check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),
+                check("a similar card opens that work in the same view",
+                    related.title === relatedTitle && related.generation === firstGen + 1,
+                    related.title + " / gen " + related.generation),
+                check("Escape returns to the intact card grid",
+                    back.cards === 6 && back.title === "Trending Books",
+                    back.cards + " / " + back.title)
+            ];
+        }
+    },
+    {
         name: "sidebar: form buttons, inert items, collapse",
         path: "/movie-page/index.html",
         run: async (page) => {

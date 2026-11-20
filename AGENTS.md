@@ -53,7 +53,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
     palette, artist/album identity, recording location, community stats and
     related songs (lyrics, duration and audio are dummy data in `DummyMedia`
     until those sources land)
-  - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail); `requestBooks` with `kind=recommend` routes through the LLM engine (books resolved by `BookResolver`)
+  - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail); `requestBooks` with `kind=recommend` routes through the LLM engine (books resolved by `BookResolver`). `requestBookDetail` / `pollBookDetail` / `pollBookDetailArt` resolve one work (identity, record ledger, description + subjects, editions, author card, similar rail) with `BookDetailMapper` folding the work/editions/ratings/author payloads, and stream cover/author/edition/similar artwork as data URIs through `bookDetailArt` events keyed by slot (`cover`, `author`, `edition:<i>`, `similar:<workKey>`)
   - `vangogh.theme.ThemeConfig` + `ThemeController` — the skin picker: `loadTheme` / `saveTheme` (synchronous, `~/.van-gogh/theme.conf`), reply `{status, theme, themes}`, so the Settings chips are rendered from the Java registry (`ThemeConfig.KNOWN`) and the page carries no theme ids, labels or colours. Theme = CSS only: `js/theme.js` moves `html[data-theme]` and the `#themeSkin` href. See `docs/themes.md`
   - Frontend: ES modules under `src/main/resources/movie-page/js/` (entry
     `js/app.js`, one file per seam — see "Frontend modules" below): shared card
@@ -103,6 +103,19 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   watchlist and favorite pills toggle locally; a similar card opens that film
   in the same view. `render.js` only decides visibility — it never imports the
   module.
+- `js/book-detail.js` + `book-detail.css` — the book-detail view behind a book
+  card, the bento layout from `prototypes/book-detail-layouts/bento.html`:
+  a 12-column tile grid (cover / identity / record on top, the description
+  beside the similar rail, then editions beside the author card) that folds to
+  6 columns with the sidebar open and to one stack when narrow. It paints
+  itself (`paintBookView`/`closeBookView`) from the `requestBookDetail` reply,
+  then fills each artwork slot (`cover`, `author`, `edition:<i>`,
+  `similar:<workKey>`) from `bookDetailArt` events, so a missing image leaves
+  its placeholder instead of a broken icon. Back / Escape return to the intact
+  grid; "Read sample" reveals the work's opening line in place; the
+  want-to-read and favorite pills toggle locally; a similar card opens that
+  work in the same view. `render.js` only decides visibility — it never
+  imports the module.
 - `js/settings.js` + `settings.css` — the Settings destination: the AI
   recommendations form (provider presets, base URL, model, masked key with a
   reveal toggle, timeout, titles). It calls `loadLlmSettings` on open and
@@ -272,13 +285,13 @@ unreproducible (skeletons, empty, error, missing artwork), and `?theme=<id>`
 starts the page with that skin stored. Fixtures are keyed to
 the real resolved-item shapes and survive the LLM engine slice. `node
 preview/check.js` (Zed task "check UI (headless)") is the same harness driven
-headless: 141 assertions over the card grid, the sidebar (form buttons, inert
+headless: 161 assertions over the card grid, the sidebar (form buttons, inert
 items, section labels, collapse/reflow), search, the Settings form (loads the
 stored config, refuses a save with no key, saves and keeps the key off the
 page), the theme picker (chips from the reply, live repaint of shell + cards +
 AI toggle, one save, reopening shows it pressed, `?theme=` startup and
-fallback), the song and movie detail views (every bento tile, each artwork
-slot, actions, Escape back to the grid) and every scenario, exit 1 on
+fallback), the song, movie and book detail views (every bento tile, each
+artwork slot, actions, Escape back to the grid) and every scenario, exit 1 on
 failure. Full guide: `docs/preview-harness.md`. Layout,
 styling and page JS go through the preview; shell, IPC and network code still
 need a real app run.
@@ -330,10 +343,11 @@ To run:
   `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` and
   posters through `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` /
   `pollBookCovers` (which doubles as the completion signal, returning −1 when
-  nothing is pending) — all synchronous UI-thread commands. The song and movie
-  details follow the same rule with their own generation pairs
+  nothing is pending) — all synchronous UI-thread commands. The song, movie and
+  book details follow the same rule with their own generation pairs
   (`requestSongDetail` / `pollSongDetail`, `requestMovieDetail` /
-  `pollMovieDetail` plus `pollMovieDetailArt`), so opening a detail cannot
+  `pollMovieDetail` plus `pollMovieDetailArt`, `requestBookDetail` /
+  `pollBookDetail` plus `pollBookDetailArt`), so opening a detail cannot
   supersede the browse request or its artwork stream. Drop the dance
   when the project can move to a Krema release whose eval is thread-safe on
   Windows (0.3.3+ source does not fix it either; nothing newer is published on

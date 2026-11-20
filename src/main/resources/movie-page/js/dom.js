@@ -37,6 +37,7 @@ export const settingsCancel = document.getElementById("settingsCancel");
 export const browseView = document.getElementById("browseView");
 export const songView = document.getElementById("songView");
 export const movieView = document.getElementById("movieView");
+export const bookView = document.getElementById("bookView");
 export const playerBar = document.getElementById("playerBar");
 export const playerArt = document.getElementById("playerArt");
 export const playerTitle = document.getElementById("playerTitle");

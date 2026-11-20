@@ -78,9 +78,11 @@ skeletons and the staggered artwork stream are both exercised.
 | `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` / `pollBookCovers` | remaining count, `-1` when done |
 | `requestSongDetail` / `pollSongDetail` | song-detail generation, then `{ status, detail?, artDataUri?, error? }` |
 | `requestMovieDetail` / `pollMovieDetail` / `pollMovieDetailArt` | movie-detail generation, then `{ status, detail?, error? }`; the art drain returns the remaining count, `-1` when done |
+| `requestBookDetail` / `pollBookDetail` / `pollBookDetailArt` | book-detail generation, then `{ status, detail?, error? }`; the art drain returns the remaining count, `-1` when done |
 | `loadTheme` / `saveTheme` | `{ status, theme, themes: [{ id, label }] }` (the same registry `ThemeConfig.KNOWN` holds) |
 | `on("poster" \| "gamePoster" \| "musicPoster" \| "bookCover")` | `{ payload: { id, dataUri }, timestamp }` |
 | `on("movieDetailArt")` | `{ payload: { slot, dataUri }, timestamp }` — slots `poster`, `cast:<i>`, `still:<i>`, `similar:<id>` |
+| `on("bookDetailArt")` | `{ payload: { slot, dataUri }, timestamp }` — slots `cover`, `author`, `edition:<i>`, `similar:<workKey>` |
 
 A superseded generation answers `superseded`, so the `requestSeq` guard in
 `js/state.js` is exercised rather than bypassed. An unmocked command rejects
@@ -115,6 +117,14 @@ certification, keywords, the facts ledger, cast & crew, stills and the similar
 rail. The mock composes the real `MovieDetail` shape from those plus the clicked
 card, and generates one artwork data URI per slot, so the test drives the same
 `movieDetailArt` stream the controller emits.
+
+`bookDetail` does the same for Open Library — a per-work description, author
+dates and bio, and a setting — because the card fixtures only carry what the
+grid shows. The mock composes the real `BookDetail` shape (record ledger,
+editions, author card, similar works) from those plus the clicked book, and
+streams `cover`, `author`, `edition:<i>` and `similar:<workKey>` data URIs. One
+edition deliberately has no cover, so the page's placeholder fallback stays
+exercised.
 
 The fixtures deliberately include the cases CSS breaks on first: a long title, an
 unbreakable 55-character word, a null rating, an empty artist, a book with no
@@ -174,12 +184,12 @@ node preview/check.js            # pass/fail, exit 1 on any failure
 node preview/check.js --verbose  # also prints each test's preview stats
 ```
 
-141 assertions across 18 groups: trending render, the sidebar (four form buttons,
+161 assertions across 19 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
 active marker), the switcher across all four forms, search hit and miss, the AI
 toggle (off by default, `kind=recommend` when on, survives a form switch, empty
-box falls back to trending), the song and movie detail views (each bento tile,
-every streamed artwork slot, actions, Escape back to the grid), the Settings
+box falls back to trending), the song, movie and book detail views (each bento
+tile, every streamed artwork slot, actions, Escape back to the grid), the Settings
 form (opens from the sidebar, paints
 the loaded config, fills the base URL from a preset, refuses a save with no key,
 saves and clears the field, keeps the stored key off the page and on a second
