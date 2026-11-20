@@ -9,11 +9,17 @@
  *   invoke("request<Form>", { kind, query })  → generation (kicks off a fetch)
  *   invoke("poll<Form>Data", { generation })  → { status, items?, error? }
  *   invoke("poll<Form>Art", {})               → remaining posters, −1 when done
+ *   invoke("requestSongDetail", { id })       → song-detail generation
+ *   invoke("pollSongDetail", { generation })  → { status, detail?, artDataUri?, error? }
+ *   invoke("requestMovieDetail", { id })      → movie-detail generation
+ *   invoke("pollMovieDetail", { generation }) → { status, detail?, error? }
+ *   invoke("pollMovieDetailArt", {})          → remaining detail art, −1 when done
  *   invoke("loadLlmSettings", {})             → { status, baseUrl, model, …, hasApiKey }
  *   invoke("saveLlmSettings", { … })          → the stored values, never the key
  *   invoke("loadTheme", {})                   → { status, theme, themes }
  *   invoke("saveTheme", { theme })            → the stored id + the theme list
  *   on("<artEvent>", handler)                 → { payload: { id, dataUri }, timestamp }
+ *   on("movieDetailArt", handler)             → { payload: { slot, dataUri }, timestamp }
  *
  * Because pacing stays pending→done like the real drains, the skeleton cards
  * and the staggered artwork stream are both exercised, which is the whole
@@ -97,6 +103,20 @@
     // Detail has its own generation counter, like the real controller: opening
     // a song must not supersede the browse request (or its artwork stream).
     var detail = { gen: 0, polls: 0, status: "idle", id: null };
+
+    // Movie detail is its own pair too (poster, headshots, stills and similar
+    // posters stream as data URIs through the movieDetailArt event).
+    var movieDetail = {
+        gen: 0,
+        polls: 0,
+        status: "idle",
+        id: null,
+        value: null,
+        delivered: false,
+        artQueue: null,
+        artEmitted: 0,
+        artDone: false
+    };
 
     // Settings: an in-memory stand-in for ~/.van-gogh/llm.conf, with the same
     // contract as SettingsController — the key never comes back out, and a
@@ -392,6 +412,181 @@
         };
     }
 
+    // ----------------------------------------------------------- movie detail
+
+    function movieDetailFor(id) {
+        var list = fixtures.movie || [];
+        var item = list.filter(function (x) { return String(x.id) === String(id); })[0] || list[0];
+        if (!item) {
+            return null;
+        }
+        var dummy = fixtures.movieDetail || {};
+        var others = list
+            .filter(function (x) { return String(x.id) !== String(item.id); })
+            .slice(0, 5);
+
+        return {
+            id: Number(item.id),
+            title: item.title,
+            tagline: dummy.tagline || "",
+            overview: item.overview || "",
+            releaseDate: String(item.year) + "-07-16",
+            year: Number(item.year) || 0,
+            runtimeMinutes: dummy.runtimeMinutes || 0,
+            certification: dummy.certification || "",
+            rating: Number(item.rating) || 0,
+            voteCount: 2340000,
+            genres: item.genre ? [item.genre] : [],
+            keywords: dummy.keywords || [],
+            posterUrl: "https://image.tmdb.org/t/p/w500/" + item.id + "-poster.jpg",
+            tmdbUrl: "https://www.themoviedb.org/movie/" + item.id,
+            trailerUrl: "https://www.youtube.com/watch?v=preview",
+            facts: dummy.facts || [],
+            cast: (dummy.cast || []).map(function (c) {
+                return {
+                    name: c.name,
+                    role: c.role || "",
+                    crew: !!c.crew,
+                    imageUrl: "https://image.tmdb.org/t/p/w500/cast-" + c.name.replace(/\s+/g, "-") + ".jpg"
+                };
+            }),
+            stills: (dummy.stills || []).map(function (s, i) {
+                return {
+                    caption: s.caption || "",
+                    imageUrl: "https://image.tmdb.org/t/p/w500/still-" + i + ".jpg"
+                };
+            }),
+            similar: others.map(function (x) {
+                return {
+                    movie: {
+                        id: Number(x.id),
+                        title: x.title,
+                        year: x.year,
+                        rating: x.rating,
+                        genre: x.genre || "",
+                        overview: x.overview || "",
+                        posterUrl: ""
+                    },
+                    posterUrl: "https://image.tmdb.org/t/p/w500/similar-" + x.id + ".jpg"
+                };
+            })
+        };
+    }
+
+    // One generated image per slot, keyed exactly like the controller's refs:
+    // poster, cast:<i>, still:<i>, similar:<id>.
+    function buildMovieArtQueue(value) {
+        var entries = [];
+        if (value.posterUrl) {
+            entries.push({
+                slot: "poster",
+                dataUri: svgCover(value.title, 500, 750, hueOf(value.id))
+            });
+        }
+        (value.cast || []).forEach(function (credit, i) {
+            if (credit.imageUrl) {
+                entries.push({
+                    slot: "cast:" + i,
+                    dataUri: svgCover(credit.name, 300, 450, hueOf(credit.name))
+                });
+            }
+        });
+        (value.stills || []).forEach(function (still, i) {
+            if (still.imageUrl) {
+                entries.push({
+                    slot: "still:" + i,
+                    dataUri: svgCover(still.caption || value.title, 640, 400, hueOf("still" + i))
+                });
+            }
+        });
+        (value.similar || []).forEach(function (entry) {
+            if (entry.posterUrl) {
+                entries.push({
+                    slot: "similar:" + entry.movie.id,
+                    dataUri: svgCover(entry.movie.title, 300, 450, hueOf(entry.movie.id))
+                });
+            }
+        });
+        return entries;
+    }
+
+    function requestMovieDetail(args) {
+        movieDetail = {
+            gen: movieDetail.gen + 1,
+            polls: 0,
+            status: "pending",
+            id: (args && args.id) || null,
+            value: null,
+            delivered: false,
+            artQueue: null,
+            artEmitted: 0,
+            artDone: false
+        };
+        console.log("[preview] movie detail request gen=" + movieDetail.gen +
+            " id=" + movieDetail.id);
+        return movieDetail.gen;
+    }
+
+    function pollMovieDetail(args) {
+        var generation = args && args.generation;
+        if (generation !== movieDetail.gen) {
+            return { generation: generation, status: "superseded", detail: null };
+        }
+        movieDetail.polls += 1;
+        var ticks = scenario === "slow" ? 20 : 2;
+        if (movieDetail.polls <= ticks) {
+            return { generation: generation, status: "pending", detail: null };
+        }
+        if (scenario === "error") {
+            movieDetail.status = "error";
+            return {
+                generation: generation,
+                status: "error",
+                error: "Simulated movie fetch failure (scenario=error).",
+                detail: null
+            };
+        }
+        var value = movieDetailFor(movieDetail.id);
+        if (!value) {
+            movieDetail.status = "error";
+            return {
+                generation: generation,
+                status: "error",
+                error: "No movie fixture for id " + movieDetail.id,
+                detail: null
+            };
+        }
+        movieDetail.status = "done";
+        movieDetail.value = value;
+        movieDetail.delivered = true;
+        console.log("[preview] movie detail done gen=" + generation +
+            " title=" + value.title);
+        return { generation: generation, status: "done", detail: value };
+    }
+
+    function pollMovieDetailArt() {
+        if (!movieDetail.delivered || !movieDetail.value || scenario === "noposters") {
+            movieDetail.artDone = true;
+            return -1;
+        }
+        if (movieDetail.artQueue === null) {
+            movieDetail.artQueue = buildMovieArtQueue(movieDetail.value);
+        }
+
+        // Two per drain call, like a network stream landing in bursts.
+        var batch = movieDetail.artQueue.splice(0, 2);
+        batch.forEach(function (entry) {
+            movieDetail.artEmitted += 1;
+            emit("movieDetailArt", { slot: entry.slot, dataUri: entry.dataUri });
+        });
+
+        if (movieDetail.artQueue.length === 0) {
+            movieDetail.artDone = true;
+            return -1;
+        }
+        return movieDetail.artQueue.length;
+    }
+
     function llmReply() {
         return {
             status: "ok",
@@ -506,6 +701,15 @@
             if (command === "pollSongDetail") {
                 return Promise.resolve(pollDetail(args));
             }
+            if (command === "requestMovieDetail") {
+                return Promise.resolve(requestMovieDetail(args));
+            }
+            if (command === "pollMovieDetail") {
+                return Promise.resolve(pollMovieDetail(args));
+            }
+            if (command === "pollMovieDetailArt") {
+                return Promise.resolve(pollMovieDetailArt());
+            }
             if (command === "loadLlmSettings") {
                 return Promise.resolve(loadLlm());
             }
@@ -553,6 +757,11 @@
                 detailGeneration: detail.gen,
                 detailStatus: detail.status,
                 detailPolls: detail.polls,
+                movieDetailGeneration: movieDetail.gen,
+                movieDetailStatus: movieDetail.status,
+                movieDetailPolls: movieDetail.polls,
+                movieDetailArtEmitted: movieDetail.artEmitted,
+                movieDetailArtDone: movieDetail.artDone,
                 settingsLoads: llm.loads,
                 settingsSaves: llm.saves,
                 settingsHasKey: !!llm.apiKey,

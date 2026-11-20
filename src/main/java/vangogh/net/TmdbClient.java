@@ -58,6 +58,18 @@ public class TmdbClient {
         return send(url);
     }
 
+    /**
+     * One call carries the whole detail page: identity, facts, cast &amp; crew,
+     * keywords, stills, videos, certifications and the similar rail all come
+     * back appended to the movie object.
+     */
+    public Try<ApiResponse> movieDetail(int id) {
+        String url = BASE + "/movie/" + id + "?api_key=" + apiKey
+                + "&language=en-US"
+                + "&append_to_response=credits,keywords,similar,images,videos,release_dates";
+        return send(url);
+    }
+
     private Try<ApiResponse> send(String url) {
         return Try.of(() -> {
                     HttpRequest request = HttpRequest.newBuilder()
@@ -115,6 +127,39 @@ public class TmdbClient {
         return PosterFailover.firstSuccess(posterSources(posterUrl, preferProxy), this::fetchAsUri)
                 .peek(pair -> rememberPosterSource(pair._1().startsWith(IMAGE_PROXY)))
                 .map(Tuple2::_2);
+    }
+
+    /**
+     * Detail artwork (poster, headshots, stills, similar posters) keeps TMDB's
+     * requested size instead of being re-encoded to the card size: a headshot
+     * is cropped in a 2:3 card and a still runs 16:9, so the card rule would
+     * make both look soft. Same proxy failover, same preference as the grid.
+     */
+    public Option<String> loadDetailImageDataUri(String imageUrl) {
+        return PosterFailover.firstSuccess(detailImageSources(imageUrl, preferProxy), this::fetchAsUri)
+                .peek(pair -> rememberPosterSource(pair._1().startsWith(IMAGE_PROXY)))
+                .map(Tuple2::_2);
+    }
+
+    /**
+     * Direct/proxy pair for a detail image at its original size. Direct first
+     * unless a previous fetch proved the proxy necessary (the image host is
+     * unreachable on some networks — see the class comment).
+     */
+    static List<String> detailImageSources(String imageUrl, boolean proxyFirst) {
+        List<String> sources = new ArrayList<>();
+        if (imageUrl == null || !imageUrl.startsWith(IMAGE_BASE + "/")) {
+            return sources;
+        }
+        String proxyUrl = IMAGE_PROXY + URLEncoder.encode(imageUrl, StandardCharsets.UTF_8);
+        if (proxyFirst) {
+            sources.add(proxyUrl);
+            sources.add(imageUrl);
+        } else {
+            sources.add(imageUrl);
+            sources.add(proxyUrl);
+        }
+        return sources;
     }
 
     /** One poster source fetch as a throwing function, so {@link Try} can carry it. */

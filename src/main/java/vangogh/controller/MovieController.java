@@ -9,6 +9,7 @@ import io.vavr.control.Try;
 import vangogh.error.FetchError;
 import vangogh.llm.Form;
 import vangogh.movie.Movie;
+import vangogh.movie.MovieDetail;
 import vangogh.movie.TmdbMovieService;
 import vangogh.recommend.PickResolver;
 import vangogh.recommend.RecommendationService;
@@ -60,6 +61,26 @@ public class MovieController {
 
     /** The reply the data drain hands the page (Gson-serialized; null fields omitted). */
     public record MovieDataReply(int generation, String status, String error, List<Movie> items) {}
+
+    // ------------------------------------------------------------ movie detail
+
+    /** One-slot holder for the latest completed detail fetch. */
+    private record PendingDetail(int generation, Either<FetchError, MovieDetail> result) {}
+
+    private record ArtRef(String slot, String url) {}
+
+    private record PendingArt(String slot, String dataUri) {}
+
+    private final AtomicInteger detailGeneration = new AtomicInteger();
+    private final AtomicReference<PendingDetail> pendingDetail = new AtomicReference<>();
+
+    private final ConcurrentLinkedQueue<PendingArt> detailArtQueue = new ConcurrentLinkedQueue<>();
+    private final AtomicInteger detailArtTotal = new AtomicInteger();
+    private final AtomicInteger detailArtDelivered = new AtomicInteger();
+    private final AtomicInteger detailArtSkipped = new AtomicInteger();
+
+    /** The detail drain's reply; artwork arrives separately as movieDetailArt events. */
+    public record MovieDetailReply(int generation, String status, String error, MovieDetail detail) {}
 
     public MovieController() {
         this(new TmdbMovieService(resolveApiKey()));
@@ -201,6 +222,136 @@ public class MovieController {
         posterTotal.set(0);
         posterDelivered.set(0);
         posterSkipped.set(0);
+    }
+
+    // -------------------------------------------------------------- detail
+
+    /**
+     * Kick off the movie-detail fetch and return its generation at once (the UI
+     * thread never blocks on network I/O). The page polls
+     * {@link #pollMovieDetail(int)} until the detail or an error arrives, then
+     * {@link #pollMovieDetailArt()} for the streamed artwork.
+     *
+     * <p>Uses its own generation counter, so opening a film cannot supersede a
+     * grid request (or its poster stream) and vice versa.
+     */
+    @KremaCommand
+    public int requestMovieDetail(int id) {
+        int gen = detailGeneration.incrementAndGet();
+        pendingDetail.set(null);
+        resetDetailArt();
+
+        Future.of(executor, () -> {
+            Either<FetchError, MovieDetail> result = service.movieDetail(id);
+            return new PendingDetail(gen, result);
+        }).onComplete(result -> deliverDetail(gen, result));
+        return gen;
+    }
+
+    /**
+     * Fans out the artwork fetches. The total is set before the detail drain can
+     * hand the page this request (the drain runs after this method returns), so
+     * a poll issued right after render never sees a stale count.
+     */
+    private void queueDetailArt(MovieDetail detail, int gen) {
+        java.util.List<ArtRef> refs = new java.util.ArrayList<>();
+        addArtRef(refs, "poster", detail.posterUrl());
+        java.util.List<MovieDetail.MovieCredit> cast = detail.cast();
+        for (int i = 0; i < cast.size(); i++) {
+            addArtRef(refs, "cast:" + i, cast.get(i).imageUrl());
+        }
+        java.util.List<MovieDetail.MovieStill> stills = detail.stills();
+        for (int i = 0; i < stills.size(); i++) {
+            addArtRef(refs, "still:" + i, stills.get(i).imageUrl());
+        }
+        for (MovieDetail.SimilarMovie similar : detail.similar()) {
+            addArtRef(refs, "similar:" + similar.movie().id(), similar.posterUrl());
+        }
+
+        detailArtTotal.set(refs.size());
+        Future.traverse(executor, io.vavr.collection.List.ofAll(refs),
+                ref -> Future.run(executor, () -> fetchDetailArt(ref, gen)));
+    }
+
+    private static void addArtRef(java.util.List<ArtRef> refs, String slot, String url) {
+        if (url != null && !url.isEmpty()) {
+            refs.add(new ArtRef(slot, url));
+        }
+    }
+
+    private void deliverDetail(int gen, Try<PendingDetail> result) {
+        if (detailGeneration.get() != gen) {
+            return;
+        }
+        PendingDetail pending = result.isFailure()
+                ? new PendingDetail(gen, Either.left(new FetchError.Transport("TMDB movie", result.getCause())))
+                : result.get();
+
+        // Fan out artwork before the drain can hand the page this request: the
+        // total is in place by the time the page's first art poll runs.
+        pending.result().peek(detail -> queueDetailArt(detail, gen));
+
+        pendingDetail.set(pending);
+    }
+
+    /**
+     * The detail drain: the latest completed fetch for the page's generation,
+     * or a pending/superseded marker. Synchronous on the UI thread.
+     */
+    @KremaCommand
+    public MovieDetailReply pollMovieDetail(int generation) {
+        PendingDetail pending = pendingDetail.get();
+        if (pending == null) {
+            return new MovieDetailReply(generation, "pending", null, null);
+        }
+        if (pending.generation() > generation) {
+            return new MovieDetailReply(pending.generation(), "superseded", null, null);
+        }
+        pendingDetail.set(null);
+        return pending.result().fold(
+                error -> new MovieDetailReply(pending.generation(), "error", FetchError.uiMessage(error), null),
+                detail -> new MovieDetailReply(pending.generation(), "done", null, detail));
+    }
+
+    /**
+     * The artwork drain: emits one {@code movieDetailArt} event per queued
+     * image ({@code {slot, dataUri}}) and returns the outstanding count, or −1
+     * when the stream for this detail is complete.
+     */
+    @KremaCommand
+    public int pollMovieDetailArt() {
+        PendingArt pending;
+        while ((pending = detailArtQueue.poll()) != null) {
+            if (events != null) {
+                events.emit("movieDetailArt",
+                        Map.of("slot", pending.slot(), "dataUri", pending.dataUri()));
+            }
+            detailArtDelivered.incrementAndGet();
+        }
+        int outstanding = detailArtTotal.get() - detailArtDelivered.get() - detailArtSkipped.get();
+        if (detailArtQueue.isEmpty() && outstanding <= 0) {
+            return -1;
+        }
+        return Math.max(outstanding, 0);
+    }
+
+    private void resetDetailArt() {
+        detailArtQueue.clear();
+        detailArtTotal.set(0);
+        detailArtDelivered.set(0);
+        detailArtSkipped.set(0);
+    }
+
+    private void fetchDetailArt(ArtRef ref, int gen) {
+        Option<String> uri = service.detailImageDataUri(ref.url())
+                .filter(ignore -> detailGeneration.get() == gen);
+        if (uri.isEmpty()) {
+            if (detailGeneration.get() == gen) {
+                detailArtSkipped.incrementAndGet();
+            }
+            return;
+        }
+        detailArtQueue.offer(new PendingArt(ref.slot(), uri.get()));
     }
 
     private void fetchAndOffer(int id, String posterUrl, int gen) {

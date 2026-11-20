@@ -14,11 +14,12 @@ export async function loadContent(domainKey, kind, term) {
     const domain = DOMAINS[domainKey];
     const seq = nextRequest();
 
-    // A browse load always leaves the song detail: drop any pending detail
+    // A browse load always leaves a detail view: drop any pending detail
     // reply so it cannot paint over the newly requested grid.
     cancelDetailRequest();
     state.view = "browse";
     state.song = null;
+    state.movie = null;
     state.domain = domainKey;
     state.title = kind === "recommend" ? "AI Recommendations"
         : kind === "search" ? "Search Results"

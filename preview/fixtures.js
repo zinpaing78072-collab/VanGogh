@@ -286,6 +286,47 @@
             stats: { contributors: 224, transcribers: 4, annotationCount: 17, pyongsCount: 81 }
         },
 
+        /* Movie-detail extras the card fixtures do not carry. The mock composes
+         * the real MovieDetail shape from these plus the clicked movie item, so
+         * the preview exercises the actual bento view — facts ledger, cast,
+         * stills, similar rail — not a lookalike. Artwork is generated per
+         * slot, like the controller's data-URI stream. */
+        movieDetail: {
+            tagline: "Your mind is the scene of the crime.",
+            runtimeMinutes: 148,
+            certification: "PG-13",
+            keywords: ["dream", "heist", "subconscious", "architecture", "time", "memory"],
+            facts: [
+                { label: "Release", value: "Jul 16, 2010", muted: false },
+                { label: "Runtime", value: "2h 28m", muted: false },
+                { label: "Director", value: "Christopher Nolan", muted: false },
+                { label: "Screenplay", value: "Christopher Nolan", muted: true },
+                { label: "Cinematography", value: "Wally Pfister", muted: true },
+                { label: "Music", value: "Hans Zimmer", muted: true },
+                { label: "Studio", value: "Warner Bros., Legendary, Syncopy", muted: true },
+                { label: "Country", value: "US, UK", muted: true },
+                { label: "Budget", value: "$160M", muted: false },
+                { label: "Box office", value: "$836.8M", muted: false },
+                { label: "Certification", value: "PG-13", muted: false },
+                { label: "Status", value: "Released", muted: false }
+            ],
+            cast: [
+                { name: "Leonardo DiCaprio", role: "Dom Cobb" },
+                { name: "Joseph Gordon-Levitt", role: "Arthur" },
+                { name: "Elliot Page", role: "Ariadne" },
+                { name: "Tom Hardy", role: "Eames" },
+                { name: "Ken Watanabe", role: "Saito" },
+                { name: "Marion Cotillard", role: "Mal" },
+                { name: "Christopher Nolan", role: "Director", crew: true },
+                { name: "Wally Pfister", role: "Cinematography", crew: true }
+            ],
+            stills: [
+                { caption: "The city folds" },
+                { caption: "Limbo" },
+                { caption: "Snow fortress" }
+            ]
+        },
+
         /* The plural + label the app shows in the section title, so the mock can
          * honour the same wording the real controllers produce. */
         labels: {
