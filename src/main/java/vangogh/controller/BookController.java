@@ -10,6 +10,9 @@ import io.vavr.control.Try;
 import vangogh.book.Book;
 import vangogh.book.OpenLibraryBookService;
 import vangogh.error.FetchError;
+import vangogh.llm.Form;
+import vangogh.recommend.PickResolver;
+import vangogh.recommend.RecommendationService;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -34,6 +37,8 @@ public class BookController {
     private volatile EventEmitter events;
     private final OpenLibraryBookService service;
     private final ExecutorService executor;
+    private final PickResolver<Book> resolver;
+    private final RecommendationService recommendations;
 
     private final AtomicInteger generation = new AtomicInteger();
 
@@ -56,9 +61,29 @@ public class BookController {
         this(new OpenLibraryBookService());
     }
 
+    /** Package-private constructor used by tests. */
     BookController(OpenLibraryBookService service) {
+        this(service, newIoPool());
+    }
+
+    /** Package-private seam: lets a test inject the pool it will shut down. */
+    BookController(OpenLibraryBookService service, ExecutorService executor) {
+        this(service, executor, null);
+    }
+
+    /** Package-private seam: tests inject the engine and its stubbed model call. */
+    BookController(OpenLibraryBookService service, ExecutorService executor,
+                   RecommendationService recommendations) {
         this.service = service;
-        this.executor = Executors.newFixedThreadPool(IO_THREADS, runnable -> {
+        this.executor = executor;
+        this.resolver = service.resolver();
+        this.recommendations = recommendations != null
+                ? recommendations
+                : new RecommendationService(executor);
+    }
+
+    private static ExecutorService newIoPool() {
+        return Executors.newFixedThreadPool(IO_THREADS, runnable -> {
             Thread thread = new Thread(runnable, "van-gogh-io");
             thread.setDaemon(true);
             return thread;
@@ -79,21 +104,19 @@ public class BookController {
         resetCoverTracking();
         pendingData.set(null);
 
-        // The AI toggle ships before this form's engine slice. Say so instead
-        // of quietly running a direct search behind an AI-looking toggle.
-        if ("recommend".equalsIgnoreCase(kind)) {
-            pendingData.set(new PendingData(gen, Either.left(new FetchError.BadInput(
-                    "kind", "AI recommendations are not wired for this form yet"))));
-            return gen;
-        }
-
         Future.of(executor, () -> fetchBooks(kind, query))
                 .onComplete(result -> deliverData(gen, result));
         return gen;
     }
 
     private Either<FetchError, java.util.List<Book>> fetchBooks(String kind, String query) {
-        return "search".equals(kind)
+        if ("recommend".equalsIgnoreCase(kind)) {
+            return recommendations.recommend(Form.BOOK, query, resolver)
+                    .map(books -> List.ofAll(books)
+                            .distinctBy(Book::workKey)
+                            .toJavaList());
+        }
+        return "search".equalsIgnoreCase(kind)
                 ? service.searchBooks(query)
                 : service.fetchTrending();
     }

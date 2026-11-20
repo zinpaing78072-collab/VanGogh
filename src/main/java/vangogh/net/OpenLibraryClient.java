@@ -48,6 +48,23 @@ public class OpenLibraryClient {
         return send(url);
     }
 
+    /**
+     * Structured lookup for the recommendation resolver: Open Library's
+     * {@code title=}/{@code author=} filters, which are stricter than a
+     * free-text {@code q=} search. The author filter is omitted when blank.
+     */
+    public Try<ApiResponse> searchBooksByTitleAuthor(String title, String author) {
+        StringBuilder url = new StringBuilder(BASE)
+                .append("search.json?title=")
+                .append(URLEncoder.encode(title, StandardCharsets.UTF_8))
+                .append("&limit=20&fields=")
+                .append(WORK_FIELDS);
+        if (author != null && !author.isBlank()) {
+            url.append("&author=").append(URLEncoder.encode(author.trim(), StandardCharsets.UTF_8));
+        }
+        return send(url.toString());
+    }
+
     public Try<ApiResponse> trending() {
         String url = BASE + "trending/weekly.json?limit=20&fields=" + WORK_FIELDS;
         return send(url);
