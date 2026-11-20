@@ -9,8 +9,8 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 ### Core behavior
 - **Input**: A keyword or content name (e.g. `"Inception"`, `"Taylor Swift"`, `"Minecraft"`)
 - **Output**: Related content across Movies, Music, Books, and Games (all four wired)
-- **Mechanism**: The frontend invokes `requestMovies` / `requestGames` / `requestMusic` / `requestBooks` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` drains (`pending` / `done` / `error` / `superseded`); artwork streams through the `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` / `pollBookCovers` drains (emitting `"poster"` / `"gamePoster"` / `"musicPoster"` / `"bookCover"`). Skeleton cards show while a fetch is in flight.
-- **Navigation**: a collapsible sidebar switches the content form with one button per form (Music / Movies / Books / Games) — all four connect to their APIs (TMDB, TheGamesDB, MusicBrainz, Open Library). **Settings** (sidebar foot) opens the AI-configuration page, and it is wired: it reads and writes `~/.van-gogh/llm.conf` through `loadLlmSettings` / `saveLlmSettings`, so a key saved there is the key the engine uses. The other menu items (Home, My Lists, Favorites) and the notification/profile buttons are shell chrome with no backend yet; `Menu` and `Library` are section labels, not destinations.
+- **Mechanism**: The frontend invokes `requestMovies` / `requestGames` / `requestGeniusMusic` / `requestBooks` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` / `pollGeniusMusicData` / `pollBookData` drains (`pending` / `done` / `error` / `superseded`); artwork streams through the `pollMoviePosters` / `pollGamePosters` / `pollGeniusMusicPosters` / `pollBookCovers` drains (emitting `"poster"` / `"gamePoster"` / `"musicPoster"` / `"bookCover"`). Skeleton cards show while a fetch is in flight.
+- **Navigation**: a collapsible sidebar switches the content form with one button per form (Music / Movies / Books / Games) — all four connect to their APIs (TMDB, TheGamesDB, Genius, Open Library). **Settings** (sidebar foot) opens two cards: **Appearance** (theme picker, read/written through `loadTheme` / `saveTheme` into `~/.van-gogh/theme.conf`) and **AI recommendations** (reads and writes `~/.van-gogh/llm.conf` through `loadLlmSettings` / `saveLlmSettings`, so a key saved there is the key the engine uses). The other menu items (Home, My Lists, Favorites) and the notification/profile buttons are shell chrome with no backend yet; `Menu` and `Library` are section labels, not destinations.
 
 ### Tech stack
 - **Language**: Java 25 (LTS), compiled with `--release 25`
@@ -38,20 +38,23 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 - **Features wired**:
   - `VanGoghApp` — Krema window builder (title, identifier, size, debug mode, assets, events, commands)
   - `MovieController` — `@KremaCommand requestMovies(kind, query)` (non-blocking kickoff, returns the generation), data + poster drains, generation-counted poster streaming via `events.emit("poster", ...)`; `kind=recommend` routes through the LLM engine (below)
-  - `vangogh.llm` (`LlmConfig`, `LlmClient`, `PromptFactory`, `Pick`, `TitleParser`, `Normalize`), `vangogh.recommend` (`PickResolver`, `RecommendationService`), and `MovieResolver` — the AI recommendation engine (movies wired): one model request composes `title | disambiguator` picks, TMDB resolves them in parallel. Config lives in `~/.van-gogh/llm.conf` — the single source of truth, written by the Settings page and re-read on every AI search (no restart, no environment overrides); the AI toggle is opt-in, so direct search and trending are unchanged. The other three forms reject `kind=recommend` until their slices land — see `docs/llm-engine.md`
+  - `vangogh.llm` (`LlmConfig`, `LlmClient`, `PromptFactory`, `Pick`, `TitleParser`, `Normalize`), `vangogh.recommend` (`PickResolver`, `RecommendationService`), `MovieResolver`, `SongResolver`, `BookResolver`, and `GameResolver` — the AI recommendation engine (all four forms wired): one model request composes `title | disambiguator` picks, then TMDB resolves movie picks, Genius resolves song picks, Open Library resolves book picks and TheGamesDB resolves game picks in parallel. Config lives in `~/.van-gogh/llm.conf` — the single source of truth, written by the Settings page and re-read on every AI search (no restart, no environment overrides); the AI toggle is opt-in, so direct search and trending are unchanged — see `docs/llm-engine.md`
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
-  - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming
-  - `MusicController`, `MusicBrainzService`, and `MusicBrainzClient` — MusicBrainz release-group search (album cards), curated trending MBID list, Cover Art Archive cover streaming; MBZ requests are paced (~1/s) with a 503 backoff-retry — see `docs/music-domain.md`
+  - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming; `requestGames` with `kind=recommend` routes through the LLM engine (games resolved by `GameResolver`)
+  - `MusicController`, `MusicBrainzService`, and `MusicBrainzClient` — the earlier MusicBrainz release-group slice (album cards), curated trending MBID list, Cover Art Archive cover streaming; MBZ requests are paced (~1/s) with a 503 backoff-retry — see `docs/music-domain.md`. Not the page's live music form: it uses `GeniusController`.
   - `GeniusController`, `GeniusMusicService`, and `GeniusClient` — Genius
-    chart/search song lists; `requestSongDetail` / `pollSongDetail` resolve one
+    chart/search song lists; `requestGeniusMusic` with `kind=recommend` routes
+    through the LLM engine (songs resolved by `SongResolver`), and
+    `requestSongDetail` / `pollSongDetail` resolve one
     song for the detail page: credits (written/produced/featuring plus the full
     `custom_performances` bill), album, release date, pageviews, the editorial
     About copy, listen/watch links, language + translation count, artwork
     palette, artist/album identity, recording location, community stats and
     related songs (lyrics, duration and audio are dummy data in `DummyMedia`
     until those sources land)
-  - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail)
+  - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail); `requestBooks` with `kind=recommend` routes through the LLM engine (books resolved by `BookResolver`)
+  - `vangogh.theme.ThemeConfig` + `ThemeController` — the skin picker: `loadTheme` / `saveTheme` (synchronous, `~/.van-gogh/theme.conf`), reply `{status, theme, themes}`, so the Settings chips are rendered from the Java registry (`ThemeConfig.KNOWN`) and the page carries no theme ids, labels or colours. Theme = CSS only: `js/theme.js` moves `html[data-theme]` and the `#themeSkin` href. See `docs/themes.md`
   - Frontend: ES modules under `src/main/resources/movie-page/js/` (entry
     `js/app.js`, one file per seam — see "Frontend modules" below): shared card
     grid with per-domain card shapes (movie/game portrait posters, music square
@@ -61,7 +64,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
     The active form lives in `state.domain` in `js/state.js`; `render.js` paints
     the active button from it, and `js/ui.js` turns a click into the trending
     load. Buttons without `data-domain` are inert shell chrome, except
-    Settings, which opens the AI-configuration page. The header AI
+    Settings, which opens the Settings page. The header AI
     toggle (`#aiToggle`, `state.ai`) is opt-in and only changes the `kind` a
     search sends (`recommend` instead of `search`); it survives a form switch.
 - **Features pending**: the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
@@ -97,6 +100,26 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   successful save the field clears and its placeholder says the key is stored.
   `render.js` shows it from `state.view === "settings"`; the sidebar item is
   active exactly then, and Escape or Cancel returns to the intact grid.
+- `js/theme.js` — the Appearance card: the only module that knows a theme
+  exists. It asks `loadTheme` on startup (`app.js` awaits it before the first
+  content load) and on Settings open, paints one chip per theme from the reply,
+  and on a click applies the theme (two attributes) and saves it immediately.
+  The chip list is never hard-coded here — `ThemeConfig.KNOWN` in Java is the
+  registry. `.provider-chip` styling is shared with the AI presets; the two
+  groups are told apart by `data-provider` / `data-theme-id`.
+- CSS is layered, not per-component: `base.css` (structure + role tokens'
+  Starry defaults), `music-detail.css`, `settings.css` (both structure only,
+  role tokens only), then the active `theme-<id>.css` last (`#themeSkin`) —
+  `theme-starry.css`, `theme-liquidneon.css`. A theme owns backdrops, type
+  scale, radii and the header offsets; adding one is a CSS file plus a
+  `ThemeConfig.KNOWN` row (recipe: `docs/themes.md`).
+- **The responsive grid ladder is base-only** — one ladder at the end of
+  `base.css` (5 columns, 4 ≤1180px, 3 ≤900px, 2 ≤768px), never duplicated in a
+  theme file: a theme decorates, it does not reflow. The 900px step matches
+  `NARROW_WIDTH = 900` in `js/ui.js`, where the sidebar auto-collapses, so the
+  grid regains the rail's room on the same boundary — change one, change both.
+  `.card-meta-item` is `nowrap` (tokens stay whole) except in book cards, whose
+  meta is the prose phrase `Author · N pages`.
 
 Rules that keep the graph acyclic: builders take the row as a parameter
 (`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click
@@ -142,6 +165,7 @@ models, prompt design) are left to each builder slice.
 ### Related project notes
 - `architecture.md` — how to add new content domains (Music, Book, Game, TV)
 - `docs/llm-engine.md` — LLM recommendation engine: config, request kinds, error text, quota, tests
+- `docs/themes.md` — theme layers, the role-token contract, and the recipe for theme #3
 - `repos/krema/` — vendored Krema source (read-only reference)
 - Vault counterpart of this description: `10 Projects/VanGogh/description.md`
   (keep in sync when this section changes)
@@ -198,6 +222,13 @@ before starting the next. Never expand scope mid-slice.
 - VS Code's Run/Debug Java tasks work as-is: `vangogh.app.VanGoghApp` is a plain
   launcher that builds the Krema window and runs the system-webview event loop.
   Add `-XstartOnFirstThread` and `--enable-native-access=ALL-UNNAMED` to the launch task's `vmArgs`.
+- **`java.lang.Error: Unresolved compilation problems` at startup is stale IDE
+  output, not a source error.** The VS Code Java extension compiles into
+  `target/classes`; a stale language-server model writes JDT error stubs there,
+  and Maven's timestamp check then skips recompiling them. Fix: `mvn clean
+  compile` (the `clean` matters) and, if it recurs, Cmd+Shift+P → "Java: Clean
+  Java Language Server Workspace". Story: vault "Debug Record — IDE wrote an
+  error stub into target/classes".
 - The workspace config routes Code Runner's Java Run Code action through
   `mvn compile exec:exec`; do not run `javac VanGoghApp.java` directly, since
   that omits the other project classes and Maven dependencies.
@@ -214,7 +245,8 @@ before starting the next. Never expand scope mid-slice.
   `window.krema.on("poster", …)` / `window.krema.on("gamePoster", …)` events
   emitted by the drains on the UI thread. The Settings page is the one pair
   that needs no drain: `loadLlmSettings` / `saveLlmSettings` on
-  `SettingsController` are synchronous (one small file) and reply at once.
+  `SettingsController` and `loadTheme` / `saveTheme` on `ThemeController` are
+  synchronous (one small file each) and reply at once.
 
 ### UI preview harness (browser, mock IPC)
 
@@ -224,13 +256,16 @@ fake `window.krema` injected, so CSS and page-side JS iterate on a browser
 refresh instead of `mvn compile exec:exec` plus a native window. `krema-shim.js`
 self-disables when a bridge is present, so no app code changes for this.
 `?scenario=slow|empty|error|noposters` reproduces the states that are otherwise
-unreproducible (skeletons, empty, error, missing artwork). Fixtures are keyed to
+unreproducible (skeletons, empty, error, missing artwork), and `?theme=<id>`
+starts the page with that skin stored. Fixtures are keyed to
 the real resolved-item shapes and survive the LLM engine slice. `node
 preview/check.js` (Zed task "check UI (headless)") is the same harness driven
-headless: 94 assertions over the card grid, the sidebar (form buttons, inert
+headless: 105 assertions over the card grid, the sidebar (form buttons, inert
 items, section labels, collapse/reflow), search, the Settings form (loads the
 stored config, refuses a save with no key, saves and keeps the key off the
-page) and every scenario, exit 1 on
+page), the theme picker (chips from the reply, live repaint of shell + cards +
+AI toggle, one save, reopening shows it pressed, `?theme=` startup and
+fallback) and every scenario, exit 1 on
 failure. Full guide: `docs/preview-harness.md`. Layout,
 styling and page JS go through the preview; shell, IPC and network code still
 need a real app run.

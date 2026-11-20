@@ -11,6 +11,8 @@
  *   invoke("poll<Form>Art", {})               → remaining posters, −1 when done
  *   invoke("loadLlmSettings", {})             → { status, baseUrl, model, …, hasApiKey }
  *   invoke("saveLlmSettings", { … })          → the stored values, never the key
+ *   invoke("loadTheme", {})                   → { status, theme, themes }
+ *   invoke("saveTheme", { theme })            → the stored id + the theme list
  *   on("<artEvent>", handler)                 → { payload: { id, dataUri }, timestamp }
  *
  * Because pacing stays pending→done like the real drains, the skeleton cards
@@ -23,6 +25,10 @@
  *   empty       a done reply with zero items (the empty state)
  *   error       an error reply (the red error state)
  *   noposters   done, artwork never arrives (every card shows its placeholder)
+ *
+ * ?theme=<id> starts the mock with that theme stored, so either skin can be
+ * inspected without clicking through Settings (unknown ids fall back to starry,
+ * exactly like ThemeConfig.read).
  */
 (function () {
     "use strict";
@@ -105,6 +111,23 @@
         saves: 0
     };
     var LLM_CONFIG_PATH = "~/.van-gogh/llm.conf";
+
+    // Theme: one stored id, and the same two-row registry ThemeConfig.KNOWN
+    // holds in Java — the page renders its chips from this reply, so the mock
+    // must not invent a third list either.
+    var THEMES = [
+        { id: "starry", label: "Starry Night" },
+        { id: "liquidneon", label: "Liquid Neon" }
+    ];
+    var theme = {
+        id: new URLSearchParams(location.search).get("theme") || "starry",
+        loads: 0,
+        saves: 0
+    };
+    if (!THEMES.some(function (t) { return t.id === theme.id; })) {
+        theme.id = "starry";
+    }
+    var THEME_CONFIG_PATH = "~/.van-gogh/theme.conf";
 
     // ---------------------------------------------------------------- artwork
 
@@ -400,6 +423,37 @@
         return llmReply();
     }
 
+    function themeReply(id) {
+        return {
+            status: "ok",
+            error: null,
+            theme: id || theme.id,
+            themes: THEMES
+        };
+    }
+
+    function loadTheme() {
+        theme.loads += 1;
+        return themeReply();
+    }
+
+    function saveTheme(args) {
+        var id = args && typeof args.theme === "string" ? args.theme.trim() : "";
+        if (!THEMES.some(function (t) { return t.id === id; })) {
+            theme.saves += 1;
+            return {
+                status: "error",
+                error: "theme: unknown theme: " + id,
+                theme: theme.id,
+                themes: THEMES
+            };
+        }
+        theme.id = id;
+        theme.saves += 1;
+        console.log("[preview] theme saved: " + id);
+        return themeReply(id);
+    }
+
     function saveLlm(args) {
         args = args || {};
         var typed = typeof args.apiKey === "string" ? args.apiKey.trim() : "";
@@ -458,6 +512,12 @@
             if (command === "saveLlmSettings") {
                 return Promise.resolve(saveLlm(args));
             }
+            if (command === "loadTheme") {
+                return Promise.resolve(loadTheme());
+            }
+            if (command === "saveTheme") {
+                return Promise.resolve(saveTheme(args));
+            }
 
             console.warn("[preview] unmocked command: " + command);
             return Promise.reject(new Error("preview: command not mocked: " + command));
@@ -495,7 +555,11 @@
                 detailPolls: detail.polls,
                 settingsLoads: llm.loads,
                 settingsSaves: llm.saves,
-                settingsHasKey: !!llm.apiKey
+                settingsHasKey: !!llm.apiKey,
+                theme: theme.id,
+                themeLoads: theme.loads,
+                themeSaves: theme.saves,
+                themeConfigPath: THEME_CONFIG_PATH
             };
         }
     };

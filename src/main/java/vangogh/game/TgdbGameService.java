@@ -61,6 +61,15 @@ public class TgdbGameService {
                         .flatMap(this::parseRows);
     }
 
+    /**
+     * The recommendation engine's resolver, sharing this service's client — so
+     * a controller (and its tests) can never end up with two TheGamesDB
+     * clients.
+     */
+    public GameResolver resolver() {
+        return new GameResolver(client);
+    }
+
     private Either<FetchError, String> requireSuccess(String api, ApiResponse res) {
         return res.isSuccess()
                 ? Either.right(res.body)
@@ -122,7 +131,12 @@ public class TgdbGameService {
         return parseRows(json).getOrElse(java.util.List.of());
     }
 
-    private Game toGame(JsonObject g, JsonObject boxartData) {
+    /**
+     * Row builder shared with {@link GameResolver}: a recommended card must be
+     * identical to a trending or search card. Static because it only reads the
+     * payload — no service state involved.
+     */
+    static Game toGame(JsonObject g, JsonObject boxartData) {
         int id = Option.of(g.get("id"))
                 .filter(j -> !j.isJsonNull())
                 .map(j -> j.getAsInt())
@@ -142,7 +156,7 @@ public class TgdbGameService {
         return new Game(id, title, release, rating, genre, overview, posterUrl);
     }
 
-    private static JsonObject extractBoxartData(JsonObject root) {
+    static JsonObject extractBoxartData(JsonObject root) {
         if (root == null || !root.has("include") || root.get("include").isJsonNull()) {
             return null;
         }

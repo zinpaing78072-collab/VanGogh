@@ -21,6 +21,7 @@ import {
 import { state } from "./state.js";
 import { render } from "./render.js";
 import { messageOf } from "./util.js";
+import { openThemeCard } from "./theme.js";
 
 // A preset only fills in the base URL: model ids rotate too often to pin one
 // per provider, and any OpenAI-compatible endpoint is allowed anyway.
@@ -44,6 +45,7 @@ export function openSettings() {
     setStatus("");
     render();
     void load();
+    void openThemeCard();
 }
 
 export function closeSettings() {
@@ -109,7 +111,9 @@ function setStatus(text, tone) {
 function paintProvider() {
     const value = settingsBaseUrl.value.trim().replace(/\/+$/, "");
     const active = Object.keys(PRESETS).find((key) => PRESETS[key] === value) || "custom";
-    settingsView.querySelectorAll(".provider-chip").forEach((chip) => {
+    // Only the endpoint chips: the Appearance card reuses the chip styling for
+    // its theme picker, and those chips have no data-provider to compare.
+    settingsView.querySelectorAll(".provider-chip[data-provider]").forEach((chip) => {
         chip.setAttribute("aria-pressed", String(chip.dataset.provider === active));
     });
 }
@@ -127,7 +131,7 @@ function numberIn(input, fallback, min, max) {
 }
 
 settingsView.addEventListener("click", (e) => {
-    const chip = e.target.closest(".provider-chip");
+    const chip = e.target.closest(".provider-chip[data-provider]");
     if (!chip) return;
     const preset = PRESETS[chip.dataset.provider];
     if (!preset) {

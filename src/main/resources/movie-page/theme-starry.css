@@ -1,0 +1,72 @@
+/* Van Gogh — Starry Night (theme id: starry)
+
+   The default theme. It adds what base.css deliberately leaves to a theme:
+   the starry backdrop, the frosted veil over it, the backdrop-filter fallback
+   (that block rewrites panel tokens, so it cannot live in base), and the search
+   bar's right-hand offsets. The role tokens themselves keep base's defaults —
+   this sheet is the proof that a theme does not need to re-declare a palette it
+   agrees with.
+
+   Loaded last by index.html so its declarations win without !important.
+ */
+
+/* The search bar's right side: AI toggle, then the Search button. Both are
+   absolutely positioned inside .search-bar, so their offsets belong to the
+   theme that sizes the button. */
+.search-input {
+    padding: 12px 148px 12px 18px;
+}
+
+.search-btn {
+    right: 10px;
+}
+
+.ai-toggle {
+    right: 104px;
+}
+
+/* Without backdrop-filter the glass cannot frost, so the panels become firmer
+   tints instead of turning transparent. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root {
+        --panel: rgba(16, 27, 45, 0.92);
+        --panel-inset: rgba(11, 19, 33, 0.9);
+    }
+}
+
+/* Starry Night backdrop — starry.png behind a lighter frosted veil */
+.sky {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background: url("starry.png") center/cover no-repeat var(--bg);
+}
+
+.veil {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(10px) saturate(1.25) brightness(1.04);
+    backdrop-filter: blur(10px) saturate(1.25) brightness(1.04);
+    background: linear-gradient(180deg,
+        rgba(127, 166, 201, 0.07),
+        rgba(127, 166, 201, 0.14));
+}
+
+.veil::before { /* ice grain */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='260'%20height='260'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.85'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 260px 260px;
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+}
+
+.veil::after { /* frost settling at the edges */
+    content: "";
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 130px 24px rgba(127, 166, 201, 0.20);
+}

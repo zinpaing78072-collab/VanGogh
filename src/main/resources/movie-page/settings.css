@@ -35,7 +35,7 @@
 .settings-subtitle {
     margin-top: 4px;
     font-size: 14px;
-    color: #bfd6ea;
+    color: var(--label-soft);
     text-shadow: 0 2px 14px rgba(4, 8, 18, 0.85);
 }
 
@@ -44,12 +44,17 @@
 .settings-card {
     /* Firmer than the card grid: this is a form, and the bright sky behind the
      * glass made the hints hard to read. Same treatment as the song-detail
-     * tiles (rgba(12, 21, 36, …)). */
-    background-color: rgba(12, 21, 36, 0.76);
+     * tiles (--panel-firm-*). */
+    background-color: var(--panel-firm-a76);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 22px 24px 20px;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 40px -28px rgba(4, 8, 18, 0.9);
+}
+
+/* Appearance + AI recommendations stacked */
+.settings-card + .settings-card {
+    margin-top: 18px;
 }
 
 .settings-card-head {
@@ -100,8 +105,8 @@
     font-size: 11.5px;
     padding: 1px 5px;
     border-radius: 4px;
-    background-color: rgba(127, 166, 201, 0.12);
-    color: var(--star-gold-lt);
+    background-color: var(--muted-a12);
+    color: var(--accent-hover);
 }
 
 .settings-input {
@@ -110,7 +115,7 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text);
-    caret-color: var(--star-gold-lt);
+    caret-color: var(--accent-hover);
     font-family: inherit;
     font-size: 14px;
     padding: 10px 12px;
@@ -123,7 +128,7 @@
 }
 
 .settings-input::placeholder {
-    color: rgba(127, 166, 201, 0.7);
+    color: var(--muted-a70);
 }
 
 .settings-input:hover {
@@ -133,11 +138,11 @@
 .settings-input:focus {
     outline: none;
     border-color: var(--accent);
-    background-color: rgba(16, 27, 45, 0.7);
+    background-color: var(--panel-firm-a70);
 }
 
 .settings-input:focus-visible {
-    outline: 2px solid var(--star-blue-lt);
+    outline: 2px solid var(--text-muted);
     outline-offset: 2px;
 }
 
@@ -170,8 +175,8 @@
 
 .settings-reveal:hover,
 .settings-reveal[aria-pressed="true"] {
-    color: var(--star-gold-lt);
-    border-color: rgba(244, 211, 94, 0.4);
+    color: var(--accent-hover);
+    border-color: var(--accent-hover-a40);
 }
 
 /* No stored key and nothing typed: there is nothing to reveal. */
@@ -207,10 +212,10 @@
 }
 
 .provider-chip[aria-pressed="true"] {
-    background-image: linear-gradient(180deg, var(--star-gold-lt) 0%, var(--star-gold) 100%);
+    background-image: linear-gradient(180deg, var(--accent-hover) 0%, var(--accent) 100%);
     border-color: transparent;
     color: var(--accent-ink);
-    box-shadow: 0 6px 16px -8px rgba(216, 169, 49, 0.6);
+    box-shadow: 0 6px 16px -8px var(--accent-a60);
 }
 
 /* Timeout + titles: two small numeric fields share a row */
@@ -249,7 +254,7 @@
     min-height: 18px;
     font-size: 12.5px;
     line-height: 1.45;
-    color: var(--star-gold-lt);
+    color: var(--accent-hover);
 }
 
 /* Save succeeded — say what was written, quietly. */
@@ -260,7 +265,7 @@
 /* Bad input or an unwritable file: the backend's message is the only text the
  * user gets, so it must not look like a success. */
 .settings-status.is-error {
-    color: #ef8f8f;
+    color: var(--danger);
 }
 
 .settings-actions {
@@ -299,11 +304,11 @@
 
 .settings-btn.primary {
     background-color: var(--accent);
-    background-image: linear-gradient(180deg, var(--star-gold-lt) 0%, var(--star-gold) 100%);
+    background-image: linear-gradient(180deg, var(--accent-hover) 0%, var(--accent) 100%);
     border-color: transparent;
     color: var(--accent-ink);
     font-weight: 700;
-    box-shadow: 0 6px 18px -8px rgba(216, 169, 49, 0.55);
+    box-shadow: 0 6px 18px -8px var(--accent-a55);
 }
 
 .settings-btn.primary:hover {
