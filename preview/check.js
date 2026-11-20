@@ -757,7 +757,7 @@ const TESTS = [
                 keyPlaceholder: document.getElementById("settingsApiKey").placeholder,
                 revealDisabled: document.getElementById("settingsReveal").disabled,
                 path: document.getElementById("settingsPath").textContent,
-                preset: [...document.querySelectorAll(".provider-chip")]
+                preset: [...document.querySelectorAll(".provider-chip[data-provider]")]
                     .filter(b => b.getAttribute("aria-pressed") === "true")
                     .map(b => b.dataset.provider).join(","),
                 status: document.getElementById("settingsStatus").textContent,
@@ -954,6 +954,148 @@ const TESTS = [
                 check("no stale cards from the superseded forms",
                     d.cards === 6 && !d.cardClass.match(/game-card|music-card/), d.cardClass)
             ].concat(artworkInvariants(d));
+        }
+    },
+    {
+        name: "theme: the picker applies, saves and survives reopening",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+            await page.evaluate(`document.getElementById("settingsNav").click(); true`);
+            await page.waitFor("window.__preview.stats().themeLoads > 0");
+
+            // Everything the Appearance card promises, read back from the page.
+            const view = async () => JSON.parse(await page.evaluate(`JSON.stringify({
+                open: !document.getElementById("settingsView").classList.contains("hidden"),
+                chips: [...document.querySelectorAll("#themeChips .theme-chip")]
+                    .map(c => ({ id: c.dataset.themeId, label: c.textContent.trim(),
+                                 pressed: c.getAttribute("aria-pressed") })),
+                theme: document.documentElement.dataset.theme,
+                skin: document.getElementById("themeSkin").getAttribute("href"),
+                status: document.getElementById("themeStatus").textContent,
+                statusError: document.getElementById("themeStatus").classList.contains("is-error"),
+                header: getComputedStyle(document.querySelector(".app-header")).backgroundColor,
+                cardBorder: getComputedStyle(document.querySelector("#movieGrid .movie-card")).borderColor,
+                toggleColor: getComputedStyle(document.getElementById("aiToggle")).color,
+                sky: getComputedStyle(document.querySelector(".sky")).backgroundImage,
+                overlap: (() => {
+                    const a = document.getElementById("aiToggle").getBoundingClientRect();
+                    const b = document.getElementById("searchBtn").getBoundingClientRect();
+                    return a.right > b.left + 1;   // 1px rounding guard
+                })()
+            })`));
+
+            const starry = await view();
+
+            await page.evaluate(`document.querySelector('#themeChips .theme-chip[data-theme-id="liquidneon"]').click(); true`);
+            await page.waitFor("window.__preview.stats().themeSaves === 1");
+            // Swapping the theme <link> is instant, but the browser fetches the
+            // new sheet asynchronously — read the painted colours only once it
+            // has landed, or every comparison sees the old skin.
+            const skinLoaded = await page.evaluate(`new Promise((resolve) => {
+                const hrefs = () => [...document.styleSheets].map((s) => String(s.href || ""));
+                const active = () => hrefs().some((h) => h.indexOf("theme-liquidneon.css") !== -1)
+                    && !hrefs().some((h) => h.indexOf("theme-starry.css") !== -1);
+                if (active()) return resolve(true);
+                const tick = setInterval(() => { if (active()) { clearInterval(tick); resolve(true); } }, 25);
+                setTimeout(() => { clearInterval(tick); resolve(false); }, 3000);
+            })`);
+            // The controls transition their colours (0.2s), and a transition only
+            // starts on the first style recalc — which is the read itself. Force
+            // that recalc, then let the fade finish before comparing skins.
+            await page.evaluate(`getComputedStyle(document.getElementById("aiToggle")).color`);
+            await page.evaluate(`new Promise((resolve) => setTimeout(resolve, 350))`);
+            const neon = await view();
+            const saved = await page.stats();
+
+            // Leaving and reopening must paint the stored choice as pressed.
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.evaluate(`document.getElementById("settingsNav").click(); true`);
+            const reopened = await view();
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+
+            return [
+                check("the Appearance card lists one chip per known theme",
+                    starry.open && starry.chips.length === 2
+                        && starry.chips[0].id === "starry"
+                        && starry.chips[1].id === "liquidneon"
+                        && starry.chips[0].label === "Starry Night"
+                        && starry.chips[1].label === "Liquid Neon",
+                    JSON.stringify(starry.chips)),
+                check("Starry Night is the default and is pressed",
+                    starry.theme === "starry" && starry.skin === "theme-starry.css"
+                        && starry.chips[0].pressed === "true"
+                        && starry.chips[1].pressed === "false",
+                    starry.theme + " / " + starry.skin),
+                check("picking Liquid Neon repaints the whole shell",
+                    skinLoaded && neon.theme === "liquidneon" && neon.skin === "theme-liquidneon.css"
+                        && neon.header !== starry.header
+                        && neon.cardBorder !== starry.cardBorder
+                        && neon.sky.indexOf("liquidneon.png") !== -1,
+                    [neon.theme, neon.skin, "loaded " + skinLoaded, neon.header,
+                        neon.cardBorder, neon.sky.slice(-46)].join(" / ")),
+                check("the AI toggle is styled by whichever theme is active",
+                    starry.toggleColor !== neon.toggleColor
+                        && neon.toggleColor === "rgb(0, 240, 255)",
+                    starry.toggleColor + " → " + neon.toggleColor),
+                check("the AI toggle never sits under the Search button",
+                    !starry.overlap && !neon.overlap,
+                    "starry overlap " + starry.overlap + " / neon overlap " + neon.overlap),
+                check("the pick is saved at once, exactly once",
+                    saved.themeSaves === 1 && saved.theme === "liquidneon"
+                        && !neon.statusError && /saved/i.test(neon.status),
+                    "saves " + saved.themeSaves + " / " + neon.status),
+                check("reopening shows the saved theme pressed",
+                    reopened.chips[1].pressed === "true"
+                        && reopened.chips[0].pressed === "false"
+                        && reopened.theme === "liquidneon",
+                    JSON.stringify(reopened.chips.map(c => c.pressed)))
+            ];
+        }
+    },
+    {
+        name: "theme: a stored theme is painted at launch",
+        path: "/movie-page/index.html?theme=liquidneon",
+        run: async (page) => {
+            await page.settle();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                theme: document.documentElement.dataset.theme,
+                skin: document.getElementById("themeSkin").getAttribute("href"),
+                sky: getComputedStyle(document.querySelector(".sky")).backgroundImage,
+                cardBorder: getComputedStyle(document.querySelector("#movieGrid .movie-card")).borderColor,
+                toggle: getComputedStyle(document.getElementById("aiToggle")).color,
+                aiToggleStyled: getComputedStyle(document.getElementById("aiToggle")).borderTopWidth
+            })`));
+
+            return [
+                check("the saved skin is the one loaded",
+                    d.theme === "liquidneon" && d.skin === "theme-liquidneon.css",
+                    d.theme + " / " + d.skin),
+                check("the backdrop is the Liquid Neon image",
+                    d.sky.indexOf("liquidneon.png") !== -1, d.sky),
+                check("the neon tokens reached the cards and the AI toggle",
+                    d.cardBorder === "rgba(0, 240, 255, 0.2)"
+                        && d.toggle === "rgb(0, 240, 255)"
+                        && d.aiToggleStyled === "1px",
+                    d.cardBorder + " / " + d.toggle + " / border " + d.aiToggleStyled)
+            ];
+        }
+    },
+    {
+        name: "theme: an unknown stored id falls back to Starry Night",
+        path: "/movie-page/index.html?theme=vaporwave",
+        run: async (page) => {
+            await page.settle();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                theme: document.documentElement.dataset.theme,
+                skin: document.getElementById("themeSkin").getAttribute("href")
+            })`));
+
+            return [
+                check("an unknown id reads as the default skin",
+                    d.theme === "starry" && d.skin === "theme-starry.css",
+                    d.theme + " / " + d.skin)
+            ];
         }
     }
 ];

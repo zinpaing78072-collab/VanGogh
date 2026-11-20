@@ -1,0 +1,528 @@
+/* Van Gogh — Liquid Neon (theme id: liquidneon)
+
+   The neon skin, formerly prototyped as cyberpunk.css. Same layout, classes and
+   ids as everything else — only the visual language changes: a rainy neon street
+   backdrop, magenta + cyan, mono display type, angular HUD corners. Flat fills
+   only: every surface is one solid colour (or a flat alpha tint), depth comes
+   from 1px neon edges and glows. No gradients anywhere.
+
+   Loaded last by index.html. Everything here either overrides a base declaration
+   or adds a decoration base never had; the null-outs (`box-shadow: none`,
+   `background-image: none`, …) exist because CSS has no per-property reset —
+   a theme that wants a base shadow gone must say so.
+
+   The `--neon-*` names below are private to this sheet. Shared sheets reference
+   role tokens only, so a theme may keep its own palette internally.
+ */
+:root {
+    /* Night City palette (private) */
+    --neon-pink:     #FF2E97;
+    --neon-pink-hot: #FF74C8;
+    --neon-cyan:     #00F0FF;
+
+    --night-0: #06030D;   /* page floor */
+    --night-2: #1A0F33;   /* raised glass */
+
+    /* Role tokens */
+    --bg: var(--night-0);
+    --panel: rgba(9, 5, 18, 0.86);
+    --panel-hover: rgba(28, 15, 51, 0.92);
+    --panel-inset: rgba(4, 2, 9, 0.88);
+    --panel-deep: #040109;
+    --accent: var(--neon-pink);
+    --accent-hover: var(--neon-pink-hot);
+    --accent-ink: #12001A;
+    --text: #F3EDFF;
+    --text-muted: #9A8ABF;
+    --text-soft: #CDC4E4;
+    --text-soft-strong: #E3DCF5;
+    --text-soft-dim: #A99BC8;
+    --label-soft: #CBBFE6;
+    --rating: var(--neon-cyan);
+    --border: rgba(0, 240, 255, 0.20);
+    --border-strong: rgba(0, 240, 255, 0.40);
+    --focus: var(--neon-cyan);
+    --danger: #FF7A9C;
+    --placeholder-from: var(--night-2);
+
+    /* Firm glass for the song tiles and the Settings card. */
+    --panel-firm-a45: rgba(10, 5, 20, 0.45);
+    --panel-firm-a55: rgba(10, 5, 20, 0.55);
+    --panel-firm-a66: rgba(10, 5, 20, 0.66);
+    --panel-firm-a70: rgba(10, 5, 20, 0.70);
+    --panel-firm-a76: rgba(10, 5, 20, 0.76);
+    --accent-a05: rgba(255, 46, 151, 0.05);
+    --accent-a26: rgba(255, 46, 151, 0.26);
+    --accent-hover-a22: rgba(255, 116, 200, 0.22);
+    --accent-hover-a32: rgba(255, 116, 200, 0.32);
+    --accent-hover-a42: rgba(255, 116, 200, 0.42);
+    --accent-hover-a55: rgba(255, 116, 200, 0.55);
+    --muted-a14: rgba(0, 240, 255, 0.14);
+    --muted-a22: rgba(0, 240, 255, 0.22);
+    --panel-firm-a88: rgba(10, 5, 20, 0.88);
+    --label: rgba(255, 46, 151, 0.68);
+    --placeholder: rgba(154, 138, 191, 0.85);
+    --inset-focus: #050109;
+    --scroll-track: #06030D;
+    --muted-a16: rgba(0, 240, 255, 0.16);
+
+    /* Accent tints for the song detail and Settings sheets. */
+    --accent-a08: rgba(255, 46, 151, 0.08);
+    --accent-a10: rgba(255, 46, 151, 0.10);
+    --accent-a12: rgba(255, 46, 151, 0.12);
+    --accent-a55: rgba(255, 46, 151, 0.55);
+    --accent-a60: rgba(255, 46, 151, 0.60);
+    --accent-a85: rgba(255, 46, 151, 0.85);
+    --accent-a90: rgba(255, 46, 151, 0.90);
+    --accent-hover-a28: rgba(255, 116, 200, 0.28);
+    --accent-hover-a30: rgba(255, 116, 200, 0.30);
+    --accent-hover-a35: rgba(255, 116, 200, 0.35);
+    --accent-hover-a40: rgba(255, 116, 200, 0.40);
+    --muted-a10: rgba(0, 240, 255, 0.10);
+    --muted-a12: rgba(0, 240, 255, 0.12);
+    --muted-a70: rgba(154, 138, 191, 0.70);
+
+    --blur-glass: blur(18px) saturate(1.5) brightness(0.82);
+    --radius: 4px;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+::selection {
+    background: var(--neon-pink);
+    color: #fff;
+}
+
+/* Search bar offsets: the neon button is narrower than Starry's and starts
+   closer to the edge, so the AI toggle and the input's right padding follow it.
+   (Base owns the bar; each theme places its own controls.) */
+.search-input {
+    padding: 12px 150px 12px 18px;
+}
+
+.search-btn {
+    right: 6px;
+}
+
+.ai-toggle {
+    right: 102px;
+}
+
+/* Sidebar — smoked-glass rail with a lit cyan seam on the right. */
+.sidebar {
+    background-color: rgba(10, 5, 20, 0.45);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4) brightness(0.74);
+    backdrop-filter: blur(22px) saturate(1.4) brightness(0.74);
+    border-right: 1px solid var(--border);
+    box-shadow: none;
+}
+
+.sidebar-head {
+    padding: 4px 4px 18px;
+    border-bottom: 1px solid rgba(255, 46, 151, 0.18);
+}
+
+.sidebar-nav {
+    padding: 14px 0 6px;
+}
+
+/* Labels read as console headings rather than prose. */
+.nav-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--label);
+    padding: 4px 12px 10px;
+}
+
+.nav-label-spaced {
+    margin-top: 18px;
+}
+
+.nav-item {
+    border: 1px solid transparent;
+    border-left: 2px solid transparent;
+}
+
+.nav-item svg {
+    opacity: 0.78;
+    transition: opacity 0.16s ease, filter 0.16s ease;
+}
+
+.nav-item:hover {
+    color: #fff;
+}
+
+.nav-item:hover svg {
+    opacity: 1;
+    color: var(--neon-cyan);
+}
+
+.nav-item.active {
+    background-color: #2C0E26;
+    background-image: none;
+    border-color: #5A1C46;
+    border-left-color: var(--neon-pink);
+    color: #fff;
+}
+
+.nav-item.active svg {
+    color: var(--neon-pink);
+}
+
+.sidebar.collapsed .nav-item {
+    border-left-width: 0;
+    border-bottom: 2px solid transparent;
+}
+
+.sidebar.collapsed .nav-item.active {
+    border-bottom-color: var(--neon-pink);
+}
+
+/* Icon buttons — cyan glyphs, pink on hover. */
+.icon-btn {
+    color: var(--neon-cyan);
+    transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.icon-btn:hover {
+    border-color: var(--neon-pink);
+    color: var(--neon-pink);
+    background-color: #2C0E26;
+    box-shadow: none;
+}
+
+.quick-actions .icon-btn.round {
+    box-shadow: none;
+}
+
+/* Header — near-black glass with a lit neon hairline. */
+.app-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+}
+
+.brand {
+    font-family: var(--mono);
+    font-size: 16px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+.brand-mark {
+    color: var(--neon-cyan);
+    text-shadow: none;
+    margin-right: 0.45em;
+    animation: markPulse 3.4s ease-in-out infinite;
+}
+
+@keyframes markPulse {
+    0%, 88%, 100% { opacity: 1; }
+    90%           { opacity: 0.35; }
+    92%           { opacity: 1; }
+    94%           { opacity: 0.6; }
+}
+
+.search-input {
+    caret-color: var(--neon-pink);
+    font-family: inherit;
+}
+
+.search-input::placeholder {
+    color: var(--placeholder);
+}
+
+.search-input:focus {
+    border-color: var(--neon-cyan);
+    background-color: var(--inset-focus);
+}
+
+.search-btn {
+    background-image: none;
+    border-radius: 3px;
+    /* cut corner — a flat shape detail, no gradient */
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+    padding: 9px 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    box-shadow: none;
+    transition: background-color 0.2s ease;
+}
+
+.search-btn:hover {
+    background-color: var(--accent-hover);
+    filter: none;
+}
+
+/* AI toggle — the neon read of the same control: a quiet cyan outline when off,
+   a flat magenta chip when on. No gradient, like every other neon surface. */
+.ai-toggle {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--neon-cyan);
+    border-radius: 3px;
+}
+
+.ai-toggle:hover {
+    color: #fff;
+    border-color: var(--neon-cyan);
+}
+
+.ai-toggle[aria-pressed="true"] {
+    background-color: var(--accent);
+    background-image: none;
+    border-color: transparent;
+    color: var(--accent-ink);
+    box-shadow: none;
+}
+
+.ai-toggle[aria-pressed="true"]:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Section title — console heading with a lit marker. */
+.section-title {
+    position: relative;
+    font-size: 19px;
+    margin-bottom: 18px;
+    padding-left: 16px;
+    color: #fff;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-shadow: none;
+}
+
+.section-title::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.28em;
+    bottom: 0.28em;
+    width: 3px;
+    background-color: var(--neon-pink);
+}
+
+/* Movie card — translucent slab with HUD brackets that ignite on hover.
+   The glass is alpha only (no per-card backdrop blur): a blur pass on every
+   card in the grid is the dominant scroll cost, same note as base.css. */
+.movie-card {
+    position: relative;
+    background-color: rgba(18, 9, 36, 0.58);
+    transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    box-shadow: none;
+}
+
+.movie-card::before,
+.movie-card::after {   /* corner brackets, top-left + bottom-right */
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--neon-cyan);
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 3;
+    transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.movie-card::before {
+    top: 6px;
+    left: 6px;
+    border-right: 0;
+    border-bottom: 0;
+}
+
+.movie-card::after {
+    right: 6px;
+    bottom: 6px;
+    border-left: 0;
+    border-top: 0;
+}
+
+.movie-card:hover {
+    background-color: rgba(32, 14, 60, 0.78);
+    border-color: var(--neon-pink);
+    box-shadow: none;
+}
+
+.movie-card:hover::before,
+.movie-card:hover::after {
+    opacity: 1;
+    border-color: var(--neon-pink);
+}
+
+.card-poster {
+    box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.10);
+}
+
+.card-cover {
+    box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.10);
+}
+
+.card-poster img {
+    filter: saturate(0.94) contrast(1.06) brightness(0.94);
+}
+
+.card-cover img {
+    filter: saturate(0.94) contrast(1.06) brightness(0.94);
+}
+
+.movie-card:hover .card-poster img,
+.movie-card:hover .card-cover img {
+    filter: saturate(1.25) contrast(1.12) brightness(1.02);
+}
+
+.poster-placeholder {
+    background: none;
+    background-color: var(--night-2);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.12);
+}
+
+.poster-placeholder svg {
+    opacity: 0.4;
+    color: var(--neon-cyan);
+}
+
+.card-info {
+    border-top: 1px solid var(--muted-a14);
+    /* no fill of its own: the card's glass runs all the way down, so the
+       blurred city shows through the lower half of the card */
+}
+
+.card-meta {
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+    gap: 10px;
+}
+
+/* Each meta token stays whole: a label never breaks mid-word. */
+.card-meta-item {
+    white-space: nowrap;
+}
+
+.movie-card:hover .card-title {
+    color: var(--neon-cyan);
+}
+
+.movie-card:hover .card-subtitle {
+    color: var(--neon-pink-hot);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar-track {
+    background: var(--scroll-track);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 240, 255, 0.35);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 46, 151, 0.6);
+}
+
+/* Keyboard focus */
+button:focus-visible, .search-input:focus-visible, .nav-item:focus-visible {
+    outline: 2px solid var(--neon-cyan);
+}
+
+/* Liquid Neon backdrop — the neon street behind a flat darkening veil. */
+.sky {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background: url("liquidneon.png") center/cover no-repeat var(--bg);
+}
+
+.veil {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: rgba(6, 3, 13, 0.52);
+    /* Blurs the city so it turns into soft neon bokeh behind the bars and
+       cards, the way base's Starry default gets its haze from its own sheet. */
+    -webkit-backdrop-filter: blur(10px) saturate(1.25) brightness(0.92);
+    backdrop-filter: blur(10px) saturate(1.25) brightness(0.92);
+}
+
+.veil::before { /* cool cast over the rain */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(10, 0, 30, 0.18);
+}
+
+.veil::after { /* neon bleed settling at the edges */
+    content: "";
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 130px 24px rgba(255, 46, 151, 0.16);
+}
+
+/* Skeletons — flat pulse instead of the base sweep. */
+.skeleton-poster,
+.skeleton-line {
+    background: none;
+    background-color: var(--panel-deep);
+    animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+    0%, 100% { background-color: #05020C; }
+    50%      { background-color: #170E2B; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .brand-mark { animation: none; }
+}
+
+/* Form chips — the theme picker and the AI provider presets. Base draws them
+   with the gold gradient; neon is flat like every other surface. */
+.provider-chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 3px;
+}
+
+.provider-chip[aria-pressed="true"] {
+    background-image: none;
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    box-shadow: none;
+}
+
+.provider-chip[aria-pressed="true"]:hover {
+    background-color: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--accent-ink);
+}
+
+/* Responsive — neon's denser grid. Starry keeps its own single breakpoint; the
+   two skins deliberately do not share these. */
+@media (max-width: 1180px) {
+    .card-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
