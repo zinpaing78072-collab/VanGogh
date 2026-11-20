@@ -1,6 +1,6 @@
 # Game detail prototypes (HTML)
 
-Three static browser mock-ups of the page a Game card opens, following the
+Four static browser mock-ups of the page a Game card opens, following the
 app's current Stargazer / Starry Night design (frosted midnight glass, gold
 accents, starry backdrop, collapsible sidebar). Nothing here is wired to the
 app: no `window.krema`, no IPC, no backend. The pages exist to compare layout
@@ -12,6 +12,8 @@ directions before the real game detail-view slice starts.
 | `v1-spotlight.html` | **01 Spotlight** — boxart, ESRB plate, overview, six-shot gallery | *Elden Ring* (TheGamesDB 65101) |
 | `v2-immersive.html` | **02 Immersive** — fanart hero, stat band, sticky rail, field report | *Cyberpunk 2077* (TheGamesDB 14517) |
 | `v3-dossier.html` | **03 Dossier** — file header, ESRB stamp, numbered memos, specs, contact sheet | *Alan Wake II* (TheGamesDB 114899) |
+| `v4-showcase.html` | **04 Showcase** — boxart pinned left, record at right, numbers, gallery, related + recommended rails, provenance sheet | *Yakuza 0* (TheGamesDB 60527) |
+
 
 Shared: `game-detail.css` (tokens copied from
 `src/main/resources/movie-page/style.css`), `icons.js` (Lucide icons inlined
@@ -19,6 +21,28 @@ for offline use), `prototype.js` (sidebar collapse, screenshot lightbox,
 read-more and save-button state), `assets/starry.png` (app backdrop),
 `assets/boxart/*.jpg` (TheGamesDB front boxart) and `assets/art/*` (TheGamesDB
 fanart and screenshots).
+
+### The showcase layout (v4)
+
+`v4-showcase.html` is the store-style direction: the boxart sits in a sticky
+left column with the quick facts and the save/favorite/share actions, and the
+whole record runs down the right — title, publisher, lede, meta row, genre
+chips, the split overview, "by the numbers", themes, platforms and an
+at-a-glance sheet. Below the two columns: the still gallery (lightbox), four
+related records, three recommended games with a "Why" line each, and a
+provenance panel that says exactly what the record does and does not carry.
+
+The page keeps its own inventions visible instead of passing them off as data:
+
+- the overview is one continuous TheGamesDB block; the four section headings
+  (`Tokyo, 1988`, `Two protagonists`, `Three fighting styles`, `The city is the
+  playground`) split it for readability, and the page says so under the text;
+- the four numbers (2 protagonists, 3 fighting styles, 2 cities, 100 stories)
+  are quoted from that overview, not from numeric API fields;
+- the theme chips are drawn from the overview wording — TheGamesDB carries
+  genre ids, not themes — and the panel notes it;
+- the "Why" line on each recommended card names the shared source tags; the
+  real engine writes its own reasons.
 
 ## Run
 
@@ -48,6 +72,14 @@ app's `wsrv.nl` poster proxy on this machine), and genre names come from
 `/v1/Genres`. The eight records used across the gallery are:
 Elden Ring, Cyberpunk 2077, Alan Wake II, Yakuza 0, Subnautica,
 Forza Horizon 6, 007 First Light, God of War Ragnarök.
+
+*Yakuza 0* (the showcase sample) was fetched on its own: `Games/ByGameID`
+returned publisher `Sega` (id 15), genres Action · Adventure (ids 1, 2),
+platform PC (id 1), release `2018-08-01`, the string rating `Not Rated` and a
+1265-character overview; `Games/Images` listed ten screenshots (ids 202525,
+244119–244127) and one front boxart (id 253598). Eight of the ten stills are
+downloaded into `assets/art/shot-60527-1.jpg` … `shot-60527-8.jpg`; the gallery
+says so.
 
 Every field on the pages maps to the app's `Game` record
 (`src/main/java/vangogh/game/Game.java`):
