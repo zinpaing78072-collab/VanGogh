@@ -213,6 +213,13 @@ before starting the next. Never expand scope mid-slice.
 - VS Code's Run/Debug Java tasks work as-is: `vangogh.app.VanGoghApp` is a plain
   launcher that builds the Krema window and runs the system-webview event loop.
   Add `-XstartOnFirstThread` and `--enable-native-access=ALL-UNNAMED` to the launch task's `vmArgs`.
+- **`java.lang.Error: Unresolved compilation problems` at startup is stale IDE
+  output, not a source error.** The VS Code Java extension compiles into
+  `target/classes`; a stale language-server model writes JDT error stubs there,
+  and Maven's timestamp check then skips recompiling them. Fix: `mvn clean
+  compile` (the `clean` matters) and, if it recurs, Cmd+Shift+P → "Java: Clean
+  Java Language Server Workspace". Story: vault "Debug Record — IDE wrote an
+  error stub into target/classes".
 - The workspace config routes Code Runner's Java Run Code action through
   `mvn compile exec:exec`; do not run `javac VanGoghApp.java` directly, since
   that omits the other project classes and Maven dependencies.
