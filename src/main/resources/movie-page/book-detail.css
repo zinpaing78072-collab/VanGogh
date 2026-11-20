@@ -433,6 +433,12 @@
 .book-sim-card {
     display: flex;
     flex-direction: column;
+    /* WebKit's UA sheet gives <button> `align-items: flex-start`; without this
+       the column items keep their intrinsic width, so the poster's
+       aspect-ratio box (absolutely positioned image only) collapses to 2×3px
+       and the rail renders coverless on macOS (Chromium's UA differs, so the
+       rail looked fine on Windows). */
+    align-items: stretch;
     gap: 7px;
     min-width: 0;
     padding: 0;

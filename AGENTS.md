@@ -145,6 +145,13 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   grid regains the rail's room on the same boundary — change one, change both.
   `.card-meta-item` is `nowrap` (tokens stay whole) except in book cards, whose
   meta is the prose phrase `Author · N pages`.
+- **A flex-column card that is a `<button>` needs `align-items: stretch`.** WebKit's
+  UA stylesheet sets `align-items: flex-start` on buttons, so the column's items keep
+  their intrinsic width; a poster whose `aspect-ratio` box holds only an absolutely
+  positioned `<img>` then collapses to 2×3px and the rail renders bare on macOS
+  (Chromium's UA differs, so Windows looked fine). Both similar rails
+  (`.movie-sim-card`, `.book-sim-card`) carry the fix and `preview/check.js` asserts
+  the 2:3 shape — do the same for a new detail rail.
 
 Rules that keep the graph acyclic: builders take the row as a parameter
 (`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click
