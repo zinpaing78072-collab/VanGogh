@@ -25,6 +25,7 @@ import java.util.List;
 public class TgdbClient {
     private static final String BASE = "https://api.thegamesdb.net/v1/";
     private static final String IMAGE_BASE = "https://cdn.thegamesdb.net/images/original/";
+    private static final String CDN_ROOT = "https://cdn.thegamesdb.net/images/";
     static final String IMAGE_PROXY = "https://wsrv.nl/?url=";
     private static final Duration POSTER_TIMEOUT = Duration.ofSeconds(5);
     private static final Path PROXY_MARKER = Path.of(System.getProperty("user.home"), ".van-gogh", "poster-proxy.conf");
@@ -58,6 +59,31 @@ public class TgdbClient {
         return send(url);
     }
 
+    /** One record with every field the detail page reads (the ids, not the names). */
+    public Try<ApiResponse> gameById(int id) {
+        String url = BASE + "Games/ByGameID?apikey=" + apiKey
+                + "&id=" + id
+                + "&fields=players,publishers,genres,overview,rating,platform,developers,youtube"
+                + "&include=boxart,platform&page=1";
+        return send(url);
+    }
+
+    /** Fanart, screenshots and boxart for one record, with the CDN base urls. */
+    public Try<ApiResponse> gameImages(int id) {
+        String url = BASE + "Games/Images?apikey=" + apiKey + "&games_id=" + id + "&page=1";
+        return send(url);
+    }
+
+    /** The publisher-name dictionary; ids alone arrive on the game payload. */
+    public Try<ApiResponse> publishers() {
+        return send(BASE + "Publishers?apikey=" + apiKey);
+    }
+
+    /** The developer-name dictionary; ids alone arrive on the game payload. */
+    public Try<ApiResponse> developers() {
+        return send(BASE + "Developers?apikey=" + apiKey);
+    }
+
     private Try<ApiResponse> send(String url) {
         return Try.of(() -> {
                     HttpRequest request = HttpRequest.newBuilder()
@@ -76,19 +102,38 @@ public class TgdbClient {
         return IMAGE_BASE + game_id;
     }
 
+    /** The CDN's medium rendition of an original URL (smaller data URIs for the rail). */
+    public static String mediumVariant(String imageUrl) {
+        if (imageUrl == null || !imageUrl.startsWith(IMAGE_BASE)) {
+            return imageUrl;
+        }
+        return imageUrl.replace("/images/original/", "/images/medium/");
+    }
+
     static List<String> posterSources(String posterUrl, boolean proxyFirst) {
-        List<String> sources = new ArrayList<>();
         if (posterUrl == null || !posterUrl.startsWith(IMAGE_BASE + "boxart/front/")) {
+            return new ArrayList<>();
+        }
+        return imageSources(posterUrl, proxyFirst);
+    }
+
+    /**
+     * Detail artwork (boxart, fanart, screenshots) — any image under the CDN,
+     * not just the front boxart the grid uses. Same proxy-first failover and
+     * the same preference marker as the grid.
+     */
+    static List<String> imageSources(String imageUrl, boolean proxyFirst) {
+        List<String> sources = new ArrayList<>();
+        if (imageUrl == null || !imageUrl.startsWith(CDN_ROOT)) {
             return sources;
         }
-        String directUrl = posterUrl;
-        String encoded = URLEncoder.encode(directUrl, StandardCharsets.UTF_8);
+        String encoded = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8);
         String proxyUrl = IMAGE_PROXY + encoded;
         if (proxyFirst) {
             sources.add(proxyUrl);
-            sources.add(directUrl);
+            sources.add(imageUrl);
         } else {
-            sources.add(directUrl);
+            sources.add(imageUrl);
             sources.add(proxyUrl);
         }
         return sources;
@@ -118,6 +163,16 @@ public class TgdbClient {
      */
     public Option<String> loadPosterDataUri(String posterUrl) {
         return PosterFailover.firstSuccess(posterSources(posterUrl, preferProxy), this::fetchAsUri)
+                .peek(pair -> rememberPosterSource(pair._1().startsWith(IMAGE_PROXY)))
+                .map(Tuple2::_2);
+    }
+
+    /**
+     * Detail artwork (boxart, fanart, screenshots) — the same failover and the
+     * same preference marker as the grid, but for any image under the CDN.
+     */
+    public Option<String> loadDetailImageDataUri(String imageUrl) {
+        return PosterFailover.firstSuccess(imageSources(imageUrl, preferProxy), this::fetchAsUri)
                 .peek(pair -> rememberPosterSource(pair._1().startsWith(IMAGE_PROXY)))
                 .map(Tuple2::_2);
     }

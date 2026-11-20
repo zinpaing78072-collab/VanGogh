@@ -1,0 +1,955 @@
+/* Game detail (the screen behind a game card click).
+ *
+ * Same glass vocabulary as the movie/book/song detail screens: the tiles reuse
+ * --panel, --border and the gold accent; the sidebar/header are the app shell
+ * and are untouched here. Layout follows
+ * prototypes/game-detail/v2-immersive.html: a fanart hero holding the boxart,
+ * title, lede and actions; a four-cell stat band; a sticky record rail beside
+ * an editorial article; and the related-games rail below. The responsive
+ * ladder un-sticks the rail and folds the band, the stills and the rail to a
+ * single column.
+ *
+ * Role tokens only — a theme decorates this page, it never has to know it.
+ */
+
+/* ------------------------------------------------------------ detail shell */
+
+/* The entrance animation fills backwards only. A filled `to` state would leave
+ * an identity transform on the view, and any transform makes the view the
+ * containing block for the fixed lightbox below — which would then scroll with
+ * the page instead of covering the viewport. */
+
+.game-view {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 20px 28px 32px;
+    animation: gameIn 0.35s cubic-bezier(0.2, 0.7, 0.25, 1) backwards;
+}
+
+@keyframes gameIn {
+    from { opacity: 0; transform: translateY(10px); }
+}
+
+.game-back-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.game-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel-inset);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.game-back:hover {
+    border-color: var(--accent-hover);
+    background-color: var(--panel-hover);
+}
+
+.game-source-note {
+    font-size: 11.5px;
+    color: var(--text-soft);
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 12px rgba(4, 8, 18, 0.95), 0 1px 3px rgba(4, 8, 18, 0.9);
+}
+
+/* ------------------------------------------------------------------- hero
+ * The fanart sits behind everything (z-index -2) under two gradients (-1);
+ * `isolation` keeps those negative layers inside the rounded frame.
+ */
+
+.game-hero {
+    position: relative;
+    min-height: 470px;
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    align-items: end;
+    gap: 36px;
+    padding: 42px;
+    border-radius: 16px;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid var(--border-strong);
+    background:
+        radial-gradient(90% 120% at 18% 20%, rgba(127, 166, 201, 0.16) 0%, transparent 60%),
+        linear-gradient(140deg, var(--placeholder-from) 0%, var(--panel-deep) 58%, var(--bg) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 40px 80px -50px rgba(0, 0, 0, 0.95);
+}
+
+.game-hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(1.12) brightness(0.72);
+}
+
+.game-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+        linear-gradient(90deg, rgba(6, 11, 21, 0.94) 0%, rgba(6, 11, 21, 0.56) 48%, rgba(6, 11, 21, 0.22) 100%),
+        linear-gradient(0deg, rgba(6, 11, 21, 0.98) 0%, rgba(6, 11, 21, 0.12) 64%);
+}
+
+.game-hero-cover {
+    position: relative;
+    align-self: center;
+    aspect-ratio: 2 / 3;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: linear-gradient(135deg, var(--placeholder-from) 0%, var(--bg) 100%);
+    box-shadow: 0 34px 60px -26px rgba(0, 0, 0, 0.95), 0 0 50px -18px var(--accent);
+}
+
+.game-cover-img,
+.game-hero-cover .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.game-cover-img {
+    object-fit: cover;
+    display: block;
+}
+
+.game-cover-placeholder svg {
+    width: 54px;
+    height: 54px;
+}
+
+.game-hero-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    max-width: 780px;
+    padding-bottom: 4px;
+}
+
+.game-kicker {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.game-hero-title {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.game-eyebrow {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-hover);
+}
+
+.game-title {
+    font-size: clamp(38px, 4.6vw, 66px);
+    line-height: 1.02;
+    letter-spacing: -1.6px;
+    font-weight: 800;
+    color: var(--text);
+    text-shadow: 0 4px 34px rgba(4, 8, 18, 0.85);
+    overflow-wrap: anywhere;
+}
+
+.game-lede {
+    max-width: 60ch;
+    font-size: 15.5px;
+    line-height: 1.65;
+    color: var(--text-soft-strong);
+    text-wrap: pretty;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-shadow: 0 1px 16px rgba(4, 8, 18, 0.9);
+}
+
+.game-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 4px;
+    font-size: 12.5px;
+    color: var(--text-soft-dim);
+}
+
+/* The separator leads the item that wraps, so a dot never ends a line alone. */
+.game-meta-row > span + span::before {
+    content: "\00b7";
+    margin: 0 6px 0 2px;
+    color: var(--text-muted);
+}
+
+.game-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.game-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--panel-firm-a45);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text-soft-strong);
+}
+
+.game-chip.quiet {
+    color: var(--accent-hover);
+    border-color: var(--accent-a55);
+    background: var(--accent-a10);
+}
+
+.game-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 4px;
+}
+
+.game-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border-strong);
+    background: var(--panel-inset);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.game-action:hover {
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
+    background: var(--accent-a12);
+}
+
+.game-action:active { transform: translateY(1px); }
+
+.game-action.active {
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
+    background: var(--accent-a26);
+}
+
+.game-action-primary {
+    border-color: transparent;
+    background-image: linear-gradient(180deg, var(--accent-hover) 0%, var(--accent) 100%);
+    color: var(--accent-ink);
+    box-shadow: 0 12px 26px -14px var(--accent-a90);
+}
+
+.game-action-primary:hover {
+    border-color: transparent;
+    color: var(--accent-ink);
+    background: linear-gradient(180deg, var(--accent-hover) 0%, var(--accent) 100%);
+    filter: brightness(1.06);
+}
+
+/* -------------------------------------------------------------- stat band */
+
+.game-stat-band {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 18px 0 34px;
+}
+
+.game-stat {
+    padding: 15px 18px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    min-width: 0;
+}
+
+.game-stat dt {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--label);
+    margin-bottom: 6px;
+}
+
+.game-stat dd {
+    font-size: 25px;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.6px;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.game-stat dd small {
+    display: block;
+    margin-top: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--text-muted);
+}
+
+/* -------------------------------------------------------------- rail + body */
+
+.game-body {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 42px;
+    align-items: start;
+}
+
+.game-rail {
+    position: sticky;
+    top: 92px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.game-panel {
+    padding: 16px 18px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.game-panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.game-panel-head h2 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.game-panel-sub {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.game-facts {
+    display: flex;
+    flex-direction: column;
+    padding-top: 4px;
+}
+
+.game-facts > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    min-width: 0;
+}
+
+.game-facts > div:last-child { border-bottom: none; }
+
+.game-facts dt {
+    flex: 0 0 auto;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.game-facts dd {
+    font-size: 12.5px;
+    text-align: right;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.game-facts dd.muted { color: var(--text-soft-dim); }
+
+.game-facts dd.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.04em;
+}
+
+.game-rail-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.game-rail-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--panel-inset);
+    color: var(--text-soft-strong);
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.18s ease, color 0.18s ease, background-color 0.18s ease;
+}
+
+.game-rail-link span[aria-hidden] { color: var(--accent); }
+
+.game-rail-link:hover {
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
+    background: var(--accent-a12);
+}
+
+.game-rail-note {
+    font-size: 11px;
+    line-height: 1.65;
+    color: var(--text-soft-dim);
+    padding: 0 4px;
+    text-wrap: pretty;
+}
+
+/* ----------------------------------------------------------------- article */
+
+.game-article {
+    display: flex;
+    flex-direction: column;
+    gap: 38px;
+    min-width: 0;
+}
+
+.game-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    scroll-margin-top: 84px;
+}
+
+.game-section-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px 20px;
+    flex-wrap: wrap;
+}
+
+.game-section-head .game-kicker { margin-bottom: 6px; }
+
+.game-section-title {
+    font-size: clamp(21px, 2vw, 26px);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    text-wrap: balance;
+}
+
+.game-count {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    white-space: nowrap;
+    padding-bottom: 3px;
+}
+
+.game-opening {
+    padding: 24px 28px;
+    border-left: 2px solid var(--accent);
+    border-radius: 0 14px 14px 0;
+    background: linear-gradient(90deg, var(--accent-a12), transparent 82%);
+}
+
+.game-opening p {
+    font-size: clamp(18px, 1.7vw, 24px);
+    line-height: 1.42;
+    font-weight: 500;
+    color: var(--text-soft-strong);
+    text-wrap: pretty;
+}
+
+.game-prose {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 74ch;
+}
+
+.game-prose p {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text-soft);
+    text-wrap: pretty;
+}
+
+.game-prose p.muted { color: var(--text-soft-dim); }
+
+/* ---------------------------------------------------------------- stills */
+
+.game-stills {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.game-stills.single { grid-template-columns: minmax(0, 1fr); }
+
+.game-still {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin: 0;
+    min-width: 0;
+}
+
+.game-still-open {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    padding: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--placeholder-from) 0%, var(--bg) 100%);
+    cursor: zoom-in;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.game-still-open:hover {
+    border-color: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+.game-still-img,
+.game-still-open .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.game-still-img {
+    object-fit: cover;
+    display: block;
+}
+
+.game-still-placeholder svg {
+    width: 34px;
+    height: 34px;
+}
+
+.game-still figcaption {
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    padding-left: 2px;
+}
+
+/* ------------------------------------------------------------- platforms */
+
+.game-platform-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.game-platform-tile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--panel-inset);
+    min-width: 0;
+}
+
+.game-platform-mark {
+    font-size: 20px;
+    color: var(--accent);
+    line-height: 1;
+}
+
+.game-platform-tile span:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.game-platform-tile b {
+    font-size: 13.5px;
+    color: var(--text);
+}
+
+.game-platform-tile span span {
+    font-size: 10.5px;
+    color: var(--text-muted);
+}
+
+.game-spec-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 36px;
+    margin-top: 4px;
+}
+
+.game-spec-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    min-width: 0;
+}
+
+.game-spec-row dt {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.game-spec-row dd {
+    font-size: 13px;
+    text-align: right;
+    color: var(--text-soft-strong);
+    overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------ source note */
+
+.game-source-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px 18px;
+    border-radius: 12px;
+    border: 1px dashed var(--border-strong);
+    background: var(--panel-inset);
+    font-size: 12px;
+    line-height: 1.65;
+    color: var(--text-soft-dim);
+    text-wrap: pretty;
+}
+
+.game-source-mark {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    font-style: italic;
+}
+
+/* ---------------------------------------------------------------- related */
+
+.game-related {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+}
+
+.game-related-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
+    gap: 16px;
+}
+
+.game-rel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.game-rel-poster {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--placeholder-from) 0%, var(--bg) 100%);
+    box-shadow: 0 18px 40px -30px rgba(4, 8, 18, 0.95);
+}
+
+.game-rel-img,
+.game-rel-poster .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.game-rel-img {
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+}
+
+.game-rel-card:hover .game-rel-img { transform: scale(1.04); }
+
+.game-rel-card:hover .game-rel-title { color: var(--accent-hover); }
+
+.game-rel-placeholder svg {
+    width: 30px;
+    height: 30px;
+}
+
+.game-rel-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.18s ease;
+}
+
+.game-rel-meta {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* --------------------------------------------------------------- lightbox */
+
+.game-lightbox {
+    position: fixed;
+    inset: 0;
+    /* Above the shell (sidebar 110, header 100): a modal must cover both. */
+    z-index: 300;
+    display: grid;
+    place-items: center;
+    padding: 34px;
+    background: rgba(4, 8, 18, 0.88);
+    backdrop-filter: blur(10px);
+}
+
+.game-lightbox figure {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    max-width: min(1180px, 100%);
+}
+
+.game-lightbox-img {
+    display: block;
+    max-width: 100%;
+    max-height: 78vh;
+    border-radius: 12px;
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 40px 90px -40px #000;
+}
+
+.game-lightbox-caption {
+    font-size: 11.5px;
+    color: var(--text-soft-dim);
+    text-align: center;
+}
+
+.game-lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 22px;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--panel-inset);
+    color: var(--text);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.game-lightbox-close:hover {
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
+}
+
+/* ------------------------------------------------------- loading / error */
+
+.game-loading-lines,
+.game-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 6px;
+}
+
+.game-skeleton .skeleton-line { height: 12px; }
+
+.game-hero.loading .game-hero-cover { max-width: 230px; }
+
+.game-error {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    max-width: 640px;
+    padding: 26px;
+    border-radius: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+}
+
+.game-error p {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-soft);
+}
+
+/* ------------------------------------------------------------- responsive */
+
+/* The default window with the sidebar open lands here: the stat band folds to
+ * 2×2 and the rail keeps its column but the hero tightens. */
+@media (max-width: 1240px) {
+    .game-hero {
+        grid-template-columns: 200px minmax(0, 1fr);
+        gap: 28px;
+        padding: 32px;
+        min-height: 420px;
+    }
+
+    .game-stat-band { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* No room for a sticky rail: it becomes a full-width record card above the
+ * article, exactly in the order it is read. */
+@media (max-width: 1100px) {
+    .game-body {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 26px;
+    }
+
+    .game-rail {
+        position: static;
+        top: auto;
+    }
+
+    .game-facts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 24px;
+    }
+
+    .game-rail-actions { flex-direction: row; flex-wrap: wrap; }
+}
+
+@media (max-width: 900px) {
+    .game-view { padding: 16px 16px 26px; }
+
+    .game-hero {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+        padding: 26px;
+        min-height: 0;
+        gap: 22px;
+    }
+
+    .game-hero-cover {
+        width: 168px;
+        align-self: start;
+    }
+
+    .game-title { letter-spacing: -1px; }
+    .game-stills { gap: 10px; }
+}
+
+@media (max-width: 700px) {
+    .game-stat-band { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .game-stills { grid-template-columns: minmax(0, 1fr); }
+    .game-spec-grid { grid-template-columns: minmax(0, 1fr); }
+    .game-facts { grid-template-columns: minmax(0, 1fr); }
+    .game-related-row { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
+    .game-opening { padding: 18px 20px; }
+    .game-lightbox { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .game-view { animation: none; }
+    .game-action,
+    .game-still-open,
+    .game-rel-img,
+    .game-rel-title { transition: none; }
+    .game-still-open:hover { transform: none; }
+    .game-rel-card:hover .game-rel-img { transform: none; }
+}

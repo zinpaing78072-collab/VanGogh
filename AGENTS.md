@@ -41,7 +41,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
   - `vangogh.llm` (`LlmConfig`, `LlmClient`, `PromptFactory`, `Pick`, `TitleParser`, `Normalize`), `vangogh.recommend` (`PickResolver`, `RecommendationService`), `MovieResolver`, `SongResolver`, `BookResolver`, and `GameResolver` — the AI recommendation engine (all four forms wired): one model request composes `title | disambiguator` picks, then TMDB resolves movie picks, Genius resolves song picks, Open Library resolves book picks and TheGamesDB resolves game picks in parallel. Config lives in `~/.van-gogh/llm.conf` — the single source of truth, written by the Settings page and re-read on every AI search (no restart, no environment overrides); the AI toggle is opt-in, so direct search and trending are unchanged — see `docs/llm-engine.md`
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
-  - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming; `requestGames` with `kind=recommend` routes through the LLM engine (games resolved by `GameResolver`)
+  - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming; `requestGames` with `kind=recommend` routes through the LLM engine (games resolved by `GameResolver`). `requestGameDetail` / `pollGameDetail` / `pollGameDetailArt` resolve one game for the immersive detail page (fanart hero, stat band, record rail, overview, screenshots, platforms, related-games rail) with its own generation pair, streaming boxart/fanart/screenshots/related boxarts as data URIs through `gameDetailArt` events keyed by slot (`boxart`, `hero`, `still:<i>`, `related:<id>`)
   - `MusicController`, `MusicBrainzService`, and `MusicBrainzClient` — the earlier MusicBrainz release-group slice (album cards), curated trending MBID list, Cover Art Archive cover streaming; MBZ requests are paced (~1/s) with a 503 backoff-retry — see `docs/music-domain.md`. Not the page's live music form: it uses `GeniusController`.
   - `GeniusController`, `GeniusMusicService`, and `GeniusClient` — Genius
     chart/search song lists; `requestGeniusMusic` with `kind=recommend` routes
@@ -116,6 +116,19 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   want-to-read and favorite pills toggle locally; a similar card opens that
   work in the same view. `render.js` only decides visibility — it never
   imports the module.
+- `js/game-detail.js` + `game-detail.css` — the game-detail view behind a game
+  card, the immersive layout from
+  `prototypes/game-detail/v2-immersive.html`: a fanart hero holding the boxart,
+  title, lede, chips and actions; a four-cell stat band; then a sticky record
+  rail beside an editorial article (opening pull quote, overview, screenshot
+  gallery with lightbox, platforms and play, provenance note); and the
+  related-games rail below. It paints itself (`paintGameView`/`closeGameView`)
+  from the `requestGameDetail` reply, then fills each artwork slot (`boxart`,
+  `hero`, `still:<i>`, `related:<id>`) from `gameDetailArt` events, so a
+  missing image leaves its placeholder instead of a broken icon. Back / Escape
+  return to the intact grid; the watchlist and favorite pills toggle locally;
+  a related card opens that game in the same view. `render.js` only decides
+  visibility — it never imports the module.
 - `js/settings.js` + `settings.css` — the Settings destination: the AI
   recommendations form (provider presets, base URL, model, masked key with a
   reveal toggle, timeout, titles). It calls `loadLlmSettings` on open and
@@ -133,7 +146,8 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   registry. `.provider-chip` styling is shared with the AI presets; the two
   groups are told apart by `data-provider` / `data-theme-id`.
 - CSS is layered, not per-component: `base.css` (structure + role tokens'
-  Starry defaults), `music-detail.css`, `movie-detail.css`, `settings.css`
+  Starry defaults), `music-detail.css`, `movie-detail.css`, `book-detail.css`,
+  `game-detail.css`, `settings.css`
   (structure only, role tokens only), then the active `theme-<id>.css` last (`#themeSkin`) —
   `theme-starry.css`, `theme-liquidneon.css`. A theme owns backdrops, type
   scale, radii and the header offsets; adding one is a CSS file plus a
@@ -268,7 +282,12 @@ before starting the next. Never expand scope mid-slice.
   `GameController` and require `<parameters>true</parameters>` in
   maven-compiler-plugin (args bind by parameter name). Posters arrive as
   `window.krema.on("poster", …)` / `window.krema.on("gamePoster", …)` events
-  emitted by the drains on the UI thread. The Settings page is the one pair
+  emitted by the drains on the UI thread. Detail views have their own generation
+  pairs so opening one never supersedes the browse request: `requestMovieDetail`
+  / `pollMovieDetail` + `pollMovieDetailArt`, `requestSongDetail` /
+  `pollSongDetail`, `requestBookDetail` / `pollBookDetail` +
+  `pollBookDetailArt`, and `requestGameDetail` / `pollGameDetail` +
+  `pollGameDetailArt`. The Settings page is the one pair
   that needs no drain: `loadLlmSettings` / `saveLlmSettings` on
   `SettingsController` and `loadTheme` / `saveTheme` on `ThemeController` are
   synchronous (one small file each) and reply at once.
@@ -285,14 +304,14 @@ unreproducible (skeletons, empty, error, missing artwork), and `?theme=<id>`
 starts the page with that skin stored. Fixtures are keyed to
 the real resolved-item shapes and survive the LLM engine slice. `node
 preview/check.js` (Zed task "check UI (headless)") is the same harness driven
-headless: 161 assertions over the card grid, the sidebar (form buttons, inert
+headless: assertions over the card grid, the sidebar (form buttons, inert
 items, section labels, collapse/reflow), search, the Settings form (loads the
 stored config, refuses a save with no key, saves and keeps the key off the
 page), the theme picker (chips from the reply, live repaint of shell + cards +
 AI toggle, one save, reopening shows it pressed, `?theme=` startup and
-fallback), the song, movie and book detail views (every bento tile, each
-artwork slot, actions, Escape back to the grid) and every scenario, exit 1 on
-failure. Full guide: `docs/preview-harness.md`. Layout,
+fallback), the song, movie, book and game detail views (every bento/immersive
+tile, each artwork slot, actions, Escape back to the grid) and every scenario,
+exit 1 on failure. Full guide: `docs/preview-harness.md`. Layout,
 styling and page JS go through the preview; shell, IPC and network code still
 need a real app run.
 
