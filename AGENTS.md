@@ -272,7 +272,7 @@ unreproducible (skeletons, empty, error, missing artwork), and `?theme=<id>`
 starts the page with that skin stored. Fixtures are keyed to
 the real resolved-item shapes and survive the LLM engine slice. `node
 preview/check.js` (Zed task "check UI (headless)") is the same harness driven
-headless: 140 assertions over the card grid, the sidebar (form buttons, inert
+headless: 141 assertions over the card grid, the sidebar (form buttons, inert
 items, section labels, collapse/reflow), search, the Settings form (loads the
 stored config, refuses a save with no key, saves and keeps the key off the
 page), the theme picker (chips from the reply, live repaint of shell + cards +

@@ -95,7 +95,7 @@
  * border and shadow. */
 .movie-tile.t-poster {
     grid-area: poster;
-    align-self: start;
+    align-self: stretch;
     padding: 0;
     background: none;
     border: none;
@@ -118,6 +118,7 @@
 
 .movie-poster-frame {
     position: relative;
+    flex: 1;
     aspect-ratio: 2 / 3;
     border-radius: 14px;
     overflow: hidden;
