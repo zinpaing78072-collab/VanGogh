@@ -17,6 +17,9 @@ export const settingsNavItem = document.getElementById("settingsNav");
  * shown/hidden by render.js from state.view. */
 export const settingsView = document.getElementById("settingsView");
 export const settingsForm = document.getElementById("settingsForm");
+/* Appearance card — chips are painted by js/theme.js from the loadTheme reply. */
+export const themeChips = document.getElementById("themeChips");
+export const themeStatus = document.getElementById("themeStatus");
 export const settingsBaseUrl = document.getElementById("settingsBaseUrl");
 export const settingsModel = document.getElementById("settingsModel");
 export const settingsApiKey = document.getElementById("settingsApiKey");

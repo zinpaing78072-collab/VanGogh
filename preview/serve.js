@@ -5,9 +5,9 @@
  * Why a server instead of just opening the file: index.html loads ES modules,
  * and Chromium refuses module scripts from file:// (the same constraint that
  * made both shells serve the page over loopback HTTP in the first place).
- * Serving the resources dir means index.html, style.css, js/*.js and posters/
- * all load exactly as the packaged app loads them — the preview is the shipped
- * page, not a copy that can drift.
+ * Serving the resources dir means index.html, base.css, the theme sheets,
+ * js/*.js and posters/ all load exactly as the packaged app loads them — the
+ * preview is the shipped page, not a copy that can drift.
  *
  * The only transformed response is index.html, which gains two classic
  * scripts before </head>. Classic scripts run before the deferred module

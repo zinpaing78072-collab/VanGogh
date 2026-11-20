@@ -50,6 +50,22 @@ reproduce on demand in the real app.
 The sidebar form buttons and the search box work in every scenario. Each form serves its own
 fixtures, and a search that matches nothing falls through to the empty state.
 
+## Themes
+
+`?theme=<id>` starts the mock with that skin stored, exactly as if Settings had
+saved it last session — the page loads `theme-starry.css` and swaps to the saved
+sheet while the grid is still empty.
+
+| URL | Shows |
+|---|---|
+| `/movie-page/index.html` | Starry Night (the default) |
+| `?theme=liquidneon` | Liquid Neon |
+| `?theme=vaporwave` | falls back to Starry Night, like `ThemeConfig.read` |
+
+Switch skins live from the Settings page instead (Appearance card) — the mock
+implements `loadTheme` / `saveTheme`, so the chips, the repaint and the "reopen
+shows it pressed" path all work without the Java side.
+
 ## What the mock implements
 
 Real contracts, not simplified ones. Pacing stays `pending → done`, which is why
@@ -61,6 +77,7 @@ skeletons and the staggered artwork stream are both exercised.
 | `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` | `{ status: "pending" \| "done" \| "error" \| "superseded", items?, error? }` |
 | `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` / `pollBookCovers` | remaining count, `-1` when done |
 | `requestSongDetail` / `pollSongDetail` | song-detail generation, then `{ status, detail?, artDataUri?, error? }` |
+| `loadTheme` / `saveTheme` | `{ status, theme, themes: [{ id, label }] }` (the same registry `ThemeConfig.KNOWN` holds) |
 | `on("poster" \| "gamePoster" \| "musicPoster" \| "bookCover")` | `{ payload: { id, dataUri }, timestamp }` |
 
 A superseded generation answers `superseded`, so the `requestSeq` guard in
@@ -101,7 +118,7 @@ the placeholder path stays visible.
 This is the point of the harness. A verification loop that used to need a human
 looking at a native window is now:
 
-1. edit `style.css` or a `js/` module
+1. edit `base.css`, a `theme-<id>.css` sheet, or a `js/` module
 2. `browser.reload`
 3. `browser.snapshot` / `browser.evaluate` for structure, `browser.screenshot` for looks
 4. `browser.console` with `level: "error"` — the mock logs every request and
@@ -119,7 +136,8 @@ http://127.0.0.1:8788/?scenario=noposters
 
 ```js
 { scenario: "trending", form: "movie", generation: 1,
-  dataPolls: 4, delivered: 6, artworkEmitted: 5 }
+  dataPolls: 4, delivered: 6, artworkEmitted: 5,
+  theme: "starry", themeLoads: 1, themeSaves: 0 }
 ```
 
 Settled-state assertions worth copying:
@@ -148,7 +166,7 @@ node preview/check.js            # pass/fail, exit 1 on any failure
 node preview/check.js --verbose  # also prints each test's preview stats
 ```
 
-94 assertions across 11 groups: trending render, the sidebar (four form buttons,
+119 assertions across 16 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
 active marker), the switcher across all four forms, search hit and miss, the AI
 toggle (off by default, `kind=recommend` when on, survives a form switch, empty
@@ -156,10 +174,30 @@ box falls back to trending), the Settings form (opens from the sidebar, paints
 the loaded config, fills the base URL from a preset, refuses a save with no key,
 saves and clears the field, keeps the stored key off the page and on a second
 blank-key save, toggles Reveal without reading the key, and fires no browse
-request), the
+request), the themes (the Appearance chips come from the reply, Starry Night is
+pressed by default, picking Liquid Neon repaints shell + cards + AI toggle and
+saves exactly once, reopening shows it pressed, a stored theme is painted at
+launch, an unknown stored id falls back), the responsive ladder (each step's
+column count from 1280px down to 600px, no card text escaping at any step, all
+three other card shapes at both ends of the ladder, and Liquid Neon stepping in
+lockstep with Starry Night), the
 empty / error / no-posters / slow scenarios, and a rapid form-switch that
 exercises the supersede guard. Exit code 1 on any failure, so it can gate a
 commit.
+
+The responsive groups drive `Emulation.setDeviceMetricsOverride` through
+`page.resize(width, height)` and read the grid back with `measureGrid(page,
+width)`, which returns the column count, the first card's width, and the three
+overflow numbers. Two things make it trustworthy: it waits for the sidebar rail
+to stop animating (below 900px `js/ui.js` collapses it, and the card widths are
+meaningless mid-transition), and it answers "does text fit" by checking text
+boxes against the card box rather than trusting `scrollWidth`.
+
+Two timing traps the theme tests document, because both look like a broken skin:
+the swapped `<link>` loads asynchronously (wait for the new sheet to appear in
+`document.styleSheets` before reading computed styles), and the controls
+transition their colours, so the first style recalc after the swap returns the
+*old* colour — force a recalc, then let the 0.2 s fade finish.
 
 It is self-contained: it boots the preview server on an ephemeral port, drives a
 headless Chromium over the DevTools protocol, and shuts both down. No npm
@@ -171,8 +209,9 @@ then the Playwright and Puppeteer caches (so a machine that already runs browser
 tests needs nothing installed). Set `CHROME=/path/to/binary` to force one.
 
 Each assertion is a `check(label, ok, detail)` in a test's `run(page)`. The
-`page` helper gives `settle()`, `stats()`, `dom()`, `selectForm()`, `search()`
-and `evaluate()`. To pin new behaviour, add a test object to `TESTS`.
+`page` helper gives `settle()`, `stats()`, `dom()`, `selectForm()`, `search()`,
+`evaluate()`, and `resize(w, h)` / `resetViewport()` for the breakpoint
+ladder. To pin new behaviour, add a test object to `TESTS`.
 
 Two things worth knowing before you write assertions:
 

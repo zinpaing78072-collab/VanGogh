@@ -6,6 +6,7 @@ import vangogh.controller.GeniusController;
 import vangogh.controller.MovieController;
 import vangogh.controller.MusicController;
 import vangogh.controller.SettingsController;
+import vangogh.controller.ThemeController;
 import vangogh.error.FetchError;
 import vangogh.llm.LlmConfig;
 
@@ -66,6 +67,7 @@ public class JcefBridge {
     private final GeniusController geniusController;
     private final BookController bookController;
     private final SettingsController settingsController;
+    private final ThemeController themeController;
     private JcefEventEmitter emitter;
     private CefMessageRouter router;
     /**
@@ -83,13 +85,15 @@ public class JcefBridge {
 
     public JcefBridge(MovieController movieController, GameController gameController,
                       MusicController musicController, GeniusController geniusController,
-                      BookController bookController, SettingsController settingsController) {
+                      BookController bookController, SettingsController settingsController,
+                      ThemeController themeController) {
         this.movieController = movieController;
         this.gameController = gameController;
         this.musicController = musicController;
         this.geniusController = geniusController;
         this.bookController = bookController;
         this.settingsController = settingsController;
+        this.themeController = themeController;
     }
 
     /**
@@ -210,6 +214,9 @@ public class JcefBridge {
             case "loadLlmSettings" ->
                     Validation.valid(new Command(settingsController::loadLlmSettings));
             case "saveLlmSettings" -> saveLlmSettingsCommand(args);
+            case "loadTheme" ->
+                    Validation.valid(new Command(themeController::loadTheme));
+            case "saveTheme" -> saveThemeCommand(args);
             default -> Validation.invalid(List.of(
                     new FetchError.BadInput("command", "unknown command: " + name)));
         };
@@ -267,6 +274,13 @@ public class JcefBridge {
      * back to the documented default instead of failing the whole save; the
      * controller owns validation of the strings.
      */
+    private Validation<Seq<FetchError>, Command> saveThemeCommand(JsonObject args) {
+        if (args == null) {
+            return Validation.invalid(List.of(new FetchError.BadInput("args", "missing")));
+        }
+        return Validation.valid(new Command(() -> themeController.saveTheme(text(args, "theme"))));
+    }
+
     private Validation<Seq<FetchError>, Command> saveLlmSettingsCommand(JsonObject args) {
         if (args == null) {
             return Validation.invalid(List.of(new FetchError.BadInput("args", "missing")));

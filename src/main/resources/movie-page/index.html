@@ -1,16 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="starry">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Van Gogh</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- Structure first, the theme sheet last: a theme only overrides, so it has
+         to win the cascade without !important. data-theme on <html> mirrors the
+         loaded sheet for scripts and tests (js/theme.js). -->
+    <link rel="stylesheet" href="base.css">
     <link rel="stylesheet" href="music-detail.css">
     <link rel="stylesheet" href="settings.css">
+    <link rel="stylesheet" id="themeSkin" href="theme-starry.css">
 </head>
 <body>
 
-<!-- Starry Night backdrop: starry.png behind a frosted veil -->
+<!-- Theme backdrop: the active theme sheet paints .sky and .veil -->
 <div class="sky" aria-hidden="true"></div>
 <div class="veil" aria-hidden="true"></div>
 
@@ -160,16 +164,39 @@
             </section>
         </main>
 
-        <!-- Settings (sidebar foot). Reads and writes ~/.van-gogh/llm.conf
-             through loadLlmSettings / saveLlmSettings (js/settings.js). The
-             stored key never crosses the bridge: the form only learns whether
-             one exists. -->
+        <!-- Settings (sidebar foot). Two cards: Appearance (theme, read/written
+             through loadTheme / saveTheme in js/theme.js) and AI recommendations
+             (loadLlmSettings / saveLlmSettings in js/settings.js). The stored key
+             never crosses the bridge: the form only learns whether one exists. -->
         <section class="settings-view hidden" id="settingsView" aria-labelledby="settingsTitle">
             <div class="settings-inner">
                 <header class="settings-head">
                     <h1 class="settings-title" id="settingsTitle">Settings</h1>
-                    <p class="settings-subtitle">How Van Gogh turns a search into recommendations.</p>
+                    <p class="settings-subtitle">How Van Gogh looks and how it turns a search into recommendations.</p>
                 </header>
+
+                <!-- Appearance. Chips are rendered from the loadTheme reply so the
+                     theme list lives in one place (ThemeConfig.KNOWN in Java); this
+                     page never invents an id or a label. A native <select> would
+                     freeze the macOS window, hence chips. -->
+                <section class="settings-card" id="themeCard" aria-labelledby="themeCardTitle">
+                    <div class="settings-card-head">
+                        <div>
+                            <h2 class="settings-section-title" id="themeCardTitle">Appearance</h2>
+                            <p class="settings-section-sub">One skin for the whole app — grid, song detail and this page.</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-field">
+                        <span class="settings-label" id="themeLabel">Theme</span>
+                        <div class="provider-chips" id="themeChips" role="group" aria-labelledby="themeLabel">
+                            <!-- theme chips injected by js/theme.js -->
+                        </div>
+                        <p class="settings-hint">Saved as soon as you pick one, and remembered on the next launch.</p>
+                    </div>
+
+                    <p class="settings-status" id="themeStatus" role="status" aria-live="polite"></p>
+                </section>
 
                 <form class="settings-card" id="settingsForm" novalidate>
                     <div class="settings-card-head">

@@ -22,6 +22,12 @@
 import "./ui.js";
 import { subscribeArtwork } from "./artwork.js";
 import { loadContent } from "./content.js";
+import { initTheme } from "./theme.js";
+
+// The stored theme first: the page is already painted with the default sheet,
+// and this swaps in the saved skin while the grid is still empty. A failure is
+// non-fatal (initTheme swallows it and keeps the default).
+await initTheme();
 
 subscribeArtwork();
 loadContent("movie", "trending", "");
