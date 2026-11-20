@@ -1,0 +1,1340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roblox · Van Gogh</title>
+<meta name="description" content="Roblox — game detail page. Gameplay, trailer, screenshots, system requirements, player reviews and more games you may like.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23F5C542' d='m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --text-primary:#fff;
+    --text-secondary:#C3DCEE;
+    --text-muted:#8FB4CC;
+    --cyan:#5FDBF5;
+    --gold:#F5C542;
+    --gold-light:#FFDE8A;
+    --ink:#0A2A45;
+    --glass:rgba(14,51,85,.70);
+    --glass-strong:rgba(10,41,66,.85);
+    --card:rgba(14,51,85,.65);
+    --card-blue:rgba(14,58,92,.82);
+    --stroke:rgba(139,221,245,.19);
+    --stroke-strong:rgba(139,221,245,.30);
+    --font-head:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --font-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --pad:48px;
+    --radius:18px;
+    --section-gap:52px;
+  }
+
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    min-height:100vh;
+    position:relative;
+    background:linear-gradient(155deg,#0A4775 0%,#1280AE 32%,#0B5480 62%,#052A45 88%,#041C30 100%);
+    background-attachment:fixed;
+    color:var(--text-primary);
+    font-family:var(--font-body);
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  img{display:block;max-width:100%}
+  [hidden]{display:none !important}
+  a{color:inherit}
+  button{font:inherit;color:inherit;cursor:pointer}
+  input{font:inherit}
+  h1,h2,h3,p,dl,dd{margin:0}
+  ul{margin:0;padding:0;list-style:none}
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:4px}
+
+  .skip-link{
+    position:absolute;left:16px;top:-60px;z-index:100;
+    padding:10px 16px;border-radius:10px;
+    background:var(--gold);color:var(--ink);font-weight:600;text-decoration:none;
+    transition:top .15s ease;
+  }
+  .skip-link:focus{top:12px}
+
+  .icon{display:inline-block;flex:none;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .icon--solid{fill:currentColor;stroke:none}
+
+  /* ---------- backdrop glows ---------- */
+  .backdrop{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+  .glow{position:absolute;border-radius:50%;filter:blur(60px)}
+  .glow--1{width:1100px;height:1100px;left:-360px;top:-420px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#63E0F759 0%,#63E0F700 62%);filter:blur(55px)}
+  .glow--2{width:900px;height:900px;right:-420px;top:-330px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#4FD0F040 0%,#4FD0F000 65%);filter:blur(55px)}
+  .glow--3{width:760px;height:600px;left:25%;top:-200px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#FFD8734D 0%,#FFD87300 70%);filter:blur(65px)}
+  .glow--4{width:1000px;height:860px;left:-240px;top:700px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#2E9BD833 0%,#2E9BD800 68%);filter:blur(65px)}
+  .glow--5{width:820px;height:820px;right:-360px;top:560px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#46D3F536 0%,#46D3F500 68%);filter:blur(60px)}
+  .glow--6{width:700px;height:600px;left:20px;top:1150px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#EFBE4F2A 0%,#EFBE4F00 75%);filter:blur(65px)}
+
+  /* ---------- header ---------- */
+  .site-header{
+    position:sticky;top:0;z-index:30;
+    background:linear-gradient(180deg,rgba(12,50,83,.78) 0%,rgba(8,39,66,.65) 100%);
+    border-bottom:1px solid rgba(139,221,245,.18);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+  }
+  .header-inner{
+    max-width:1440px;margin:0 auto;
+    display:flex;align-items:center;gap:28px;
+    height:88px;padding:0 var(--pad);
+  }
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex:none}
+  .brand-mark{color:var(--gold);width:24px;height:24px}
+  .brand-name{font-family:var(--font-head);font-size:23px;font-weight:600;letter-spacing:.2px;white-space:nowrap}
+  .search-group{flex:1;display:flex;align-items:center;justify-content:center;gap:14px;min-width:0}
+  .search{
+    display:flex;align-items:center;gap:12px;
+    width:min(520px,100%);height:48px;padding:0 20px;
+    border-radius:24px;border:1px solid rgba(139,221,245,.21);
+    background:rgba(11,46,74,.68);
+    color:#9FC4DA;
+    transition:border-color .15s ease,background .15s ease;
+  }
+  .search:focus-within{border-color:rgba(95,219,245,.55);background:rgba(11,46,74,.85)}
+  .search input{
+    flex:1;min-width:0;background:none;border:0;outline:none;
+    color:var(--text-primary);font-size:14px;
+  }
+  .search input::placeholder{color:#96BCD4}
+  .btn-search{
+    height:48px;padding:0 26px;border:0;border-radius:24px;
+    background:linear-gradient(170deg,#FFD873 0%,#F0B934 100%);
+    color:var(--ink);font-size:14px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;
+    transition:filter .15s ease,transform .1s ease;
+  }
+  .btn-search:hover{filter:brightness(1.06)}
+  .btn-search:active{transform:translateY(1px)}
+
+  .category{position:relative;flex:none}
+  .category-toggle{
+    display:flex;align-items:center;gap:12px;
+    height:48px;padding:0 18px;border-radius:14px;
+    background:rgba(11,46,74,.68);border:1px solid rgba(139,221,245,.21);
+    color:var(--text-primary);font-size:14px;font-weight:500;
+    transition:border-color .15s ease,background .15s ease;
+  }
+  .category-toggle:hover{border-color:rgba(95,219,245,.5);background:rgba(11,46,74,.85)}
+  .category-toggle .chev{color:#9FC4DA;transition:transform .18s ease}
+  .category-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .category-menu{
+    position:absolute;right:0;top:calc(100% + 10px);min-width:184px;
+    padding:8px;border-radius:16px;
+    background:rgba(10,41,66,.97);border:1px solid var(--stroke-strong);
+    box-shadow:0 24px 50px rgba(1,15,26,.55);
+    display:none;z-index:40;
+  }
+  .category-menu.open{display:block}
+  .category-menu a{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:9px 12px;border-radius:10px;text-decoration:none;
+    font-size:13.5px;color:var(--text-secondary);
+  }
+  .category-menu a:hover,.category-menu a:focus-visible{background:rgba(95,219,245,.12);color:#fff}
+  .category-menu a[aria-current="true"]{color:var(--cyan);font-weight:600}
+  .mobile-tools{display:none;align-items:center;gap:8px}
+  .mobile-search{display:none;align-items:center;gap:10px;padding:0 var(--pad) 16px}
+  .mobile-search .search{flex:1;height:44px;width:auto;min-width:0}
+  .mobile-search .btn-search{height:44px;padding:0 20px;flex:none}
+  .site-header.search-open .mobile-search{display:flex}
+  .icon-button{
+    width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+    border-radius:19px;background:rgba(11,46,74,.68);border:1px solid rgba(139,221,245,.21);
+    color:#B7DCF0;text-decoration:none;
+  }
+  .icon-button:hover{border-color:rgba(95,219,245,.5)}
+
+  /* ---------- layout ---------- */
+  main{max-width:1440px;margin:0 auto;padding:34px var(--pad) 64px}
+  .content{display:flex;flex-direction:column;gap:var(--section-gap)}
+
+  .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+  .crumb-back{
+    display:inline-flex;align-items:center;gap:8px;
+    background:none;border:0;padding:0;color:var(--text-muted);font-size:13px;font-weight:500;
+  }
+  .crumb-back:hover{color:var(--text-secondary)}
+  .crumb-divider{color:#5E89A6}
+  .crumb-current{color:var(--cyan)}
+
+  /* ---------- hero ---------- */
+  .hero{display:grid;grid-template-columns:minmax(280px,380px) minmax(0,1fr);gap:44px;align-items:start}
+  .cover{
+    position:relative;width:100%;aspect-ratio:380/561;
+    border-radius:24px;overflow:hidden;
+    border:1px solid rgba(158,230,255,.30);
+    background:linear-gradient(160deg,#0B5480,#041C30);
+    box-shadow:0 18px 44px rgba(0,16,24,.53),inset 0 0 30px rgba(95,219,245,.20);
+  }
+  .cover img{width:100%;height:100%;object-fit:cover}
+  .cover-badge{
+    position:absolute;top:18px;left:18px;
+    display:flex;align-items:center;gap:7px;
+    padding:8px 14px;border-radius:20px;
+    background:rgba(6,38,63,.90);border:1px solid rgba(158,230,255,.25);
+    font-size:13px;font-weight:600;
+  }
+  .cover-badge .icon{color:var(--gold)}
+  .cover-tag{
+    position:absolute;left:18px;bottom:18px;
+    padding:6px 12px;border-radius:8px;
+    background:rgba(245,197,66,.90);color:var(--ink);
+    font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  }
+
+  .hero-info{display:flex;flex-direction:column;gap:22px;min-width:0}
+  .eyebrow{color:var(--gold);font-size:11px;font-weight:600;letter-spacing:2px}
+  h1{font-family:var(--font-head);font-size:clamp(42px,4.7vw,64px);font-weight:600;line-height:1.05;letter-spacing:-1px}
+  .meta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--text-secondary)}
+  .dot{width:4px;height:4px;border-radius:50%;background:#6E9AB6;flex:none}
+  .meta-rating{display:inline-flex;align-items:center;gap:6px;color:var(--gold-light);font-weight:600}
+  .meta-rating .icon{color:var(--gold)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    padding:6px 14px;border-radius:20px;
+    border:1px solid rgba(139,221,245,.30);
+    background:rgba(11,53,83,.24);
+    font-size:12px;font-weight:500;color:#D9F4FD;
+  }
+
+  .facts{display:flex;flex-wrap:wrap;gap:44px}
+  .fact dt{color:var(--text-muted);font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px}
+  .fact dd{font-size:14px;font-weight:500}
+
+  .platforms{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+  .platforms-label{color:var(--text-muted);font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;margin-right:2px}
+  .platform{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:7px 12px;border-radius:10px;
+    border:1px solid rgba(139,221,245,.21);
+    background:rgba(11,46,74,.60);
+    color:var(--text-secondary);font-size:12px;
+  }
+  .platform .icon{color:#B7DCF0}
+
+  .overview{color:var(--text-secondary);font-size:15px;line-height:1.7}
+  .overview-more{color:var(--text-secondary);font-size:15px;line-height:1.7;display:none;margin-top:10px}
+  .overview.expanded + .overview-more{display:block}
+  .read-more{
+    display:inline-flex;align-items:center;gap:6px;align-self:flex-start;
+    padding:0;border:0;background:none;color:var(--gold);font-size:13px;font-weight:600;
+  }
+  .read-more .icon{transition:transform .2s ease}
+  .read-more[aria-expanded="true"] .icon{transform:rotate(180deg)}
+
+  .actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    height:54px;padding:0 28px;border-radius:27px;border:0;
+    font-size:14px;font-weight:600;
+    transition:filter .15s ease,transform .1s ease,background .15s ease,border-color .15s ease;
+    text-decoration:none;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:linear-gradient(170deg,#FFD873 0%,#F0B934 100%);color:var(--ink)}
+  .btn-primary:hover{filter:brightness(1.06)}
+  .btn-ghost{
+    background:rgba(11,46,74,.70);border:1px solid rgba(139,221,245,.30);
+    color:var(--text-primary);font-weight:500;
+  }
+  .btn-ghost:hover{background:rgba(11,46,74,.95);border-color:rgba(139,221,245,.55)}
+  .btn-ghost .icon{color:var(--cyan)}
+  .btn-fav{padding:0 22px}
+  .btn-fav .icon{color:var(--gold)}
+  .btn[aria-pressed="true"]{border-color:rgba(95,219,245,.65);background:rgba(17,74,105,.9)}
+  .btn-fav[aria-pressed="true"] .icon{fill:var(--gold)}
+
+  /* ---------- section headers ---------- */
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+  .section-head h2{font-family:var(--font-head);font-size:24px;font-weight:600;letter-spacing:-.2px}
+  .section-sub{margin-top:6px;color:var(--text-muted);font-size:13px}
+  .section-action{
+    display:inline-flex;align-items:center;gap:8px;
+    color:var(--cyan);font-size:13px;font-weight:500;text-decoration:none;
+    white-space:nowrap;
+  }
+  .section-action:hover{text-decoration:underline;text-underline-offset:3px}
+
+  /* ---------- trailer ---------- */
+  .player{
+    position:relative;width:100%;aspect-ratio:1344/500;
+    max-height:500px;border-radius:22px;overflow:hidden;
+    border:1px solid rgba(158,230,255,.27);
+    box-shadow:0 22px 56px rgba(0,18,31,.60);
+    background:#02101C;
+  }
+  .player img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .player-scrim{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(2,16,28,0) 35%,rgba(2,16,28,.80) 100%);
+  }
+  .player-chip{
+    position:absolute;display:inline-flex;align-items:center;gap:8px;
+    padding:6px 12px;border-radius:10px;
+    background:rgba(2,16,28,.68);color:var(--text-primary);
+    font-size:11px;font-weight:600;
+  }
+  .player-source{top:36px;left:36px;color:#B9D6E8}
+  .player-duration{top:28px;right:28px;padding:6px 10px;border-radius:8px}
+  .player-play{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:96px;height:96px;border-radius:50%;border:0;
+    background:rgba(245,197,66,.90);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 32px rgba(245,197,66,.45);
+    transition:transform .18s ease,filter .18s ease;
+  }
+  .player-play:hover{transform:translate(-50%,-50%) scale(1.05);filter:brightness(1.05)}
+  .player-play .icon{margin-left:4px}
+  .player-caption{position:absolute;left:36px;bottom:34px;right:120px}
+  .player-caption h3{font-family:var(--font-head);font-size:20px;font-weight:600}
+  .player-caption p{margin-top:4px;color:#B9D6E8;font-size:13px}
+  .player-progress{
+    position:absolute;left:0;right:0;bottom:0;height:3px;
+    background:rgba(255,255,255,.18);opacity:0;
+  }
+  .player-progress span{display:block;height:100%;width:0;background:var(--gold)}
+  .player.is-playing .player-play{opacity:0;pointer-events:none}
+  .player.is-playing .player-progress{opacity:1}
+  .player.is-playing .player-progress span{animation:progress 154s linear forwards}
+  @keyframes progress{to{width:100%}}
+
+  /* ---------- screenshots ---------- */
+  .shots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+  .shot{
+    position:relative;overflow:hidden;border-radius:14px;
+    aspect-ratio:321/190;
+    border:1px solid rgba(158,230,255,.24);
+    box-shadow:0 10px 28px rgba(0,18,31,.50);
+    background:#082742;
+    text-decoration:none;
+  }
+  .shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+  .shot:hover img{transform:scale(1.04)}
+  .shot-scrim{position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(180deg,rgba(2,16,28,0),rgba(2,16,28,.73))}
+  .shot-caption{position:absolute;left:12px;bottom:11px;font-size:11px;font-weight:500;color:#DCEBF5}
+
+  /* ---------- cards ---------- */
+  .card{
+    border-radius:var(--radius);
+    border:1px solid rgba(139,221,245,.20);
+    background:var(--card);
+  }
+  .feature-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+  .feature{padding:22px;display:flex;flex-direction:column;gap:12px;border-radius:var(--radius)}
+  .feature-icon{
+    width:40px;height:40px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(245,197,66,.15);border:1px solid rgba(245,197,66,.30);
+    color:var(--gold);
+  }
+  .feature h3{font-size:15px;font-weight:600}
+  .feature p{color:var(--text-secondary);font-size:12.5px;line-height:1.6}
+
+  /* ---------- requirements ---------- */
+  .req-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .req{padding:24px;display:flex;flex-direction:column;gap:14px;border-radius:var(--radius)}
+  .req--recommended{background:var(--card-blue);border-color:rgba(245,197,66,.40)}
+  .req-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .req-head h3{font-size:16px;font-weight:600}
+  .req-badge{
+    padding:4px 9px;border-radius:6px;background:rgba(245,197,66,.90);color:var(--ink);
+    font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  }
+  .req-list{display:flex;flex-direction:column}
+  .req-row{
+    display:flex;gap:16px;padding:10px 0;
+    border-bottom:1px solid rgba(139,221,245,.12);
+    font-size:13px;
+  }
+  .req-row:last-child{border-bottom:0;padding-bottom:0}
+  .req-key{width:96px;flex:none;color:#9FC4DA;font-size:11.5px;line-height:1.7}
+  .req-val{flex:1;min-width:0;color:#E3EEF6;font-weight:500;font-size:13px}
+
+  /* ---------- reviews ---------- */
+  .reviews{display:grid;grid-template-columns:360px minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+  .review-summary{padding:24px;display:flex;flex-direction:column;gap:16px;background:rgba(14,51,85,.70)}
+  .score-row{display:flex;align-items:flex-end;gap:14px}
+  .score{font-family:var(--font-head);font-size:46px;font-weight:600;line-height:1}
+  .score-meta{display:flex;flex-direction:column;gap:4px;padding-bottom:3px}
+  .stars{display:flex;gap:2px;color:var(--gold)}
+  .star-half{position:relative;display:inline-flex;width:14px;height:14px}
+  .star-half .icon{position:absolute;inset:0;width:14px;height:14px;color:rgba(245,197,66,.35)}
+  .star-half .icon+ .icon{clip-path:inset(0 50% 0 0);color:var(--gold)}
+  .score-count{color:var(--text-muted);font-size:12px}
+  .bars{display:flex;flex-direction:column;gap:9px}
+  .bar-row{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text-muted)}
+  .bar-label{width:8px;flex:none}
+  .bar-track{flex:1;height:6px;border-radius:3px;background:rgba(159,196,218,.13);overflow:hidden}
+  .bar-fill{display:block;height:100%;border-radius:3px;background:var(--gold)}
+  .bar-count{width:38px;text-align:right;flex:none}
+  .summary-divider{height:1px;background:rgba(139,221,245,.15)}
+  .summary-footer{display:flex;align-items:center;gap:10px;color:var(--text-secondary);font-size:12px}
+  .summary-footer .icon{color:var(--cyan)}
+
+  .review{padding:22px;display:flex;flex-direction:column;gap:12px;background:rgba(14,51,85,.70)}
+  .reviewer{display:flex;align-items:center;gap:10px}
+  .avatar{
+    width:36px;height:36px;border-radius:50%;flex:none;
+    display:flex;align-items:center;justify-content:center;
+    background:#1B5C7F;border:1px solid rgba(139,221,245,.24);
+    font-size:12px;font-weight:600;
+  }
+  .reviewer-meta{flex:1;min-width:0}
+  .reviewer-meta strong{display:block;font-size:13px;font-weight:600}
+  .reviewer-meta span{display:block;color:var(--text-muted);font-size:11px}
+  .review-stars{display:flex;gap:2px;color:var(--gold);margin-left:auto}
+  .review-stars .dim{color:rgba(245,197,66,.24)}
+  .review h3{font-size:14px;font-weight:600;line-height:1.45}
+  .review-body{color:var(--text-secondary);font-size:12.5px;line-height:1.65}
+  .helpful{display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:11px}
+  .helpful .icon{color:#9FC4DA}
+
+  /* ---------- related ---------- */
+  .related-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+  .related-card{
+    display:flex;flex-direction:column;overflow:hidden;
+    border-radius:16px;text-decoration:none;
+    transition:transform .2s ease,border-color .2s ease,background .2s ease;
+  }
+  .related-card:hover{transform:translateY(-3px);border-color:rgba(95,219,245,.5);background:rgba(17,60,95,.75)}
+  .poster{position:relative;aspect-ratio:256/340;overflow:hidden;background:#0B3553}
+  .poster img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+  .related-card:hover .poster img{transform:scale(1.04)}
+  .poster::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:78px;
+    background:linear-gradient(180deg,rgba(2,16,28,0),rgba(2,16,28,.55));
+  }
+  .related-info{padding:14px 14px 16px;display:flex;flex-direction:column;gap:5px}
+  .related-title{color:var(--cyan);font-size:13.5px;font-weight:600;line-height:1.35}
+  .related-year{color:var(--text-muted);font-size:11.5px}
+  .related-genres{color:#8FB4CC;font-size:11px}
+  .related-rating{display:flex;align-items:center;gap:5px;margin-top:2px}
+  .related-rating .icon{color:var(--gold)}
+  .related-rating span{color:var(--gold-light);font-size:11px;font-weight:600}
+
+  /* ---------- footer ---------- */
+  .site-footer{
+    margin-top:var(--section-gap);
+    padding-top:18px;border-top:1px solid rgba(139,221,245,.15);
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  }
+  .footer-brand{display:flex;align-items:center;gap:9px;color:#B9D6E8;font-size:14px;font-weight:600}
+  .footer-brand .icon{color:var(--gold)}
+  .footer-note{color:#7FA6BF;font-size:12px}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:1180px){
+    .reviews{grid-template-columns:320px minmax(0,1fr) minmax(0,1fr)}
+  }
+
+  @media (max-width:1024px){
+    :root{--pad:32px}
+    .hero{gap:32px;grid-template-columns:minmax(260px,320px) minmax(0,1fr)}
+    .reviews{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+    .review-summary{grid-column:1 / -1}
+    .facts{gap:32px}
+    .shots{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .player{aspect-ratio:16/9}
+    .related-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  }
+
+  @media (max-width:1000px){
+    .feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+
+  @media (max-width:860px){
+    .search-group{display:none}
+    .site-header .category{display:none}
+    .mobile-tools{display:flex}
+    .mobile-tools .category{display:block}
+    .header-inner{height:64px;gap:12px;justify-content:space-between}
+    .brand-mark{width:19px;height:19px}
+    .brand-name{font-size:18px}
+    .category-toggle{height:38px;border-radius:12px;padding:0 12px;gap:8px;font-size:13px}
+    .category-toggle .icon{width:14px;height:14px}
+    .hero{grid-template-columns:1fr;gap:24px}
+    .cover{aspect-ratio:390/420;border-radius:18px}
+    .cover-tag{font-size:9px;padding:5px 10px;border-radius:7px}
+    h1{font-size:clamp(34px,8vw,44px)}
+    .facts{display:grid;grid-template-columns:1fr;gap:0}
+    .fact{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(139,221,245,.12)}
+    .fact dt{margin:0;font-size:11.5px;font-weight:400;letter-spacing:0;text-transform:none;color:#9FC4DA}
+    .fact dd{font-size:12.5px;text-align:right}
+    .actions .btn{flex:1;min-width:0;padding:0 18px}
+    .btn-fav{flex:none;width:54px;padding:0}
+    .btn-fav span{display:none}
+    .section-head h2{font-size:18px}
+    .section-sub{font-size:11px;margin-top:4px}
+    .section-action{font-size:11px;gap:5px}
+    .player-play{width:56px;height:56px}
+    .player-play .icon{width:22px;height:22px}
+    .player-caption{left:16px;right:16px;bottom:16px}
+    .player-caption h3{font-size:14px}
+    .player-caption p{font-size:11px}
+    .player-source{top:14px;left:14px;font-size:10px;padding:5px 9px}
+    .player-duration{top:14px;right:14px;font-size:10px;padding:5px 8px}
+    .feature-grid{grid-template-columns:1fr}
+    .feature{flex-direction:row;align-items:flex-start;gap:12px;padding:16px;border-radius:14px}
+    .feature-icon{width:34px;height:34px;border-radius:10px}
+    .feature h3{font-size:13.5px}
+    .feature p{font-size:11.5px}
+    .req-grid{grid-template-columns:1fr;gap:10px}
+    .req{padding:16px;border-radius:14px;gap:10px}
+    .req-key{width:70px;font-size:11px}
+    .req-row{padding:6px 0;font-size:11.5px}
+    .reviews{grid-template-columns:1fr;gap:10px}
+    .review-summary,.review{padding:16px;border-radius:14px;gap:12px}
+    .score{font-size:34px}
+    .review h3{font-size:13px}
+    .review-body{font-size:11.5px}
+    .related-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .related-card{border-radius:13px}
+    .poster{aspect-ratio:167/190}
+    .related-info{padding:10px 10px 12px;gap:3px}
+    .related-title{font-size:12px}
+    .related-year{font-size:10.5px}
+    .related-genres{font-size:10px}
+    .site-footer{flex-direction:column;align-items:flex-start;gap:6px}
+  }
+
+  @media (max-width:700px){
+    .related-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  }
+
+  @media (max-width:420px){
+    :root{--pad:20px}
+    .req-key{width:64px}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation-duration:.001ms !important;transition-duration:.001ms !important}
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-sparkles" viewBox="0 0 24 24">
+      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
+      <path d="M5 3v4M19 17v4M3 5h4M17 19h4"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+    </symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01Z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 3l14 9-14 9Z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+    <symbol id="i-gamepad-2" viewBox="0 0 24 24">
+      <path d="M6 11h4M8 9v4"/><path d="M15 12h.01M18 10h.01"/>
+      <path d="M17.32 5H6.68a4 4 0 0 0-3.96 3.44c-.07.6-.14 1.28-.19 1.94C2.36 12.4 2 14 2 15a4 4 0 0 0 7.44 2.05L10 16h4l.56 1.05A4 4 0 0 0 22 15c0-1-.36-2.6-.53-4.62-.05-.66-.12-1.34-.19-1.94A4 4 0 0 0 17.32 5Z"/>
+    </symbol>
+    <symbol id="i-joystick" viewBox="0 0 24 24">
+      <path d="M12 9v5"/><circle cx="12" cy="5.5" r="3.5"/>
+      <path d="M5 21v-3a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v3"/>
+    </symbol>
+    <symbol id="i-gamepad" viewBox="0 0 24 24">
+      <rect x="2" y="7" width="20" height="11" rx="5.5"/>
+      <path d="M7 12.5h3M8.5 11v3M16.5 11.5h.01M18.5 14h.01"/>
+    </symbol>
+    <symbol id="i-swords" viewBox="0 0 24 24">
+      <path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 6-6"/><path d="M16 16l4 4"/>
+      <path d="M9.5 17.5 21 6V3h-3L6.5 14.5"/><path d="M8 16 4 20"/>
+    </symbol>
+    <symbol id="i-map" viewBox="0 0 24 24">
+      <path d="M14.1 5.55a2 2 0 0 0 1.79 0l3.66-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.56 2.27a2 2 0 0 1-1.78 0l-4.22-2.1a2 2 0 0 0-1.78 0l-3.66 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9l4.56-2.27a2 2 0 0 1 1.78 0z"/>
+      <path d="M15 5.76v15M9 3.24v15"/>
+    </symbol>
+    <symbol id="i-users" viewBox="0 0 24 24">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+    </symbol>
+    <symbol id="i-hourglass" viewBox="0 0 24 24">
+      <path d="M5 22h14M5 2h14"/>
+      <path d="M17 22v-4.17a2 2 0 0 0-.59-1.42L12 12l-4.41 4.41A2 2 0 0 0 7 17.83V22"/>
+      <path d="M7 2v4.17a2 2 0 0 0 .59 1.42L12 12l4.41-4.41A2 2 0 0 0 17 6.17V2"/>
+    </symbol>
+    <symbol id="i-thumbs-up" viewBox="0 0 24 24">
+      <path d="M7 10v12"/>
+      <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>
+    </symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24">
+      <path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5Z"/>
+      <path d="M16 9a5 5 0 0 1 0 6M19.4 18.4a9 9 0 0 0 0-12.8"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="backdrop" aria-hidden="true">
+  <div class="glow glow--1"></div>
+  <div class="glow glow--2"></div>
+  <div class="glow glow--3"></div>
+  <div class="glow glow--4"></div>
+  <div class="glow glow--5"></div>
+  <div class="glow glow--6"></div>
+</div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="index.html" aria-label="Van Gogh — All Games">
+      <svg class="icon icon--solid brand-mark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+      <span class="brand-name">Van Gogh</span>
+    </a>
+
+    <div class="search-group">
+      <form class="search" role="search">
+        <svg class="icon" width="17" height="17" aria-hidden="true"><use href="#i-search"></use></svg>
+        <input type="search" aria-label="Search games, platforms, studios" placeholder="Search games, platforms, studios…">
+      </form>
+      <button class="btn-search" type="button">Search</button>
+    </div>
+
+    <div class="category">
+      <button class="category-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="category-menu-desktop">
+        <span class="category-label">Games</span>
+        <svg class="icon chev" width="16" height="16" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+      </button>
+      <div class="category-menu" id="category-menu-desktop" role="menu" aria-label="Content category">
+        <a href="#" role="menuitem" data-category="Movies">Movies</a>
+        <a href="#" role="menuitem" data-category="Music">Music</a>
+        <a href="#" role="menuitem" data-category="Books">Books</a>
+        <a href="#" role="menuitem" data-category="Games" aria-current="true">Games</a>
+      </div>
+    </div>
+
+    <div class="mobile-tools">
+      <button class="icon-button" type="button" data-search-toggle aria-expanded="false" aria-controls="mobile-search" aria-label="Search games">
+        <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-search"></use></svg>
+      </button>
+      <div class="category">
+        <button class="category-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="category-menu-mobile">
+          <span class="category-label">Games</span>
+          <svg class="icon chev" width="14" height="14" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+        </button>
+        <div class="category-menu" id="category-menu-mobile" role="menu" aria-label="Content category">
+          <a href="#" role="menuitem" data-category="Movies">Movies</a>
+          <a href="#" role="menuitem" data-category="Music">Music</a>
+          <a href="#" role="menuitem" data-category="Books">Books</a>
+          <a href="#" role="menuitem" data-category="Games" aria-current="true">Games</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form class="mobile-search" id="mobile-search" role="search">
+    <div class="search">
+      <svg class="icon" width="17" height="17" aria-hidden="true"><use href="#i-search"></use></svg>
+      <input type="search" aria-label="Search games, platforms, studios" placeholder="Search games, platforms, studios…">
+    </div>
+    <button class="btn-search" type="submit">Search</button>
+  </form>
+</header>
+
+<main id="main">
+  <div class="content">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a class="crumb-back" href="index.html">
+        <svg class="icon" width="15" height="15" aria-hidden="true"><use href="#i-arrow-left"></use></svg>
+        Back to Games
+      </a>
+      <span class="crumb-divider" aria-hidden="true">/</span>
+      <span class="crumb-current" id="crumb-current" aria-current="page">Roblox</span>
+    </nav>
+
+    <section class="hero" aria-labelledby="game-title">
+      <div class="cover">
+        <img id="cover-img" src="images/roblox-cover.jpg" alt="Roblox cover artwork" width="380" height="561">
+        <div class="cover-badge">
+          <svg class="icon icon--solid" width="13" height="13" aria-hidden="true"><use href="#i-star"></use></svg>
+          <span id="cover-score">4.6</span>
+        </div>
+        <div class="cover-tag" id="cover-tag">Game of the Year 2025</div>
+      </div>
+
+      <div class="hero-info">
+        <p class="eyebrow" id="eyebrow">GAME OF THE YEAR</p>
+        <h1 id="game-title">Roblox</h1>
+
+        <div class="meta-row">
+          <span id="meta-year">2006</span>
+          <span class="dot" aria-hidden="true"></span>
+          <span class="meta-rating">
+            <svg class="icon icon--solid" width="15" height="15" aria-hidden="true"><use href="#i-star"></use></svg>
+            <span id="meta-rating">4.6 / 5</span>
+          </span>
+          <span class="dot" aria-hidden="true"></span>
+          <span id="meta-extra">100+ worlds</span>
+        </div>
+
+        <ul class="chips" id="genre-chips" aria-label="Genres">
+          <li class="chip">Sandbox</li>
+          <li class="chip">Multiplayer</li>
+          <li class="chip">UGC</li>
+          <li class="chip">Adventure</li>
+        </ul>
+
+        <dl class="facts">
+          <div class="fact">
+            <dt>Developer</dt>
+            <dd id="fact-developer">Roblox Corporation</dd>
+          </div>
+          <div class="fact">
+            <dt>Publisher</dt>
+            <dd id="fact-publisher">Roblox Corporation</dd>
+          </div>
+          <div class="fact">
+            <dt>Release date</dt>
+            <dd id="fact-release">1 Sep 2006</dd>
+          </div>
+        </dl>
+
+        <div class="platforms" id="platforms" aria-label="Available on">
+          <span class="platforms-label">Available on</span>
+          <span class="platform"><svg class="icon" width="14" height="14" aria-hidden="true"><use href="#i-monitor"></use></svg>PC</span>
+          <span class="platform"><svg class="icon" width="14" height="14" aria-hidden="true"><use href="#i-gamepad-2"></use></svg>PlayStation 5</span>
+          <span class="platform"><svg class="icon" width="14" height="14" aria-hidden="true"><use href="#i-joystick"></use></svg>Xbox Series X|S</span>
+          <span class="platform"><svg class="icon" width="14" height="14" aria-hidden="true"><use href="#i-gamepad"></use></svg>Switch</span>
+        </div>
+
+        <p class="overview" id="overview">Roblox is a platform where millions of people build, play and share experiences together. Jump between obby courses, roleplay towns, tycoons and shooters — every world here is made by the community, and a brand new one is always waiting.</p>
+        <p class="overview-more" id="overview-more">Everything runs on Roblox Studio and the Roblox engine, so the same world plays on PC, console and mobile — and your avatar, friends and inventory follow you across every experience.</p>
+        <button class="read-more" id="read-more" type="button" aria-expanded="false" aria-controls="overview-more">
+          <span class="read-more-label">Read More</span>
+          <svg class="icon" width="14" height="14" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+        </button>
+
+        <div class="actions">
+          <button class="btn btn-primary" type="button" data-scroll-to="trailer">
+            <svg class="icon icon--solid" width="16" height="16" aria-hidden="true"><use href="#i-play"></use></svg>
+            Play Trailer
+          </button>
+          <button class="btn btn-ghost" type="button" data-toggle="want" aria-pressed="false">
+            <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-plus"></use></svg>
+            <span>Want to Play</span>
+          </button>
+          <button class="btn btn-ghost btn-fav" type="button" data-toggle="fav" aria-pressed="false" aria-label="Add to Favorites">
+            <svg class="icon" width="18" height="18" aria-hidden="true"><use href="#i-heart"></use></svg>
+            <span>Add to Favorites</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="trailer-title">
+      <div class="section-head">
+        <div>
+          <h2 id="trailer-title">Official Trailer</h2>
+          <p class="section-sub" id="trailer-sub">2 min 34 sec · Roblox Corporation</p>
+        </div>
+        <a class="section-action" id="trailer-all-link" href="#screenshots-section">
+          All trailers
+          <svg class="icon" width="15" height="15" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+        </a>
+      </div>
+
+      <div class="player" id="trailer">
+        <img id="trailer-img" src="images/roblox-trailer.jpg" alt="Roblox trailer still — a world at dusk">
+        <div class="player-scrim"></div>
+        <div class="player-chip player-source">
+          <svg class="icon" width="14" height="14" aria-hidden="true"><use href="#i-volume"></use></svg>
+          4K
+        </div>
+        <div class="player-chip player-duration">02:34</div>
+        <button class="player-play" type="button" aria-label="Play trailer" aria-pressed="false">
+          <svg class="icon icon--solid" width="30" height="30" aria-hidden="true"><use href="#i-play"></use></svg>
+        </button>
+        <div class="player-caption">
+          <h3 id="trailer-caption">Roblox — Official Trailer</h3>
+          <p id="trailer-meta">4K HDR · Official trailer · 24M views</p>
+        </div>
+        <div class="player-progress" aria-hidden="true"><span></span></div>
+      </div>
+    </section>
+
+    <section id="screenshots-section" aria-labelledby="shots-title">
+      <div class="section-head">
+        <div>
+          <h2 id="shots-title">Screenshots</h2>
+          <p class="section-sub" id="shots-sub">12 shots · Community worlds</p>
+        </div>
+        <a class="section-action" href="#screenshots-section">
+          View gallery
+          <svg class="icon" width="15" height="15" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+        </a>
+      </div>
+
+      <div class="shots" id="shots-grid">
+        <a class="shot" href="images/roblox-shot1.jpg">
+          <img src="images/roblox-shot1.jpg" alt="Adopt Me! world screenshot" loading="lazy">
+          <span class="shot-scrim"></span>
+          <span class="shot-caption">Adopt Me!</span>
+        </a>
+        <a class="shot" href="images/roblox-shot2.jpg">
+          <img src="images/roblox-shot2.jpg" alt="Brookhaven RP world screenshot" loading="lazy">
+          <span class="shot-scrim"></span>
+          <span class="shot-caption">Brookhaven RP</span>
+        </a>
+        <a class="shot" href="images/roblox-shot3.jpg">
+          <img src="images/roblox-shot3.jpg" alt="Blox Fruits world screenshot" loading="lazy">
+          <span class="shot-scrim"></span>
+          <span class="shot-caption">Blox Fruits</span>
+        </a>
+        <a class="shot" href="images/roblox-shot4.jpg">
+          <img src="images/roblox-shot4.jpg" alt="Grow a Garden world screenshot" loading="lazy">
+          <span class="shot-scrim"></span>
+          <span class="shot-caption">Grow a Garden</span>
+        </a>
+      </div>
+    </section>
+
+    <section id="features-section" aria-labelledby="features-title">
+      <div class="section-head">
+        <div>
+          <h2 id="features-title">Gameplay &amp; Features</h2>
+          <p class="section-sub" id="features-sub">Everything you can play, build and share</p>
+        </div>
+      </div>
+
+      <div class="feature-grid" id="features-grid"></div>
+    </section>
+
+    <section id="requirements-section" aria-labelledby="requirements-title">
+      <div class="section-head">
+        <div>
+          <h2 id="requirements-title">System Requirements</h2>
+          <p class="section-sub" id="requirements-sub">PC · Windows 10 / 11</p>
+        </div>
+      </div>
+
+      <div class="req-grid" id="req-grid"></div>
+    </section>
+
+    <section aria-labelledby="reviews-title">
+      <div class="section-head">
+        <div>
+          <h2 id="reviews-title">Player Reviews</h2>
+          <p class="section-sub" id="reviews-sub">2.4M player ratings</p>
+        </div>
+        <a class="section-action" href="#reviews">
+          View all reviews
+          <svg class="icon" width="15" height="15" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+        </a>
+      </div>
+
+      <div class="reviews" id="reviews"></div>
+    </section>
+
+    <section id="related" aria-labelledby="related-title">
+      <div class="section-head">
+        <div>
+          <h2 id="related-title">You May Also Like</h2>
+          <p class="section-sub" id="related-sub">Because you play Roblox</p>
+        </div>
+        <a class="section-action" href="index.html">
+          See all
+          <svg class="icon" width="15" height="15" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+        </a>
+      </div>
+
+      <div class="related-grid" id="related-grid"></div>
+    </section>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <svg class="icon icon--solid" width="16" height="16" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+        Van Gogh
+      </div>
+      <p class="footer-note">Made for people who love stories, in every form.</p>
+    </footer>
+  </div>
+</main>
+
+<script src="games-data.js"></script>
+<script>
+  const GAMES = window.GAMES || [];
+  const BY_SLUG = window.GAMES_BY_SLUG || {};
+  const CATALOG = GAMES.length ? GAMES : [];
+
+  // Which game? ?game=<slug>, falling back to Roblox (the design's showcase page).
+  const requested = (new URLSearchParams(location.search).get('game') || '').toLowerCase();
+  const game = BY_SLUG[requested] || BY_SLUG['roblox'] || CATALOG[0];
+
+  const $ = (id) => document.getElementById(id);
+  const setText = (id, value) => { const el = $(id); if (el) el.textContent = value; };
+  const setVisible = (id, visible) => { const el = $(id); if (el) el.hidden = !visible; };
+
+  // Stable 0..1 pseudo-random per string, so numbers stay put between reloads.
+  function hash(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0) / 4294967295;
+  }
+
+  function fmtCount(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1e3) return Math.round(n / 1e3) + 'K';
+    return String(Math.round(n));
+  }
+
+  function fmtDuration(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  const starIcon = (size, extra) =>
+    `<svg class="icon icon--solid${extra ? ' ' + extra : ''}" width="${size}" height="${size}" aria-hidden="true"><use href="#i-star"></use></svg>`;
+
+  function summaryStars(rating) {
+    const full = Math.floor(rating);
+    const half = rating - full >= 0.25;
+    const empty = Math.max(0, 5 - full - (half ? 1 : 0));
+    return starIcon(14).repeat(full)
+      + (half ? `<span class="star-half" aria-hidden="true">${starIcon(14)}${starIcon(14)}</span>` : '')
+      + starIcon(14, 'dim').repeat(empty);
+  }
+
+  function reviewStars(count) {
+    return starIcon(13).repeat(count) + starIcon(13, 'dim').repeat(Math.max(0, 5 - count));
+  }
+
+  const PLATFORM_ICONS = {
+    'PC': 'i-monitor',
+    'VR': 'i-joystick',
+    'PlayStation 5': 'i-gamepad-2',
+    'Xbox Series X|S': 'i-joystick',
+    'Switch': 'i-gamepad'
+  };
+
+  // ---------------------------------------------------------------- meta
+  document.title = `${game.title} · Van Gogh`;
+  const metaDescription = document.querySelector('meta[name="description"]');
+  if (metaDescription) {
+    metaDescription.setAttribute('content', `${game.title} — game detail page. Gameplay, trailer, screenshots, system requirements, player reviews and more games you may like.`);
+  }
+
+  // ---------------------------------------------------------------- hero
+  const cover = $('cover-img');
+  if (cover) {
+    cover.src = game.cover;
+    cover.alt = `${game.title} cover artwork`;
+  }
+  setText('cover-score', game.rating.toFixed(1));
+  setText('cover-tag', 'Game of the Year 2025');
+  setVisible('cover-tag', Boolean(game.goty));
+
+  setText('eyebrow', game.eyebrow || game.genres[0].toUpperCase());
+  setVisible('eyebrow', Boolean(game.eyebrow));
+
+  setText('game-title', game.title);
+  setText('crumb-current', game.title);
+
+  setText('meta-year', game.year);
+  setText('meta-rating', game.rating.toFixed(1) + ' / 5');
+  setText('meta-extra', game.meta || '');
+  setVisible('meta-extra', Boolean(game.meta));
+  if (!game.meta) {
+    const dots = document.querySelectorAll('.meta-row .dot');
+    if (dots[1]) dots[1].hidden = true;
+  }
+
+  const chips = $('genre-chips');
+  if (chips) chips.innerHTML = game.genres.map((g) => `<li class="chip">${g}</li>`).join('');
+
+  setText('fact-developer', game.developer);
+  setText('fact-publisher', game.publisher);
+  setText('fact-release', game.release);
+
+  const platforms = $('platforms');
+  if (platforms) {
+    platforms.innerHTML = '<span class="platforms-label">Available on</span>'
+      + game.platforms.map((p) =>
+        `<span class="platform"><svg class="icon" width="14" height="14" aria-hidden="true"><use href="#${PLATFORM_ICONS[p] || 'i-gamepad'}"></use></svg>${p}</span>`
+      ).join('');
+  }
+
+  setText('overview', game.overview);
+  setText('overview-more', game.more || '');
+  setVisible('read-more', Boolean(game.more));
+  setVisible('overview-more', Boolean(game.more));
+
+  // ---------------------------------------------------------------- trailer
+  const trailer = game.trailer || {};
+  const trailerSeconds = trailer.seconds || 70 + Math.round(hash(game.slug) * 80);
+  const trailerImage = $('trailer-img');
+  if (trailerImage) {
+    trailerImage.src = trailer.image || game.cover;
+    trailerImage.alt = `${game.title} trailer still`;
+  }
+  setText('trailer-sub', `${Math.floor(trailerSeconds / 60)} min ${trailerSeconds % 60} sec · ${game.developer}`);
+  setText('trailer-caption', `${game.title} — Official Trailer`);
+  setText('trailer-meta', `4K HDR · Official trailer · ${trailer.views || fmtCount(200000 + hash(game.slug + 'views') * 4000000)} views`);
+  const durationChip = document.querySelector('.player-duration');
+  if (durationChip) durationChip.textContent = fmtDuration(trailerSeconds);
+
+  // ---------------------------------------------------------------- screenshots
+  const shots = game.screenshots || [];
+  setVisible('screenshots-section', shots.length > 0);
+  setVisible('trailer-all-link', shots.length > 0);
+  if (shots.length) {
+    setText('shots-sub', game.shotsSub || `${shots.length} shots · ${game.title}`);
+    const grid = $('shots-grid');
+    if (grid) {
+      grid.innerHTML = shots.map((shot) => `
+        <a class="shot" href="${shot.src}">
+          <img src="${shot.src}" alt="${shot.caption} screenshot" loading="lazy">
+          <span class="shot-scrim"></span>
+          <span class="shot-caption">${shot.caption}</span>
+        </a>`).join('');
+    }
+  }
+
+  // ---------------------------------------------------------------- features
+  function genericFeatures() {
+    const g1 = game.genres[0];
+    const g2 = game.genres[1] || game.genres[0];
+    return [
+      {
+        icon: 'i-swords',
+        title: `${g1} first`,
+        body: `Built around ${game.genres.join(', ').toLowerCase()} — the loop ${game.title} is known for, without the filler.`
+      },
+      {
+        icon: 'i-users',
+        title: `Plays on ${game.platforms.length} platform${game.platforms.length === 1 ? '' : 's'}`,
+        body: `${game.platforms.join(' · ')} — ${g2.toLowerCase()} sessions carry across every version you own.`
+      },
+      {
+        icon: 'i-thumbs-up',
+        title: `${game.rating.toFixed(1)} / 5 from players`,
+        body: `Rated by ${fmtCount(Math.round(game.rating * game.rating * 137000))} players on Van Gogh.`
+      },
+      {
+        icon: 'i-map',
+        title: `Made by ${game.developer}`,
+        body: `Published by ${game.publisher}, out since ${game.release}.`
+      }
+    ];
+  }
+
+  const features = game.features || genericFeatures();
+  const featuresGrid = $('features-grid');
+  if (featuresGrid) {
+    featuresGrid.innerHTML = features.map((f) => `
+      <article class="card feature">
+        <div class="feature-icon"><svg class="icon" width="18" height="18" aria-hidden="true"><use href="#${f.icon}"></use></svg></div>
+        <div>
+          <h3>${f.title}</h3>
+          <p>${f.body}</p>
+        </div>
+      </article>`).join('');
+  }
+  setText('features-sub', game.featuresSub || `${game.genres.join(' · ')} · ${game.platforms.length} platform${game.platforms.length === 1 ? '' : 's'}`);
+
+  // ---------------------------------------------------------------- requirements
+  const REQ_TIERS = [
+    { os: 'Windows 10 / macOS 12', cpu: 'Dual-core 1.6 GHz or faster', ram: '4 GB RAM', gpu: 'DirectX 10 capable GPU', storage: '4 GB free space', dx: 'Version 10' },
+    { os: 'Windows 10 / macOS 13', cpu: 'Quad-core 2.4 GHz or faster', ram: '8 GB RAM', gpu: 'DirectX 11 capable GPU', storage: '20 GB free space', dx: 'Version 11' },
+    { os: 'Windows 11 / macOS 14', cpu: 'Six-core 3.2 GHz or faster', ram: '16 GB RAM', gpu: 'DirectX 12 capable GPU, 8 GB VRAM', storage: '70 GB SSD space', dx: 'Version 12' },
+    { os: 'Windows 11 / macOS 14', cpu: 'Eight-core 3.6 GHz or faster', ram: '32 GB RAM', gpu: 'DirectX 12 capable GPU, 12 GB VRAM', storage: '110 GB NVMe SSD', dx: 'Version 12' }
+  ];
+  const tier = game.year < 2012 ? 0 : game.year < 2020 ? 1 : 2;
+  const minimum = game.requirements?.min || REQ_TIERS[tier];
+  const recommended = game.requirements?.rec || REQ_TIERS[Math.min(tier + 1, REQ_TIERS.length - 1)];
+  const reqKeys = ['OS', 'Processor', 'Memory', 'Graphics', 'Storage', 'DirectX'];
+  const reqValues = (tier2) => [tier2.os, tier2.cpu, tier2.ram, tier2.gpu, tier2.storage, tier2.dx];
+  const reqRows = (values) => values.map((v, i) =>
+    `<div class="req-row"><dt class="req-key">${reqKeys[i]}</dt><dd class="req-val">${v}</dd></div>`).join('');
+
+  const reqGrid = $('req-grid');
+  if (reqGrid) {
+    reqGrid.innerHTML = `
+      <article class="card req">
+        <div class="req-head"><h3>Minimum</h3></div>
+        <dl class="req-list">${reqRows(reqValues(minimum))}</dl>
+      </article>
+      <article class="card req req--recommended">
+        <div class="req-head">
+          <h3>Recommended</h3>
+          <span class="req-badge">${game.requirements?.badge || '60 FPS · High'}</span>
+        </div>
+        <dl class="req-list">${reqRows(reqValues(recommended))}</dl>
+      </article>`;
+  }
+
+  // ---------------------------------------------------------------- reviews
+  const ratingCount = game.ratingsCount || Math.round(game.rating * game.rating * 137000);
+  const skew = Math.min(0.94, Math.max(0.3, (game.rating - 2.5) / 2.3));
+  const weights = [skew, (1 - skew) * 3.05, (1 - skew) * 1.26, (1 - skew) * 0.68, (1 - skew) * 0.57];
+  const weightSum = weights.reduce((a, b) => a + b, 0);
+  const counts = weights.map((w) => Math.round((ratingCount * w) / weightSum));
+  const maxWeight = Math.max(...weights);
+  const recommend = Math.min(98, Math.round(46 + game.rating * 10));
+
+  setText('reviews-sub', `${fmtCount(ratingCount)} player ratings`);
+
+  const DEFAULT_REVIEWERS = [
+    { initials: 'JW', name: 'Jonas Weber', role: 'Played 40+ hours' },
+    { initials: 'PR', name: 'Priya Raman', role: 'Played 75+ hours' },
+    { initials: 'AT', name: 'Aiko Tanaka', role: 'Played 120+ hours' },
+    { initials: 'LO', name: 'Luis Ortega', role: 'Played 25+ hours' },
+    { initials: 'SC', name: 'Sam Carter', role: 'Played 90+ hours' },
+    { initials: 'NH', name: 'Nadia Haddad', role: 'Played 60+ hours' }
+  ];
+
+  function defaultReviews() {
+    const g1 = game.genres[0].toLowerCase();
+    const first = DEFAULT_REVIEWERS[Math.floor(hash(game.slug + 'a') * DEFAULT_REVIEWERS.length)];
+    let second = DEFAULT_REVIEWERS[Math.floor(hash(game.slug + 'b') * DEFAULT_REVIEWERS.length)];
+    if (second.name === first.name) {
+      second = DEFAULT_REVIEWERS[(DEFAULT_REVIEWERS.indexOf(first) + 1) % DEFAULT_REVIEWERS.length];
+    }
+    const positiveStars = game.rating >= 4.5 ? 5 : 4;
+    return [
+      {
+        ...first,
+        stars: positiveStars,
+        title: `Exactly what I wanted from a ${g1} game`,
+        body: `Picked ${game.title} up on a whim and lost a whole weekend to it. The ${g1} loop is tight — there is always one more thing to finish before you log off.`,
+        helpful: 64 + Math.round(hash(game.slug + 'h1') * 90)
+      },
+      {
+        ...second,
+        stars: 4,
+        title: 'Great, with a few rough edges',
+        body: `The ${g1} side of ${game.title} really shines once it clicks, but the first couple of hours are slow and the menus take some getting used to. Worth pushing through.`,
+        helpful: 30 + Math.round(hash(game.slug + 'h2') * 70)
+      }
+    ];
+  }
+
+  const reviewList = game.reviews && game.reviews.length ? game.reviews : defaultReviews();
+  const reviews = $('reviews');
+  if (reviews) {
+    reviews.innerHTML = `
+      <div class="card review-summary">
+        <div class="score-row">
+          <span class="score">${game.rating.toFixed(1)}</span>
+          <div class="score-meta">
+            <span class="stars" aria-label="${game.rating.toFixed(1)} out of 5 stars">${summaryStars(game.rating)}</span>
+            <span class="score-count">${fmtCount(ratingCount)} ratings</span>
+          </div>
+        </div>
+
+        <div class="bars">
+          ${game.ratingBars
+            ? game.ratingBars.map((b, i) => `
+            <div class="bar-row">
+              <span class="bar-label">${5 - i}</span>
+              <span class="bar-track"><span class="bar-fill" style="width:${b.pct}%"></span></span>
+              <span class="bar-count">${b.count}</span>
+            </div>`).join('')
+            : weights.map((w, i) => `
+            <div class="bar-row">
+              <span class="bar-label">${5 - i}</span>
+              <span class="bar-track"><span class="bar-fill" style="width:${Math.round((w / maxWeight) * 100)}%"></span></span>
+              <span class="bar-count">${fmtCount(counts[i])}</span>
+            </div>`).join('')}
+        </div>
+
+        <div class="summary-divider"></div>
+        <div class="summary-footer">
+          <svg class="icon" width="14" height="14" aria-hidden="true"><use href="#i-thumbs-up"></use></svg>
+          <span>${recommend}% of players recommend this game</span>
+        </div>
+      </div>
+
+      ${reviewList.map((r) => `
+        <article class="card review">
+          <div class="reviewer">
+            <span class="avatar" aria-hidden="true">${r.initials}</span>
+            <div class="reviewer-meta">
+              <strong>${r.name}</strong>
+              <span>${r.role}</span>
+            </div>
+            <span class="review-stars" aria-label="${r.stars} out of 5 stars">${reviewStars(r.stars)}</span>
+          </div>
+          <h3>${r.title}</h3>
+          <p class="review-body">${r.body}</p>
+          <div class="helpful">
+            <svg class="icon" width="12" height="12" aria-hidden="true"><use href="#i-thumbs-up"></use></svg>
+            <span>${r.helpful} found this helpful</span>
+          </div>
+        </article>`).join('')}`;
+  }
+
+  // ---------------------------------------------------------------- related
+  setText('related-sub', `Because you play ${game.title}`);
+
+  const start = Math.max(0, CATALOG.findIndex((g) => g.slug === game.slug));
+  const related = [];
+  for (let i = 1; i <= 5 && CATALOG.length > 1; i++) {
+    related.push(CATALOG[(start + i) % CATALOG.length]);
+  }
+
+  const relatedGrid = $('related-grid');
+  if (relatedGrid) {
+    relatedGrid.innerHTML = related.map((g) => `
+      <a class="card related-card" href="gamedetail.html?game=${g.slug}" aria-label="Open ${g.title} details">
+        <div class="poster"><img src="${g.cover}" alt="${g.title} cover" loading="lazy"></div>
+        <div class="related-info">
+          <span class="related-title">${g.title}</span>
+          <span class="related-year">${g.year}</span>
+          <span class="related-genres">${g.genres.slice(0, 2).join(' · ')}</span>
+          <span class="related-rating">
+            ${starIcon(11)}
+            <span>${g.rating.toFixed(1)}</span>
+          </span>
+        </div>
+      </a>`).join('');
+  }
+
+  // ---------------------------------------------------------------- behaviour
+  // Read more
+  const readMore = $('read-more');
+  readMore?.addEventListener('click', () => {
+    const expanded = readMore.getAttribute('aria-expanded') === 'true';
+    readMore.setAttribute('aria-expanded', String(!expanded));
+    readMore.querySelector('.read-more-label').textContent = expanded ? 'Read More' : 'Read Less';
+    $('overview')?.classList.toggle('expanded', !expanded);
+  });
+
+  // Want to Play / Favorites
+  const wantBtn = document.querySelector('[data-toggle="want"]');
+  wantBtn?.addEventListener('click', () => {
+    const pressed = wantBtn.getAttribute('aria-pressed') === 'true';
+    wantBtn.setAttribute('aria-pressed', String(!pressed));
+    wantBtn.querySelector('span').textContent = pressed ? 'Want to Play' : 'In Watchlist';
+  });
+
+  const favBtn = document.querySelector('[data-toggle="fav"]');
+  favBtn?.addEventListener('click', () => {
+    const pressed = favBtn.getAttribute('aria-pressed') === 'true';
+    favBtn.setAttribute('aria-pressed', String(!pressed));
+    favBtn.setAttribute('aria-label', pressed ? 'Add to Favorites' : 'Remove from Favorites');
+    favBtn.querySelector('span').textContent = pressed ? 'Add to Favorites' : 'In Favorites';
+  });
+
+  // Play Trailer button scrolls to the player
+  document.querySelector('[data-scroll-to="trailer"]')?.addEventListener('click', () => {
+    $('trailer')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  // Fake trailer playback state (click the player again to pause)
+  const player = $('trailer');
+  const playBtn = player?.querySelector('.player-play');
+  const startPlaying = () => {
+    player.classList.add('is-playing');
+    playBtn.setAttribute('aria-pressed', 'true');
+    playBtn.setAttribute('aria-label', 'Pause trailer');
+  };
+  const pausePlaying = () => {
+    player.classList.remove('is-playing');
+    playBtn.setAttribute('aria-pressed', 'false');
+    playBtn.setAttribute('aria-label', 'Play trailer');
+    const bar = player.querySelector('.player-progress span');
+    bar.style.width = '';
+  };
+  playBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (player.classList.contains('is-playing')) pausePlaying();
+    else startPlaying();
+  });
+  player?.addEventListener('click', () => {
+    if (player.classList.contains('is-playing')) pausePlaying();
+  });
+
+  // Mobile search panel
+  const searchToggle = document.querySelector('[data-search-toggle]');
+  const header = document.querySelector('.site-header');
+  searchToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = header.classList.toggle('search-open');
+    searchToggle.setAttribute('aria-expanded', String(open));
+    if (open) document.querySelector('#mobile-search input')?.focus();
+  });
+
+  // Search always lands on the All Games page
+  const goSearch = (value) => {
+    const q = (value || '').trim();
+    location.href = q ? `index.html?q=${encodeURIComponent(q)}` : 'index.html';
+  };
+  document.querySelectorAll('form[role="search"]').forEach((form) => {
+    const input = form.querySelector('input[type="search"]');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      goSearch(input?.value);
+    });
+    form.querySelector('.btn-search')?.addEventListener('click', () => goSearch(input?.value));
+  });
+  const desktopSearch = document.querySelector('.search-group .btn-search');
+  desktopSearch?.addEventListener('click', () => {
+    goSearch(document.querySelector('.search-group input[type="search"]')?.value);
+  });
+
+  // Category dropdown
+  document.querySelectorAll('.category').forEach((category) => {
+    const toggle = category.querySelector('.category-toggle');
+    const menu = category.querySelector('.category-menu');
+    const label = toggle.querySelector('.category-label');
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = menu.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+
+    menu.querySelectorAll('a').forEach((item) => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.category-label').forEach((el) => {
+          el.textContent = item.dataset.category;
+        });
+        document.querySelectorAll('.category-menu a').forEach((a) => a.removeAttribute('aria-current'));
+        document.querySelectorAll(`.category-menu a[data-category="${item.dataset.category}"]`).forEach((a) => a.setAttribute('aria-current', 'true'));
+        menu.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+  });
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.category-menu.open').forEach((menu) => {
+      menu.classList.remove('open');
+      menu.parentElement.querySelector('.category-toggle')?.setAttribute('aria-expanded', 'false');
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.category-menu.open').forEach((menu) => {
+        menu.classList.remove('open');
+        menu.parentElement.querySelector('.category-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    }
+  });
+</script>
+</body>
+</html>

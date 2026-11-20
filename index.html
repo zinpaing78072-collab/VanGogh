@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All Games · Van Gogh</title>
+<meta name="description" content="Browse every game in Van Gogh — pick a box art card to open its detail page.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23F5C542' d='m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --text-primary:#fff;
+    --text-secondary:#C3DCEE;
+    --text-muted:#8FB4CC;
+    --cyan:#5FDBF5;
+    --gold:#F5C542;
+    --gold-light:#FFDE8A;
+    --ink:#0A2A45;
+    --glass:rgba(14,51,85,.70);
+    --stroke:rgba(139,221,245,.19);
+    --stroke-strong:rgba(139,221,245,.30);
+    --font-head:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --font-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --pad:48px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;position:relative;
+    background:linear-gradient(155deg,#0A4775 0%,#1280AE 32%,#0B5480 62%,#052A45 88%,#041C30 100%);
+    background-attachment:fixed;
+    color:var(--text-primary);font-family:var(--font-body);line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  img{display:block;max-width:100%}
+  a{color:inherit}
+  button{font:inherit;color:inherit;cursor:pointer}
+  input{font:inherit}
+  h1,h2,h3,p{margin:0}
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:4px}
+
+  .icon{display:inline-block;flex:none;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .icon--solid{fill:currentColor;stroke:none}
+
+  .skip-link{position:absolute;left:16px;top:-60px;z-index:100;padding:10px 16px;border-radius:10px;background:var(--gold);color:var(--ink);font-weight:600;text-decoration:none;transition:top .15s ease}
+  .skip-link:focus{top:12px}
+
+  .backdrop{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+  .glow{position:absolute;border-radius:50%;filter:blur(60px)}
+  .glow--1{width:1000px;height:1000px;left:-320px;top:-360px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#63E0F759 0%,#63E0F700 64%);filter:blur(55px)}
+  .glow--2{width:700px;height:560px;left:32%;top:-200px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#FFD8734D 0%,#FFD87300 70%);filter:blur(65px)}
+  .glow--3{width:860px;height:860px;right:-360px;top:-280px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#4FD0F040 0%,#4FD0F000 66%);filter:blur(55px)}
+  .glow--4{width:900px;height:820px;left:-260px;top:640px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#2E9BD833 0%,#2E9BD800 68%);filter:blur(65px)}
+  .glow--5{width:820px;height:760px;right:-340px;top:520px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#46D3F536 0%,#46D3F500 68%);filter:blur(60px)}
+  .glow--6{width:700px;height:600px;left:16%;top:1200px;background:radial-gradient(ellipse 50% 50% at 50% 50%,#EFBE4F2A 0%,#EFBE4F00 75%);filter:blur(65px)}
+
+  .site-header{
+    position:sticky;top:0;z-index:30;
+    background:linear-gradient(180deg,rgba(12,50,83,.78) 0%,rgba(8,39,66,.65) 100%);
+    border-bottom:1px solid rgba(139,221,245,.18);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  }
+  .header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:28px;height:88px;padding:0 var(--pad)}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex:none}
+  .brand-mark{color:var(--gold);width:24px;height:24px}
+  .brand-name{font-family:var(--font-head);font-size:23px;font-weight:600;letter-spacing:.2px;white-space:nowrap}
+  .search-group{flex:1;display:flex;align-items:center;justify-content:center;gap:14px;min-width:0}
+  .search{display:flex;align-items:center;gap:12px;width:min(520px,100%);height:48px;padding:0 20px;border-radius:24px;border:1px solid rgba(139,221,245,.21);background:rgba(11,46,74,.68);color:#9FC4DA;transition:border-color .15s ease,background .15s ease}
+  .search:focus-within{border-color:rgba(95,219,245,.55);background:rgba(11,46,74,.85)}
+  .search input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--text-primary);font-size:14px}
+  .search input::placeholder{color:#96BCD4}
+  .btn-search{height:48px;padding:0 26px;border:0;border-radius:24px;background:linear-gradient(170deg,#FFD873 0%,#F0B934 100%);color:var(--ink);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;transition:filter .15s ease,transform .1s ease}
+  .btn-search:hover{filter:brightness(1.06)}
+  .btn-search:active{transform:translateY(1px)}
+
+  .dropdown{position:relative;flex:none}
+  .dropdown-toggle{
+    display:flex;align-items:center;gap:12px;height:48px;padding:0 18px;border-radius:14px;
+    background:rgba(11,46,74,.68);border:1px solid rgba(139,221,245,.21);
+    color:var(--text-primary);font-size:14px;font-weight:500;
+    transition:border-color .15s ease,background .15s ease;
+  }
+  .dropdown-toggle:hover{border-color:rgba(95,219,245,.5);background:rgba(11,46,74,.85)}
+  .dropdown-toggle .chev{color:#9FC4DA;transition:transform .18s ease}
+  .dropdown-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .dropdown-menu{
+    position:absolute;right:0;top:calc(100% + 10px);min-width:196px;padding:8px;border-radius:16px;
+    background:rgba(10,41,66,.97);border:1px solid var(--stroke-strong);
+    box-shadow:0 24px 50px rgba(1,15,26,.55);display:none;z-index:40;
+  }
+  .dropdown-menu.open{display:block}
+  .dropdown-menu a,.dropdown-menu button{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;
+    padding:9px 12px;border-radius:10px;text-decoration:none;border:0;background:none;text-align:left;
+    font-size:13.5px;color:var(--text-secondary);
+  }
+  .dropdown-menu a:hover,.dropdown-menu button:hover{background:rgba(95,219,245,.12);color:#fff}
+  .dropdown-menu [aria-current="true"]{color:var(--cyan);font-weight:600}
+  .mobile-tools{display:none;align-items:center;gap:8px}
+  .mobile-search{display:none;align-items:center;gap:10px;padding:0 var(--pad) 16px}
+  .mobile-search .search{flex:1;height:44px;width:auto;min-width:0}
+  .mobile-search .btn-search{height:44px;padding:0 20px;flex:none}
+  .site-header.search-open .mobile-search{display:flex}
+  .icon-button{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:19px;background:rgba(11,46,74,.68);border:1px solid rgba(139,221,245,.21);color:#B7DCF0;text-decoration:none}
+  .icon-button:hover{border-color:rgba(95,219,245,.5)}
+
+  main{max-width:1440px;margin:0 auto;padding:38px var(--pad) 60px}
+  .content{display:flex;flex-direction:column;gap:28px}
+
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .page-title{font-family:var(--font-head);font-size:clamp(30px,3.2vw,38px);font-weight:600;letter-spacing:-.5px;line-height:1.15}
+  .page-sub{margin-top:8px;color:var(--text-secondary);font-size:13.5px}
+  .sort-toggle{height:44px;border-radius:12px;gap:10px;font-size:13px;font-weight:400;color:#E3EEF6;padding:0 16px;background:rgba(11,46,74,.60)}
+  .sort-toggle .icon{color:#9FC4DA}
+
+  .filters{display:flex;flex-wrap:wrap;gap:8px}
+  .filter{
+    padding:9px 16px;border-radius:22px;border:1px solid rgba(139,221,245,.22);
+    background:rgba(11,53,83,.24);color:#D9F4FD;font-size:13px;font-weight:500;
+    transition:background .15s ease,color .15s ease,border-color .15s ease;
+  }
+  .filter:hover{border-color:rgba(95,219,245,.55);background:rgba(11,53,83,.42)}
+  .filter[aria-pressed="true"]{background:linear-gradient(170deg,#FFD873 0%,#F0B934 100%);color:var(--ink);border-color:transparent;font-weight:600}
+
+  .games-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px}
+  .game-card{
+    display:flex;flex-direction:column;overflow:hidden;text-decoration:none;
+    border-radius:16px;border:1px solid rgba(139,221,245,.19);
+    background:rgba(14,51,85,.65);
+    transition:transform .2s ease,border-color .2s ease,background .2s ease;
+  }
+  .game-card:hover{transform:translateY(-3px);border-color:rgba(95,219,245,.5);background:rgba(17,60,95,.75)}
+  .game-poster{position:relative;aspect-ratio:211/300;overflow:hidden;background:#0B3553}
+  .game-poster img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+  .game-card:hover .game-poster img{transform:scale(1.04)}
+  .game-poster::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,16,28,0) 55%,rgba(2,16,28,.35) 100%)}
+  .goty-badge{
+    position:absolute;z-index:2;top:10px;left:10px;
+    padding:4px 8px;border-radius:6px;background:rgba(245,197,66,.90);color:var(--ink);
+    font-size:9px;font-weight:700;letter-spacing:.6px;
+  }
+  .game-info{display:flex;flex-direction:column;gap:4px;padding:12px 12px 14px}
+  .game-title{color:var(--cyan);font-size:13px;font-weight:600;line-height:1.3}
+  .game-year{color:var(--text-muted);font-size:11px}
+  .game-genres{color:var(--text-muted);font-size:10.5px;line-height:1.35}
+  .game-rating{display:flex;align-items:center;gap:4px;margin-top:2px}
+  .game-rating .icon{color:var(--gold)}
+  .game-rating span{color:var(--gold-light);font-size:11px;font-weight:600}
+
+  .empty{padding:56px 20px;text-align:center;border:1px dashed rgba(139,221,245,.3);border-radius:18px;background:rgba(14,51,85,.35)}
+  .empty h2{font-family:var(--font-head);font-size:20px;font-weight:600}
+  .empty p{margin-top:8px;color:var(--text-muted);font-size:13px}
+  .empty button{margin-top:18px;height:40px;padding:0 18px;border-radius:20px;border:1px solid rgba(139,221,245,.3);background:rgba(11,46,74,.7);color:var(--text-primary);font-size:13px}
+  .empty button:hover{border-color:rgba(95,219,245,.6)}
+
+  .load-wrap{display:flex;justify-content:center;padding-top:10px}
+  .load-more{
+    display:inline-flex;align-items:center;gap:9px;height:52px;padding:0 30px;
+    border-radius:26px;border:1px solid rgba(139,221,245,.22);
+    background:rgba(11,46,74,.70);color:var(--gold-light);
+    font-size:13.5px;font-weight:600;
+    transition:background .15s ease,border-color .15s ease;
+  }
+  .load-more:hover{background:rgba(11,46,74,.95);border-color:rgba(245,197,66,.45)}
+  .load-more .icon{color:var(--gold)}
+
+  .site-footer{
+    margin-top:8px;padding:20px 0 0;border-top:1px solid rgba(139,221,245,.15);
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  }
+  .footer-brand{display:flex;align-items:center;gap:9px;color:#B9D6E8;font-size:14px;font-weight:600}
+  .footer-brand .icon{color:var(--gold)}
+  .footer-note{color:#7FA6BF;font-size:12px}
+
+  [hidden]{display:none !important}
+
+  @media (max-width:1180px){
+    .games-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  }
+  @media (max-width:1024px){
+    :root{--pad:32px}
+    .game-poster{aspect-ratio:3/4}
+  }
+  @media (max-width:900px){
+    .games-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  }
+  @media (max-width:860px){
+    .search-group{display:none}
+    .site-header .dropdown{display:none}
+    .mobile-tools{display:flex}
+    .mobile-tools .dropdown{display:block}
+    .header-inner{height:64px;gap:12px;justify-content:space-between}
+    .brand-mark{width:19px;height:19px}
+    .brand-name{font-size:18px}
+    .dropdown-toggle{height:38px;border-radius:12px;padding:0 12px;gap:8px;font-size:13px}
+    .dropdown-toggle .icon{width:14px;height:14px}
+    .page-title{font-size:28px}
+    .page-sub{font-size:12px;margin-top:6px}
+    .sort-toggle{height:38px;font-size:12px;padding:0 12px}
+    .filter{padding:7px 13px;font-size:12px}
+    .game-info{padding:10px 10px 12px}
+    .game-title{font-size:12px}
+    .game-genres{font-size:10px}
+  }
+  @media (max-width:700px){
+    .games-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .game-poster{aspect-ratio:167/220}
+    .site-footer{flex-direction:column;align-items:flex-start;gap:6px}
+  }
+  @media (max-width:420px){
+    :root{--pad:20px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.001ms !important;transition-duration:.001ms !important}
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#games">Skip to games</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-sparkles" viewBox="0 0 24 24">
+      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
+      <path d="M5 3v4M19 17v4M3 5h4M17 19h4"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-arrow-up-down" viewBox="0 0 24 24"><path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01Z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+  </defs>
+</svg>
+
+<div class="backdrop" aria-hidden="true">
+  <div class="glow glow--1"></div>
+  <div class="glow glow--2"></div>
+  <div class="glow glow--3"></div>
+  <div class="glow glow--4"></div>
+  <div class="glow glow--5"></div>
+  <div class="glow glow--6"></div>
+</div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="index.html" aria-label="Van Gogh — All Games">
+      <svg class="icon icon--solid brand-mark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+      <span class="brand-name">Van Gogh</span>
+    </a>
+
+    <div class="search-group">
+      <form class="search" id="home-search-form" role="search">
+        <svg class="icon" width="17" height="17" aria-hidden="true"><use href="#i-search"></use></svg>
+        <input id="search-input" type="search" aria-label="Search games, platforms, studios" placeholder="Search games, platforms, studios…">
+      </form>
+      <button class="btn-search" type="submit" form="home-search-form">Search</button>
+    </div>
+
+    <div class="dropdown">
+      <button class="dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="category-menu-desktop">
+        <span class="category-label">Games</span>
+        <svg class="icon chev" width="16" height="16" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+      </button>
+      <div class="dropdown-menu" id="category-menu-desktop" role="menu" aria-label="Content category">
+        <button type="button" role="menuitem" data-category="Movies">Movies</button>
+        <button type="button" role="menuitem" data-category="Music">Music</button>
+        <button type="button" role="menuitem" data-category="Books">Books</button>
+        <button type="button" role="menuitem" data-category="Games" aria-current="true">Games</button>
+      </div>
+    </div>
+
+    <div class="mobile-tools">
+      <button class="icon-button" type="button" data-search-toggle aria-expanded="false" aria-controls="mobile-search" aria-label="Search games">
+        <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-search"></use></svg>
+      </button>
+      <div class="dropdown">
+        <button class="dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="category-menu-mobile">
+          <span class="category-label">Games</span>
+          <svg class="icon chev" width="14" height="14" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+        </button>
+        <div class="dropdown-menu" id="category-menu-mobile" role="menu" aria-label="Content category">
+          <button type="button" role="menuitem" data-category="Movies">Movies</button>
+          <button type="button" role="menuitem" data-category="Music">Music</button>
+          <button type="button" role="menuitem" data-category="Books">Books</button>
+          <button type="button" role="menuitem" data-category="Games" aria-current="true">Games</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form class="mobile-search" id="mobile-search" role="search">
+    <div class="search">
+      <svg class="icon" width="17" height="17" aria-hidden="true"><use href="#i-search"></use></svg>
+      <input type="search" aria-label="Search games, platforms, studios" placeholder="Search games, platforms, studios…">
+    </div>
+    <button class="btn-search" type="submit">Search</button>
+  </form>
+</header>
+
+<main id="games">
+  <div class="content">
+
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">All Games</h1>
+        <p class="page-sub">1,284 games across every platform · Updated daily</p>
+      </div>
+
+      <div class="dropdown">
+        <button class="dropdown-toggle sort-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="sort-menu">
+          <svg class="icon" width="14" height="14" aria-hidden="true"><use href="#i-arrow-up-down"></use></svg>
+          <span class="sort-label">Most popular</span>
+          <svg class="icon chev" width="15" height="15" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+        </button>
+        <div class="dropdown-menu" id="sort-menu" role="menu" aria-label="Sort games">
+          <button type="button" role="menuitem" data-sort="popular" aria-current="true">Most popular</button>
+          <button type="button" role="menuitem" data-sort="rating">Highest rated</button>
+          <button type="button" role="menuitem" data-sort="newest">Newest</button>
+          <button type="button" role="menuitem" data-sort="az">A–Z</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters" role="group" aria-label="Filter games by genre">
+      <button class="filter" type="button" data-genre="All" aria-pressed="true">All</button>
+      <button class="filter" type="button" data-genre="Battle Royale" aria-pressed="false">Battle Royale</button>
+      <button class="filter" type="button" data-genre="Sandbox" aria-pressed="false">Sandbox</button>
+      <button class="filter" type="button" data-genre="Party" aria-pressed="false">Party</button>
+      <button class="filter" type="button" data-genre="Action" aria-pressed="false">Action</button>
+      <button class="filter" type="button" data-genre="Sports" aria-pressed="false">Sports</button>
+      <button class="filter" type="button" data-genre="Survival" aria-pressed="false">Survival</button>
+      <button class="filter" type="button" data-genre="Shooter" aria-pressed="false">Shooter</button>
+      <button class="filter" type="button" data-genre="Co-op" aria-pressed="false">Co-op</button>
+    </div>
+
+    <div class="games-grid" id="games-grid" aria-live="polite"></div>
+
+    <div class="empty" id="empty" hidden>
+      <h2>No games found</h2>
+      <p id="empty-text">Try a different search or genre.</p>
+      <button type="button" id="clear-filters">Clear filters</button>
+    </div>
+
+    <div class="load-wrap" id="load-wrap">
+      <button class="load-more" type="button" id="load-more">
+        <svg class="icon" width="15" height="15" aria-hidden="true"><use href="#i-plus"></use></svg>
+        <span>Load more games</span>
+      </button>
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <svg class="icon icon--solid" width="16" height="16" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+        Van Gogh
+      </div>
+      <p class="footer-note">Made for people who love stories, in every form.</p>
+    </footer>
+  </div>
+</main>
+
+<script src="games-data.js"></script>
+<script>
+  const GAMES = window.GAMES || [];
+  const PAGE_SIZE = 6;
+  const INITIAL = 18;
+
+  const state = {q: "", genre: "All", sort: "popular", shown: INITIAL};
+  const grid = document.getElementById('games-grid');
+  const empty = document.getElementById('empty');
+  const emptyText = document.getElementById('empty-text');
+  const loadWrap = document.getElementById('load-wrap');
+  const loadLabel = document.querySelector('#load-more span');
+  const searchInputs = [...document.querySelectorAll('input[type="search"]')];
+  const filters = [...document.querySelectorAll('.filter')];
+
+  // Keep both search inputs (desktop + mobile) in sync
+  function setQuery(value, source) {
+    state.q = value.trim();
+    searchInputs.forEach((input) => { if (input !== source) input.value = value; });
+    state.shown = INITIAL;
+    render();
+  }
+
+  function matches(game) {
+    const q = state.q.toLowerCase();
+    const text = [game.title, game.developer, game.publisher, ...game.genres].join(" ").toLowerCase();
+    const byQuery = !q || text.includes(q);
+    const byGenre = state.genre === "All" || game.genres.some((g) => g.toLowerCase().includes(state.genre.toLowerCase()));
+    return byQuery && byGenre;
+  }
+
+  function sorted(list) {
+    const copy = [...list];
+    if (state.sort === "rating") copy.sort((a, b) => b.rating - a.rating);
+    else if (state.sort === "newest") copy.sort((a, b) => b.year - a.year);
+    else if (state.sort === "az") copy.sort((a, b) => a.title.localeCompare(b.title));
+    return copy;
+  }
+
+  function card(game) {
+    return `
+      <a class="game-card" href="gamedetail.html?game=${game.slug}" aria-label="Open ${game.title} details">
+        <div class="game-poster">
+          <img src="${game.cover}" alt="${game.title} cover art" loading="lazy">
+          ${game.goty ? '<span class="goty-badge">GOTY</span>' : ''}
+        </div>
+        <div class="game-info">
+          <h3 class="game-title">${game.title}</h3>
+          <span class="game-year">${game.year}</span>
+          <span class="game-genres">${game.genres.slice(0, 2).join(' · ')}</span>
+          <span class="game-rating">
+            <svg class="icon icon--solid" width="11" height="11" aria-hidden="true"><use href="#i-star"></use></svg>
+            <span>${game.rating.toFixed(1)}</span>
+          </span>
+        </div>
+      </a>`;
+  }
+
+  function render() {
+    const list = sorted(GAMES.filter(matches));
+    const visible = list.slice(0, state.shown);
+
+    grid.innerHTML = visible.map(card).join('');
+    grid.hidden = list.length === 0;
+    empty.hidden = list.length !== 0;
+    if (!list.length) {
+      emptyText.textContent = state.q
+        ? `Nothing matches “${state.q}”${state.genre !== 'All' ? ` in ${state.genre}` : ''}.`
+        : `No ${state.genre} games in this demo.`;
+    }
+
+    const remaining = list.length - visible.length;
+    loadWrap.hidden = remaining <= 0;
+    loadLabel.textContent = `Load ${Math.min(PAGE_SIZE, remaining)} more game${Math.min(PAGE_SIZE, remaining) === 1 ? '' : 's'}`;
+  }
+
+  // Search (desktop + mobile)
+  document.querySelectorAll('form[role="search"]').forEach((form) => {
+    const input = form.querySelector('input[type="search"]');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      setQuery(input.value, input);
+    });
+    input.addEventListener('input', () => setQuery(input.value, input));
+  });
+
+  // Genre filters
+  filters.forEach((button) => {
+    button.addEventListener('click', () => {
+      state.genre = button.dataset.genre;
+      state.shown = INITIAL;
+      filters.forEach((f) => f.setAttribute('aria-pressed', String(f === button)));
+      render();
+    });
+  });
+
+  document.getElementById('clear-filters').addEventListener('click', () => {
+    state.genre = "All";
+    state.sort = "popular";
+    filters.forEach((f) => f.setAttribute('aria-pressed', String(f.dataset.genre === 'All')));
+    searchInputs.forEach((input) => { input.value = ''; });
+    state.q = '';
+    state.shown = INITIAL;
+    document.querySelectorAll('#sort-menu button').forEach((b) => {
+      b.toggleAttribute('aria-current', b.dataset.sort === 'popular');
+      if (b.dataset.sort === 'popular') b.setAttribute('aria-current', 'true');
+      else b.removeAttribute('aria-current');
+    });
+    document.querySelector('.sort-label').textContent = 'Most popular';
+    render();
+  });
+
+  // Load more
+  document.getElementById('load-more').addEventListener('click', () => {
+    state.shown += PAGE_SIZE;
+    render();
+  });
+
+  // Dropdowns (category + sort)
+  document.querySelectorAll('.dropdown').forEach((dropdown) => {
+    const toggle = dropdown.querySelector('.dropdown-toggle');
+    const menu = dropdown.querySelector('.dropdown-menu');
+    if (!toggle || !menu) return;
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = menu.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+
+    menu.querySelectorAll('button').forEach((item) => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (item.dataset.sort) {
+          state.sort = item.dataset.sort;
+          state.shown = INITIAL;
+          document.querySelector('.sort-label').textContent = item.textContent;
+          menu.querySelectorAll('button').forEach((b) => {
+            if (b === item) b.setAttribute('aria-current', 'true');
+            else b.removeAttribute('aria-current');
+          });
+          render();
+        } else if (item.dataset.category) {
+          document.querySelectorAll('.category-label').forEach((el) => { el.textContent = item.dataset.category; });
+          document.querySelectorAll('.dropdown-menu button[data-category]').forEach((b) => {
+            if (b.dataset.category === item.dataset.category) b.setAttribute('aria-current', 'true');
+            else b.removeAttribute('aria-current');
+          });
+        }
+        menu.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+  });
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown-menu.open').forEach((menu) => {
+      menu.classList.remove('open');
+      menu.parentElement.querySelector('.dropdown-toggle')?.setAttribute('aria-expanded', 'false');
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.dropdown-menu.open').forEach((menu) => {
+        menu.classList.remove('open');
+        menu.parentElement.querySelector('.dropdown-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    }
+  });
+
+  // Mobile search panel
+  const searchToggle = document.querySelector('[data-search-toggle]');
+  const header = document.querySelector('.site-header');
+  searchToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = header.classList.toggle('search-open');
+    searchToggle.setAttribute('aria-expanded', String(open));
+    if (open) document.querySelector('#mobile-search input')?.focus();
+  });
+
+  // Deep link: index.html?q=...
+  const params = new URLSearchParams(location.search);
+  if (params.get('q')) {
+    const q = params.get('q');
+    searchInputs.forEach((input) => { input.value = q; });
+    state.q = q;
+  }
+
+  render();
+</script>
+</body>
+</html>
