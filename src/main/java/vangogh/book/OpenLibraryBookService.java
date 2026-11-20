@@ -61,6 +61,15 @@ public class OpenLibraryBookService {
                         .flatMap(this::parseRows);
     }
 
+    /**
+     * The recommendation engine's resolver, sharing this service's client — so
+     * a controller (and its tests) can never end up with two Open Library
+     * clients.
+     */
+    public BookResolver resolver() {
+        return new BookResolver(client);
+    }
+
     private Either<FetchError, String> requireSuccess(String api, ApiResponse res) {
         return res.isSuccess()
                 ? Either.right(res.body)
@@ -104,7 +113,12 @@ public class OpenLibraryBookService {
         return parseRows(json).getOrElse(java.util.List.of());
     }
 
-    private Book toBook(JsonObject doc, int position) {
+    /**
+     * Row builder shared with {@link BookResolver}: a recommended card must be
+     * identical to a trending or search card. Static because it only reads the
+     * payload — no service state involved.
+     */
+    static Book toBook(JsonObject doc, int position) {
         String workKey = Option.of(optString(doc, "key"))
                 .map(k -> k.replaceFirst("^/works/", ""))
                 .filter(k -> !k.isEmpty())

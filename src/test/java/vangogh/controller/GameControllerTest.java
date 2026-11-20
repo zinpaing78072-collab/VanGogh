@@ -2,12 +2,21 @@ package vangogh.controller;
 
 import vangogh.error.FetchError;
 import vangogh.game.Game;
+import vangogh.game.GameResolver;
 import vangogh.game.TgdbGameService;
+import vangogh.llm.LlmClient;
+import vangogh.llm.LlmConfig;
+import vangogh.net.ApiResponse;
+import vangogh.net.TgdbClient;
+import vangogh.recommend.RecommendationService;
 import org.junit.jupiter.api.Test;
 import io.vavr.control.Either;
+import io.vavr.control.Try;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Unit tests for GameController — the Krema IPC command handler that backs
@@ -61,6 +70,74 @@ class GameControllerTest {
         public Either<FetchError, java.util.List<Game>> searchGames(String query) {
             return fetchTrending();
         }
+    }
+
+    /** TheGamesDB client with a canned search reply (no network). */
+    static class StubTgdbClient extends TgdbClient {
+        final String body;
+
+        StubTgdbClient(String body) {
+            super("stub-key");
+            this.body = body;
+        }
+
+        @Override
+        public Try<ApiResponse> searchGame(String query) {
+            return Try.success(new ApiResponse(200, body, null));
+        }
+    }
+
+    /** Stub service whose resolver uses the canned client, posters served instantly. */
+    static class RecommendingService extends SlowService {
+        private final GameResolver resolver;
+
+        RecommendingService(GameResolver resolver) {
+            this.resolver = resolver;
+        }
+
+        @Override
+        public GameResolver resolver() {
+            return resolver;
+        }
+
+        @Override
+        public io.vavr.control.Option<String> posterDataUri(String posterUrl) {
+            return io.vavr.control.Option.some("data:image/jpeg;base64,stubbed");
+        }
+    }
+
+    /** Stub model call: returns a canned reply or a mapped failure. */
+    static class StubLlm extends LlmClient {
+        final Either<FetchError, String> result;
+        int calls;
+
+        StubLlm(Either<FetchError, String> result) {
+            this.result = result;
+        }
+
+        @Override
+        public Either<FetchError, String> complete(LlmConfig config, String system, String user) {
+            calls++;
+            return result;
+        }
+    }
+
+    private static final String SAMPLE_GAME = """
+            {"id":42,"game_title":"Sample Game","release_date":"2024-06-15",\
+            "overview":"An adventure.","genres":[1]}
+            """;
+
+    private static String payload(String... rows) {
+        return "{\"data\":{\"games\":[" + String.join(",", rows) + "]}," +
+                "\"include\":{\"boxart\":{\"data\":{}}}}";
+    }
+
+    /** Controller wired to the engine with a stubbed model call. */
+    private GameController recommendController(TgdbGameService service, StubLlm llm,
+                                               ExecutorService io) {
+        RecommendationService engine = new RecommendationService(io, llm,
+                () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 10)));
+        return new GameController(service, io, engine);
     }
 
     /** Drains pollGameData until this generation's fetch resolves (2s deadline). */
@@ -121,15 +198,115 @@ class GameControllerTest {
     }
 
     @Test
-    void recommendKindIsRejectedUntilThisFormsEngineSliceLands() throws Exception {
-        GameController controller = new GameController(new SlowService());
+    void requestGamesWithRecommendKindRunsTheModelAndResolvesItsPicks() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            StubLlm llm = new StubLlm(Either.right(
+                    "Sample Game | 2024\nNot A Real Game | 1999"));
+            GameController controller = recommendController(
+                    new RecommendingService(new GameResolver(
+                            new StubTgdbClient(payload(SAMPLE_GAME)))), llm, io);
 
-        int gen = controller.requestGames("recommend", "cozy games");
-        GameController.GameDataReply reply = drainData(controller, gen);
+            int gen = controller.requestGames("recommend", "cozy adventures");
+            GameController.GameDataReply reply = drainData(controller, gen);
 
-        // Never a silent direct search behind an AI-looking toggle.
-        assertEquals("error", reply.status());
-        assertEquals("kind: AI recommendations are not wired for this form yet", reply.error());
+            assertEquals("done", reply.status());
+            assertNull(reply.error());
+            assertEquals(1, reply.items().size());   // the unresolvable pick is dropped
+            assertEquals("Sample Game", reply.items().get(0).game_title());
+            assertEquals("2024-06-15", reply.items().get(0).release_date());
+            assertEquals(1, llm.calls);
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void recommendWithoutAQueryIsABadInputError() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            // The page never sends this (an empty box is trending), but the
+            // engine must not spend a model call on nothing.
+            StubLlm llm = new StubLlm(Either.right("Sample Game | 2024"));
+            GameController controller = recommendController(
+                    new RecommendingService(new GameResolver(
+                            new StubTgdbClient(payload(SAMPLE_GAME)))), llm, io);
+
+            int gen = controller.requestGames("recommend", "  ");
+            GameController.GameDataReply reply = drainData(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("AI recommendations need a query"), reply.error());
+            assertEquals(0, llm.calls);
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void aModelFailureSurfacesOnTheDataDrain() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            StubLlm llm = new StubLlm(Either.left(new FetchError.Transport(
+                    "LLM request", new RuntimeException("offline"))));
+            GameController controller = recommendController(
+                    new RecommendingService(new GameResolver(
+                            new StubTgdbClient(payload(SAMPLE_GAME)))), llm, io);
+
+            int gen = controller.requestGames("recommend", "cozy adventures");
+            GameController.GameDataReply reply = drainData(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("LLM request failed: offline"), reply.error());
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void aModelHttpErrorSurfacesWithItsStatus() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            StubLlm llm = new StubLlm(Either.left(
+                    new FetchError.HttpStatus("LLM", 401, "{\"error\":\"bad key\"}")));
+            GameController controller = recommendController(
+                    new RecommendingService(new GameResolver(
+                            new StubTgdbClient(payload(SAMPLE_GAME)))), llm, io);
+
+            int gen = controller.requestGames("recommend", "cozy adventures");
+            GameController.GameDataReply reply = drainData(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("LLM failed: HTTP 401"), reply.error());
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void aCatalogFailureWithNoResolvedPicksSurfacesItsError() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            StubLlm llm = new StubLlm(Either.right("Sample Game | 2024"));
+            TgdbClient failing = new TgdbClient("stub-key") {
+                @Override
+                public Try<ApiResponse> searchGame(String query) {
+                    return Try.success(new ApiResponse(500, "boom", "server error"));
+                }
+            };
+            GameController controller = recommendController(
+                    new RecommendingService(new GameResolver(failing)), llm, io);
+
+            int gen = controller.requestGames("recommend", "cozy adventures");
+            GameController.GameDataReply reply = drainData(controller, gen);
+
+            // "The network ate everything" must not render as "no games".
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("TheGamesDB search failed: HTTP 500"),
+                    reply.error());
+        } finally {
+            io.shutdownNow();
+        }
     }
 
     @Test

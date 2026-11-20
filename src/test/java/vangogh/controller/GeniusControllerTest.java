@@ -1,20 +1,29 @@
 package vangogh.controller;
 
 import vangogh.error.FetchError;
+import vangogh.llm.LlmClient;
+import vangogh.llm.LlmConfig;
 import vangogh.music.Credit;
 import vangogh.music.GeniusMusicService;
 import vangogh.music.MediaLink;
 import vangogh.music.SongDetail;
+import vangogh.net.ApiResponse;
+import vangogh.net.GeniusClient;
+import vangogh.recommend.RecommendationService;
 import org.junit.jupiter.api.Test;
 import io.vavr.control.Either;
 import io.vavr.control.Option;
+import io.vavr.control.Try;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
- * Unit tests for the song-detail commands on {@link GeniusController}. Same
- * contract as the list commands: the handler returns the request generation at
- * once (UI thread never blocks on network I/O) and the detail arrives through
- * {@code pollSongDetail}.
+ * Unit tests for {@link GeniusController}: the song list, AI recommendations
+ * and the song-detail commands. Same contract throughout: the handler returns
+ * the request generation at once (UI thread never blocks on network I/O) and
+ * results arrive through their drain.
  */
 class GeniusControllerTest {
 
@@ -84,6 +93,75 @@ class GeniusControllerTest {
         public Either<FetchError, SongDetail> songDetail(String id) {
             return Either.left(new FetchError.Transport("Genius song", new RuntimeException("boom")));
         }
+    }
+
+    private static final String SEARCH_HITS = """
+        {"response":{"hits":[
+          {"type":"song","result":{
+            "id":8434253,
+            "title":"Anti-Hero",
+            "primary_artist":{"name":"Taylor Swift"},
+            "song_art_image_thumbnail_url":"https://images.genius.com/anti-hero.300x300x1.jpg",
+            "release_date_for_display":"October 21, 2022"}}
+        ]}}
+        """;
+
+    /** Stub Genius client: canned search hits and a stubbed artwork fetch. */
+    static class StubSearchClient extends GeniusClient {
+        ApiResponse searchResponse = new ApiResponse(200, SEARCH_HITS, null);
+
+        StubSearchClient() {
+            super("stub-token");
+        }
+
+        @Override
+        public Try<ApiResponse> search(String query) {
+            return Try.success(searchResponse);
+        }
+
+        @Override
+        public Option<String> loadPosterDataUri(String imageUrl) {
+            return Option.some("data:image/jpeg;base64,stubbed");
+        }
+    }
+
+    /** Stub model call: returns a canned reply or a mapped failure. */
+    static class StubLlm extends LlmClient {
+        final Either<FetchError, String> result;
+        int calls;
+
+        StubLlm(Either<FetchError, String> result) {
+            this.result = result;
+        }
+
+        @Override
+        public Either<FetchError, String> complete(LlmConfig config, String system, String user) {
+            calls++;
+            return result;
+        }
+    }
+
+    /** Controller wired to the engine with a stubbed model call. */
+    private GeniusController recommendController(GeniusMusicService service, StubLlm llm,
+                                                 ExecutorService io) {
+        RecommendationService engine = new RecommendationService(io, llm,
+                () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 10)));
+        return new GeniusController(service, io, engine);
+    }
+
+    /** Drains pollGeniusMusicData until this generation's fetch resolves (2s deadline). */
+    private GeniusController.MusicDataReply drainMusic(GeniusController controller, int generation)
+            throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 2000;
+        GeniusController.MusicDataReply reply = null;
+        while (System.currentTimeMillis() < deadline) {
+            reply = controller.pollGeniusMusicData(generation);
+            if (!"pending".equals(reply.status())) {
+                return reply;
+            }
+            Thread.sleep(10);
+        }
+        return reply;
     }
 
     private GeniusController.SongDetailReply drainDetail(GeniusController controller, int generation)
@@ -170,5 +248,88 @@ class GeniusControllerTest {
             listReply = controller.pollGeniusMusicData(listGen);
         }
         assertNotEquals("superseded", listReply.status());
+    }
+
+    @Test
+    void requestGeniusMusicWithRecommendKindRunsTheModelAndResolvesItsPicks() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            StubLlm llm = new StubLlm(Either.right(
+                    "Anti-Hero | Taylor Swift\nNot A Real Song | Nobody At All"));
+            GeniusController controller = recommendController(
+                    new GeniusMusicService(new StubSearchClient()), llm, io);
+
+            int gen = controller.requestGeniusMusic("recommend", "sad pop");
+            GeniusController.MusicDataReply reply = drainMusic(controller, gen);
+
+            assertEquals("done", reply.status());
+            assertNull(reply.error());
+            assertEquals(1, reply.items().size());   // the unresolvable pick is dropped
+            assertEquals("Anti-Hero", reply.items().get(0).title());
+            assertEquals("Taylor Swift", reply.items().get(0).artist());
+            assertEquals(2022, reply.items().get(0).year());
+            assertEquals(1, llm.calls);
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void recommendWithoutAQueryIsABadInputError() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            // The page never sends this (an empty box is trending), but the
+            // engine must not spend a model call on nothing.
+            StubLlm llm = new StubLlm(Either.right("Anti-Hero | Taylor Swift"));
+            GeniusController controller = recommendController(
+                    new GeniusMusicService(new StubSearchClient()), llm, io);
+
+            int gen = controller.requestGeniusMusic("recommend", "  ");
+            GeniusController.MusicDataReply reply = drainMusic(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("AI recommendations need a query"), reply.error());
+            assertEquals(0, llm.calls);
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void aModelFailureSurfacesOnTheDataDrain() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            StubLlm llm = new StubLlm(Either.left(new FetchError.Transport(
+                    "LLM request", new RuntimeException("offline"))));
+            GeniusController controller = recommendController(
+                    new GeniusMusicService(new StubSearchClient()), llm, io);
+
+            int gen = controller.requestGeniusMusic("recommend", "sad pop");
+            GeniusController.MusicDataReply reply = drainMusic(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("LLM request failed: offline"), reply.error());
+        } finally {
+            io.shutdownNow();
+        }
+    }
+
+    @Test
+    void aModelHttpErrorSurfacesWithItsStatus() throws Exception {
+        ExecutorService io = Executors.newFixedThreadPool(4);
+        try {
+            StubLlm llm = new StubLlm(Either.left(
+                    new FetchError.HttpStatus("LLM", 401, "{\"error\":\"bad key\"}")));
+            GeniusController controller = recommendController(
+                    new GeniusMusicService(new StubSearchClient()), llm, io);
+
+            int gen = controller.requestGeniusMusic("recommend", "sad pop");
+            GeniusController.MusicDataReply reply = drainMusic(controller, gen);
+
+            assertEquals("error", reply.status());
+            assertTrue(reply.error().contains("LLM failed: HTTP 401"), reply.error());
+        } finally {
+            io.shutdownNow();
+        }
     }
 }

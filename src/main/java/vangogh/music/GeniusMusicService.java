@@ -55,6 +55,14 @@ public class GeniusMusicService {
                 .flatMap(this::parseSearch);
     }
 
+    /**
+     * The recommendation engine's resolver, sharing this service's client — so
+     * a controller (and its tests) can never end up with two Genius clients.
+     */
+    public SongResolver resolver() {
+        return new SongResolver(client);
+    }
+
     public Either<FetchError, java.util.List<Song>> searchSongs(String query) {
         return (query == null || query.trim().isEmpty())
                 ? fetchTrending()
@@ -538,7 +546,12 @@ public class GeniusMusicService {
         return toSong(song);
     }
 
-    private Song toSong(JsonObject s) {
+    /**
+     * Row builder shared with {@link SongResolver}: a recommended card must be
+     * identical to a trending or search card. Static because it only reads the
+     * payload — no service state involved.
+     */
+    static Song toSong(JsonObject s) {
         String id = optString(s, "id");
         if (id.isEmpty()) {
             id = optString(s, "api_path");
@@ -558,7 +571,7 @@ public class GeniusMusicService {
         return new Song(id.isEmpty() ? "0" : id, title, artist, year, "Song", "", posterUrl);
     }
 
-    private static String artistName(JsonObject s) {
+    static String artistName(JsonObject s) {
         // search result uses primary_artist object
         if (s.has("primary_artist") && s.get("primary_artist").isJsonObject()) {
             String n = optString(s.getAsJsonObject("primary_artist"), "name");

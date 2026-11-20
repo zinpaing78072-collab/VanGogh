@@ -113,11 +113,15 @@ back to a direct search — the error names the cause.
 
 | Form | AI recommendations | Notes |
 |---|---|---|
-| Movies | wired | TMDB `/search/movie` resolution |
-| Music, Books, Games | explicitly rejected | `kind: AI recommendations are not wired for this form yet` until their slices land |
+| Movies | wired | TMDB `/search/movie` resolution (`MovieResolver`) |
+| Music | wired | Genius `/search` song resolution (`SongResolver`) through `requestGeniusMusic` |
+| Books | wired | Open Library structured + containment resolution (`BookResolver`) |
+| Games | wired | TheGamesDB exact-name resolution (`GameResolver`) |
 
-The rejection is deliberate: without it, an AI-looking toggle would quietly run
-a database search on those forms and contradict the feature.
+All four content forms now run the engine. Music is wired on
+`GeniusController` — the music form's live controller. `MusicController` (the
+earlier MusicBrainz album slice) is not the page's music path and keeps its
+`recommend` rejection until it is retired or rewired.
 
 ## Pipeline
 
@@ -133,7 +137,9 @@ request<Form>(kind="recommend", query)        UI thread, returns generation at o
 
 Classes: `vangogh.llm` (`LlmConfig`, `LlmClient`, `Form`, `PromptFactory`,
 `Pick`, `TitleParser`, `Normalize`), `vangogh.recommend`
-(`PickResolver`, `RecommendationService`), and `vangogh.movie.MovieResolver`.
+(`PickResolver`, `RecommendationService`), `vangogh.movie.MovieResolver`,
+`vangogh.music.SongResolver`, `vangogh.book.BookResolver`, and
+`vangogh.game.GameResolver`.
 
 `LlmClient` owns the wire: one cached `OpenAIClient` per (baseUrl, key,
 timeout), `maxRetries(4)`, and the SDK's typed errors mapped onto `FetchError`
@@ -152,6 +158,31 @@ results, the release year must match when the model supplied one, the highest
 `vote_count` wins, and rows under 10 votes are rejected. Recommended cards are
 built by the same `TmdbMovieService.toMovie` as trending/search cards.
 
+Song resolution is the music form's equivalent: exact normalized title among
+the top 5 **song** hits (Genius' mixed hit list also carries albums and
+artists), the model-supplied artist must match when present, and the first hit
+in Genius' relevance order wins. Presentation-only suffixes ("(feat. …)",
+"[Remastered 2011]", "feat. …") are ignored for matching, so a clean title and
+a featured version resolve to the same song; a bare year in the disambiguator
+slot is treated as a format slip, not an artist. Recommended cards use the same
+`GeniusMusicService.toSong` as trending/search cards.
+
+Book resolution has two passes. First a structured Open Library search with
+`title=` and, when the model supplied one, `author=`; the normalized title must
+match exactly and the highest `edition_count` wins. If that misses, a free-text
+`q=` search is tried, accepting a candidate title contained in the model's
+title (so "The Hobbit" can resolve "The Hobbit, or There and Back Again") only
+when the candidate has at least 6 characters or 2 words — "Dune" must not
+swallow "Dune Messiah" — again ranked by `edition_count`. Recommended cards use
+`OpenLibraryBookService.toBook`.
+
+Game resolution is exact normalized `game_title`, the release year must match
+when the model supplied one, duplicate ids collapse, and the first matching row
+wins. TheGamesDB has no popularity data, so there is no vote/edition floor.
+Recommended cards use `TgdbGameService.toGame`, including the front-boxart URL.
+A bare year in the disambiguator slot is accepted for games and ignored for
+books (where the disambiguator is an author).
+
 ## Error messages
 
 Every failure is a `FetchError` value rendered by `FetchError.uiMessage`, so
@@ -165,9 +196,9 @@ the page shows one readable line instead of a stack trace.
 | Transport failure / timeout | `LLM request failed: <cause>` |
 | Reply is not chat-completions | `LLM payload unreadable (chat completions)` |
 | Reply has no usable titles | `LLM payload unreadable (reply contained no titles)` |
-| Every pick failed to resolve | the first catalog error (e.g. `TMDB search failed: HTTP 503 …`) |
+| Every pick failed to resolve | the first catalog error (e.g. `TMDB search failed: HTTP 503 …`, `Genius search failed: HTTP 503 …`, `OpenLibrary search failed: HTTP 503 …` or `TheGamesDB search failed: HTTP 503 …`) |
 | Blank AI query | `query: AI recommendations need a query` (the page sends `trending` instead) |
-| Unwired form | `kind: AI recommendations are not wired for this form yet` |
+| Unwired form | `kind: AI recommendations are not wired for this form yet` (only the legacy MusicBrainz `MusicController` path remains) |
 
 A reply with some unresolvable titles is still a success: those picks are
 dropped, and fewer than 10 cards is normal. The request is an error only when
@@ -202,21 +233,33 @@ errored.
   input is an error value and writes nothing.
 - `vangogh.movie.MovieResolverTest`: top-5, year mismatch, vote floor,
   normalization, HTTP/transport/payload errors.
+- `vangogh.music.SongResolverTest`: exact title + artist, feature/remaster
+  suffix handling, artist mismatch, mixed non-song hits, top-5 window,
+  HTTP/transport/payload errors.
+- `vangogh.book.BookResolverTest`: strict title + author, edition-count
+  tiebreak, guarded containment fallback (short titles rejected), sparse rows
+  without authors, bare-year disambiguator, HTTP/transport/payload errors.
+- `vangogh.game.GameResolverTest`: exact name + year, year mismatch, duplicate
+  ids, missing release dates, HTTP/transport/payload errors.
 - `vangogh.recommend.RecommendationServiceTest`: one model call, partial
   lists, zero-resolved-with-error → error, blank query and missing config
   never call the model, a throwing resolver is contained.
 - `MovieControllerTest`: `kind=recommend` end to end through the drain, blank
   query, model failure and HTTP failure.
-- `GameControllerTest`: an unwired form rejects `recommend` with `BadInput`.
+- `GeniusControllerTest`: `kind=recommend` end to end through the music drain,
+  blank query, model failure and HTTP failure.
+- `BookControllerTest` and `GameControllerTest`: `kind=recommend` end to end
+  through their drains (partial resolution, blank query, model failure, model
+  HTTP failure, and a total catalog failure surfacing its own error).
 - `preview/check.js`: the toggle defaults off, flips `aria-pressed`, sends
   `kind=recommend`, stays on across a form switch, and an empty AI search
   sends `trending`; the Settings page loads/saves through the mocked commands
   and never lets the stored key into the field.
 
-## Adding the next form
+## Adding a new form
 
-The engine is generic over `PickResolver<T>`; a new form is one resolver class
-plus its controller branch (slices S3–S5 in the spec). Reuse the service's row
-mapper (`toSong` / `toBook` / `toGame`) so a recommended card is identical to a
-trending card, and delete that form's `recommend` rejection block. Music must
-also change its empty-state label from "albums" to "songs".
+The engine is generic over `PickResolver<T>`; a new form (e.g. TV) is one
+resolver class plus its controller branch (the slice plan in the spec). Reuse
+the service's row mapper (`toSong` / `toBook` / `toGame` / `toMovie`) so a
+recommended card is identical to a trending card, and delete any `recommend`
+rejection block that form still has.
