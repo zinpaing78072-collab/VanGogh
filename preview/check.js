@@ -654,6 +654,232 @@ const TESTS = [
         }
     },
     {
+        name: "movie card opens the movie detail",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+
+            await page.evaluate(`document.querySelector("#movieGrid .movie-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().movieDetailArtDone
+                && document.querySelectorAll("#movieView .movie-facts > div").length > 0`);
+
+            const stats = await page.stats();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                movieVisible: !document.getElementById("movieView").classList.contains("hidden"),
+                title: ((document.querySelector("#movieView .movie-title") || {}).textContent || "").trim(),
+                tagline: ((document.querySelector("#movieView .movie-tagline") || {}).textContent || "").trim(),
+                chips: document.querySelectorAll("#movieView .movie-kicker .chip").length,
+                facts: document.querySelectorAll("#movieView .movie-facts > div").length,
+                firstFact: ((document.querySelector("#movieView .movie-facts dt") || {}).textContent || "").trim()
+                    + " = " + ((document.querySelector("#movieView .movie-facts dd") || {}).textContent || "").trim(),
+                mutedFacts: document.querySelectorAll("#movieView .movie-facts dd.muted").length,
+                keywords: document.querySelectorAll("#movieView .movie-keywords li").length,
+                cast: document.querySelectorAll("#movieView .movie-cast-card").length,
+                crewRoles: document.querySelectorAll("#movieView .movie-cast-meta .role.crew").length,
+                stills: document.querySelectorAll("#movieView .movie-shot").length,
+                similar: document.querySelectorAll("#movieView .movie-sim-card").length,
+                tiles: document.querySelectorAll("#movieView .movie-bento > .movie-tile").length,
+                posterHeight: document.querySelector("#movieView .t-poster").getBoundingClientRect().height,
+                identHeight: document.querySelector("#movieView .t-ident").getBoundingClientRect().height,
+                posterArt: document.querySelectorAll("#movieView .movie-poster-img:not(.hidden)").length,
+                castArt: document.querySelectorAll("#movieView .movie-cast-img:not(.hidden)").length,
+                stillArt: document.querySelectorAll("#movieView .movie-shot-img:not(.hidden)").length,
+                simArt: document.querySelectorAll("#movieView .movie-sim-img:not(.hidden)").length,
+                visiblePlaceholders: document.querySelectorAll("#movieView .poster-placeholder:not(.hidden)").length,
+                broken: [...document.querySelectorAll("#movieView img")]
+                    .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
+                trailer: (document.querySelector("#movieView a.movie-action-primary") || {}).href || "",
+                tmdb: [...document.querySelectorAll("#movieView a.movie-action")]
+                    .map(a => a.href).filter(h => h.indexOf("themoviedb.org") !== -1).length,
+                actions: document.querySelectorAll("#movieView .movie-action").length,
+                overflow: Math.max(0, document.getElementById("movieView").scrollWidth
+                    - document.getElementById("movieView").clientWidth)
+            })`));
+
+            await page.evaluate(`document.querySelector('#movieView [data-action="watchlist"]').click(); true`);
+            const watchlist = JSON.parse(await page.evaluate(`JSON.stringify({
+                pressed: document.querySelector('#movieView [data-action="watchlist"]').getAttribute("aria-pressed"),
+                text: document.querySelector('#movieView [data-action="watchlist"]').textContent.trim()
+            })`));
+
+            // The related rail opens another film through the same detail pair.
+            const firstGen = stats.movieDetailGeneration;
+            const relatedTitle = await page.evaluate(
+                `document.querySelector("#movieView .movie-sim-card").dataset.title`);
+            await page.evaluate(`document.querySelector("#movieView .movie-sim-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().movieDetailGeneration > ${firstGen}
+                && window.__preview.stats().movieDetailStatus === "done"
+                && ((document.querySelector("#movieView .movie-title") || {}).textContent || "").trim()
+                    === ${JSON.stringify(relatedTitle)}`);
+            const related = JSON.parse(await page.evaluate(`JSON.stringify({
+                title: ((document.querySelector("#movieView .movie-title") || {}).textContent || "").trim(),
+                generation: window.__preview.stats().movieDetailGeneration
+            })`));
+
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.getElementById("browseView").classList.contains("hidden")
+                && document.getElementById("movieView").classList.contains("hidden")`);
+            const back = JSON.parse(await page.evaluate(`JSON.stringify({
+                cards: document.querySelectorAll("#movieGrid .movie-card").length,
+                title: document.getElementById("sectionTitle").textContent
+            })`));
+
+            return [
+                check("clicking a movie card opens the detail view",
+                    d.browseHidden && d.movieVisible, d.browseHidden + "/" + d.movieVisible),
+                check("detail shows the clicked film's identity",
+                    d.title === "Inception" && d.tagline.indexOf("Your mind") === 0,
+                    d.title + " / " + d.tagline),
+                check("kicker carries year, certification and runtime", d.chips === 3, d.chips),
+                check("facts ledger renders all twelve rows", d.facts === 12, d.facts),
+                check("facts start with the release date",
+                    d.firstFact === "Release = Jul 16, 2010" && d.mutedFacts === 5,
+                    d.firstFact + " / " + d.mutedFacts + " muted"),
+                check("keywords render as chips", d.keywords === 6, d.keywords),
+                check("cast & crew render with the two crew roles",
+                    d.cast === 8 && d.crewRoles === 2, d.cast + " / " + d.crewRoles),
+                check("artwork stills render", d.stills === 3, d.stills),
+                check("similar rail renders", d.similar === 5, d.similar),
+                check("detail lays out as seven bento tiles", d.tiles === 7, d.tiles),
+                check("the poster tile matches the identity tile's height",
+                    Math.abs(d.posterHeight - d.identHeight) <= 1,
+                    d.posterHeight + " / " + d.identHeight),
+                check("poster streams into its slot", d.posterArt === 1, d.posterArt),
+                check("every headshot streams into its slot", d.castArt === 8, d.castArt),
+                check("every still streams into its slot", d.stillArt === 3, d.stillArt),
+                check("every similar poster streams into its slot", d.simArt === 5, d.simArt),
+                check("artwork replaces every placeholder",
+                    d.visiblePlaceholders === 0 && d.broken === 0,
+                    d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
+                check("every queued image was emitted", stats.movieDetailArtEmitted === 17,
+                    stats.movieDetailArtEmitted),
+                check("identity carries trailer, watchlist, favorite and TMDB actions",
+                    d.trailer.indexOf("youtube.com") !== -1 && d.tmdb === 1 && d.actions === 4,
+                    d.trailer + " / " + d.actions),
+                check("watchlist toggles on and says so",
+                    watchlist.pressed === "true" && watchlist.text.indexOf("In watchlist") !== -1,
+                    watchlist.pressed + " / " + watchlist.text),
+                check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),
+                check("a similar card opens that film in the same view",
+                    related.title === relatedTitle && related.generation === firstGen + 1,
+                    related.title + " / gen " + related.generation),
+                check("Escape returns to the intact card grid",
+                    back.cards === 6 && back.title === "Trending Movies",
+                    back.cards + " / " + back.title)
+            ];
+        }
+    },
+    {
+        name: "book card opens the book detail",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.selectForm("book");
+
+            await page.evaluate(`document.querySelector("#movieGrid .book-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().bookDetailArtDone
+                && document.querySelectorAll("#bookView .book-facts > div").length > 0`);
+
+            const stats = await page.stats();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                bookVisible: !document.getElementById("bookView").classList.contains("hidden"),
+                title: ((document.querySelector("#bookView .book-title") || {}).textContent || "").trim(),
+                byline: ((document.querySelector("#bookView .book-byline-who b") || {}).textContent || "").trim(),
+                chips: document.querySelectorAll("#bookView .book-kicker .chip").length,
+                facts: document.querySelectorAll("#bookView .book-facts > div").length,
+                firstFact: ((document.querySelector("#bookView .book-facts dt") || {}).textContent || "").trim()
+                    + " = " + ((document.querySelector("#bookView .book-facts dd") || {}).textContent || "").trim(),
+                spanFacts: document.querySelectorAll("#bookView .book-facts > div.span-all").length,
+                keywords: document.querySelectorAll("#bookView .book-keywords li").length,
+                editions: document.querySelectorAll("#bookView .book-edition").length,
+                expenses: document.querySelectorAll("#bookView .book-edition-meta b").length,
+                similar: document.querySelectorAll("#bookView .book-sim-card").length,
+                tiles: document.querySelectorAll("#bookView .book-bento > .book-tile").length,
+                actions: document.querySelectorAll("#bookView .book-action").length,
+                sample: document.querySelectorAll("#bookView .book-sample").length,
+                coverArt: document.querySelectorAll("#bookView .book-cover-img:not(.hidden)").length,
+                authorArt: document.querySelectorAll("#bookView .book-author-img:not(.hidden)").length,
+                editionArt: document.querySelectorAll("#bookView .book-edition-img:not(.hidden)").length,
+                simArt: document.querySelectorAll("#bookView .book-sim-img:not(.hidden)").length,
+                visiblePlaceholders: document.querySelectorAll("#bookView .poster-placeholder:not(.hidden)").length,
+                broken: [...document.querySelectorAll("#bookView img")]
+                    .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
+                overflow: Math.max(0, document.getElementById("bookView").scrollWidth
+                    - document.getElementById("bookView").clientWidth)
+            })`));
+
+            // The sample toggle reveals the work's opening line, in place.
+            await page.evaluate(`document.querySelector('#bookView [data-action="sample"]').click(); true`);
+            const sample = JSON.parse(await page.evaluate(`JSON.stringify({
+                pressed: document.querySelector('#bookView [data-action="sample"]').getAttribute("aria-pressed"),
+                visible: !document.querySelector("#bookView .book-sample").classList.contains("hidden"),
+                text: document.querySelector("#bookView .book-sample").textContent.trim()
+            })`));
+
+            // The similar rail opens another work through the same detail pair.
+            const firstGen = stats.bookDetailGeneration;
+            const relatedTitle = await page.evaluate(
+                `document.querySelector("#bookView .book-sim-card").dataset.title`);
+            await page.evaluate(`document.querySelector("#bookView .book-sim-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().bookDetailGeneration > ${firstGen}
+                && window.__preview.stats().bookDetailStatus === "done"
+                && ((document.querySelector("#bookView .book-title") || {}).textContent || "").trim()
+                    === ${JSON.stringify(relatedTitle)}`);
+            const related = JSON.parse(await page.evaluate(`JSON.stringify({
+                title: ((document.querySelector("#bookView .book-title") || {}).textContent || "").trim(),
+                generation: window.__preview.stats().bookDetailGeneration
+            })`));
+
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.getElementById("browseView").classList.contains("hidden")
+                && document.getElementById("bookView").classList.contains("hidden")`);
+            const back = JSON.parse(await page.evaluate(`JSON.stringify({
+                cards: document.querySelectorAll("#movieGrid .book-card").length,
+                title: document.getElementById("sectionTitle").textContent
+            })`));
+
+            return [
+                check("clicking a book card opens the detail view",
+                    d.browseHidden && d.bookVisible, d.browseHidden + "/" + d.bookVisible),
+                check("detail shows the clicked work's identity",
+                    d.title === "The Lord of the Rings" && d.byline === "J. R. R. Tolkien",
+                    d.title + " / " + d.byline),
+                check("kicker carries year, pages and edition count", d.chips === 3, d.chips),
+                check("facts ledger renders all eight rows", d.facts === 8, d.facts),
+                check("facts start with the publication year",
+                    d.firstFact === "First published = 1954" && d.spanFacts === 2,
+                    d.firstFact + " / " + d.spanFacts + " full width"),
+                check("subjects render as chips", d.keywords === 3, d.keywords),
+                check("other editions render", d.editions === 4 && d.expenses === 4,
+                    d.editions + " / " + d.expenses),
+                check("similar rail renders", d.similar === 5, d.similar),
+                check("detail lays out as seven bento tiles", d.tiles === 7, d.tiles),
+                check("identity carries sample, want-to-read, favorite and Open Library actions",
+                    d.sample === 1 && d.actions === 4, d.sample + " / " + d.actions),
+                check("cover streams into its slot", d.coverArt === 1, d.coverArt),
+                check("the author photo paints the byline and the author tile", d.authorArt === 2, d.authorArt),
+                check("every covered edition streams into its slot", d.editionArt === 3, d.editionArt),
+                check("every similar cover streams into its slot", d.simArt === 5, d.simArt),
+                check("a coverless edition keeps its placeholder instead of breaking",
+                    d.visiblePlaceholders === 1 && d.broken === 0,
+                    d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
+                check("every queued image was emitted", stats.bookDetailArtEmitted === 10,
+                    stats.bookDetailArtEmitted),
+                check("read sample toggles the opening line in place",
+                    sample.pressed === "true" && sample.visible && sample.text.indexOf("Bilbo Baggins") !== -1,
+                    sample.pressed + " / " + sample.text.slice(0, 40)),
+                check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),
+                check("a similar card opens that work in the same view",
+                    related.title === relatedTitle && related.generation === firstGen + 1,
+                    related.title + " / gen " + related.generation),
+                check("Escape returns to the intact card grid",
+                    back.cards === 6 && back.title === "Trending Books",
+                    back.cards + " / " + back.title)
+            ];
+        }
+    },
+    {
         name: "sidebar: form buttons, inert items, collapse",
         path: "/movie-page/index.html",
         run: async (page) => {

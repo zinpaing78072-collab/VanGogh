@@ -5,6 +5,7 @@ import vangogh.net.ApiResponse;
 import vangogh.net.OpenLibraryClient;
 
 import io.vavr.collection.List;
+import io.vavr.concurrent.Future;
 import io.vavr.control.Either;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
@@ -68,6 +69,107 @@ public class OpenLibraryBookService {
      */
     public BookResolver resolver() {
         return new BookResolver(client);
+    }
+
+    // ------------------------------------------------------------ detail
+
+    /**
+     * The detail page's data. The work record is the spine (its failure is the
+     * page's error); the author, editions, ratings and similar payloads are
+     * supplementary — a failure there leaves an empty tile, not an error.
+     *
+     * <p>The supplementary fetches start together on vavr's virtual-thread
+     * executor, so the page waits for the slowest call rather than their sum.
+     */
+    public Either<FetchError, BookDetail> bookDetail(String requestedKey) {
+        String workKey = BookDetailMapper.normaliseKey(requestedKey);
+        if (workKey.isEmpty()) {
+            return Either.left(new FetchError.BadInput("workKey", "required"));
+        }
+        return client.workDetail(workKey)
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Transport("OpenLibrary work", e))
+                .flatMap(res -> requireSuccess("OpenLibrary work", res))
+                .flatMap(body -> parseObject("OpenLibrary work", body))
+                .map(work -> composeDetail(workKey, work));
+    }
+
+    /** Detail artwork (cover, author photo, edition covers, similar covers). */
+    public Option<String> detailImageDataUri(String imageUrl) {
+        return Option.of(imageUrl)
+                .filter(u -> !u.isEmpty())
+                .flatMap(u -> Option.of(coverCache.get(u))
+                        .orElse(() -> client.loadDetailImageDataUri(u)
+                                .peek(uri -> cachePut(u, uri))));
+    }
+
+    private BookDetail composeDetail(String workKey, JsonObject work) {
+        String authorKey = BookDetailMapper.authorKey(work);
+        java.util.List<String> subjects = BookDetailMapper.subjects(work);
+
+        Future<Option<JsonObject>> author =
+                authorKey.isEmpty() ? Future.successful(Option.none())
+                        : Future.of(() -> jsonOption(client.authorDetail(authorKey)));
+        Future<Option<JsonObject>> editions =
+                Future.of(() -> jsonOption(client.editions(workKey)));
+        Future<Option<JsonObject>> ratings =
+                Future.of(() -> jsonOption(client.ratings(workKey)));
+        Future<Option<JsonObject>> bySubject =
+                subjects.isEmpty() ? Future.successful(Option.none())
+                        : Future.of(() -> jsonOption(client.searchBySubject(subjects.get(0))));
+
+        Option<JsonObject> authorJson = await(author);
+        Option<JsonObject> editionsJson = await(editions);
+        Option<JsonObject> ratingsJson = await(ratings);
+        Option<JsonObject> similarJson = await(bySubject);
+
+        // Works without subjects still get a rail: same-author titles. This
+        // one call waits for the author record, so it is the only supplement
+        // that cannot start with the others.
+        if (similarJson.isEmpty()) {
+            String name = authorJson.map(BookDetailMapper::authorName).getOrElse("");
+            if (!name.isEmpty()) {
+                similarJson = jsonOption(client.searchByAuthor(name));
+            }
+        }
+
+        return BookDetailMapper.compose(
+                work,
+                workKey,
+                editionsJson.getOrNull(),
+                ratingsJson.getOrNull(),
+                authorJson.getOrNull(),
+                similarBooks(similarJson, workKey));
+    }
+
+    private java.util.List<Book> similarBooks(Option<JsonObject> payload, String workKey) {
+        return payload
+                .flatMap(root -> firstPresentArray(root, "docs", "works"))
+                .map(rows -> List.range(0, rows.size())
+                        .map(i -> toBook(rows.get(i).getAsJsonObject(), i))
+                        .filter(book -> !book.workKey().equals(workKey))
+                        .distinctBy(Book::workKey)
+                        .take(6)
+                        .toJavaList())
+                .getOrElse(java.util.List.of());
+    }
+
+    private static Option<JsonObject> await(Future<Option<JsonObject>> future) {
+        Try<Option<JsonObject>> result = future.await().getValue().get();
+        return result.getOrElse(Option.none());
+    }
+
+    private static Option<JsonObject> jsonOption(Try<ApiResponse> response) {
+        return response.toOption()
+                .filter(ApiResponse::isSuccess)
+                .flatMap(res -> Try.of(() ->
+                        com.google.gson.JsonParser.parseString(res.body).getAsJsonObject()).toOption());
+    }
+
+    private static Either<FetchError, JsonObject> parseObject(String api, String body) {
+        return Try.of(() -> com.google.gson.JsonParser.parseString(body).getAsJsonObject())
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Payload(api, "payload shape", e));
     }
 
     private Either<FetchError, String> requireSuccess(String api, ApiResponse res) {

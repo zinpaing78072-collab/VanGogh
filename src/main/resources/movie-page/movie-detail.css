@@ -1,0 +1,676 @@
+/* Movie detail (the screen behind a movie card click).
+ *
+ * Same glass vocabulary as music-detail.css: the detail tiles reuse --panel,
+ * --border and the gold accent; the sidebar/header are the app shell and are
+ * untouched here. Layout follows prototypes/movie-detail-layouts/bento.html:
+ * a 12-column dashboard with poster / identity / details on the first row,
+ * synopsis beside the similar rail, then cast beside the artwork. The
+ * responsive ladder folds that to 6 columns, then to one stack.
+ *
+ * Role tokens only — a theme decorates this page, it never has to know it.
+ */
+
+/* ------------------------------------------------------------ detail shell */
+
+.movie-view {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 20px 28px 28px;
+    animation: movieIn 0.35s cubic-bezier(0.2, 0.7, 0.25, 1) both;
+}
+
+@keyframes movieIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.movie-back-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.movie-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel-inset);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.movie-back:hover {
+    border-color: var(--accent-hover);
+    background-color: var(--panel-hover);
+}
+
+.movie-source-note {
+    font-size: 11.5px;
+    color: var(--text-soft);
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 12px rgba(4, 8, 18, 0.95), 0 1px 3px rgba(4, 8, 18, 0.9);
+}
+
+/* ------------------------------------------------------------- bento grid
+ * Named areas, so the same markup reflows from the wide dashboard to a
+ * 6-column tablet arrangement to a single stack without the page-side JS
+ * knowing anything about the layout.
+ */
+
+.movie-bento {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-areas:
+        "poster poster poster ident ident ident ident ident ident facts facts facts"
+        "story story story story story story sim sim sim sim sim sim"
+        "cast cast cast cast cast cast gallery gallery gallery gallery gallery gallery";
+    gap: 14px;
+    align-items: stretch;
+}
+
+.movie-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    min-height: 0;
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* The poster is its own tile: no surface behind it, the frame carries the
+ * border and shadow. */
+.movie-tile.t-poster {
+    grid-area: poster;
+    align-self: stretch;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+.movie-tile.t-ident {
+    grid-area: ident;
+    justify-content: center;
+    gap: 12px;
+}
+
+.movie-tile.t-facts   { grid-area: facts; }
+.movie-tile.t-story   { grid-area: story; }
+.movie-tile.t-cast    { grid-area: cast; }
+.movie-tile.t-gallery { grid-area: gallery; }
+.movie-tile.t-sim     { grid-area: sim; }
+
+/* ---------------------------------------------------------------- poster */
+
+.movie-poster-frame {
+    position: relative;
+    flex: 1;
+    aspect-ratio: 2 / 3;
+    border-radius: 14px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--placeholder-from) 0%, var(--bg) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 26px 60px -32px rgba(4, 8, 18, 0.95);
+}
+
+.movie-poster-img,
+.movie-poster-frame .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.movie-poster-img {
+    object-fit: cover;
+    display: block;
+}
+
+/* --------------------------------------------------------------- identity */
+
+.movie-kicker {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.movie-kicker .chip {
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-soft-strong);
+    border: 1px solid var(--border-strong);
+    background: var(--panel-firm-a45);
+}
+
+.movie-title {
+    font-size: clamp(28px, 3.1vw, 44px);
+    line-height: 1.02;
+    letter-spacing: -1px;
+    font-weight: 800;
+    color: var(--text);
+    text-shadow: 0 2px 24px rgba(4, 8, 18, 0.75);
+    overflow-wrap: anywhere;
+}
+
+.movie-tagline {
+    max-width: 52ch;
+    font-size: 14.5px;
+    font-style: italic;
+    color: var(--text-soft-strong);
+    text-wrap: pretty;
+}
+
+.movie-tagline::before { content: "\201C"; }
+.movie-tagline::after  { content: "\201D"; }
+
+/* Score: the number leads, the vote count qualifies it. */
+.movie-score-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.movie-score {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--rating);
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 20px rgba(4, 8, 18, 0.7);
+}
+
+.movie-score .max {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--text-muted);
+}
+
+.movie-score .star {
+    font-size: 18px;
+    color: var(--accent);
+}
+
+.movie-votes {
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.movie-genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    list-style: none;
+}
+
+.movie-genres li {
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel-inset);
+    font-size: 11.5px;
+    color: var(--text-soft);
+}
+
+.movie-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 2px;
+}
+
+.movie-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 15px;
+    border-radius: 10px;
+    border: 1px solid var(--border-strong);
+    background: var(--panel-inset);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.movie-action:hover {
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
+    background: var(--accent-a12);
+}
+
+.movie-action:active { transform: translateY(1px); }
+
+.movie-action.active {
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
+    background: var(--accent-a26);
+}
+
+.movie-action-primary {
+    border-color: transparent;
+    background-image: linear-gradient(180deg, var(--accent-hover) 0%, var(--accent) 100%);
+    color: var(--accent-ink);
+    box-shadow: 0 12px 26px -14px rgba(216, 169, 49, 0.9);
+}
+
+.movie-action-primary:hover {
+    border-color: transparent;
+    color: var(--accent-ink);
+    filter: brightness(1.06);
+}
+
+/* -------------------------------------------------------------- tile heads */
+
+.movie-panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.movie-panel-head h2 {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.movie-panel-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* ---------------------------------------------------------- facts ledger */
+
+.movie-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 16px;
+    align-content: start;
+}
+
+.movie-facts > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    min-width: 0;
+}
+
+/* The six rows under a label pair up; the studio/country/money/status tail
+ * runs full width, the same rhythm as the prototype's ledger. */
+.movie-facts > div:nth-child(n + 7) {
+    grid-column: 1 / -1;
+}
+
+.movie-facts dt {
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.movie-facts dd {
+    font-size: 13.5px;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.movie-facts dd.muted { color: var(--text-soft-dim); }
+
+/* ---------------------------------------------------------------- synopsis */
+
+.movie-lede {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--text-soft);
+    text-wrap: pretty;
+}
+
+.movie-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    list-style: none;
+    margin-top: 2px;
+}
+
+.movie-keywords li {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    color: var(--text-soft-strong);
+    border: 1px solid var(--border);
+    background: var(--panel-inset);
+}
+
+/* ------------------------------------------------------------ cast & crew */
+
+.movie-cast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 10px;
+}
+
+.movie-cast-card {
+    min-width: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.movie-cast-crop {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    background: linear-gradient(135deg, var(--placeholder-from) 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+}
+
+.movie-cast-img,
+.movie-cast-crop .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.movie-cast-img {
+    object-fit: cover;
+    object-position: center 20%;
+    display: block;
+}
+
+.movie-cast-placeholder {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.movie-cast-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding: 7px 9px 9px;
+}
+
+.movie-cast-meta .name {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.movie-cast-meta .role {
+    font-size: 10px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.movie-cast-meta .role.crew { color: var(--accent-hover); }
+
+/* --------------------------------------------------------------- artwork */
+
+.movie-gallery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.movie-shot {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--panel-deep);
+    box-shadow: 0 18px 40px -30px rgba(4, 8, 18, 0.95);
+}
+
+.movie-shot-img,
+.movie-shot .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.movie-shot-img {
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease, filter 0.3s ease;
+}
+
+.movie-shot:hover .movie-shot-img {
+    transform: scale(1.04);
+    filter: saturate(1.14);
+}
+
+.movie-shot figcaption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 22px 12px 9px;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-soft-strong);
+    background: linear-gradient(180deg, transparent, rgba(6, 12, 22, 0.88));
+}
+
+/* ---------------------------------------------------------- similar rail */
+
+.movie-sim-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 132px;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x proximity;
+}
+
+.movie-sim-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    scroll-snap-align: start;
+}
+
+.movie-sim-poster {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--panel-deep);
+    border: 1px solid var(--border);
+    box-shadow: 0 18px 40px -30px rgba(4, 8, 18, 0.95);
+}
+
+.movie-sim-img,
+.movie-sim-poster .poster-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.movie-sim-img {
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+}
+
+.movie-sim-card:hover .movie-sim-img { transform: scale(1.04); }
+
+.movie-sim-placeholder svg {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 0;
+}
+
+.movie-sim-score {
+    position: absolute;
+    right: 7px;
+    top: 7px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--accent-ink);
+    background: var(--accent-a90);
+    font-variant-numeric: tabular-nums;
+}
+
+.movie-sim-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text);
+}
+
+.movie-sim-year {
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}
+
+/* ------------------------------------------------------- loading / error */
+
+.movie-loading-note {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.movie-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 4px;
+}
+
+.movie-skeleton .skeleton-line { height: 12px; }
+
+.movie-error {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    max-width: 640px;
+    padding: 26px;
+    border-radius: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+}
+
+.movie-error p {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-soft);
+}
+
+/* ------------------------------------------------------------- responsive */
+
+/* Default window with the sidebar open lands here: the dashboard folds into
+ * a 6-column arrangement, poster + identity on top and the rest in rows. */
+@media (max-width: 1400px) {
+    .movie-bento {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-areas:
+            "poster poster ident ident ident ident"
+            "facts facts facts facts facts facts"
+            "story story story story story story"
+            "cast cast cast gallery gallery gallery"
+            "sim sim sim sim sim sim";
+    }
+
+    /* The facts tile is full width now, so it has room for four columns. */
+    .movie-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .movie-facts > div:nth-child(n + 7) { grid-column: auto; }
+}
+
+@media (max-width: 1000px) {
+    .movie-bento {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "poster"
+            "ident"
+            "facts"
+            "story"
+            "cast"
+            "gallery"
+            "sim";
+        gap: 12px;
+    }
+
+    .movie-tile.t-poster { max-width: 340px; }
+    .movie-view { padding: 16px 16px 24px; }
+    .movie-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .movie-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .movie-sim-row { grid-auto-columns: 150px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .movie-view { animation: none; }
+    .movie-shot-img,
+    .movie-sim-img { transition: none; }
+    .movie-shot:hover .movie-shot-img,
+    .movie-sim-card:hover .movie-sim-img { transform: none; }
+}

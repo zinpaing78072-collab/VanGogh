@@ -31,10 +31,13 @@ export const settingsPath = document.getElementById("settingsPath");
 export const settingsSave = document.getElementById("settingsSave");
 export const settingsCancel = document.getElementById("settingsCancel");
 
-/* Browse vs. song detail: browseView holds the card grid, songView is painted
- * by song-detail.js, playerBar is the demo transport pinned to the bottom. */
+/* Browse vs. detail: browseView holds the card grid; songView is painted by
+ * song-detail.js, movieView by movie-detail.js, playerBar is the demo
+ * transport pinned to the bottom. */
 export const browseView = document.getElementById("browseView");
 export const songView = document.getElementById("songView");
+export const movieView = document.getElementById("movieView");
+export const bookView = document.getElementById("bookView");
 export const playerBar = document.getElementById("playerBar");
 export const playerArt = document.getElementById("playerArt");
 export const playerTitle = document.getElementById("playerTitle");

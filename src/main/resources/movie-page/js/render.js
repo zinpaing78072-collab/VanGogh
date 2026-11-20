@@ -6,13 +6,17 @@ import { state } from "./state.js";
 import { DOMAINS } from "./domains.js";
 import { openDetail } from "./detail.js";
 import { paintSongView, closeSongView } from "./song-detail.js";
+import { paintMovieView, closeMovieView } from "./movie-detail.js";
+import { paintBookView, closeBookView } from "./book-detail.js";
 import { escapeHtml } from "./util.js";
 
 export function render() {
     if (state.view === "settings") {
-        // Settings replaces the browse page; a song detail (and its player)
+        // Settings replaces the browse page; a detail view (and the player)
         // must not stay painted underneath.
         closeSongView();
+        closeMovieView();
+        closeBookView();
         browseView.classList.add("hidden");
         settingsView.classList.remove("hidden");
         paintActiveNav(null);
@@ -20,12 +24,30 @@ export function render() {
     }
     settingsView.classList.add("hidden");
     if (state.view === "song") {
+        closeMovieView();
+        closeBookView();
         browseView.classList.add("hidden");
         paintSongView();
         return;
     }
+    if (state.view === "movie") {
+        closeSongView();
+        closeBookView();
+        browseView.classList.add("hidden");
+        paintMovieView();
+        return;
+    }
+    if (state.view === "book") {
+        closeSongView();
+        closeMovieView();
+        browseView.classList.add("hidden");
+        paintBookView();
+        return;
+    }
     browseView.classList.remove("hidden");
     closeSongView();
+    closeMovieView();
+    closeBookView();
     renderBrowse();
 }
 

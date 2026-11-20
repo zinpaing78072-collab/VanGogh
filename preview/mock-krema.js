@@ -9,11 +9,20 @@
  *   invoke("request<Form>", { kind, query })  → generation (kicks off a fetch)
  *   invoke("poll<Form>Data", { generation })  → { status, items?, error? }
  *   invoke("poll<Form>Art", {})               → remaining posters, −1 when done
+ *   invoke("requestSongDetail", { id })       → song-detail generation
+ *   invoke("pollSongDetail", { generation })  → { status, detail?, artDataUri?, error? }
+ *   invoke("requestMovieDetail", { id })      → movie-detail generation
+ *   invoke("pollMovieDetail", { generation }) → { status, detail?, error? }
+ *   invoke("pollMovieDetailArt", {})          → remaining detail art, −1 when done
+ *   invoke("requestBookDetail", { workKey })  → book-detail generation
+ *   invoke("pollBookDetail", { generation })  → { status, detail?, error? }
+ *   invoke("pollBookDetailArt", {})           → remaining book art, −1 when done
  *   invoke("loadLlmSettings", {})             → { status, baseUrl, model, …, hasApiKey }
  *   invoke("saveLlmSettings", { … })          → the stored values, never the key
  *   invoke("loadTheme", {})                   → { status, theme, themes }
  *   invoke("saveTheme", { theme })            → the stored id + the theme list
  *   on("<artEvent>", handler)                 → { payload: { id, dataUri }, timestamp }
+ *   on("movieDetailArt", handler)             → { payload: { slot, dataUri }, timestamp }
  *
  * Because pacing stays pending→done like the real drains, the skeleton cards
  * and the staggered artwork stream are both exercised, which is the whole
@@ -97,6 +106,34 @@
     // Detail has its own generation counter, like the real controller: opening
     // a song must not supersede the browse request (or its artwork stream).
     var detail = { gen: 0, polls: 0, status: "idle", id: null };
+
+    // Movie detail is its own pair too (poster, headshots, stills and similar
+    // posters stream as data URIs through the movieDetailArt event).
+    var movieDetail = {
+        gen: 0,
+        polls: 0,
+        status: "idle",
+        id: null,
+        value: null,
+        delivered: false,
+        artQueue: null,
+        artEmitted: 0,
+        artDone: false
+    };
+
+    // Book detail is its own pair too (work cover, author photo, edition
+    // covers and similar covers stream as data URIs through bookDetailArt).
+    var bookDetail = {
+        gen: 0,
+        polls: 0,
+        status: "idle",
+        workKey: null,
+        value: null,
+        delivered: false,
+        artQueue: null,
+        artEmitted: 0,
+        artDone: false
+    };
 
     // Settings: an in-memory stand-in for ~/.van-gogh/llm.conf, with the same
     // contract as SettingsController — the key never comes back out, and a
@@ -392,6 +429,389 @@
         };
     }
 
+    // ----------------------------------------------------------- movie detail
+
+    function movieDetailFor(id) {
+        var list = fixtures.movie || [];
+        var item = list.filter(function (x) { return String(x.id) === String(id); })[0] || list[0];
+        if (!item) {
+            return null;
+        }
+        var dummy = fixtures.movieDetail || {};
+        var others = list
+            .filter(function (x) { return String(x.id) !== String(item.id); })
+            .slice(0, 5);
+
+        return {
+            id: Number(item.id),
+            title: item.title,
+            tagline: dummy.tagline || "",
+            overview: item.overview || "",
+            releaseDate: String(item.year) + "-07-16",
+            year: Number(item.year) || 0,
+            runtimeMinutes: dummy.runtimeMinutes || 0,
+            certification: dummy.certification || "",
+            rating: Number(item.rating) || 0,
+            voteCount: 2340000,
+            genres: item.genre ? [item.genre] : [],
+            keywords: dummy.keywords || [],
+            posterUrl: "https://image.tmdb.org/t/p/w500/" + item.id + "-poster.jpg",
+            tmdbUrl: "https://www.themoviedb.org/movie/" + item.id,
+            trailerUrl: "https://www.youtube.com/watch?v=preview",
+            facts: dummy.facts || [],
+            cast: (dummy.cast || []).map(function (c) {
+                return {
+                    name: c.name,
+                    role: c.role || "",
+                    crew: !!c.crew,
+                    imageUrl: "https://image.tmdb.org/t/p/w500/cast-" + c.name.replace(/\s+/g, "-") + ".jpg"
+                };
+            }),
+            stills: (dummy.stills || []).map(function (s, i) {
+                return {
+                    caption: s.caption || "",
+                    imageUrl: "https://image.tmdb.org/t/p/w500/still-" + i + ".jpg"
+                };
+            }),
+            similar: others.map(function (x) {
+                return {
+                    movie: {
+                        id: Number(x.id),
+                        title: x.title,
+                        year: x.year,
+                        rating: x.rating,
+                        genre: x.genre || "",
+                        overview: x.overview || "",
+                        posterUrl: ""
+                    },
+                    posterUrl: "https://image.tmdb.org/t/p/w500/similar-" + x.id + ".jpg"
+                };
+            })
+        };
+    }
+
+    // One generated image per slot, keyed exactly like the controller's refs:
+    // poster, cast:<i>, still:<i>, similar:<id>.
+    function buildMovieArtQueue(value) {
+        var entries = [];
+        if (value.posterUrl) {
+            entries.push({
+                slot: "poster",
+                dataUri: svgCover(value.title, 500, 750, hueOf(value.id))
+            });
+        }
+        (value.cast || []).forEach(function (credit, i) {
+            if (credit.imageUrl) {
+                entries.push({
+                    slot: "cast:" + i,
+                    dataUri: svgCover(credit.name, 300, 450, hueOf(credit.name))
+                });
+            }
+        });
+        (value.stills || []).forEach(function (still, i) {
+            if (still.imageUrl) {
+                entries.push({
+                    slot: "still:" + i,
+                    dataUri: svgCover(still.caption || value.title, 640, 400, hueOf("still" + i))
+                });
+            }
+        });
+        (value.similar || []).forEach(function (entry) {
+            if (entry.posterUrl) {
+                entries.push({
+                    slot: "similar:" + entry.movie.id,
+                    dataUri: svgCover(entry.movie.title, 300, 450, hueOf(entry.movie.id))
+                });
+            }
+        });
+        return entries;
+    }
+
+    function requestMovieDetail(args) {
+        movieDetail = {
+            gen: movieDetail.gen + 1,
+            polls: 0,
+            status: "pending",
+            id: (args && args.id) || null,
+            value: null,
+            delivered: false,
+            artQueue: null,
+            artEmitted: 0,
+            artDone: false
+        };
+        console.log("[preview] movie detail request gen=" + movieDetail.gen +
+            " id=" + movieDetail.id);
+        return movieDetail.gen;
+    }
+
+    function pollMovieDetail(args) {
+        var generation = args && args.generation;
+        if (generation !== movieDetail.gen) {
+            return { generation: generation, status: "superseded", detail: null };
+        }
+        movieDetail.polls += 1;
+        var ticks = scenario === "slow" ? 20 : 2;
+        if (movieDetail.polls <= ticks) {
+            return { generation: generation, status: "pending", detail: null };
+        }
+        if (scenario === "error") {
+            movieDetail.status = "error";
+            return {
+                generation: generation,
+                status: "error",
+                error: "Simulated movie fetch failure (scenario=error).",
+                detail: null
+            };
+        }
+        var value = movieDetailFor(movieDetail.id);
+        if (!value) {
+            movieDetail.status = "error";
+            return {
+                generation: generation,
+                status: "error",
+                error: "No movie fixture for id " + movieDetail.id,
+                detail: null
+            };
+        }
+        movieDetail.status = "done";
+        movieDetail.value = value;
+        movieDetail.delivered = true;
+        console.log("[preview] movie detail done gen=" + generation +
+            " title=" + value.title);
+        return { generation: generation, status: "done", detail: value };
+    }
+
+    function pollMovieDetailArt() {
+        if (!movieDetail.delivered || !movieDetail.value || scenario === "noposters") {
+            movieDetail.artDone = true;
+            return -1;
+        }
+        if (movieDetail.artQueue === null) {
+            movieDetail.artQueue = buildMovieArtQueue(movieDetail.value);
+        }
+
+        // Two per drain call, like a network stream landing in bursts.
+        var batch = movieDetail.artQueue.splice(0, 2);
+        batch.forEach(function (entry) {
+            movieDetail.artEmitted += 1;
+            emit("movieDetailArt", { slot: entry.slot, dataUri: entry.dataUri });
+        });
+
+        if (movieDetail.artQueue.length === 0) {
+            movieDetail.artDone = true;
+            return -1;
+        }
+        return movieDetail.artQueue.length;
+    }
+
+    // ------------------------------------------------------------ book detail
+
+    function bookDetailFor(workKey) {
+        var list = fixtures.book || [];
+        var item = list.filter(function (x) { return String(x.workKey) === String(workKey); })[0] || list[0];
+        if (!item) {
+            return null;
+        }
+        var extras = fixtures.bookDetail || {};
+        var year = Number(item.year) || 0;
+        var pages = Number(item.pages) || 0;
+        var editionCount = Number(item.editionCount) || 0;
+        var rating = Number(item.rating) || 0;
+        var setting = (extras.settings || {})[item.workKey] || "";
+        var ratingCount = extras.ratingCount || 0;
+
+        var editions = [0, 1, 2, 3].map(function (i) {
+            return {
+                year: year ? String(year + i * 3) : "",
+                pages: pages ? (pages + i * 8) + " pp" : "",
+                isbn: "97800000000" + (10 + i),
+                // The last edition deliberately has no cover, so the preview
+                // keeps one edition placeholder visible.
+                coverUrl: i < 3 ? "https://covers.openlibrary.org/b/id/" + (700000 + i) + "-L.jpg" : ""
+            };
+        });
+
+        var facts = [];
+        function fact(label, value, muted, spanAll) {
+            if (value !== "" && value != null) {
+                facts.push({ label: label, value: String(value), muted: !!muted, spanAll: !!spanAll });
+            }
+        }
+        fact("First published", year, false, false);
+        fact("Pages", pages, false, false);
+        fact("Editions", editionCount, false, false);
+        fact("Setting", setting, false, false);
+        if (rating > 0) {
+            fact("Rating", rating.toFixed(1) + " / 5", false, false);
+        }
+        fact("Ratings", ratingCount, false, false);
+        fact("Featured", item.author + ", " + year, true, true);
+        fact("ISBN", editions[0].isbn, true, true);
+
+        var authorName = item.author || "Unknown author";
+        var author = {
+            name: authorName,
+            dates: (extras.authorDates || {})[authorName] || "",
+            bio: (extras.authorBios || {})[authorName] || "",
+            photoUrl: "https://covers.openlibrary.org/a/id/" + (9000 + year % 100) + "-L.jpg",
+            wikipediaUrl: "https://en.wikipedia.org/wiki/" + encodeURIComponent(authorName.replace(/ /g, "_")),
+            openLibraryUrl: "https://openlibrary.org/authors/OL" + (1000 + year % 900) + "A"
+        };
+
+        var others = list
+            .filter(function (x) { return String(x.workKey) !== String(item.workKey); })
+            .slice(0, 6)
+            .map(function (x, i) {
+                return {
+                    workKey: x.workKey,
+                    title: x.title,
+                    author: x.author || "",
+                    year: Number(x.year) || 0,
+                    rating: Number(x.rating) || 0,
+                    subjects: x.subjects || "",
+                    firstSentence: x.firstSentence || "",
+                    pages: Number(x.pages) || 0,
+                    editionCount: Number(x.editionCount) || 0,
+                    coverUrl: "https://covers.openlibrary.org/b/id/" + (800000 + i) + "-L.jpg"
+                };
+            });
+
+        return {
+            workKey: item.workKey,
+            title: item.title,
+            year: year,
+            pages: pages,
+            editionCount: editionCount,
+            rating: rating,
+            ratingCount: ratingCount,
+            description: (extras.descriptions || {})[item.workKey] || "",
+            firstSentence: item.firstSentence || "",
+            subjects: item.subjects
+                ? String(item.subjects).split(/[,;\u00b7]/).map(function (s) { return s.trim(); })
+                    .filter(Boolean)
+                : [],
+            setting: setting,
+            coverUrl: "https://covers.openlibrary.org/b/id/600000-L.jpg",
+            openLibraryUrl: "https://openlibrary.org/works/" + item.workKey,
+            facts: facts,
+            editions: editions,
+            author: author,
+            similar: others
+        };
+    }
+
+    // One generated image per slot, keyed exactly like the controller's refs:
+    // cover, author, edition:<i>, similar:<workKey>.
+    function buildBookArtQueue(value) {
+        var entries = [];
+        if (value.coverUrl) {
+            entries.push({
+                slot: "cover",
+                dataUri: svgCover(value.title, 500, 750, hueOf(value.workKey))
+            });
+        }
+        if (value.author && value.author.photoUrl) {
+            entries.push({
+                slot: "author",
+                dataUri: svgCover(value.author.name, 300, 450, hueOf(value.author.name))
+            });
+        }
+        (value.editions || []).forEach(function (edition, i) {
+            if (edition.coverUrl) {
+                entries.push({
+                    slot: "edition:" + i,
+                    dataUri: svgCover((edition.year || value.title) + " edition", 300, 450, hueOf("edition" + i))
+                });
+            }
+        });
+        (value.similar || []).forEach(function (book) {
+            if (book.coverUrl) {
+                entries.push({
+                    slot: "similar:" + book.workKey,
+                    dataUri: svgCover(book.title, 300, 450, hueOf(book.workKey))
+                });
+            }
+        });
+        return entries;
+    }
+
+    function requestBookDetail(args) {
+        bookDetail = {
+            gen: bookDetail.gen + 1,
+            polls: 0,
+            status: "pending",
+            workKey: (args && args.workKey) || null,
+            value: null,
+            delivered: false,
+            artQueue: null,
+            artEmitted: 0,
+            artDone: false
+        };
+        console.log("[preview] book detail request gen=" + bookDetail.gen +
+            " workKey=" + bookDetail.workKey);
+        return bookDetail.gen;
+    }
+
+    function pollBookDetail(args) {
+        var generation = args && args.generation;
+        if (generation !== bookDetail.gen) {
+            return { generation: generation, status: "superseded", detail: null };
+        }
+        bookDetail.polls += 1;
+        var ticks = scenario === "slow" ? 20 : 2;
+        if (bookDetail.polls <= ticks) {
+            return { generation: generation, status: "pending", detail: null };
+        }
+        if (scenario === "error") {
+            bookDetail.status = "error";
+            return {
+                generation: generation,
+                status: "error",
+                error: "Simulated book fetch failure (scenario=error).",
+                detail: null
+            };
+        }
+        var value = bookDetailFor(bookDetail.workKey);
+        if (!value) {
+            bookDetail.status = "error";
+            return {
+                generation: generation,
+                status: "error",
+                error: "No book fixture for workKey " + bookDetail.workKey,
+                detail: null
+            };
+        }
+        bookDetail.status = "done";
+        bookDetail.value = value;
+        bookDetail.delivered = true;
+        console.log("[preview] book detail done gen=" + generation +
+            " title=" + value.title);
+        return { generation: generation, status: "done", detail: value };
+    }
+
+    function pollBookDetailArt() {
+        if (!bookDetail.delivered || !bookDetail.value || scenario === "noposters") {
+            bookDetail.artDone = true;
+            return -1;
+        }
+        if (bookDetail.artQueue === null) {
+            bookDetail.artQueue = buildBookArtQueue(bookDetail.value);
+        }
+
+        // Two per drain call, like a network stream landing in bursts.
+        var batch = bookDetail.artQueue.splice(0, 2);
+        batch.forEach(function (entry) {
+            bookDetail.artEmitted += 1;
+            emit("bookDetailArt", { slot: entry.slot, dataUri: entry.dataUri });
+        });
+
+        if (bookDetail.artQueue.length === 0) {
+            bookDetail.artDone = true;
+            return -1;
+        }
+        return bookDetail.artQueue.length;
+    }
+
     function llmReply() {
         return {
             status: "ok",
@@ -506,6 +926,24 @@
             if (command === "pollSongDetail") {
                 return Promise.resolve(pollDetail(args));
             }
+            if (command === "requestMovieDetail") {
+                return Promise.resolve(requestMovieDetail(args));
+            }
+            if (command === "pollMovieDetail") {
+                return Promise.resolve(pollMovieDetail(args));
+            }
+            if (command === "pollMovieDetailArt") {
+                return Promise.resolve(pollMovieDetailArt());
+            }
+            if (command === "requestBookDetail") {
+                return Promise.resolve(requestBookDetail(args));
+            }
+            if (command === "pollBookDetail") {
+                return Promise.resolve(pollBookDetail(args));
+            }
+            if (command === "pollBookDetailArt") {
+                return Promise.resolve(pollBookDetailArt());
+            }
             if (command === "loadLlmSettings") {
                 return Promise.resolve(loadLlm());
             }
@@ -553,6 +991,16 @@
                 detailGeneration: detail.gen,
                 detailStatus: detail.status,
                 detailPolls: detail.polls,
+                movieDetailGeneration: movieDetail.gen,
+                movieDetailStatus: movieDetail.status,
+                movieDetailPolls: movieDetail.polls,
+                movieDetailArtEmitted: movieDetail.artEmitted,
+                movieDetailArtDone: movieDetail.artDone,
+                bookDetailGeneration: bookDetail.gen,
+                bookDetailStatus: bookDetail.status,
+                bookDetailPolls: bookDetail.polls,
+                bookDetailArtEmitted: bookDetail.artEmitted,
+                bookDetailArtDone: bookDetail.artDone,
                 settingsLoads: llm.loads,
                 settingsSaves: llm.saves,
                 settingsHasKey: !!llm.apiKey,
