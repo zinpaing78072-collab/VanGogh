@@ -11,10 +11,13 @@ import io.vavr.control.Option;
 import io.vavr.control.Try;
 import io.vavr.control.Validation;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -28,12 +31,21 @@ import com.google.gson.JsonParser;
  */
 public class TgdbGameService {
 
+    private static final int MAX_RELATED = 6;
+    private static final int MIN_SERIES = 3;
+
     private final TgdbClient client;
 
     // Poster data URIs by poster URL, so re-renders (search, filter toggles)
     // don't re-download the same images. Bounded so long sessions don't grow it.
     // Stays a concurrent map because vavr has no concurrent map.
     private final Map<String, String> posterCache = new ConcurrentHashMap<>();
+
+    // The name dictionaries are large (thousands of rows) and change slowly, so
+    // they are fetched at most once per service instance — and only when a
+    // detail page actually needs a name.
+    private final AtomicReference<Map<String, String>> publisherDictionary = new AtomicReference<>();
+    private final AtomicReference<Map<String, String>> developerDictionary = new AtomicReference<>();
 
     public TgdbGameService(TgdbClient client) {
         this.client = client;
@@ -208,6 +220,230 @@ public class TgdbGameService {
         posterCache.put(url, uri);
     }
 
+    // -------------------------------------------------------------- detail
+
+    /**
+     * The detail page's data. The record itself is the spine — its failure is
+     * the page's error; the images, the name dictionaries and the series rail
+     * are supplementary, so a failure there leaves an empty tile instead.
+     *
+     * <p>Only real record fields are exposed: the API's rating string passes
+     * through untouched, and nothing is invented for records that do not carry
+     * a developer, a price or a playtime.
+     */
+    public Either<FetchError, GameDetail> gameDetail(int gameId) {
+        if (gameId <= 0) {
+            return Either.left(new FetchError.BadInput("game id", "missing"));
+        }
+        return client.gameById(gameId)
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Transport("TheGamesDB game", e))
+                .flatMap(res -> requireSuccess("TheGamesDB game", res))
+                .flatMap(this::requireGame)
+                .map(root -> composeDetail(root, gameId));
+    }
+
+    /** Detail artwork (boxart, fanart, screenshots) through the same image cache. */
+    public Option<String> detailImageDataUri(String imageUrl) {
+        return Option.of(imageUrl)
+                .filter(u -> !u.isEmpty())
+                .flatMap(u -> Option.of(posterCache.get(u))
+                        .orElse(() -> client.loadDetailImageDataUri(u)
+                                .peek(uri -> cachePut(u, uri))));
+    }
+
+    private Either<FetchError, JsonObject> requireGame(String body) {
+        return Try.of(() -> JsonParser.parseString(body).getAsJsonObject())
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Payload("TheGamesDB", "payload shape", e))
+                .flatMap(root -> Option.of(root.getAsJsonObject("data"))
+                        .flatMap(data -> Option.of(data.getAsJsonArray("games")))
+                        .filter(games -> games.size() > 0)
+                        .map(games -> root)
+                        .toEither(() -> (FetchError) new FetchError.Payload(
+                                "TheGamesDB", "missing data.games", null)));
+    }
+
+    private GameDetail composeDetail(JsonObject root, int gameId) {
+        JsonObject game = root.getAsJsonObject("data").getAsJsonArray("games")
+                .get(0).getAsJsonObject();
+        JsonObject images = client.gameImages(gameId)
+                .toOption()
+                .filter(ApiResponse::isSuccess)
+                .flatMap(res -> Try.of(() ->
+                        JsonParser.parseString(res.body).getAsJsonObject()).toOption())
+                .getOrNull();
+        RelatedRail rail = relatedGames(game, gameId);
+        return GameDetailMapper.compose(
+                root,
+                game,
+                images,
+                rail.source(),
+                rail.items(),
+                developerNames(),
+                publisherNames());
+    }
+
+    /** The rail plus where it came from, so the page can label it honestly. */
+    private record RelatedRail(String source, java.util.List<GameDetail.Related> items) {}
+
+    /**
+     * The related rail. Same-series siblings come from a name search seeded with
+     * the title's first meaningful word; when the record has too few (most
+     * games only have platform/edition twins), the catalogue's trending list
+     * fills the rest, and the rail says so.
+     */
+    private RelatedRail relatedGames(JsonObject game, int gameId) {
+        String title = optString(game, "game_title");
+        String seed = seriesSeed(title);
+        java.util.List<GameDetail.Related> series = seed.isEmpty()
+                ? java.util.List.of()
+                : client.searchGame(seed)
+                        .toOption()
+                        .filter(ApiResponse::isSuccess)
+                        .flatMap(res -> parseRelated(res.body, gameId, title, false).toOption())
+                        .getOrElse(java.util.List.of());
+        if (series.size() >= MIN_SERIES) {
+            return new RelatedRail("series", List.ofAll(series).take(4).toJavaList());
+        }
+
+        java.util.List<GameDetail.Related> catalogue = client.trending()
+                .toOption()
+                .filter(ApiResponse::isSuccess)
+                .flatMap(res -> parseRelated(res.body, gameId, "", true).toOption())
+                .getOrElse(java.util.List.of());
+
+        java.util.List<GameDetail.Related> combined = List.ofAll(series)
+                .appendAll(List.ofAll(catalogue))
+                .distinctBy(GameDetail.Related::id)
+                .filter(related -> related.id() != gameId)
+                .take(4)
+                .toJavaList();
+        return new RelatedRail("catalogue", combined);
+    }
+
+    private Either<FetchError, java.util.List<GameDetail.Related>> parseRelated(
+            String body, int gameId, String title, boolean allowVariants) {
+        return Try.of(() -> JsonParser.parseString(body).getAsJsonObject())
+                .toEither()
+                .mapLeft(e -> (FetchError) new FetchError.Payload("TheGamesDB", "payload shape", e))
+                .map(root -> {
+                    JsonArray rows = Option.of(root.getAsJsonObject("data"))
+                            .flatMap(data -> Option.of(data.getAsJsonArray("games")))
+                            .getOrElse(new JsonArray());
+                    JsonObject boxartData = extractBoxartData(root);
+                    List<GameDetail.Related> candidates = List.range(0, rows.size())
+                            .map(i -> rows.get(i).getAsJsonObject())
+                            .filter(candidate -> optInt(candidate, "id") != gameId)
+                            .filter(candidate -> title.isEmpty()
+                                    || !optString(candidate, "game_title").equalsIgnoreCase(title))
+                            .filter(candidate -> allowVariants
+                                    || !isVariant(optString(candidate, "game_title")))
+                            .map(candidate -> toRelated(candidate, boxartData))
+                            .filter(related -> !related.title().isEmpty());
+                    return candidates
+                            .distinctBy(related -> related.title().toLowerCase())
+                            .sortBy(related -> related.posterUrl().isEmpty())
+                            .take(MAX_RELATED)
+                            .toJavaList();
+                });
+    }
+
+    /** "[Demo Disc]", "(Collector's Edition)", "… Director's Cut": same game, not a sibling. */
+    private static boolean isVariant(String title) {
+        String lower = title.toLowerCase();
+        return lower.contains("[") || lower.contains("(")
+                || lower.contains("edition") || lower.contains("demo disc")
+                || lower.contains("director's cut");
+    }
+
+    private static GameDetail.Related toRelated(JsonObject game, JsonObject boxartData) {
+        int id = optInt(game, "id");
+        String release = optString(game, "release_date");
+        String genre = Option.of(game.get("genres"))
+                .filter(element -> !element.isJsonNull() && element.isJsonArray())
+                .map(element -> genreLabel(element.getAsJsonArray()))
+                .getOrElse("");
+        return new GameDetail.Related(
+                id,
+                optString(game, "game_title"),
+                yearOf(release),
+                optString(game, "rating"),
+                genre,
+                TgdbClient.mediumVariant(findFrontBoxart(boxartData, id)));
+    }
+
+    /** The first word of the title that can serve as a series name. */
+    static String seriesSeed(String title) {
+        if (title == null || title.isBlank()) {
+            return "";
+        }
+        String cleaned = title.replaceAll("[\\[({].*$", " ").trim();
+        for (String word : cleaned.split("[^\\p{L}\\p{N}]+")) {
+            if (word.length() >= 4) {
+                return word;
+            }
+        }
+        return "";
+    }
+
+    private Map<String, String> publisherNames() {
+        return nameDictionary(publisherDictionary, () -> client.publishers(), "publishers");
+    }
+
+    private Map<String, String> developerNames() {
+        return nameDictionary(developerDictionary, () -> client.developers(), "developers");
+    }
+
+    /**
+     * The API sends publisher/developer ids on the game payload, so the names
+     * come from a full dictionary. One fetch per service instance: the
+     * dictionary is thousands of rows and does not change within a session.
+     */
+    private Map<String, String> nameDictionary(
+            AtomicReference<Map<String, String>> cache,
+            java.util.function.Supplier<Try<ApiResponse>> fetch,
+            String node) {
+        Map<String, String> cached = cache.get();
+        if (cached != null) {
+            return cached;
+        }
+        Map<String, String> parsed = fetch.get()
+                .toOption()
+                .filter(ApiResponse::isSuccess)
+                .flatMap(res -> Try.of(() -> parseNames(res.body, node)).toOption())
+                .getOrElse(Map.of());
+        if (!parsed.isEmpty()) {
+            cache.set(parsed);
+        }
+        return parsed;
+    }
+
+    private static Map<String, String> parseNames(String body, String node) {
+        JsonObject data = JsonParser.parseString(body).getAsJsonObject().getAsJsonObject("data");
+        JsonObject dictionary = data.getAsJsonObject(node);
+        Map<String, String> names = new HashMap<>();
+        for (Map.Entry<String, JsonElement> entry : dictionary.entrySet()) {
+            names.put(entry.getKey(), optString(entry.getValue().getAsJsonObject(), "name"));
+        }
+        return names;
+    }
+
+    private static int optInt(JsonObject object, String key) {
+        return Option.of(object.get(key))
+                .filter(element -> !element.isJsonNull())
+                .map(JsonElement::getAsInt)
+                .getOrElse(0);
+    }
+
+    private static int yearOf(String releaseDate) {
+        if (releaseDate == null || releaseDate.length() < 4) {
+            return 0;
+        }
+        String year = releaseDate.substring(0, 4);
+        return year.chars().allMatch(Character::isDigit) ? Integer.parseInt(year) : 0;
+    }
+
     private static String optString(JsonObject g, String key) {
         return Option.of(g.get(key))
                 .filter(j -> !j.isJsonNull())
@@ -224,7 +460,7 @@ public class TgdbGameService {
                 .mkString(" · ");
     }
 
-    private static String genreName(int id) {
+    static String genreName(int id) {
         return switch (id) {
             case 1 -> "Action";
             case 2 -> "Adventure";

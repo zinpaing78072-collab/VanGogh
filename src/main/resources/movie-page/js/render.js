@@ -8,6 +8,7 @@ import { openDetail } from "./detail.js";
 import { paintSongView, closeSongView } from "./song-detail.js";
 import { paintMovieView, closeMovieView } from "./movie-detail.js";
 import { paintBookView, closeBookView } from "./book-detail.js";
+import { paintGameView, closeGameView } from "./game-detail.js";
 import { escapeHtml } from "./util.js";
 
 export function render() {
@@ -17,6 +18,7 @@ export function render() {
         closeSongView();
         closeMovieView();
         closeBookView();
+        closeGameView();
         browseView.classList.add("hidden");
         settingsView.classList.remove("hidden");
         paintActiveNav(null);
@@ -26,6 +28,7 @@ export function render() {
     if (state.view === "song") {
         closeMovieView();
         closeBookView();
+        closeGameView();
         browseView.classList.add("hidden");
         paintSongView();
         return;
@@ -33,6 +36,7 @@ export function render() {
     if (state.view === "movie") {
         closeSongView();
         closeBookView();
+        closeGameView();
         browseView.classList.add("hidden");
         paintMovieView();
         return;
@@ -40,14 +44,24 @@ export function render() {
     if (state.view === "book") {
         closeSongView();
         closeMovieView();
+        closeGameView();
         browseView.classList.add("hidden");
         paintBookView();
+        return;
+    }
+    if (state.view === "game") {
+        closeSongView();
+        closeMovieView();
+        closeBookView();
+        browseView.classList.add("hidden");
+        paintGameView();
         return;
     }
     browseView.classList.remove("hidden");
     closeSongView();
     closeMovieView();
     closeBookView();
+    closeGameView();
     renderBrowse();
 }
 

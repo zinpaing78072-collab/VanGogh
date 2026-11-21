@@ -898,6 +898,189 @@ const TESTS = [
         }
     },
     {
+        name: "game card opens the game detail",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.selectForm("game");
+
+            await page.evaluate(`document.querySelector("#movieGrid .game-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().gameDetailArtDone
+                && document.querySelectorAll("#gameView .game-facts > div").length > 0`);
+
+            const stats = await page.stats();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                gameVisible: !document.getElementById("gameView").classList.contains("hidden"),
+                title: ((document.querySelector("#gameView .game-title") || {}).textContent || "").trim(),
+                lede: ((document.querySelector("#gameView .game-lede") || {}).textContent || "").trim(),
+                chips: document.querySelectorAll("#gameView .game-chip").length,
+                meta: document.querySelectorAll("#gameView .game-meta-row span:not(.game-dot)").length,
+                stats: document.querySelectorAll("#gameView .game-stat").length,
+                firstStat: ((document.querySelector("#gameView .game-stat dt") || {}).textContent || "").trim()
+                    + " = " + ((document.querySelector("#gameView .game-stat dd") || {}).textContent || "").trim(),
+                facts: document.querySelectorAll("#gameView .game-facts > div").length,
+                firstFact: ((document.querySelector("#gameView .game-facts dt") || {}).textContent || "").trim()
+                    + " = " + ((document.querySelector("#gameView .game-facts dd") || {}).textContent || "").trim(),
+                quote: document.querySelectorAll("#gameView .game-opening").length,
+                paragraphs: document.querySelectorAll("#gameView .game-prose p").length,
+                stills: document.querySelectorAll("#gameView .game-still").length,
+                platforms: document.querySelectorAll("#gameView .game-platform-tile").length,
+                specs: document.querySelectorAll("#gameView .game-spec-row").length,
+                related: document.querySelectorAll("#gameView .game-rel-card").length,
+                relatedKicker: ((document.querySelector("#gameView .game-related .game-kicker") || {}).textContent || "").trim(),
+                actions: document.querySelectorAll("#gameView .game-action").length,
+                recordLink: [...document.querySelectorAll("#gameView a")]
+                    .filter(a => a.href.indexOf("thegamesdb.net") !== -1).length,
+                boxartArt: document.querySelectorAll("#gameView .game-cover-img:not(.hidden)").length,
+                heroArt: document.querySelectorAll("#gameView .game-hero-bg:not(.hidden)").length,
+                stillArt: document.querySelectorAll("#gameView .game-still-img:not(.hidden)").length,
+                relatedArt: document.querySelectorAll("#gameView .game-rel-img:not(.hidden)").length,
+                visiblePlaceholders: document.querySelectorAll("#gameView .poster-placeholder:not(.hidden)").length,
+                broken: [...document.querySelectorAll("#gameView img")]
+                    .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
+                overflow: Math.max(0, document.getElementById("gameView").scrollWidth
+                    - document.getElementById("gameView").clientWidth)
+            })`));
+
+            // The save pills toggle locally, like the other detail views.
+            await page.evaluate(`document.querySelector('#gameView [data-action="watchlist"]').click(); true`);
+            const watchlist = JSON.parse(await page.evaluate(`JSON.stringify({
+                pressed: document.querySelector('#gameView [data-action="watchlist"]').getAttribute("aria-pressed"),
+                text: document.querySelector('#gameView [data-action="watchlist"]').textContent.trim()
+            })`));
+
+            // A screenshot opens the in-view lightbox; Escape closes the
+            // lightbox first and only the second Escape leaves the page.
+            await page.evaluate(`document.querySelector("#gameView .game-still-open").click(); true`);
+            const lightbox = JSON.parse(await page.evaluate(`JSON.stringify((function () {
+                const l = document.querySelector("#gameView .game-lightbox");
+                const r = l.getBoundingClientRect();
+                const vw = document.documentElement.clientWidth;
+                const vh = document.documentElement.clientHeight;
+                const atSidebar = document.elementFromPoint(20, Math.round(vh / 2));
+                return {
+                    open: !l.classList.contains("hidden"),
+                    src: (l.querySelector(".game-lightbox-img") || {}).src || "",
+                    caption: (l.querySelector(".game-lightbox-caption") || {}).textContent || "",
+                    covers: Math.abs(r.top) < 1 && Math.abs(r.left) < 1
+                        && Math.abs(r.width - vw) < 1 && Math.abs(r.height - vh) < 1,
+                    aboveShell: !!atSidebar && l.contains(atSidebar)
+                };
+            })())`));
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            const afterFirstEscape = JSON.parse(await page.evaluate(`JSON.stringify({
+                lightbox: !document.querySelector("#gameView .game-lightbox").classList.contains("hidden"),
+                gameVisible: !document.getElementById("gameView").classList.contains("hidden")
+            })`));
+
+            // The related rail opens another game through the same detail pair.
+            const firstGen = stats.gameDetailGeneration;
+            const relatedTitle = await page.evaluate(
+                `document.querySelector("#gameView .game-rel-card").dataset.title`);
+            await page.evaluate(`document.querySelector("#gameView .game-rel-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().gameDetailGeneration > ${firstGen}
+                && window.__preview.stats().gameDetailStatus === "done"
+                && ((document.querySelector("#gameView .game-title") || {}).textContent || "").trim()
+                    === ${JSON.stringify(relatedTitle)}`);
+            const related = JSON.parse(await page.evaluate(`JSON.stringify({
+                title: ((document.querySelector("#gameView .game-title") || {}).textContent || "").trim(),
+                generation: window.__preview.stats().gameDetailGeneration,
+                facts: document.querySelectorAll("#gameView .game-facts > div").length
+            })`));
+
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.getElementById("browseView").classList.contains("hidden")
+                && document.getElementById("gameView").classList.contains("hidden")`);
+            const back = JSON.parse(await page.evaluate(`JSON.stringify({
+                cards: document.querySelectorAll("#movieGrid .game-card").length,
+                title: document.getElementById("sectionTitle").textContent
+            })`));
+
+            // The sparse fixture: no rating, platform, publisher or developer,
+            // no boxart and one screenshot — the page keeps placeholders and
+            // drops the sections the record cannot fill.
+            const sparseGen = await page.evaluate(`window.__preview.stats().gameDetailGeneration`);
+            await page.evaluate(`document.querySelectorAll("#movieGrid .game-card")[3].click(); true`);
+            await page.waitFor(`window.__preview.stats().gameDetailGeneration > ${sparseGen}
+                && window.__preview.stats().gameDetailStatus === "done"
+                && window.__preview.stats().gameDetailArtDone`);
+            const sparse = JSON.parse(await page.evaluate(`JSON.stringify({
+                title: ((document.querySelector("#gameView .game-title") || {}).textContent || "").trim(),
+                facts: document.querySelectorAll("#gameView .game-facts > div").length,
+                chips: document.querySelectorAll("#gameView .game-chip").length,
+                platforms: document.querySelectorAll("#gameView .game-platform-tile").length,
+                stills: document.querySelectorAll("#gameView .game-still").length,
+                coverPlaceholder: document.querySelectorAll("#gameView .game-hero-cover .poster-placeholder:not(.hidden)").length,
+                broken: [...document.querySelectorAll("#gameView img")]
+                    .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length
+            })`));
+
+            return [
+                check("clicking a game card opens the detail view",
+                    d.browseHidden && d.gameVisible, d.browseHidden + "/" + d.gameVisible),
+                check("detail shows the clicked game's identity",
+                    d.title === "Minecraft" && d.lede.indexOf("Build, explore") === 0,
+                    d.title + " / " + d.lede.slice(0, 32)),
+                check("kicker and meta line carry year, genres, rating, players and platforms",
+                    d.chips === 4 && d.meta === 3, d.chips + " chips / " + d.meta + " meta"),
+                check("stat band renders four cells starting with the release year",
+                    d.stats === 4 && d.firstStat.indexOf("Released = 2011") === 0,
+                    d.stats + " / " + d.firstStat),
+                check("record rail renders eight facts starting with the release date",
+                    d.facts === 8 && d.firstFact === "Release = 2011-11-18",
+                    d.facts + " / " + d.firstFact),
+                check("the opening pull quote and both overview paragraphs render",
+                    d.quote === 1 && d.paragraphs === 2, d.quote + " / " + d.paragraphs),
+                check("screenshots render", d.stills === 3, d.stills),
+                check("every platform renders as a tile", d.platforms === 4, d.platforms),
+                check("the spec grid pairs players, release, genres and rating", d.specs === 4, d.specs),
+                check("the related rail labels itself as same-series",
+                    d.related === 4 && d.relatedKicker === "Same series",
+                    d.related + " / " + d.relatedKicker),
+                check("hero carries trailer, watchlist, favorite and record actions",
+                    d.actions === 4 && d.recordLink >= 1, d.actions + " / " + d.recordLink),
+                check("boxart and fanart stream into their slots",
+                    d.boxartArt === 1 && d.heroArt === 1, d.boxartArt + " / " + d.heroArt),
+                check("every screenshot streams into its slot", d.stillArt === 3, d.stillArt),
+                check("every related boxart streams into its slot", d.relatedArt === 4, d.relatedArt),
+                check("artwork replaces every placeholder",
+                    d.visiblePlaceholders === 0 && d.broken === 0,
+                    d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
+                check("every queued image was emitted", stats.gameDetailArtEmitted === 9,
+                    stats.gameDetailArtEmitted),
+                check("watchlist toggles on and says so",
+                    watchlist.pressed === "true" && watchlist.text.indexOf("In My Lists") !== -1,
+                    watchlist.pressed + " / " + watchlist.text),
+                check("a screenshot opens the lightbox with the same image",
+                    lightbox.open && lightbox.src.indexOf("data:image/svg") === 0
+                        && lightbox.caption.indexOf("Screenshot 1") !== -1,
+                    lightbox.open + " / " + lightbox.caption.trim()),
+                check("the lightbox covers the viewport above the shell",
+                    lightbox.covers && lightbox.aboveShell,
+                    lightbox.covers + " / " + lightbox.aboveShell),
+                check("Escape closes the lightbox without leaving the page",
+                    !afterFirstEscape.lightbox && afterFirstEscape.gameVisible,
+                    afterFirstEscape.lightbox + " / " + afterFirstEscape.gameVisible),
+                check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),
+                check("a related card opens that game in the same view",
+                    related.title === relatedTitle && related.generation === firstGen + 1,
+                    related.title + " / gen " + related.generation),
+                check("Escape returns to the intact card grid",
+                    back.cards === 6 && back.title === "Trending Games",
+                    back.cards + " / " + back.title),
+                check("a sparse record keeps its boxart placeholder",
+                    sparse.coverPlaceholder === 1 && sparse.broken === 0,
+                    sparse.coverPlaceholder + " placeholder / " + sparse.broken + " broken"),
+                check("a sparse record drops the sections it cannot fill",
+                    sparse.title.indexOf("Supercalifragilistic") === 0
+                        && sparse.facts === 2 && sparse.chips === 1
+                        && sparse.platforms === 0 && sparse.stills === 1,
+                    sparse.facts + " facts / " + sparse.chips + " chips / "
+                        + sparse.platforms + " platforms / " + sparse.stills + " stills")
+            ];
+        }
+    },
+    {
         name: "sidebar: form buttons, inert items, collapse",
         path: "/movie-page/index.html",
         run: async (page) => {

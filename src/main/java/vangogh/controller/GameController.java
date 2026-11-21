@@ -9,6 +9,7 @@ import io.vavr.control.Option;
 import io.vavr.control.Try;
 import vangogh.error.FetchError;
 import vangogh.game.Game;
+import vangogh.game.GameDetail;
 import vangogh.game.TgdbGameService;
 import vangogh.llm.Form;
 import vangogh.recommend.PickResolver;
@@ -211,6 +212,147 @@ public class GameController {
             return;
         }
         posterQueue.offer(new PendingPoster(id, uri.get()));
+    }
+
+    // -------------------------------------------------------------- detail
+
+    /** One-slot holder for the latest completed detail fetch. */
+    private record PendingDetail(int generation, Either<FetchError, GameDetail> result) {}
+
+    private record ArtRef(String slot, String url) {}
+
+    private record PendingArt(String slot, String dataUri) {}
+
+    private final AtomicInteger detailGeneration = new AtomicInteger();
+    private final AtomicReference<PendingDetail> pendingDetail = new AtomicReference<>();
+
+    private final ConcurrentLinkedQueue<PendingArt> detailArtQueue = new ConcurrentLinkedQueue<>();
+    private final AtomicInteger detailArtTotal = new AtomicInteger();
+    private final AtomicInteger detailArtDelivered = new AtomicInteger();
+    private final AtomicInteger detailArtSkipped = new AtomicInteger();
+
+    /** The detail drain's reply; artwork arrives separately as gameDetailArt events. */
+    public record GameDetailReply(int generation, String status, String error, GameDetail detail) {}
+
+    /**
+     * Kicks off the game-detail fetch and returns its generation at once (the
+     * UI thread never blocks on network I/O). The page polls
+     * {@link #pollGameDetail(int)} until the detail or an error arrives, then
+     * {@link #pollGameDetailArt()} for the streamed artwork.
+     *
+     * <p>Its own generation counter means opening a game cannot supersede the
+     * grid request (or its poster stream) and vice versa.
+     */
+    @KremaCommand
+    public int requestGameDetail(int id) {
+        int gen = detailGeneration.incrementAndGet();
+        pendingDetail.set(null);
+        resetDetailArt();
+
+        Future.of(executor, () -> service.gameDetail(id))
+                .onComplete(result -> deliverDetail(gen, result));
+        return gen;
+    }
+
+    /**
+     * Fans out the artwork fetches. The total is set before the detail drain
+     * can hand the page this request, so a poll issued right after render
+     * never sees a stale count.
+     */
+    private void queueDetailArt(GameDetail detail, int gen) {
+        java.util.List<ArtRef> refs = new java.util.ArrayList<>();
+        addArtRef(refs, "boxart", detail.boxartUrl());
+        addArtRef(refs, "hero", detail.heroUrl());
+        java.util.List<String> stills = detail.stillUrls();
+        for (int i = 0; i < stills.size(); i++) {
+            addArtRef(refs, "still:" + i, stills.get(i));
+        }
+        for (GameDetail.Related related : detail.related()) {
+            addArtRef(refs, "related:" + related.id(), related.posterUrl());
+        }
+
+        detailArtTotal.set(refs.size());
+        Future.traverse(executor, io.vavr.collection.List.ofAll(refs),
+                ref -> Future.run(executor, () -> fetchDetailArt(ref, gen)));
+    }
+
+    private static void addArtRef(java.util.List<ArtRef> refs, String slot, String url) {
+        if (url != null && !url.isEmpty()) {
+            refs.add(new ArtRef(slot, url));
+        }
+    }
+
+    private void deliverDetail(int gen, Try<Either<FetchError, GameDetail>> result) {
+        if (detailGeneration.get() != gen) {
+            return;
+        }
+        Either<FetchError, GameDetail> either = result.isFailure()
+                ? Either.left(new FetchError.Transport("TheGamesDB game", result.getCause()))
+                : result.get();
+
+        either.peek(detail -> queueDetailArt(detail, gen));
+        pendingDetail.set(new PendingDetail(gen, either));
+    }
+
+    /**
+     * The detail drain: the latest completed fetch for the page's generation,
+     * or a pending/superseded marker. Synchronous on the UI thread.
+     */
+    @KremaCommand
+    public GameDetailReply pollGameDetail(int generation) {
+        PendingDetail pending = pendingDetail.get();
+        if (pending == null) {
+            return new GameDetailReply(generation, "pending", null, null);
+        }
+        if (pending.generation() > generation) {
+            return new GameDetailReply(pending.generation(), "superseded", null, null);
+        }
+        pendingDetail.set(null);
+        return pending.result().fold(
+                error -> new GameDetailReply(pending.generation(), "error",
+                        FetchError.uiMessage(error), null),
+                detail -> new GameDetailReply(pending.generation(), "done", null, detail));
+    }
+
+    /**
+     * The artwork drain: emits one {@code gameDetailArt} event per queued
+     * image ({@code {slot, dataUri}}) and returns the outstanding count, or −1
+     * when the stream for this detail is complete.
+     */
+    @KremaCommand
+    public int pollGameDetailArt() {
+        PendingArt pending;
+        while ((pending = detailArtQueue.poll()) != null) {
+            if (events != null) {
+                events.emit("gameDetailArt",
+                        Map.of("slot", pending.slot(), "dataUri", pending.dataUri()));
+            }
+            detailArtDelivered.incrementAndGet();
+        }
+        int outstanding = detailArtTotal.get() - detailArtDelivered.get() - detailArtSkipped.get();
+        if (detailArtQueue.isEmpty() && outstanding <= 0) {
+            return -1;
+        }
+        return Math.max(outstanding, 0);
+    }
+
+    private void resetDetailArt() {
+        detailArtQueue.clear();
+        detailArtTotal.set(0);
+        detailArtDelivered.set(0);
+        detailArtSkipped.set(0);
+    }
+
+    private void fetchDetailArt(ArtRef ref, int gen) {
+        Option<String> uri = service.detailImageDataUri(ref.url())
+                .filter(ignore -> detailGeneration.get() == gen);
+        if (uri.isEmpty()) {
+            if (detailGeneration.get() == gen) {
+                detailArtSkipped.incrementAndGet();
+            }
+            return;
+        }
+        detailArtQueue.offer(new PendingArt(ref.slot(), uri.get()));
     }
 
     private static String resolveApiKey() {

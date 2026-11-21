@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="music-detail.css">
     <link rel="stylesheet" href="movie-detail.css">
     <link rel="stylesheet" href="book-detail.css">
+    <link rel="stylesheet" href="game-detail.css">
     <link rel="stylesheet" href="settings.css">
     <link rel="stylesheet" id="themeSkin" href="theme-starry.css">
 </head>
@@ -293,6 +294,10 @@
         <!-- Song detail (opened from a music card). Painted by
              js/song-detail.js from state.song; hidden while browsing. -->
         <section class="song-view hidden" id="songView" aria-live="polite"></section>
+
+        <!-- Game detail (opened from a game card). Painted by
+             js/game-detail.js from state.game; hidden while browsing. -->
+        <section class="game-view hidden" id="gameView" aria-live="polite"></section>
 
         <!-- Song player — a UI-only demo transport until an audio source is
              wired (the detail payload says so). Pinned to the bottom of the

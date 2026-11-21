@@ -17,12 +17,16 @@
  *   invoke("requestBookDetail", { workKey })  → book-detail generation
  *   invoke("pollBookDetail", { generation })  → { status, detail?, error? }
  *   invoke("pollBookDetailArt", {})           → remaining book art, −1 when done
+ *   invoke("requestGameDetail", { id })       → game-detail generation
+ *   invoke("pollGameDetail", { generation })  → { status, detail?, error? }
+ *   invoke("pollGameDetailArt", {})           → remaining game art, −1 when done
  *   invoke("loadLlmSettings", {})             → { status, baseUrl, model, …, hasApiKey }
  *   invoke("saveLlmSettings", { … })          → the stored values, never the key
  *   invoke("loadTheme", {})                   → { status, theme, themes }
  *   invoke("saveTheme", { theme })            → the stored id + the theme list
  *   on("<artEvent>", handler)                 → { payload: { id, dataUri }, timestamp }
  *   on("movieDetailArt", handler)             → { payload: { slot, dataUri }, timestamp }
+ *   on("gameDetailArt", handler)              → { payload: { slot, dataUri }, timestamp }
  *
  * Because pacing stays pending→done like the real drains, the skeleton cards
  * and the staggered artwork stream are both exercised, which is the whole
@@ -128,6 +132,20 @@
         polls: 0,
         status: "idle",
         workKey: null,
+        value: null,
+        delivered: false,
+        artQueue: null,
+        artEmitted: 0,
+        artDone: false
+    };
+
+    // Game detail is its own pair too (boxart, fanart, stills and related
+    // boxarts stream as data URIs through gameDetailArt).
+    var gameDetail = {
+        gen: 0,
+        polls: 0,
+        status: "idle",
+        id: null,
         value: null,
         delivered: false,
         artQueue: null,
@@ -812,6 +830,213 @@
         return bookDetail.artQueue.length;
     }
 
+    // ------------------------------------------------------------ game detail
+
+    /** The rail's record sheet, in the same order GameDetailMapper builds it. */
+    function gameFacts(value) {
+        var facts = [];
+        function fact(label, text) {
+            if (text !== "" && text != null) {
+                facts.push({ label: label, value: String(text) });
+            }
+        }
+        fact("Release", value.releaseDate);
+        fact("Age rating", value.rating);
+        fact("Players", value.players > 0 ? value.players : "");
+        fact("Platform", value.platforms.join(" \u00b7 "));
+        fact("Genres", value.genres.join(" \u00b7 "));
+        fact("Publisher", value.publishers.join(" \u00b7 "));
+        fact("Developer", value.developers.join(" \u00b7 "));
+        fact("Game ID", value.id > 0 ? value.id : "");
+        return facts;
+    }
+
+    function gameDetailFor(id) {
+        var list = fixtures.game || [];
+        var extras = fixtures.gameDetail || {};
+        var item = list.filter(function (x) { return String(x.id) === String(id); })[0];
+
+        if (!item) {
+            // A related-rail card is a record too. Build it from the fixture's
+            // related row instead of falling back to an unrelated game.
+            var found = null;
+            Object.keys(extras).forEach(function (key) {
+                (extras[key].related || []).forEach(function (r) {
+                    if (String(r.id) === String(id)) {
+                        found = r;
+                    }
+                });
+            });
+            if (!found) {
+                return null;
+            }
+            item = {
+                id: found.id,
+                game_title: found.title,
+                year: found.year,
+                rating: found.rating,
+                genre: found.genre
+            };
+        }
+
+        var extra = extras[String(item.id)] || {};
+        var stills = Number(extra.stills) || 0;
+
+        var value = {
+            id: Number(item.id),
+            title: item.game_title,
+            releaseDate: extra.releaseDate || "",
+            year: Number(item.year) || 0,
+            rating: extra.rating || "",
+            players: Number(extra.players) || 0,
+            genres: extra.genres || (item.genre ? [item.genre] : []),
+            platforms: extra.platforms || [],
+            publishers: extra.publishers || [],
+            developers: extra.developers || [],
+            overview: extra.overview || item.overview || "",
+            youtubeUrl: extra.youtube || "",
+            recordUrl: "https://thegamesdb.net/game/" + item.id + "/",
+            boxartUrl: extra.boxart
+                ? "https://cdn.thegamesdb.net/images/original/boxart/" + item.id + ".jpg" : "",
+            heroUrl: extra.hero
+                ? "https://cdn.thegamesdb.net/images/medium/fanart/" + item.id + ".jpg" : "",
+            stillUrls: [],
+            facts: [],
+            relatedSource: extra.relatedSource || "catalogue",
+            related: (extra.related || []).map(function (r) {
+                return {
+                    id: Number(r.id),
+                    title: r.title,
+                    year: Number(r.year) || 0,
+                    rating: r.rating || "",
+                    genre: r.genre || "",
+                    posterUrl: "https://cdn.thegamesdb.net/images/medium/boxart/" + r.id + ".jpg"
+                };
+            })
+        };
+
+        for (var i = 0; i < stills; i++) {
+            value.stillUrls.push(
+                "https://cdn.thegamesdb.net/images/medium/screenshots/" + item.id + "-" + i + ".jpg");
+        }
+        // Same fallback the mapper applies: no fanart → the first screenshot.
+        if (!value.heroUrl && value.stillUrls.length) {
+            value.heroUrl = value.stillUrls[0];
+        }
+        value.facts = gameFacts(value);
+        return value;
+    }
+
+    // One generated image per slot, keyed exactly like the controller's refs:
+    // boxart, hero, still:<i>, related:<id>.
+    function buildGameArtQueue(value) {
+        var entries = [];
+        if (value.boxartUrl) {
+            entries.push({
+                slot: "boxart",
+                dataUri: svgCover(value.title, 460, 690, hueOf(value.id))
+            });
+        }
+        if (value.heroUrl) {
+            entries.push({
+                slot: "hero",
+                dataUri: svgCover(value.title.charAt(0), 1280, 620, hueOf("hero" + value.id))
+            });
+        }
+        (value.stillUrls || []).forEach(function (still, i) {
+            entries.push({
+                slot: "still:" + i,
+                dataUri: svgCover(value.title.charAt(0), 800, 450, hueOf("still" + value.id + i))
+            });
+        });
+        (value.related || []).forEach(function (game) {
+            if (game.posterUrl) {
+                entries.push({
+                    slot: "related:" + game.id,
+                    dataUri: svgCover(game.title, 300, 450, hueOf(game.id))
+                });
+            }
+        });
+        return entries;
+    }
+
+    function requestGameDetail(args) {
+        gameDetail = {
+            gen: gameDetail.gen + 1,
+            polls: 0,
+            status: "pending",
+            id: (args && args.id) || null,
+            value: null,
+            delivered: false,
+            artQueue: null,
+            artEmitted: 0,
+            artDone: false
+        };
+        console.log("[preview] game detail request gen=" + gameDetail.gen +
+            " id=" + gameDetail.id);
+        return gameDetail.gen;
+    }
+
+    function pollGameDetail(args) {
+        var generation = args && args.generation;
+        if (generation !== gameDetail.gen) {
+            return { generation: generation, status: "superseded", detail: null };
+        }
+        gameDetail.polls += 1;
+        var ticks = scenario === "slow" ? 20 : 2;
+        if (gameDetail.polls <= ticks) {
+            return { generation: generation, status: "pending", detail: null };
+        }
+        if (scenario === "error") {
+            gameDetail.status = "error";
+            return {
+                generation: generation,
+                status: "error",
+                error: "Simulated game fetch failure (scenario=error).",
+                detail: null
+            };
+        }
+        var value = gameDetailFor(gameDetail.id);
+        if (!value) {
+            gameDetail.status = "error";
+            return {
+                generation: generation,
+                status: "error",
+                error: "No game fixture for id " + gameDetail.id,
+                detail: null
+            };
+        }
+        gameDetail.status = "done";
+        gameDetail.value = value;
+        gameDetail.delivered = true;
+        console.log("[preview] game detail done gen=" + generation +
+            " title=" + value.title);
+        return { generation: generation, status: "done", detail: value };
+    }
+
+    function pollGameDetailArt() {
+        if (!gameDetail.delivered || !gameDetail.value || scenario === "noposters") {
+            gameDetail.artDone = true;
+            return -1;
+        }
+        if (gameDetail.artQueue === null) {
+            gameDetail.artQueue = buildGameArtQueue(gameDetail.value);
+        }
+
+        // Two per drain call, like a network stream landing in bursts.
+        var batch = gameDetail.artQueue.splice(0, 2);
+        batch.forEach(function (entry) {
+            gameDetail.artEmitted += 1;
+            emit("gameDetailArt", { slot: entry.slot, dataUri: entry.dataUri });
+        });
+
+        if (gameDetail.artQueue.length === 0) {
+            gameDetail.artDone = true;
+            return -1;
+        }
+        return gameDetail.artQueue.length;
+    }
+
     function llmReply() {
         return {
             status: "ok",
@@ -944,6 +1169,15 @@
             if (command === "pollBookDetailArt") {
                 return Promise.resolve(pollBookDetailArt());
             }
+            if (command === "requestGameDetail") {
+                return Promise.resolve(requestGameDetail(args));
+            }
+            if (command === "pollGameDetail") {
+                return Promise.resolve(pollGameDetail(args));
+            }
+            if (command === "pollGameDetailArt") {
+                return Promise.resolve(pollGameDetailArt());
+            }
             if (command === "loadLlmSettings") {
                 return Promise.resolve(loadLlm());
             }
@@ -1001,6 +1235,11 @@
                 bookDetailPolls: bookDetail.polls,
                 bookDetailArtEmitted: bookDetail.artEmitted,
                 bookDetailArtDone: bookDetail.artDone,
+                gameDetailGeneration: gameDetail.gen,
+                gameDetailStatus: gameDetail.status,
+                gameDetailPolls: gameDetail.polls,
+                gameDetailArtEmitted: gameDetail.artEmitted,
+                gameDetailArtDone: gameDetail.artDone,
                 settingsLoads: llm.loads,
                 settingsSaves: llm.saves,
                 settingsHasKey: !!llm.apiKey,

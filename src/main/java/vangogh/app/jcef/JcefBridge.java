@@ -207,6 +207,12 @@ public class JcefBridge {
             case "pollGeniusMusicData" -> intCommand(args, "generation", geniusController::pollGeniusMusicData);
             case "pollBookData" -> intCommand(args, "generation", bookController::pollBookData);
             case "pollGamePosters" -> Validation.valid(new Command(gameController::pollGamePosters));
+            case "requestGameDetail" ->
+                    intCommand(args, "id", gameController::requestGameDetail);
+            case "pollGameDetail" ->
+                    intCommand(args, "generation", gameController::pollGameDetail);
+            case "pollGameDetailArt" ->
+                    Validation.valid(new Command(gameController::pollGameDetailArt));
             case "pollMoviePosters" -> Validation.valid(new Command(movieController::pollMoviePosters));
             case "pollMusicPosters" -> Validation.valid(new Command(musicController::pollMusicPosters));
             case "pollGeniusMusicPosters" -> Validation.valid(new Command(geniusController::pollGeniusMusicPosters));
