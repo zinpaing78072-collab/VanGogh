@@ -935,6 +935,12 @@ const TESTS = [
                 heroArt: document.querySelectorAll("#gameView .game-hero-bg:not(.hidden)").length,
                 stillArt: document.querySelectorAll("#gameView .game-still-img:not(.hidden)").length,
                 relatedArt: document.querySelectorAll("#gameView .game-rel-img:not(.hidden)").length,
+                // Same button/flex trap as the movie and book rails (see their
+                // comments): WebKit collapses the aspect-ratio box to 2×3px.
+                relPoster: (function () {
+                    var r = document.querySelector("#gameView .game-rel-poster").getBoundingClientRect();
+                    return { w: Math.round(r.width), h: Math.round(r.height) };
+                })(),
                 visiblePlaceholders: document.querySelectorAll("#gameView .poster-placeholder:not(.hidden)").length,
                 broken: [...document.querySelectorAll("#gameView img")]
                     .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
@@ -1043,6 +1049,9 @@ const TESTS = [
                     d.boxartArt === 1 && d.heroArt === 1, d.boxartArt + " / " + d.heroArt),
                 check("every screenshot streams into its slot", d.stillArt === 3, d.stillArt),
                 check("every related boxart streams into its slot", d.relatedArt === 4, d.relatedArt),
+                check("related rail lays every boxart out at 2:3",
+                    d.relPoster.h > 100 && Math.abs(d.relPoster.w / d.relPoster.h - 2 / 3) < 0.02,
+                    d.relPoster.w + "×" + d.relPoster.h),
                 check("artwork replaces every placeholder",
                     d.visiblePlaceholders === 0 && d.broken === 0,
                     d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
