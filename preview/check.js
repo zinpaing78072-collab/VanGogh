@@ -654,6 +654,433 @@ const TESTS = [
         }
     },
     {
+        name: "movie card opens the movie detail",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+
+            await page.evaluate(`document.querySelector("#movieGrid .movie-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().movieDetailArtDone
+                && document.querySelectorAll("#movieView .movie-facts > div").length > 0`);
+
+            const stats = await page.stats();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                movieVisible: !document.getElementById("movieView").classList.contains("hidden"),
+                title: ((document.querySelector("#movieView .movie-title") || {}).textContent || "").trim(),
+                tagline: ((document.querySelector("#movieView .movie-tagline") || {}).textContent || "").trim(),
+                chips: document.querySelectorAll("#movieView .movie-kicker .chip").length,
+                facts: document.querySelectorAll("#movieView .movie-facts > div").length,
+                firstFact: ((document.querySelector("#movieView .movie-facts dt") || {}).textContent || "").trim()
+                    + " = " + ((document.querySelector("#movieView .movie-facts dd") || {}).textContent || "").trim(),
+                mutedFacts: document.querySelectorAll("#movieView .movie-facts dd.muted").length,
+                keywords: document.querySelectorAll("#movieView .movie-keywords li").length,
+                cast: document.querySelectorAll("#movieView .movie-cast-card").length,
+                crewRoles: document.querySelectorAll("#movieView .movie-cast-meta .role.crew").length,
+                stills: document.querySelectorAll("#movieView .movie-shot").length,
+                similar: document.querySelectorAll("#movieView .movie-sim-card").length,
+                tiles: document.querySelectorAll("#movieView .movie-bento > .movie-tile").length,
+                posterHeight: document.querySelector("#movieView .t-poster").getBoundingClientRect().height,
+                identHeight: document.querySelector("#movieView .t-ident").getBoundingClientRect().height,
+                posterArt: document.querySelectorAll("#movieView .movie-poster-img:not(.hidden)").length,
+                castArt: document.querySelectorAll("#movieView .movie-cast-img:not(.hidden)").length,
+                stillArt: document.querySelectorAll("#movieView .movie-shot-img:not(.hidden)").length,
+                simArt: document.querySelectorAll("#movieView .movie-sim-img:not(.hidden)").length,
+                // The rail card is a <button>; WebKit's UA sheet sets it to
+                // align-items:flex-start, which collapsed this aspect-ratio box
+                // to 2×3px on macOS. Assert the 2:3 shape, not just the event.
+                simPoster: (function () {
+                    var r = document.querySelector("#movieView .movie-sim-poster").getBoundingClientRect();
+                    return { w: Math.round(r.width), h: Math.round(r.height) };
+                })(),
+                visiblePlaceholders: document.querySelectorAll("#movieView .poster-placeholder:not(.hidden)").length,
+                broken: [...document.querySelectorAll("#movieView img")]
+                    .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
+                trailer: (document.querySelector("#movieView a.movie-action-primary") || {}).href || "",
+                tmdb: [...document.querySelectorAll("#movieView a.movie-action")]
+                    .map(a => a.href).filter(h => h.indexOf("themoviedb.org") !== -1).length,
+                actions: document.querySelectorAll("#movieView .movie-action").length,
+                overflow: Math.max(0, document.getElementById("movieView").scrollWidth
+                    - document.getElementById("movieView").clientWidth)
+            })`));
+
+            await page.evaluate(`document.querySelector('#movieView [data-action="watchlist"]').click(); true`);
+            const watchlist = JSON.parse(await page.evaluate(`JSON.stringify({
+                pressed: document.querySelector('#movieView [data-action="watchlist"]').getAttribute("aria-pressed"),
+                text: document.querySelector('#movieView [data-action="watchlist"]').textContent.trim()
+            })`));
+
+            // The related rail opens another film through the same detail pair.
+            const firstGen = stats.movieDetailGeneration;
+            const relatedTitle = await page.evaluate(
+                `document.querySelector("#movieView .movie-sim-card").dataset.title`);
+            await page.evaluate(`document.querySelector("#movieView .movie-sim-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().movieDetailGeneration > ${firstGen}
+                && window.__preview.stats().movieDetailStatus === "done"
+                && ((document.querySelector("#movieView .movie-title") || {}).textContent || "").trim()
+                    === ${JSON.stringify(relatedTitle)}`);
+            const related = JSON.parse(await page.evaluate(`JSON.stringify({
+                title: ((document.querySelector("#movieView .movie-title") || {}).textContent || "").trim(),
+                generation: window.__preview.stats().movieDetailGeneration
+            })`));
+
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.getElementById("browseView").classList.contains("hidden")
+                && document.getElementById("movieView").classList.contains("hidden")`);
+            const back = JSON.parse(await page.evaluate(`JSON.stringify({
+                cards: document.querySelectorAll("#movieGrid .movie-card").length,
+                title: document.getElementById("sectionTitle").textContent
+            })`));
+
+            return [
+                check("clicking a movie card opens the detail view",
+                    d.browseHidden && d.movieVisible, d.browseHidden + "/" + d.movieVisible),
+                check("detail shows the clicked film's identity",
+                    d.title === "Inception" && d.tagline.indexOf("Your mind") === 0,
+                    d.title + " / " + d.tagline),
+                check("kicker carries year, certification and runtime", d.chips === 3, d.chips),
+                check("facts ledger renders all twelve rows", d.facts === 12, d.facts),
+                check("facts start with the release date",
+                    d.firstFact === "Release = Jul 16, 2010" && d.mutedFacts === 5,
+                    d.firstFact + " / " + d.mutedFacts + " muted"),
+                check("keywords render as chips", d.keywords === 6, d.keywords),
+                check("cast & crew render with the two crew roles",
+                    d.cast === 8 && d.crewRoles === 2, d.cast + " / " + d.crewRoles),
+                check("artwork stills render", d.stills === 3, d.stills),
+                check("similar rail renders", d.similar === 5, d.similar),
+                check("detail lays out as seven bento tiles", d.tiles === 7, d.tiles),
+                check("the poster tile matches the identity tile's height",
+                    Math.abs(d.posterHeight - d.identHeight) <= 1,
+                    d.posterHeight + " / " + d.identHeight),
+                check("poster streams into its slot", d.posterArt === 1, d.posterArt),
+                check("every headshot streams into its slot", d.castArt === 8, d.castArt),
+                check("every still streams into its slot", d.stillArt === 3, d.stillArt),
+                check("every similar poster streams into its slot", d.simArt === 5, d.simArt),
+                check("similar rail lays every poster out at 2:3",
+                    d.simPoster.h > 100 && Math.abs(d.simPoster.w / d.simPoster.h - 2 / 3) < 0.02,
+                    d.simPoster.w + "×" + d.simPoster.h),
+                check("artwork replaces every placeholder",
+                    d.visiblePlaceholders === 0 && d.broken === 0,
+                    d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
+                check("every queued image was emitted", stats.movieDetailArtEmitted === 17,
+                    stats.movieDetailArtEmitted),
+                check("identity carries trailer, watchlist, favorite and TMDB actions",
+                    d.trailer.indexOf("youtube.com") !== -1 && d.tmdb === 1 && d.actions === 4,
+                    d.trailer + " / " + d.actions),
+                check("watchlist toggles on and says so",
+                    watchlist.pressed === "true" && watchlist.text.indexOf("In watchlist") !== -1,
+                    watchlist.pressed + " / " + watchlist.text),
+                check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),
+                check("a similar card opens that film in the same view",
+                    related.title === relatedTitle && related.generation === firstGen + 1,
+                    related.title + " / gen " + related.generation),
+                check("Escape returns to the intact card grid",
+                    back.cards === 6 && back.title === "Trending Movies",
+                    back.cards + " / " + back.title)
+            ];
+        }
+    },
+    {
+        name: "book card opens the book detail",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.selectForm("book");
+
+            await page.evaluate(`document.querySelector("#movieGrid .book-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().bookDetailArtDone
+                && document.querySelectorAll("#bookView .book-facts > div").length > 0`);
+
+            const stats = await page.stats();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                bookVisible: !document.getElementById("bookView").classList.contains("hidden"),
+                title: ((document.querySelector("#bookView .book-title") || {}).textContent || "").trim(),
+                byline: ((document.querySelector("#bookView .book-byline-who b") || {}).textContent || "").trim(),
+                chips: document.querySelectorAll("#bookView .book-kicker .chip").length,
+                facts: document.querySelectorAll("#bookView .book-facts > div").length,
+                firstFact: ((document.querySelector("#bookView .book-facts dt") || {}).textContent || "").trim()
+                    + " = " + ((document.querySelector("#bookView .book-facts dd") || {}).textContent || "").trim(),
+                spanFacts: document.querySelectorAll("#bookView .book-facts > div.span-all").length,
+                keywords: document.querySelectorAll("#bookView .book-keywords li").length,
+                editions: document.querySelectorAll("#bookView .book-edition").length,
+                expenses: document.querySelectorAll("#bookView .book-edition-meta b").length,
+                similar: document.querySelectorAll("#bookView .book-sim-card").length,
+                tiles: document.querySelectorAll("#bookView .book-bento > .book-tile").length,
+                actions: document.querySelectorAll("#bookView .book-action").length,
+                sample: document.querySelectorAll("#bookView .book-sample").length,
+                coverArt: document.querySelectorAll("#bookView .book-cover-img:not(.hidden)").length,
+                authorArt: document.querySelectorAll("#bookView .book-author-img:not(.hidden)").length,
+                editionArt: document.querySelectorAll("#bookView .book-edition-img:not(.hidden)").length,
+                simArt: document.querySelectorAll("#bookView .book-sim-img:not(.hidden)").length,
+                // Same button/flex trap as the movie rail (see its comment).
+                simPoster: (function () {
+                    var r = document.querySelector("#bookView .book-sim-poster").getBoundingClientRect();
+                    return { w: Math.round(r.width), h: Math.round(r.height) };
+                })(),
+                visiblePlaceholders: document.querySelectorAll("#bookView .poster-placeholder:not(.hidden)").length,
+                broken: [...document.querySelectorAll("#bookView img")]
+                    .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
+                overflow: Math.max(0, document.getElementById("bookView").scrollWidth
+                    - document.getElementById("bookView").clientWidth)
+            })`));
+
+            // The sample toggle reveals the work's opening line, in place.
+            await page.evaluate(`document.querySelector('#bookView [data-action="sample"]').click(); true`);
+            const sample = JSON.parse(await page.evaluate(`JSON.stringify({
+                pressed: document.querySelector('#bookView [data-action="sample"]').getAttribute("aria-pressed"),
+                visible: !document.querySelector("#bookView .book-sample").classList.contains("hidden"),
+                text: document.querySelector("#bookView .book-sample").textContent.trim()
+            })`));
+
+            // The similar rail opens another work through the same detail pair.
+            const firstGen = stats.bookDetailGeneration;
+            const relatedTitle = await page.evaluate(
+                `document.querySelector("#bookView .book-sim-card").dataset.title`);
+            await page.evaluate(`document.querySelector("#bookView .book-sim-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().bookDetailGeneration > ${firstGen}
+                && window.__preview.stats().bookDetailStatus === "done"
+                && ((document.querySelector("#bookView .book-title") || {}).textContent || "").trim()
+                    === ${JSON.stringify(relatedTitle)}`);
+            const related = JSON.parse(await page.evaluate(`JSON.stringify({
+                title: ((document.querySelector("#bookView .book-title") || {}).textContent || "").trim(),
+                generation: window.__preview.stats().bookDetailGeneration
+            })`));
+
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.getElementById("browseView").classList.contains("hidden")
+                && document.getElementById("bookView").classList.contains("hidden")`);
+            const back = JSON.parse(await page.evaluate(`JSON.stringify({
+                cards: document.querySelectorAll("#movieGrid .book-card").length,
+                title: document.getElementById("sectionTitle").textContent
+            })`));
+
+            return [
+                check("clicking a book card opens the detail view",
+                    d.browseHidden && d.bookVisible, d.browseHidden + "/" + d.bookVisible),
+                check("detail shows the clicked work's identity",
+                    d.title === "The Lord of the Rings" && d.byline === "J. R. R. Tolkien",
+                    d.title + " / " + d.byline),
+                check("kicker carries year, pages and edition count", d.chips === 3, d.chips),
+                check("facts ledger renders all eight rows", d.facts === 8, d.facts),
+                check("facts start with the publication year",
+                    d.firstFact === "First published = 1954" && d.spanFacts === 2,
+                    d.firstFact + " / " + d.spanFacts + " full width"),
+                check("subjects render as chips", d.keywords === 3, d.keywords),
+                check("other editions render", d.editions === 4 && d.expenses === 4,
+                    d.editions + " / " + d.expenses),
+                check("similar rail renders", d.similar === 5, d.similar),
+                check("detail lays out as seven bento tiles", d.tiles === 7, d.tiles),
+                check("identity carries sample, want-to-read, favorite and Open Library actions",
+                    d.sample === 1 && d.actions === 4, d.sample + " / " + d.actions),
+                check("cover streams into its slot", d.coverArt === 1, d.coverArt),
+                check("the author photo paints the byline and the author tile", d.authorArt === 2, d.authorArt),
+                check("every covered edition streams into its slot", d.editionArt === 3, d.editionArt),
+                check("every similar cover streams into its slot", d.simArt === 5, d.simArt),
+                check("similar rail lays every cover out at 2:3",
+                    d.simPoster.h > 100 && Math.abs(d.simPoster.w / d.simPoster.h - 2 / 3) < 0.02,
+                    d.simPoster.w + "×" + d.simPoster.h),
+                check("a coverless edition keeps its placeholder instead of breaking",
+                    d.visiblePlaceholders === 1 && d.broken === 0,
+                    d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
+                check("every queued image was emitted", stats.bookDetailArtEmitted === 10,
+                    stats.bookDetailArtEmitted),
+                check("read sample toggles the opening line in place",
+                    sample.pressed === "true" && sample.visible && sample.text.indexOf("Bilbo Baggins") !== -1,
+                    sample.pressed + " / " + sample.text.slice(0, 40)),
+                check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),
+                check("a similar card opens that work in the same view",
+                    related.title === relatedTitle && related.generation === firstGen + 1,
+                    related.title + " / gen " + related.generation),
+                check("Escape returns to the intact card grid",
+                    back.cards === 6 && back.title === "Trending Books",
+                    back.cards + " / " + back.title)
+            ];
+        }
+    },
+    {
+        name: "game card opens the game detail",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.selectForm("game");
+
+            await page.evaluate(`document.querySelector("#movieGrid .game-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().gameDetailArtDone
+                && document.querySelectorAll("#gameView .game-facts > div").length > 0`);
+
+            const stats = await page.stats();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                browseHidden: document.getElementById("browseView").classList.contains("hidden"),
+                gameVisible: !document.getElementById("gameView").classList.contains("hidden"),
+                title: ((document.querySelector("#gameView .game-title") || {}).textContent || "").trim(),
+                lede: ((document.querySelector("#gameView .game-lede") || {}).textContent || "").trim(),
+                chips: document.querySelectorAll("#gameView .game-chip").length,
+                meta: document.querySelectorAll("#gameView .game-meta-row span:not(.game-dot)").length,
+                stats: document.querySelectorAll("#gameView .game-stat").length,
+                firstStat: ((document.querySelector("#gameView .game-stat dt") || {}).textContent || "").trim()
+                    + " = " + ((document.querySelector("#gameView .game-stat dd") || {}).textContent || "").trim(),
+                facts: document.querySelectorAll("#gameView .game-facts > div").length,
+                firstFact: ((document.querySelector("#gameView .game-facts dt") || {}).textContent || "").trim()
+                    + " = " + ((document.querySelector("#gameView .game-facts dd") || {}).textContent || "").trim(),
+                quote: document.querySelectorAll("#gameView .game-opening").length,
+                paragraphs: document.querySelectorAll("#gameView .game-prose p").length,
+                stills: document.querySelectorAll("#gameView .game-still").length,
+                platforms: document.querySelectorAll("#gameView .game-platform-tile").length,
+                specs: document.querySelectorAll("#gameView .game-spec-row").length,
+                related: document.querySelectorAll("#gameView .game-rel-card").length,
+                relatedKicker: ((document.querySelector("#gameView .game-related .game-kicker") || {}).textContent || "").trim(),
+                actions: document.querySelectorAll("#gameView .game-action").length,
+                recordLink: [...document.querySelectorAll("#gameView a")]
+                    .filter(a => a.href.indexOf("thegamesdb.net") !== -1).length,
+                boxartArt: document.querySelectorAll("#gameView .game-cover-img:not(.hidden)").length,
+                heroArt: document.querySelectorAll("#gameView .game-hero-bg:not(.hidden)").length,
+                stillArt: document.querySelectorAll("#gameView .game-still-img:not(.hidden)").length,
+                relatedArt: document.querySelectorAll("#gameView .game-rel-img:not(.hidden)").length,
+                visiblePlaceholders: document.querySelectorAll("#gameView .poster-placeholder:not(.hidden)").length,
+                broken: [...document.querySelectorAll("#gameView img")]
+                    .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
+                overflow: Math.max(0, document.getElementById("gameView").scrollWidth
+                    - document.getElementById("gameView").clientWidth)
+            })`));
+
+            // The save pills toggle locally, like the other detail views.
+            await page.evaluate(`document.querySelector('#gameView [data-action="watchlist"]').click(); true`);
+            const watchlist = JSON.parse(await page.evaluate(`JSON.stringify({
+                pressed: document.querySelector('#gameView [data-action="watchlist"]').getAttribute("aria-pressed"),
+                text: document.querySelector('#gameView [data-action="watchlist"]').textContent.trim()
+            })`));
+
+            // A screenshot opens the in-view lightbox; Escape closes the
+            // lightbox first and only the second Escape leaves the page.
+            await page.evaluate(`document.querySelector("#gameView .game-still-open").click(); true`);
+            const lightbox = JSON.parse(await page.evaluate(`JSON.stringify((function () {
+                const l = document.querySelector("#gameView .game-lightbox");
+                const r = l.getBoundingClientRect();
+                const vw = document.documentElement.clientWidth;
+                const vh = document.documentElement.clientHeight;
+                const atSidebar = document.elementFromPoint(20, Math.round(vh / 2));
+                return {
+                    open: !l.classList.contains("hidden"),
+                    src: (l.querySelector(".game-lightbox-img") || {}).src || "",
+                    caption: (l.querySelector(".game-lightbox-caption") || {}).textContent || "",
+                    covers: Math.abs(r.top) < 1 && Math.abs(r.left) < 1
+                        && Math.abs(r.width - vw) < 1 && Math.abs(r.height - vh) < 1,
+                    aboveShell: !!atSidebar && l.contains(atSidebar)
+                };
+            })())`));
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            const afterFirstEscape = JSON.parse(await page.evaluate(`JSON.stringify({
+                lightbox: !document.querySelector("#gameView .game-lightbox").classList.contains("hidden"),
+                gameVisible: !document.getElementById("gameView").classList.contains("hidden")
+            })`));
+
+            // The related rail opens another game through the same detail pair.
+            const firstGen = stats.gameDetailGeneration;
+            const relatedTitle = await page.evaluate(
+                `document.querySelector("#gameView .game-rel-card").dataset.title`);
+            await page.evaluate(`document.querySelector("#gameView .game-rel-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().gameDetailGeneration > ${firstGen}
+                && window.__preview.stats().gameDetailStatus === "done"
+                && ((document.querySelector("#gameView .game-title") || {}).textContent || "").trim()
+                    === ${JSON.stringify(relatedTitle)}`);
+            const related = JSON.parse(await page.evaluate(`JSON.stringify({
+                title: ((document.querySelector("#gameView .game-title") || {}).textContent || "").trim(),
+                generation: window.__preview.stats().gameDetailGeneration,
+                facts: document.querySelectorAll("#gameView .game-facts > div").length
+            })`));
+
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.getElementById("browseView").classList.contains("hidden")
+                && document.getElementById("gameView").classList.contains("hidden")`);
+            const back = JSON.parse(await page.evaluate(`JSON.stringify({
+                cards: document.querySelectorAll("#movieGrid .game-card").length,
+                title: document.getElementById("sectionTitle").textContent
+            })`));
+
+            // The sparse fixture: no rating, platform, publisher or developer,
+            // no boxart and one screenshot — the page keeps placeholders and
+            // drops the sections the record cannot fill.
+            const sparseGen = await page.evaluate(`window.__preview.stats().gameDetailGeneration`);
+            await page.evaluate(`document.querySelectorAll("#movieGrid .game-card")[3].click(); true`);
+            await page.waitFor(`window.__preview.stats().gameDetailGeneration > ${sparseGen}
+                && window.__preview.stats().gameDetailStatus === "done"
+                && window.__preview.stats().gameDetailArtDone`);
+            const sparse = JSON.parse(await page.evaluate(`JSON.stringify({
+                title: ((document.querySelector("#gameView .game-title") || {}).textContent || "").trim(),
+                facts: document.querySelectorAll("#gameView .game-facts > div").length,
+                chips: document.querySelectorAll("#gameView .game-chip").length,
+                platforms: document.querySelectorAll("#gameView .game-platform-tile").length,
+                stills: document.querySelectorAll("#gameView .game-still").length,
+                coverPlaceholder: document.querySelectorAll("#gameView .game-hero-cover .poster-placeholder:not(.hidden)").length,
+                broken: [...document.querySelectorAll("#gameView img")]
+                    .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length
+            })`));
+
+            return [
+                check("clicking a game card opens the detail view",
+                    d.browseHidden && d.gameVisible, d.browseHidden + "/" + d.gameVisible),
+                check("detail shows the clicked game's identity",
+                    d.title === "Minecraft" && d.lede.indexOf("Build, explore") === 0,
+                    d.title + " / " + d.lede.slice(0, 32)),
+                check("kicker and meta line carry year, genres, rating, players and platforms",
+                    d.chips === 4 && d.meta === 3, d.chips + " chips / " + d.meta + " meta"),
+                check("stat band renders four cells starting with the release year",
+                    d.stats === 4 && d.firstStat.indexOf("Released = 2011") === 0,
+                    d.stats + " / " + d.firstStat),
+                check("record rail renders eight facts starting with the release date",
+                    d.facts === 8 && d.firstFact === "Release = 2011-11-18",
+                    d.facts + " / " + d.firstFact),
+                check("the opening pull quote and both overview paragraphs render",
+                    d.quote === 1 && d.paragraphs === 2, d.quote + " / " + d.paragraphs),
+                check("screenshots render", d.stills === 3, d.stills),
+                check("every platform renders as a tile", d.platforms === 4, d.platforms),
+                check("the spec grid pairs players, release, genres and rating", d.specs === 4, d.specs),
+                check("the related rail labels itself as same-series",
+                    d.related === 4 && d.relatedKicker === "Same series",
+                    d.related + " / " + d.relatedKicker),
+                check("hero carries trailer, watchlist, favorite and record actions",
+                    d.actions === 4 && d.recordLink >= 1, d.actions + " / " + d.recordLink),
+                check("boxart and fanart stream into their slots",
+                    d.boxartArt === 1 && d.heroArt === 1, d.boxartArt + " / " + d.heroArt),
+                check("every screenshot streams into its slot", d.stillArt === 3, d.stillArt),
+                check("every related boxart streams into its slot", d.relatedArt === 4, d.relatedArt),
+                check("artwork replaces every placeholder",
+                    d.visiblePlaceholders === 0 && d.broken === 0,
+                    d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
+                check("every queued image was emitted", stats.gameDetailArtEmitted === 9,
+                    stats.gameDetailArtEmitted),
+                check("watchlist toggles on and says so",
+                    watchlist.pressed === "true" && watchlist.text.indexOf("In My Lists") !== -1,
+                    watchlist.pressed + " / " + watchlist.text),
+                check("a screenshot opens the lightbox with the same image",
+                    lightbox.open && lightbox.src.indexOf("data:image/svg") === 0
+                        && lightbox.caption.indexOf("Screenshot 1") !== -1,
+                    lightbox.open + " / " + lightbox.caption.trim()),
+                check("the lightbox covers the viewport above the shell",
+                    lightbox.covers && lightbox.aboveShell,
+                    lightbox.covers + " / " + lightbox.aboveShell),
+                check("Escape closes the lightbox without leaving the page",
+                    !afterFirstEscape.lightbox && afterFirstEscape.gameVisible,
+                    afterFirstEscape.lightbox + " / " + afterFirstEscape.gameVisible),
+                check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),
+                check("a related card opens that game in the same view",
+                    related.title === relatedTitle && related.generation === firstGen + 1,
+                    related.title + " / gen " + related.generation),
+                check("Escape returns to the intact card grid",
+                    back.cards === 6 && back.title === "Trending Games",
+                    back.cards + " / " + back.title),
+                check("a sparse record keeps its boxart placeholder",
+                    sparse.coverPlaceholder === 1 && sparse.broken === 0,
+                    sparse.coverPlaceholder + " placeholder / " + sparse.broken + " broken"),
+                check("a sparse record drops the sections it cannot fill",
+                    sparse.title.indexOf("Supercalifragilistic") === 0
+                        && sparse.facts === 2 && sparse.chips === 1
+                        && sparse.platforms === 0 && sparse.stills === 1,
+                    sparse.facts + " facts / " + sparse.chips + " chips / "
+                        + sparse.platforms + " platforms / " + sparse.stills + " stills")
+            ];
+        }
+    },
+    {
         name: "sidebar: form buttons, inert items, collapse",
         path: "/movie-page/index.html",
         run: async (page) => {

@@ -7,7 +7,7 @@
  */
 
 export const state = {
-    view: "browse",   // "browse" | "song" | "settings" — render() dispatches on it
+    view: "browse",   // "browse" | "song" | "movie" | "book" | "game" | "settings" — render() dispatches on it
     domain: "movie",
     title: "Trending Movies",
     status: "idle",   // "idle" | "loading" | "ready" | "error"
@@ -16,6 +16,12 @@ export const state = {
     error: null,
     // The open song detail: { status, id, title, artist, detail, artDataUri, error }
     song: null,
+    // The open movie detail: { status, id, title, year, detail, error }
+    movie: null,
+    // The open book detail: { status, workKey, title, year, detail, error }
+    book: null,
+    // The open game detail: { status, id, title, year, detail, error }
+    game: null,
 };
 
 let requestSeq = 0;

@@ -48,11 +48,67 @@ class MovieControllerTest {
         }
         """;
 
+    /** One /movie/:id payload with enough appended blocks for the bento view. */
+    private static final String DETAIL_JSON = """
+        {
+          "id": 27205,
+          "title": "Inception",
+          "tagline": "Your mind is the scene of the crime.",
+          "overview": "A thief who steals corporate secrets through dream-sharing technology.",
+          "release_date": "2010-07-16",
+          "runtime": 148,
+          "status": "Released",
+          "vote_average": 8.4,
+          "vote_count": 2300000,
+          "budget": 160000000,
+          "revenue": 836800000,
+          "poster_path": "/inception.jpg",
+          "genres": [
+            { "id": 28, "name": "Action" },
+            { "id": 878, "name": "Science Fiction" }
+          ],
+          "keywords": { "keywords": [ { "id": 1, "name": "dream" } ] },
+          "credits": {
+            "cast": [
+              { "name": "Leonardo DiCaprio", "character": "Dom Cobb", "profile_path": "/leo.jpg" },
+              { "name": "Joseph Gordon-Levitt", "character": "Arthur", "profile_path": "/jgl.jpg" }
+            ],
+            "crew": [
+              { "name": "Christopher Nolan", "job": "Director", "profile_path": "/nolan.jpg" },
+              { "name": "Wally Pfister", "job": "Director of Photography", "profile_path": "/pfister.jpg" }
+            ]
+          },
+          "images": { "backdrops": [ { "file_path": "/still-01.jpg" } ] },
+          "similar": {
+            "results": [
+              {
+                "id": 155,
+                "title": "The Dark Knight",
+                "release_date": "2008-07-18",
+                "vote_average": 8.5,
+                "genre_ids": [28],
+                "poster_path": "/tdk.jpg"
+              }
+            ]
+          },
+          "videos": { "results": [ { "site": "YouTube", "type": "Trailer", "key": "trailer-key" } ] },
+          "release_dates": {
+            "results": [
+              { "iso_3166_1": "US", "release_dates": [ { "certification": "PG-13", "type": 3 } ] }
+            ]
+          },
+          "production_companies": [ { "name": "Warner Bros." } ],
+          "production_countries": [ { "name": "United States of America" } ]
+        }
+        """;
+
     /** Stub client returning canned responses instead of hitting the network. */
     static class StubClient extends TmdbClient {
         ApiResponse trendingResponse;
         ApiResponse searchResponse;
+        ApiResponse detailResponse;
         final List<String> posterCalls = new ArrayList<>();
+        final List<String> detailArtCalls = new ArrayList<>();
 
         StubClient() {
             super("test-key");
@@ -69,9 +125,20 @@ class MovieControllerTest {
         }
 
         @Override
+        public io.vavr.control.Try<ApiResponse> movieDetail(int id) {
+            return io.vavr.control.Try.success(detailResponse);
+        }
+
+        @Override
         public io.vavr.control.Option<String> loadPosterDataUri(String posterUrl) {
             posterCalls.add(posterUrl);
             return io.vavr.control.Option.some("data:image/jpeg;base64,stubbed");
+        }
+
+        @Override
+        public io.vavr.control.Option<String> loadDetailImageDataUri(String imageUrl) {
+            detailArtCalls.add(imageUrl);
+            return io.vavr.control.Option.some("data:image/jpeg;base64,detail");
         }
     }
 
@@ -132,6 +199,34 @@ class MovieControllerTest {
             Thread.sleep(10);
         }
         return reply;
+    }
+
+    /** Drains pollMovieDetail until this generation's fetch resolves (2s deadline). */
+    private MovieController.MovieDetailReply drainDetail(MovieController controller, int generation)
+            throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 2000;
+        MovieController.MovieDetailReply reply = null;
+        while (System.currentTimeMillis() < deadline) {
+            reply = controller.pollMovieDetail(generation);
+            if (!"pending".equals(reply.status())) {
+                return reply;
+            }
+            Thread.sleep(10);
+        }
+        return reply;
+    }
+
+    /** Drains pollMovieDetailArt until the −1 completion signal (2s deadline). */
+    private int drainDetailArt(MovieController controller) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 2000;
+        int result = 0;
+        while (result != -1 && System.currentTimeMillis() < deadline) {
+            result = controller.pollMovieDetailArt();
+            if (result != -1) {
+                Thread.sleep(10);
+            }
+        }
+        return result;
     }
 
     @Test
@@ -380,5 +475,123 @@ class MovieControllerTest {
         } finally {
             io.shutdownNow();
         }
+    }
+
+    // ------------------------------------------------------------ detail view
+
+    @Test
+    void requestMovieDetailDoesNotBlockTheCallingThreadDuringFetch() {
+        StubClient client = new StubClient() {
+            @Override
+            public io.vavr.control.Try<ApiResponse> movieDetail(int id) {
+                try {
+                    Thread.sleep(500); // simulate a slow TMDB round-trip
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return io.vavr.control.Try.success(new ApiResponse(200, DETAIL_JSON, null));
+            }
+        };
+        MovieController controller = controllerWith(serviceWith(client));
+
+        long start = System.nanoTime();
+        controller.requestMovieDetail(27205);
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+        assertTrue(elapsedMs < 250,
+                "requestMovieDetail blocked the calling thread for " + elapsedMs
+                        + "ms — UI-thread freeze");
+    }
+
+    @Test
+    void movieDetailArrivesOnItsDrainWithFactsCastStillsAndSimilar() throws Exception {
+        StubClient client = new StubClient();
+        client.detailResponse = new ApiResponse(200, DETAIL_JSON, null);
+        MovieController controller = controllerWith(serviceWith(client));
+
+        int gen = controller.requestMovieDetail(27205);
+        MovieController.MovieDetailReply reply = drainDetail(controller, gen);
+
+        assertEquals("done", reply.status());
+        assertEquals("Inception", reply.detail().title());
+        assertEquals(148, reply.detail().runtimeMinutes());
+        assertEquals(10, reply.detail().facts().size());  // no screenplay/music rows in this fixture
+        assertEquals(4, reply.detail().cast().size());   // two cast + director + DP
+        assertEquals(1, reply.detail().stills().size());
+        assertEquals(1, reply.detail().similar().size());
+    }
+
+    @Test
+    void movieDetailArtDrainStreamsEverySlot() throws Exception {
+        StubClient client = new StubClient();
+        client.detailResponse = new ApiResponse(200, DETAIL_JSON, null);
+        MovieController controller = controllerWith(serviceWith(client));
+        TestEventEmitter emitter = new TestEventEmitter();
+        controller.setEventEmitter(emitter);
+
+        int gen = controller.requestMovieDetail(27205);
+        assertEquals("done", drainDetail(controller, gen).status());
+
+        assertEquals(-1, drainDetailArt(controller));
+
+        // poster + four credit headshots + one still + one similar poster
+        assertEquals(7, emitter.emitted.size());
+        List<String> slots = new ArrayList<>();
+        for (KremaEvent event : emitter.emitted) {
+            assertEquals("movieDetailArt", event.name());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> payload = (Map<String, Object>) event.payload();
+            slots.add((String) payload.get("slot"));
+            assertTrue(((String) payload.get("dataUri")).startsWith("data:image"));
+        }
+        assertTrue(slots.containsAll(List.of(
+                "poster", "cast:0", "cast:1", "cast:2", "cast:3", "still:0", "similar:155")),
+                slots.toString());
+    }
+
+    @Test
+    void movieDetailArtSkippedImagesDoNotStallPolling() throws Exception {
+        StubClient client = new StubClient() {
+            @Override
+            public io.vavr.control.Option<String> loadDetailImageDataUri(String imageUrl) {
+                return io.vavr.control.Option.none(); // every image fetch fails
+            }
+        };
+        client.detailResponse = new ApiResponse(200, DETAIL_JSON, null);
+        MovieController controller = controllerWith(serviceWith(client));
+        controller.setEventEmitter(new TestEventEmitter());
+
+        int gen = controller.requestMovieDetail(27205);
+        assertEquals("done", drainDetail(controller, gen).status());
+
+        assertEquals(-1, drainDetailArt(controller));
+    }
+
+    @Test
+    void movieDetailErrorSurfacesOnItsDrain() throws Exception {
+        StubClient client = new StubClient();
+        client.detailResponse = new ApiResponse(500, "boom", "server error");
+        MovieController controller = controllerWith(serviceWith(client));
+
+        int gen = controller.requestMovieDetail(27205);
+        MovieController.MovieDetailReply reply = drainDetail(controller, gen);
+
+        assertEquals("error", reply.status());
+        assertTrue(reply.error().contains("TMDB movie failed: HTTP 500"), reply.error());
+    }
+
+    @Test
+    void pollMovieDetailOlderGenerationIsSupersededByANewerRequest() throws Exception {
+        StubClient client = new StubClient();
+        client.detailResponse = new ApiResponse(200, DETAIL_JSON, null);
+        MovieController controller = controllerWith(serviceWith(client));
+
+        int firstGen = controller.requestMovieDetail(27205);
+        int secondGen = controller.requestMovieDetail(155);
+        assertTrue(secondGen > firstGen);
+
+        // The first poller must never consume the newer request's detail.
+        assertNotEquals("done", controller.pollMovieDetail(firstGen).status());
+        assertEquals("done", drainDetail(controller, secondGen).status());
     }
 }

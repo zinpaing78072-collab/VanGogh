@@ -1,6 +1,7 @@
 package vangogh.controller;
 
 import vangogh.book.Book;
+import vangogh.book.BookDetail;
 import vangogh.book.BookResolver;
 import vangogh.book.OpenLibraryBookService;
 import vangogh.error.FetchError;
@@ -40,6 +41,24 @@ class BookControllerTest {
             "OL27482W", "The Hobbit", "J.R.R. Tolkien", 1937, 4.29,
             "Fantasy", "In a hole in the ground there lived a hobbit.", 310, 482,
             "https://covers.openlibrary.org/b/id/14627509-L.jpg");
+
+    private static final BookDetail DETAIL = new BookDetail(
+            "OL2172356W", "Do Androids Dream of Electric Sheep?", 1968, 224, 90,
+            4.0, 164, "It was January 2021, and Rick Deckard had a license to kill.",
+            "A merry little surge of electricity piped by automatic alarm.",
+            java.util.List.of("Androids", "Science fiction"), "2021",
+            "https://covers.openlibrary.org/b/id/207515-L.jpg",
+            "https://openlibrary.org/works/OL2172356W",
+            java.util.List.of(new BookDetail.Fact("First published", "1968", false, false)),
+            java.util.List.of(
+                    new BookDetail.Edition("1969", "210 pp", "9780451038005",
+                            "https://covers.openlibrary.org/b/id/123-L.jpg"),
+                    new BookDetail.Edition("2017", "224 pp", "9780547572345", "")),
+            new BookDetail.Author("Philip K. Dick", "1928 \u2013 1982", "bio",
+                    "https://covers.openlibrary.org/a/id/12345-L.jpg",
+                    "https://en.wikipedia.org/wiki/Philip_K._Dick",
+                    "https://openlibrary.org/authors/OL274606A"),
+            java.util.List.of(COVERED_BOOK));
 
     /** Stub service whose fetch sleeps, simulating a slow Open Library round-trip. */
     static class SlowService extends OpenLibraryBookService {
@@ -183,6 +202,37 @@ class BookControllerTest {
         }
     }
 
+    /** Grid fetch plus a canned detail, artwork served instantly. */
+    static class DetailBooksService extends CoveredService {
+        boolean failDetail;
+
+        @Override
+        public Either<FetchError, BookDetail> bookDetail(String workKey) {
+            return failDetail
+                    ? Either.left(new FetchError.Transport(
+                            "OpenLibrary work", new RuntimeException("offline")))
+                    : Either.right(DETAIL);
+        }
+
+        @Override
+        public io.vavr.control.Option<String> detailImageDataUri(String imageUrl) {
+            return io.vavr.control.Option.some("data:image/jpeg;base64,stubbed");
+        }
+    }
+
+    /** Slow detail fetch, for the non-blocking regression. */
+    static class SlowDetailService extends DetailBooksService {
+        @Override
+        public Either<FetchError, BookDetail> bookDetail(String workKey) {
+            try {
+                Thread.sleep(400);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return super.bookDetail(workKey);
+        }
+    }
+
     /** EventEmitter that captures emitted events instead of talking to a webview. */
     static class TestEventEmitter extends EventEmitter {
         final List<KremaEvent> emitted = new ArrayList<>();
@@ -218,6 +268,34 @@ class BookControllerTest {
         int result = 0;
         while (result != -1 && System.currentTimeMillis() < deadline) {
             result = controller.pollBookCovers();
+            if (result != -1) {
+                Thread.sleep(10);
+            }
+        }
+        return result;
+    }
+
+    /** Drains pollBookDetail until this generation's fetch resolves (2s deadline). */
+    private BookController.BookDetailReply drainDetail(BookController controller, int generation)
+            throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 2000;
+        BookController.BookDetailReply reply = null;
+        while (System.currentTimeMillis() < deadline) {
+            reply = controller.pollBookDetail(generation);
+            if (!"pending".equals(reply.status())) {
+                return reply;
+            }
+            Thread.sleep(10);
+        }
+        return reply;
+    }
+
+    /** Drains pollBookDetailArt to its -1 completion signal (2s deadline). */
+    private int drainDetailArt(BookController controller) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 2000;
+        int result = 0;
+        while (result != -1 && System.currentTimeMillis() < deadline) {
+            result = controller.pollBookDetailArt();
             if (result != -1) {
                 Thread.sleep(10);
             }
@@ -429,5 +507,103 @@ class BookControllerTest {
         } finally {
             io.shutdownNow();
         }
+    }
+
+    // ------------------------------------------------------------- detail
+
+    @Test
+    void requestBookDetailDoesNotBlockTheCallingThreadDuringFetch() {
+        BookController controller = new BookController(new SlowDetailService());
+
+        long start = System.nanoTime();
+        int gen = controller.requestBookDetail("OL2172356W");
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+        assertTrue(elapsedMs < 250,
+                "requestBookDetail blocked the calling thread for " + elapsedMs
+                        + "ms — UI-thread freeze");
+        assertTrue(gen > 0);
+    }
+
+    @Test
+    void bookDetailArrivesOnTheDetailDrain() throws Exception {
+        BookController controller = new BookController(new DetailBooksService());
+
+        int gen = controller.requestBookDetail("OL2172356W");
+        BookController.BookDetailReply reply = drainDetail(controller, gen);
+
+        assertEquals("done", reply.status());
+        assertNull(reply.error());
+        assertEquals("Do Androids Dream of Electric Sheep?", reply.detail().title());
+        assertEquals("OL2172356W", reply.detail().workKey());
+        assertEquals("Philip K. Dick", reply.detail().author().name());
+    }
+
+    @Test
+    void bookDetailArtStreamsEverySlotAndCompletes() throws Exception {
+        BookController controller = new BookController(new DetailBooksService());
+        TestEventEmitter emitter = new TestEventEmitter();
+        controller.setEventEmitter(emitter);
+
+        int gen = controller.requestBookDetail("OL2172356W");
+        assertEquals("done", drainDetail(controller, gen).status());
+
+        assertEquals(-1, drainDetailArt(controller));
+
+        // cover + author + the covered edition + the similar cover; the
+        // coverless edition has no entry, so its placeholder stays.
+        assertEquals(4, emitter.emitted.size());
+        java.util.List<String> slots = new ArrayList<>();
+        for (KremaEvent event : emitter.emitted) {
+            assertEquals("bookDetailArt", event.name());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> payload = (Map<String, Object>) event.payload();
+            slots.add((String) payload.get("slot"));
+            assertTrue(((String) payload.get("dataUri")).startsWith("data:image"));
+        }
+        assertTrue(slots.containsAll(java.util.List.of(
+                "cover", "author", "edition:0", "similar:OL27482W")), slots.toString());
+    }
+
+    @Test
+    void bookDetailFailureSurfacesOnTheDetailDrain() throws Exception {
+        DetailBooksService service = new DetailBooksService();
+        service.failDetail = true;
+        BookController controller = new BookController(service);
+
+        int gen = controller.requestBookDetail("OL2172356W");
+        BookController.BookDetailReply reply = drainDetail(controller, gen);
+
+        assertEquals("error", reply.status());
+        assertEquals("OpenLibrary work failed: offline", reply.error());
+    }
+
+    @Test
+    void detailDrainOlderGenerationIsSupersededByANewerRequest() throws Exception {
+        BookController controller = new BookController(new DetailBooksService());
+
+        int firstGen = controller.requestBookDetail("OL2172356W");
+        int secondGen = controller.requestBookDetail("OL27482W");
+        assertTrue(secondGen > firstGen);
+
+        // The first poller must never consume the second request's result.
+        assertNotEquals("done", controller.pollBookDetail(firstGen).status());
+        assertEquals("done", drainDetail(controller, secondGen).status());
+    }
+
+    @Test
+    void openingABookDoesNotSupersedeTheGridRequestOrItsCovers() throws Exception {
+        BookController controller = new BookController(new DetailBooksService());
+        controller.setEventEmitter(new TestEventEmitter());
+
+        // A grid load and a detail load are independent pairs: opening a book
+        // while the grid is still fetching must not cancel either stream.
+        int gridGen = controller.requestBooks("trending", "");
+        int detailGen = controller.requestBookDetail("OL2172356W");
+
+        assertEquals("done", drainData(controller, gridGen).status());
+        assertEquals("done", drainDetail(controller, detailGen).status());
+        assertEquals(-1, drainCovers(controller));
+        assertEquals(-1, drainDetailArt(controller));
     }
 }

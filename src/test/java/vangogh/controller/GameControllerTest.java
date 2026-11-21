@@ -1,7 +1,10 @@
 package vangogh.controller;
 
+import build.krema.core.event.EventEmitter;
+import build.krema.core.event.KremaEvent;
 import vangogh.error.FetchError;
 import vangogh.game.Game;
+import vangogh.game.GameDetail;
 import vangogh.game.GameResolver;
 import vangogh.game.TgdbGameService;
 import vangogh.llm.LlmClient;
@@ -11,10 +14,13 @@ import vangogh.net.TgdbClient;
 import vangogh.recommend.RecommendationService;
 import org.junit.jupiter.api.Test;
 import io.vavr.control.Either;
+import io.vavr.control.Option;
 import io.vavr.control.Try;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -106,6 +112,98 @@ class GameControllerTest {
         }
     }
 
+    /** A complete record the detail page can paint, art included. */
+    private static final GameDetail DETAIL = new GameDetail(
+            42,
+            "Sample Game",
+            "2024-06-15",
+            2024,
+            "E10+ - Everyone 10+",
+            1,
+            java.util.List.of("Action"),
+            java.util.List.of("PC"),
+            java.util.List.of("Sample Publisher"),
+            java.util.List.of("Sample Developer"),
+            "An adventure.",
+            "https://youtu.be/sample",
+            "https://thegamesdb.net/game/42/",
+            "https://cdn.thegamesdb.net/images/original/boxart/front/42.jpg",
+            "https://cdn.thegamesdb.net/images/medium/fanart/42.jpg",
+            java.util.List.of("https://cdn.thegamesdb.net/images/medium/screenshots/42-1.jpg"),
+            java.util.List.of(new GameDetail.Fact("Release", "2024-06-15")),
+            "series",
+            java.util.List.of(new GameDetail.Related(
+                    43, "Sample Game 2", 2025, "E10+ - Everyone 10+", "Action",
+                    "https://cdn.thegamesdb.net/images/medium/boxart/front/43.jpg")));
+
+    /** Stub service: the detail record is canned, artwork resolves instantly. */
+    static class DetailService extends TgdbGameService {
+        DetailService() {
+            super("test-key");
+        }
+
+        @Override
+        public Either<FetchError, GameDetail> gameDetail(int id) {
+            return Either.right(DETAIL);
+        }
+
+        @Override
+        public Option<String> detailImageDataUri(String imageUrl) {
+            return Option.some("data:image/jpeg;base64,"
+                    + Integer.toHexString(imageUrl.hashCode()));
+        }
+
+        @Override
+        public Either<FetchError, java.util.List<Game>> fetchTrending() {
+            return Either.right(java.util.List.of());
+        }
+
+        @Override
+        public Either<FetchError, java.util.List<Game>> searchGames(String query) {
+            return fetchTrending();
+        }
+    }
+
+    /** Detail fetch that sleeps, simulating a slow TheGamesDB round-trip. */
+    static class SlowDetailService extends DetailService {
+        @Override
+        public Either<FetchError, GameDetail> gameDetail(int id) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return Either.right(DETAIL);
+        }
+    }
+
+    /** Detail fetch that fails, to test the error drain. */
+    static class FailingDetailService extends TgdbGameService {
+        FailingDetailService() {
+            super("test-key");
+        }
+
+        @Override
+        public Either<FetchError, GameDetail> gameDetail(int id) {
+            return Either.left(new FetchError.Transport(
+                    "TheGamesDB game", new RuntimeException("boom")));
+        }
+    }
+
+    /** EventEmitter that captures emitted events instead of talking to a webview. */
+    static class TestEventEmitter extends EventEmitter {
+        final java.util.List<KremaEvent> emitted = new ArrayList<>();
+
+        TestEventEmitter() {
+            super(null);
+        }
+
+        @Override
+        public void emit(String eventName, Object payload) {
+            emitted.add(new KremaEvent(eventName, payload));
+        }
+    }
+
     /** Stub model call: returns a canned reply or a mapped failure. */
     static class StubLlm extends LlmClient {
         final Either<FetchError, String> result;
@@ -153,6 +251,34 @@ class GameControllerTest {
             Thread.sleep(10);
         }
         return reply;
+    }
+
+    /** Drains pollGameDetail until this generation's fetch resolves (2s deadline). */
+    private GameController.GameDetailReply drainDetail(GameController controller, int generation)
+            throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 2000;
+        GameController.GameDetailReply reply = null;
+        while (System.currentTimeMillis() < deadline) {
+            reply = controller.pollGameDetail(generation);
+            if (!"pending".equals(reply.status())) {
+                return reply;
+            }
+            Thread.sleep(10);
+        }
+        return reply;
+    }
+
+    /** Drains pollGameDetailArt until the −1 completion signal (2s deadline). */
+    private int drainDetailArt(GameController controller) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 2000;
+        int result = 0;
+        while (result != -1 && System.currentTimeMillis() < deadline) {
+            result = controller.pollGameDetailArt();
+            if (result != -1) {
+                Thread.sleep(10);
+            }
+        }
+        return result;
     }
 
     @Test
@@ -326,5 +452,109 @@ class GameControllerTest {
 
         // The newer request still delivers through the drain.
         assertEquals("done", drainData(controller, secondGen).status());
+    }
+
+    @Test
+    void requestGameDetailDoesNotBlockTheCallingThreadDuringFetch() {
+        GameController controller = new GameController(new SlowDetailService());
+
+        long start = System.nanoTime();
+        int gen = controller.requestGameDetail(42);
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+        assertTrue(elapsedMs < 250,
+                "requestGameDetail blocked the calling thread for " + elapsedMs
+                        + "ms — UI-thread freeze");
+        assertTrue(gen > 0);
+    }
+
+    @Test
+    void gameDetailArrivesOnItsDrainWithTheWholeRecord() throws Exception {
+        GameController controller = new GameController(new DetailService());
+
+        int gen = controller.requestGameDetail(42);
+        GameController.GameDetailReply reply = drainDetail(controller, gen);
+
+        assertEquals("done", reply.status());
+        assertNull(reply.error());
+        assertNotNull(reply.detail());
+        assertEquals("Sample Game", reply.detail().title());
+        assertEquals("E10+ - Everyone 10+", reply.detail().rating());
+        assertEquals(java.util.List.of("PC"), reply.detail().platforms());
+        assertEquals(1, reply.detail().related().size());
+        assertEquals("https://cdn.thegamesdb.net/images/original/boxart/front/42.jpg",
+                reply.detail().boxartUrl());
+    }
+
+    @Test
+    void gameDetailArtStreamsEverySlotAndCompletes() throws Exception {
+        TestEventEmitter emitter = new TestEventEmitter();
+        GameController controller = new GameController(new DetailService());
+        controller.setEventEmitter(emitter);
+
+        int gen = controller.requestGameDetail(42);
+        assertEquals("done", drainDetail(controller, gen).status());
+        assertEquals(-1, drainDetailArt(controller));
+
+        // boxart + hero + one screenshot + one related boxart.
+        assertEquals(4, emitter.emitted.size());
+        Set<String> slots = new java.util.HashSet<>();
+        for (KremaEvent event : emitter.emitted) {
+            assertEquals("gameDetailArt", event.name());
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> payload =
+                    (java.util.Map<String, Object>) event.payload();
+            slots.add((String) payload.get("slot"));
+            assertTrue(((String) payload.get("dataUri")).startsWith("data:image"));
+        }
+        assertEquals(Set.of("boxart", "hero", "still:0", "related:43"), slots);
+    }
+
+    @Test
+    void gameDetailFailureSurfacesOnItsDrain() throws Exception {
+        GameController controller = new GameController(new FailingDetailService());
+
+        int gen = controller.requestGameDetail(42);
+        GameController.GameDetailReply reply = drainDetail(controller, gen);
+
+        assertEquals("error", reply.status());
+        assertEquals("TheGamesDB game failed: boom", reply.error());
+    }
+
+    @Test
+    void aMissingGameIdIsABadInputError() throws Exception {
+        // id <= 0 short-circuits before any network call.
+        GameController controller = new GameController(new TgdbGameService("test-key"));
+
+        int gen = controller.requestGameDetail(0);
+        GameController.GameDetailReply reply = drainDetail(controller, gen);
+
+        assertEquals("error", reply.status());
+        assertTrue(reply.error().contains("game id"), reply.error());
+    }
+
+    @Test
+    void openingASecondGameDetailSupersedesTheFirstPoller() throws Exception {
+        GameController controller = new GameController(new SlowDetailService());
+
+        int firstGen = controller.requestGameDetail(42);
+        int secondGen = controller.requestGameDetail(43);
+        assertTrue(secondGen > firstGen);
+
+        // The first poller must never consume the second request's detail.
+        assertNotEquals("done", controller.pollGameDetail(firstGen).status());
+        assertEquals("done", drainDetail(controller, secondGen).status());
+    }
+
+    @Test
+    void theGameDetailAndGridRequestsDoNotSupersedeEachOther() throws Exception {
+        GameController controller = new GameController(new DetailService());
+
+        int detailGen = controller.requestGameDetail(42);
+        int gridGen = controller.requestGames("trending", "");
+
+        assertEquals("done", drainDetail(controller, detailGen).status());
+        assertEquals("done", drainData(controller, gridGen).status());
+        assertEquals(-1, drainDetailArt(controller));
     }
 }

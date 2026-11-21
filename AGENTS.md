@@ -37,11 +37,11 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 ### Project state
 - **Features wired**:
   - `VanGoghApp` — Krema window builder (title, identifier, size, debug mode, assets, events, commands)
-  - `MovieController` — `@KremaCommand requestMovies(kind, query)` (non-blocking kickoff, returns the generation), data + poster drains, generation-counted poster streaming via `events.emit("poster", ...)`; `kind=recommend` routes through the LLM engine (below)
+  - `MovieController` — `@KremaCommand requestMovies(kind, query)` (non-blocking kickoff, returns the generation), data + poster drains, generation-counted poster streaming via `events.emit("poster", ...)`; `kind=recommend` routes through the LLM engine (below). `requestMovieDetail` / `pollMovieDetail` / `pollMovieDetailArt` resolve one film for the detail page (identity, facts ledger, cast & crew, stills, similar rail) with its own generation pair, streaming poster/headshots/stills/similar posters as data URIs through `movieDetailArt` events keyed by slot (`poster`, `cast:<i>`, `still:<i>`, `similar:<id>`)
   - `vangogh.llm` (`LlmConfig`, `LlmClient`, `PromptFactory`, `Pick`, `TitleParser`, `Normalize`), `vangogh.recommend` (`PickResolver`, `RecommendationService`), `MovieResolver`, `SongResolver`, `BookResolver`, and `GameResolver` — the AI recommendation engine (all four forms wired): one model request composes `title | disambiguator` picks, then TMDB resolves movie picks, Genius resolves song picks, Open Library resolves book picks and TheGamesDB resolves game picks in parallel. Config lives in `~/.van-gogh/llm.conf` — the single source of truth, written by the Settings page and re-read on every AI search (no restart, no environment overrides); the AI toggle is opt-in, so direct search and trending are unchanged — see `docs/llm-engine.md`
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
-  - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming; `requestGames` with `kind=recommend` routes through the LLM engine (games resolved by `GameResolver`)
+  - `GameController`, `TgdbGameService`, and `TgdbClient` — TheGamesDB search/trending and front-boxart streaming; `requestGames` with `kind=recommend` routes through the LLM engine (games resolved by `GameResolver`). `requestGameDetail` / `pollGameDetail` / `pollGameDetailArt` resolve one game for the immersive detail page (fanart hero, stat band, record rail, overview, screenshots, platforms, related-games rail) with its own generation pair, streaming boxart/fanart/screenshots/related boxarts as data URIs through `gameDetailArt` events keyed by slot (`boxart`, `hero`, `still:<i>`, `related:<id>`)
   - `MusicController`, `MusicBrainzService`, and `MusicBrainzClient` — the earlier MusicBrainz release-group slice (album cards), curated trending MBID list, Cover Art Archive cover streaming; MBZ requests are paced (~1/s) with a 503 backoff-retry — see `docs/music-domain.md`. Not the page's live music form: it uses `GeniusController`.
   - `GeniusController`, `GeniusMusicService`, and `GeniusClient` — Genius
     chart/search song lists; `requestGeniusMusic` with `kind=recommend` routes
@@ -53,7 +53,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
     palette, artist/album identity, recording location, community stats and
     related songs (lyrics, duration and audio are dummy data in `DummyMedia`
     until those sources land)
-  - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail); `requestBooks` with `kind=recommend` routes through the LLM engine (books resolved by `BookResolver`)
+  - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail); `requestBooks` with `kind=recommend` routes through the LLM engine (books resolved by `BookResolver`). `requestBookDetail` / `pollBookDetail` / `pollBookDetailArt` resolve one work (identity, record ledger, description + subjects, editions, author card, similar rail) with `BookDetailMapper` folding the work/editions/ratings/author payloads, and stream cover/author/edition/similar artwork as data URIs through `bookDetailArt` events keyed by slot (`cover`, `author`, `edition:<i>`, `similar:<workKey>`)
   - `vangogh.theme.ThemeConfig` + `ThemeController` — the skin picker: `loadTheme` / `saveTheme` (synchronous, `~/.van-gogh/theme.conf`), reply `{status, theme, themes}`, so the Settings chips are rendered from the Java registry (`ThemeConfig.KNOWN`) and the page carries no theme ids, labels or colours. Theme = CSS only: `js/theme.js` moves `html[data-theme]` and the `#themeSkin` href. See `docs/themes.md`
   - Frontend: ES modules under `src/main/resources/movie-page/js/` (entry
     `js/app.js`, one file per seam — see "Frontend modules" below): shared card
@@ -91,6 +91,44 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   below) that folds to 6 columns with the sidebar open and to one stack when
   narrow. It paints itself (`paintSongView`/`closeSongView`); `render.js` only
   decides visibility, so it never imports `render.js`.
+- `js/movie-detail.js` + `movie-detail.css` — the movie-detail view behind a
+  movie card, the bento layout from `prototypes/movie-detail-layouts/bento.html`:
+  a 12-column tile grid (poster / identity / facts on top, keywords + story,
+  cast and stills in the middle, similar rail below) that folds to 6 columns
+  with the sidebar open and to one stack when narrow. It paints itself
+  (`paintMovieView`/`closeMovieView`) from the `requestMovieDetail` reply, then
+  fills each artwork slot (`poster`, `cast:<i>`, `still:<i>`, `similar:<id>`)
+  from `movieDetailArt` events, so a missing image leaves its placeholder
+  instead of a broken icon. Back / Escape return to the intact grid; the
+  watchlist and favorite pills toggle locally; a similar card opens that film
+  in the same view. `render.js` only decides visibility — it never imports the
+  module.
+- `js/book-detail.js` + `book-detail.css` — the book-detail view behind a book
+  card, the bento layout from `prototypes/book-detail-layouts/bento.html`:
+  a 12-column tile grid (cover / identity / record on top, the description
+  beside the similar rail, then editions beside the author card) that folds to
+  6 columns with the sidebar open and to one stack when narrow. It paints
+  itself (`paintBookView`/`closeBookView`) from the `requestBookDetail` reply,
+  then fills each artwork slot (`cover`, `author`, `edition:<i>`,
+  `similar:<workKey>`) from `bookDetailArt` events, so a missing image leaves
+  its placeholder instead of a broken icon. Back / Escape return to the intact
+  grid; "Read sample" reveals the work's opening line in place; the
+  want-to-read and favorite pills toggle locally; a similar card opens that
+  work in the same view. `render.js` only decides visibility — it never
+  imports the module.
+- `js/game-detail.js` + `game-detail.css` — the game-detail view behind a game
+  card, the immersive layout from
+  `prototypes/game-detail/v2-immersive.html`: a fanart hero holding the boxart,
+  title, lede, chips and actions; a four-cell stat band; then a sticky record
+  rail beside an editorial article (opening pull quote, overview, screenshot
+  gallery with lightbox, platforms and play, provenance note); and the
+  related-games rail below. It paints itself (`paintGameView`/`closeGameView`)
+  from the `requestGameDetail` reply, then fills each artwork slot (`boxart`,
+  `hero`, `still:<i>`, `related:<id>`) from `gameDetailArt` events, so a
+  missing image leaves its placeholder instead of a broken icon. Back / Escape
+  return to the intact grid; the watchlist and favorite pills toggle locally;
+  a related card opens that game in the same view. `render.js` only decides
+  visibility — it never imports the module.
 - `js/settings.js` + `settings.css` — the Settings destination: the AI
   recommendations form (provider presets, base URL, model, masked key with a
   reveal toggle, timeout, titles). It calls `loadLlmSettings` on open and
@@ -108,8 +146,9 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   registry. `.provider-chip` styling is shared with the AI presets; the two
   groups are told apart by `data-provider` / `data-theme-id`.
 - CSS is layered, not per-component: `base.css` (structure + role tokens'
-  Starry defaults), `music-detail.css`, `settings.css` (both structure only,
-  role tokens only), then the active `theme-<id>.css` last (`#themeSkin`) —
+  Starry defaults), `music-detail.css`, `movie-detail.css`, `book-detail.css`,
+  `game-detail.css`, `settings.css`
+  (structure only, role tokens only), then the active `theme-<id>.css` last (`#themeSkin`) —
   `theme-starry.css`, `theme-liquidneon.css`. A theme owns backdrops, type
   scale, radii and the header offsets; adding one is a CSS file plus a
   `ThemeConfig.KNOWN` row (recipe: `docs/themes.md`).
@@ -120,6 +159,13 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   grid regains the rail's room on the same boundary — change one, change both.
   `.card-meta-item` is `nowrap` (tokens stay whole) except in book cards, whose
   meta is the prose phrase `Author · N pages`.
+- **A flex-column card that is a `<button>` needs `align-items: stretch`.** WebKit's
+  UA stylesheet sets `align-items: flex-start` on buttons, so the column's items keep
+  their intrinsic width; a poster whose `aspect-ratio` box holds only an absolutely
+  positioned `<img>` then collapses to 2×3px and the rail renders bare on macOS
+  (Chromium's UA differs, so Windows looked fine). Both similar rails
+  (`.movie-sim-card`, `.book-sim-card`) carry the fix and `preview/check.js` asserts
+  the 2:3 shape — do the same for a new detail rail.
 
 Rules that keep the graph acyclic: builders take the row as a parameter
 (`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click
@@ -243,7 +289,12 @@ before starting the next. Never expand scope mid-slice.
   `GameController` and require `<parameters>true</parameters>` in
   maven-compiler-plugin (args bind by parameter name). Posters arrive as
   `window.krema.on("poster", …)` / `window.krema.on("gamePoster", …)` events
-  emitted by the drains on the UI thread. The Settings page is the one pair
+  emitted by the drains on the UI thread. Detail views have their own generation
+  pairs so opening one never supersedes the browse request: `requestMovieDetail`
+  / `pollMovieDetail` + `pollMovieDetailArt`, `requestSongDetail` /
+  `pollSongDetail`, `requestBookDetail` / `pollBookDetail` +
+  `pollBookDetailArt`, and `requestGameDetail` / `pollGameDetail` +
+  `pollGameDetailArt`. The Settings page is the one pair
   that needs no drain: `loadLlmSettings` / `saveLlmSettings` on
   `SettingsController` and `loadTheme` / `saveTheme` on `ThemeController` are
   synchronous (one small file each) and reply at once.
@@ -260,13 +311,14 @@ unreproducible (skeletons, empty, error, missing artwork), and `?theme=<id>`
 starts the page with that skin stored. Fixtures are keyed to
 the real resolved-item shapes and survive the LLM engine slice. `node
 preview/check.js` (Zed task "check UI (headless)") is the same harness driven
-headless: 105 assertions over the card grid, the sidebar (form buttons, inert
+headless: assertions over the card grid, the sidebar (form buttons, inert
 items, section labels, collapse/reflow), search, the Settings form (loads the
 stored config, refuses a save with no key, saves and keeps the key off the
 page), the theme picker (chips from the reply, live repaint of shell + cards +
 AI toggle, one save, reopening shows it pressed, `?theme=` startup and
-fallback) and every scenario, exit 1 on
-failure. Full guide: `docs/preview-harness.md`. Layout,
+fallback), the song, movie, book and game detail views (every bento/immersive
+tile, each artwork slot, actions, Escape back to the grid) and every scenario,
+exit 1 on failure. Full guide: `docs/preview-harness.md`. Layout,
 styling and page JS go through the preview; shell, IPC and network code still
 need a real app run.
 
@@ -317,10 +369,12 @@ To run:
   `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` and
   posters through `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` /
   `pollBookCovers` (which doubles as the completion signal, returning −1 when
-  nothing is pending) — all synchronous UI-thread commands. The song detail
-  follows the same rule with its own generation pair (`requestSongDetail` /
-  `pollSongDetail`), so opening a song cannot supersede the browse request or
-  its artwork stream. Drop the dance
+  nothing is pending) — all synchronous UI-thread commands. The song, movie and
+  book details follow the same rule with their own generation pairs
+  (`requestSongDetail` / `pollSongDetail`, `requestMovieDetail` /
+  `pollMovieDetail` plus `pollMovieDetailArt`, `requestBookDetail` /
+  `pollBookDetail` plus `pollBookDetailArt`), so opening a detail cannot
+  supersede the browse request or its artwork stream. Drop the dance
   when the project can move to a Krema release whose eval is thread-safe on
   Windows (0.3.3+ source does not fix it either; nothing newer is published on
   Maven Central).

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Van Gogh · Game detail prototype — The dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="game-detail.css?v=2">
+</head>
+<body class="v3">
+
+<div class="sky" aria-hidden="true"></div>
+<div class="veil" aria-hidden="true"></div>
+
+<div class="app-shell">
+    <aside class="sidebar" aria-label="Sidebar">
+        <div class="sidebar-head">
+            <div class="brand"><span class="brand-mark" aria-hidden="true">✶</span><span class="brand-text">Van Gogh</span></div>
+            <button type="button" class="icon-btn sidebar-toggle" aria-label="Collapse sidebar" title="Collapse sidebar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Main navigation">
+            <p class="nav-label">Menu</p>
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+                <span class="nav-text">Home</span>
+            </button>
+            <button type="button" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <span class="nav-text">Music</span>
+            </button>
+            <button type="button" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+                <span class="nav-text">Movies</span>
+            </button>
+            <button type="button" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span class="nav-text">Books</span>
+            </button>
+            <button type="button" class="nav-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+                <span class="nav-text">Games</span>
+            </button>
+
+            <p class="nav-label nav-label-spaced">Library</p>
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+                <span class="nav-text">My Lists</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                <span class="nav-text">Favorites</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-foot">
+            <button type="button" class="nav-item" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span class="nav-text">Settings</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="main-column">
+        <header class="app-header">
+            <div class="search-bar">
+                <i data-icon="search" class="search-glyph" aria-hidden="true"></i>
+                <input type="text" class="search-input" placeholder="Search movies, books, music, games…" aria-label="Search">
+                <button type="button" class="search-btn">Search</button>
+            </div>
+            <div class="quick-actions">
+                <button type="button" class="icon-btn round" aria-label="Notifications"><i data-icon="bell"></i></button>
+                <button type="button" class="icon-btn round avatar" aria-label="Profile"><i data-icon="user"></i></button>
+            </div>
+        </header>
+
+        <main class="detail-wrap">
+            <div class="crumbs">
+                <a href="index.html"><i data-icon="arrow-left" aria-hidden="true"></i>Games</a>
+                <span class="dot"></span>
+                <span class="context">Trending this week</span>
+                <span class="dot"></span>
+                <span class="context">Alan Wake II</span>
+                <span class="proto-flag"><i data-icon="compass" aria-hidden="true"></i>Prototype 03 · Dossier</span>
+            </div>
+
+            <article class="dossier" aria-label="Alan Wake II record">
+                <div class="dossier-bar">
+                    <span class="file-no">Case file · AW2-114899</span>
+                    <span class="bar-right">
+                        <span>TheGamesDB record</span>
+                        <span>Compiled 2026-11-19</span>
+                    </span>
+                </div>
+
+                <header class="dossier-hero">
+                    <figure class="cover-frame">
+                        <img src="assets/boxart/alan-wake-2.jpg" alt="Boxart of Alan Wake II">
+                    </figure>
+
+                    <div class="dossier-title-block">
+                        <div class="badges">
+                            <span class="form-badge"><i data-icon="gamepad-2" aria-hidden="true"></i>GAME</span>
+                            <span class="engine-note"><i data-icon="sparkles" aria-hidden="true"></i>Resolved from TheGamesDB · 114899</span>
+                        </div>
+                        <div>
+                            <p class="eyebrow">Epic Games</p>
+                            <h1 class="display-title">Alan Wake II</h1>
+                        </div>
+                        <p class="byline">A psychological horror story told from <strong>two perspectives</strong>.</p>
+                        <div class="meta-row">
+                            <span>Released Oct 27, 2023</span>
+                            <span class="dot"></span>
+                            <span>1 player</span>
+                            <span class="dot"></span>
+                            <span>PC</span>
+                        </div>
+                        <div class="chips" aria-label="Genres">
+                            <span class="chip"><i data-icon="tag" aria-hidden="true"></i>Action</span>
+                            <span class="chip"><i data-icon="tag" aria-hidden="true"></i>Adventure</span>
+                            <span class="chip"><i data-icon="tag" aria-hidden="true"></i>Shooter</span>
+                            <span class="chip"><i data-icon="tag" aria-hidden="true"></i>Horror</span>
+                        </div>
+                    </div>
+
+                    <div class="stamp" aria-label="ESRB AO, Adult Only 18+, 2023">
+                        <span class="stamp-top">ESRB</span>
+                        <span class="stamp-letter">AO</span>
+                        <span class="stamp-year">2023</span>
+                    </div>
+                </header>
+
+                <div class="dossier-body">
+                    <aside class="record-panel" aria-label="Record sheet">
+                        <p class="record-title"><i data-icon="file-text" aria-hidden="true"></i>Record sheet</p>
+                        <dl class="fact-list record-sheet">
+                            <div class="fact-row"><dt>Game ID</dt><dd class="mono">114899</dd></div>
+                            <div class="fact-row"><dt>Boxart ID</dt><dd class="mono">423940</dd></div>
+                            <div class="fact-row"><dt>Release</dt><dd>2023-10-27</dd></div>
+                            <div class="fact-row"><dt>ESRB</dt><dd>AO · Adult Only 18+</dd></div>
+                            <div class="fact-row"><dt>Players</dt><dd>1</dd></div>
+                            <div class="fact-row"><dt>Publisher</dt><dd>Epic Games</dd></div>
+                            <div class="fact-row"><dt>Platform</dt><dd>PC</dd></div>
+                            <div class="fact-row"><dt>Genres</dt><dd>Action · Adventure · Shooter · Horror</dd></div>
+                        </dl>
+                        <div class="record-actions">
+                            <button type="button" class="btn btn-primary js-save" data-off-label="Add to My Lists" data-on-label="In My Lists"><i data-icon="bookmark-plus" aria-hidden="true"></i><span>Add to My Lists</span></button>
+                            <button type="button" class="btn js-save" data-off-label="Favorite" data-on-label="Favorited"><i data-icon="heart" aria-hidden="true"></i><span>Favorite</span></button>
+                            <a class="btn" href="https://thegamesdb.net/game/114899/" target="_blank" rel="noopener noreferrer"><i data-icon="external-link" aria-hidden="true"></i>TheGamesDB record</a>
+                        </div>
+                        <div class="source-note">
+                            <i data-icon="database" aria-hidden="true"></i>
+                            <span>Boxart, fanart and stills are the original TheGamesDB assets. No community rating, developer credit or store price is recorded here.</span>
+                        </div>
+                    </aside>
+
+                    <div class="dossier-main">
+                        <section class="memo">
+                            <span class="memo-num"><i data-icon="hash" aria-hidden="true"></i>Memo 01 · Premise</span>
+                            <h2>A small-town murder, a dark story</h2>
+                            <div class="rule"></div>
+                            <div class="overview">
+                                <p>
+                                    Saga Anderson arrives to investigate ritualistic murders in a
+                                    small town. Alan Wake pens a dark story to shape the reality
+                                    around him. These two heroes are somehow connected. Can they
+                                    become the heroes they need to be?
+                                </p>
+                                <p>
+                                    <b class="ov-label">Solve a deadly mystery</b>
+                                    What begins as a small-town murder investigation rapidly spirals
+                                    into a nightmare journey. Uncover the source of the supernatural
+                                    darkness in this psychological horror story filled with intense
+                                    suspense and unexpected twists.
+                                </p>
+                            </div>
+                        </section>
+
+                        <section class="memo">
+                            <span class="memo-num"><i data-icon="hash" aria-hidden="true"></i>Memo 02 · Structure</span>
+                            <h2>Two characters, two realities</h2>
+                            <div class="rule"></div>
+                            <div class="overview">
+                                <p>
+                                    <b class="ov-label">Play as two characters</b>
+                                    Experience both Alan Wake's and Saga Anderson's stories and see
+                                    events unfold from different perspectives. Switch between
+                                    Anderson's life-or-death race to solve the case and Wake's
+                                    desperate attempts to rewrite his reality to escape the depths of
+                                    the Dark Place.
+                                </p>
+                            </div>
+                            <div class="chips">
+                                <span class="chip"><i data-icon="user" aria-hidden="true"></i>Saga Anderson</span>
+                                <span class="chip"><i data-icon="user" aria-hidden="true"></i>Alan Wake</span>
+                                <span class="chip"><i data-icon="map" aria-hidden="true"></i>Dark Place</span>
+                            </div>
+                        </section>
+
+                        <section class="memo">
+                            <span class="memo-num"><i data-icon="hash" aria-hidden="true"></i>Memo 03 · Technical record</span>
+                            <h2>PC presets carried in the overview</h2>
+                            <div class="rule"></div>
+                            <p style="font-size:12.5px;color:var(--text-muted);line-height:1.65">
+                                The source overview embeds three PC configurations. They are shown
+                                here as the record publishes them; the obvious “GeForce RT 3070”
+                                typo is corrected to RTX.
+                            </p>
+                            <div class="preset-grid">
+                                <div class="preset">
+                                    <h3>Minimum · 1080p / 30 FPS</h3>
+                                    <dl>
+                                        <div class="spec-row"><dt>GPU</dt><dd>RTX 2060 / RX 6600</dd></div>
+                                        <div class="spec-row"><dt>VRAM</dt><dd>6 GB</dd></div>
+                                        <div class="spec-row"><dt>DLSS / FSR2</dt><dd>Quality</dd></div>
+                                        <div class="spec-row"><dt>CPU</dt><dd>i5-7600K or AMD equivalent</dd></div>
+                                        <div class="spec-row"><dt>RAM</dt><dd>16 GB</dd></div>
+                                        <div class="spec-row"><dt>OS</dt><dd>Windows 10/11, 64-bit</dd></div>
+                                        <div class="spec-row"><dt>Storage</dt><dd>90 GB SSD</dd></div>
+                                    </dl>
+                                </div>
+                                <div class="preset">
+                                    <h3>Recommended · 1440p / 30 FPS</h3>
+                                    <dl>
+                                        <div class="spec-row"><dt>GPU</dt><dd>RTX 3060 / RX 6600 XT</dd></div>
+                                        <div class="spec-row"><dt>VRAM</dt><dd>8 GB</dd></div>
+                                        <div class="spec-row"><dt>DLSS / FSR2</dt><dd>Balanced</dd></div>
+                                        <div class="spec-row"><dt>CPU</dt><dd>Ryzen 7 3700X or Intel equivalent</dd></div>
+                                        <div class="spec-row"><dt>RAM</dt><dd>16 GB</dd></div>
+                                        <div class="spec-row"><dt>OS</dt><dd>Windows 10/11, 64-bit</dd></div>
+                                        <div class="spec-row"><dt>Storage</dt><dd>90 GB SSD</dd></div>
+                                    </dl>
+                                </div>
+                                <div class="preset">
+                                    <h3>Recommended · 1080p / 60 FPS</h3>
+                                    <dl>
+                                        <div class="spec-row"><dt>GPU</dt><dd>RTX 3070 / RX 6700 XT</dd></div>
+                                        <div class="spec-row"><dt>VRAM</dt><dd>8 GB</dd></div>
+                                        <div class="spec-row"><dt>DLSS / FSR2</dt><dd>Performance</dd></div>
+                                        <div class="spec-row"><dt>CPU</dt><dd>Ryzen 7 3700X or Intel equivalent</dd></div>
+                                        <div class="spec-row"><dt>RAM</dt><dd>16 GB</dd></div>
+                                        <div class="spec-row"><dt>OS</dt><dd>Windows 10/11, 64-bit</dd></div>
+                                        <div class="spec-row"><dt>Storage</dt><dd>90 GB SSD</dd></div>
+                                    </dl>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="memo">
+                            <span class="memo-num"><i data-icon="hash" aria-hidden="true"></i>Memo 04 · Contact sheet</span>
+                            <h2>Stills attached to the file</h2>
+                            <div class="rule"></div>
+                            <div class="shot-grid">
+                                <button type="button" class="shot" data-full="assets/art/fanart-alan-wake-2.jpg" data-caption="Alan Wake II · fanart · TheGamesDB">
+                                    <img src="assets/art/fanart-alan-wake-2.jpg" alt="Alan Wake II fanart">
+                                    <span class="shot-open"><i data-icon="maximize-2" aria-hidden="true"></i>Enlarge</span>
+                                </button>
+                                <button type="button" class="shot" data-full="assets/art/shot-114899-2.jpg" data-caption="Alan Wake II · screenshot 2 · TheGamesDB">
+                                    <img src="assets/art/shot-114899-2.jpg" alt="Alan Wake II screenshot 2">
+                                    <span class="shot-open"><i data-icon="maximize-2" aria-hidden="true"></i>Enlarge</span>
+                                </button>
+                                <button type="button" class="shot" data-full="assets/art/shot-114899-3.jpg" data-caption="Alan Wake II · screenshot 3 · TheGamesDB">
+                                    <img src="assets/art/shot-114899-3.jpg" alt="Alan Wake II screenshot 3">
+                                    <span class="shot-open"><i data-icon="maximize-2" aria-hidden="true"></i>Enlarge</span>
+                                </button>
+                            </div>
+                        </section>
+
+                        <section class="memo">
+                            <span class="memo-num"><i data-icon="hash" aria-hidden="true"></i>Memo 05 · Provenance</span>
+                            <h2>What this page can promise</h2>
+                            <div class="rule"></div>
+                            <div class="spec-grid">
+                                <div class="spec-row"><dt>Game ID</dt><dd class="mono">114899</dd></div>
+                                <div class="spec-row"><dt>Boxart ID</dt><dd class="mono">423940</dd></div>
+                                <div class="spec-row"><dt>Fanart ID</dt><dd class="mono">391375</dd></div>
+                                <div class="spec-row"><dt>Screenshot IDs</dt><dd class="mono">391377 · 391378</dd></div>
+                                <div class="spec-row"><dt>Genres</dt><dd>Action · Adventure · Shooter · Horror</dd></div>
+                                <div class="spec-row"><dt>Players</dt><dd>1</dd></div>
+                                <div class="spec-row"><dt>Platform</dt><dd>PC</dd></div>
+                                <div class="spec-row"><dt>ESRB</dt><dd>AO · Adult Only 18+</dd></div>
+                            </div>
+                            <div class="source-note">
+                                <i data-icon="info" aria-hidden="true"></i>
+                                <span><b>Prototype data.</b> The record maps to <code>Game(id, game_title, release_date, rating, genre, overview, posterUrl)</code>. Players, publisher and platform names are returned by the same request but are not yet fields on the Java record; the production slice must add them before this page can ship.</span>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <footer class="dossier-foot">
+                    <span class="source"><i data-icon="database" aria-hidden="true"></i>Source: TheGamesDB · game 114899</span>
+                    <span>Static prototype · not wired to the app</span>
+                    <a href="index.html">Back to the gallery →</a>
+                </footer>
+            </article>
+
+            <section class="related" aria-label="More games">
+                <div class="section-head">
+                    <div>
+                        <p class="section-kicker">Cross-reference</p>
+                        <h2 class="section-title">More games the engine might pair</h2>
+                    </div>
+                    <a class="section-link" href="v1-spotlight.html">Back to layout 01<i data-icon="arrow-right" aria-hidden="true"></i></a>
+                </div>
+                <div class="game-strip">
+                    <a class="mini-card" href="v1-spotlight.html">
+                        <div class="mini-cover"><img src="assets/boxart/elden-ring.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">Elden Ring</p>
+                            <p class="mini-author">Bandai Namco Entertainment</p>
+                            <p class="mini-meta">2022 · M · Action · RPG</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="v2-immersive.html">
+                        <div class="mini-cover"><img src="assets/boxart/cyberpunk-2077.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">Cyberpunk 2077</p>
+                            <p class="mini-author">CD Projekt</p>
+                            <p class="mini-meta">2020 · M · Action · RPG</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="index.html">
+                        <div class="mini-cover"><img src="assets/boxart/yakuza-0.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">Yakuza 0</p>
+                            <p class="mini-author">Sega</p>
+                            <p class="mini-meta">2018 · NR · Action · Adventure</p>
+                        </div>
+                    </a>
+                    <a class="mini-card" href="index.html">
+                        <div class="mini-cover"><img src="assets/boxart/007-first-light.jpg" alt=""></div>
+                        <div class="mini-body">
+                            <p class="mini-title">007 First Light</p>
+                            <p class="mini-author">IO Interactive</p>
+                            <p class="mini-meta">2026 · T · Action · Stealth</p>
+                        </div>
+                    </a>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<script src="icons.js"></script>
+<script src="prototype.js"></script>
+</body>
+</html>

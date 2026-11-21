@@ -286,6 +286,177 @@
             stats: { contributors: 224, transcribers: 4, annotationCount: 17, pyongsCount: 81 }
         },
 
+        /* Movie-detail extras the card fixtures do not carry. The mock composes
+         * the real MovieDetail shape from these plus the clicked movie item, so
+         * the preview exercises the actual bento view — facts ledger, cast,
+         * stills, similar rail — not a lookalike. Artwork is generated per
+         * slot, like the controller's data-URI stream. */
+        movieDetail: {
+            tagline: "Your mind is the scene of the crime.",
+            runtimeMinutes: 148,
+            certification: "PG-13",
+            keywords: ["dream", "heist", "subconscious", "architecture", "time", "memory"],
+            facts: [
+                { label: "Release", value: "Jul 16, 2010", muted: false },
+                { label: "Runtime", value: "2h 28m", muted: false },
+                { label: "Director", value: "Christopher Nolan", muted: false },
+                { label: "Screenplay", value: "Christopher Nolan", muted: true },
+                { label: "Cinematography", value: "Wally Pfister", muted: true },
+                { label: "Music", value: "Hans Zimmer", muted: true },
+                { label: "Studio", value: "Warner Bros., Legendary, Syncopy", muted: true },
+                { label: "Country", value: "US, UK", muted: true },
+                { label: "Budget", value: "$160M", muted: false },
+                { label: "Box office", value: "$836.8M", muted: false },
+                { label: "Certification", value: "PG-13", muted: false },
+                { label: "Status", value: "Released", muted: false }
+            ],
+            cast: [
+                { name: "Leonardo DiCaprio", role: "Dom Cobb" },
+                { name: "Joseph Gordon-Levitt", role: "Arthur" },
+                { name: "Elliot Page", role: "Ariadne" },
+                { name: "Tom Hardy", role: "Eames" },
+                { name: "Ken Watanabe", role: "Saito" },
+                { name: "Marion Cotillard", role: "Mal" },
+                { name: "Christopher Nolan", role: "Director", crew: true },
+                { name: "Wally Pfister", role: "Cinematography", crew: true }
+            ],
+            stills: [
+                { caption: "The city folds" },
+                { caption: "Limbo" },
+                { caption: "Snow fortress" }
+            ]
+        },
+
+        /* Game-detail extras the card fixtures do not carry. The mock composes
+         * the real GameDetail shape from these plus the clicked game item, so
+         * the preview exercises the actual immersive view — record rail, stat
+         * band, article, stills, related rail — not a lookalike. The rating is
+         * TheGamesDB's string, never a score; artwork is generated per slot,
+         * like the controller's data-URI stream. A game with no entry here gets
+         * the card's own year/genre and no optional fields, which is the
+         * sparse-record path the page must also survive. */
+        gameDetail: {
+            "10225": {
+                releaseDate: "2011-11-18",
+                rating: "E10+ - Everyone 10+",
+                players: 4,
+                genres: ["Sandbox", "Adventure"],
+                platforms: ["Nintendo Switch", "PlayStation 4", "Xbox One", "PC"],
+                publishers: ["Mojang Studios"],
+                developers: ["Mojang Studios"],
+                overview: "Build, explore and survive in a procedurally generated world made of blocks. Every seed is a different world, from mushroom islands to deep caves, and every block can be moved.\n\nSurvival mode adds hunger, crafting and nights that belong to the monsters; creative mode takes the monsters away and leaves the whole world as material. The record's overview stops there — no price, playtime or score is attached to it.",
+                youtube: "https://www.youtube.com/watch?v=preview",
+                hero: true,
+                boxart: true,
+                stills: 3,
+                relatedSource: "series",
+                related: [
+                    { id: "10226", title: "Minecraft Dungeons", year: "2020", rating: "E10+ - Everyone 10+", genre: "Action RPG" },
+                    { id: "10227", title: "Minecraft Legends", year: "2023", rating: "E10+ - Everyone 10+", genre: "Action Strategy" },
+                    { id: "10228", title: "Minecraft: Story Mode", year: "2015", rating: "E10+ - Everyone 10+", genre: "Adventure" },
+                    { id: "10229", title: "Minecraft Earth", year: "2019", rating: "E10+ - Everyone 10+", genre: "Sandbox" }
+                ]
+            },
+            "9034": {
+                releaseDate: "2017-03-03",
+                rating: "E10+ - Everyone 10+",
+                players: 1,
+                genres: ["Action", "Adventure"],
+                platforms: ["Nintendo Switch", "Wii U"],
+                publishers: ["Nintendo"],
+                developers: ["Nintendo EPD"],
+                overview: "Wake up in a ruined Hyrule and reclaim the kingdom from Calamity Ganon. The plateau teaches you to climb, cook and listen to the wind, and then the map opens all at once.",
+                youtube: "",
+                hero: true,
+                boxart: true,
+                stills: 2,
+                relatedSource: "catalogue",
+                related: [
+                    { id: "9035", title: "The Legend of Zelda: Tears of the Kingdom", year: "2023", rating: "E10+ - Everyone 10+", genre: "Action Adventure" },
+                    { id: "7720", title: "Hollow Knight", year: "2017", rating: "E10+ - Everyone 10+", genre: "Metroidvania" },
+                    { id: "3310", title: "Elden Ring", year: "2022", rating: "M - Mature 17+", genre: "Action RPG" }
+                ]
+            },
+            "7720": {
+                releaseDate: "2017-02-24",
+                rating: "E10+ - Everyone 10+",
+                players: 1,
+                genres: ["Platform", "Adventure"],
+                platforms: ["PC", "Nintendo Switch", "PlayStation 4"],
+                publishers: ["Team Cherry"],
+                developers: ["Team Cherry"],
+                overview: "Descend into Hallownest, a ruined insect kingdom, and uncover its secrets. The map is drawn by hand, one bench at a time, and the quiet is part of the design.",
+                youtube: "https://www.youtube.com/watch?v=preview",
+                hero: true,
+                boxart: true,
+                stills: 1,
+                relatedSource: "catalogue",
+                related: [
+                    { id: "7721", title: "Hollow Knight: Silksong", year: "2024", rating: "E10+ - Everyone 10+", genre: "Metroidvania" },
+                    { id: "5502", title: "Stardew Valley", year: "2016", rating: "E10+ - Everyone 10+", genre: "Farming Sim" }
+                ]
+            },
+            // The stress game: an unbroken title, no rating, no publisher or
+            // developer, no hero and a single screenshot — every optional field
+            // is absent, so every placeholder path is visible at once.
+            "4411": {
+                releaseDate: "",
+                rating: "",
+                players: 0,
+                genres: ["Arcade"],
+                platforms: [],
+                publishers: [],
+                developers: [],
+                overview: "A deliberately unbreakable title, to prove the card truncates instead of overflowing. This record carries no rating, no platform and no publisher, so the page shows only what it has.",
+                youtube: "",
+                hero: false,
+                boxart: false,
+                stills: 1,
+                relatedSource: "catalogue",
+                related: [
+                    { id: "10225", title: "Minecraft", year: "2011", rating: "E10+ - Everyone 10+", genre: "Sandbox" },
+                    { id: "5502", title: "Stardew Valley", year: "2016", rating: "E10+ - Everyone 10+", genre: "Farming Sim" }
+                ]
+            }
+        },
+
+        /* Book-detail extras the card fixtures do not carry. The mock composes
+         * the real BookDetail shape from these plus the clicked book item, so
+         * the preview exercises the actual bento view — record ledger, story,
+         * editions, author card, similar rail — not a lookalike. Artwork is
+         * generated per slot, like the controller's data-URI stream. */
+        bookDetail: {
+            descriptions: {
+                "OL82563W": "In a quiet corner of Middle-earth, a hobbit is swept into a war of rings, wizards and old songs. The road runs from the Shire to Mount Doom, and every step asks what a small person is willing to carry.",
+                "OL1168007W": "On the desert planet Arrakis, water is wealth and spice is power. A young heir learns the ways of the Fremen while empires move against his family, and the desert itself becomes the only thing worth trusting.",
+                "OL7890123W": "A deliberately long preview description, long enough to wrap past the tile's first lines and prove the story column reflows without pushing the grid sideways.",
+                "OL27448W": "A summer on Long Island, a green light across the bay, and a man who believes the past can be bought back. Fitzgerald's short, bright novel keeps its distance from the party it describes.",
+                "OL1513254W": "Case is a burned-out console cowboy with one last job. The sky above the port is the color of television, tuned to a dead channel, and the future is a network of glass and debt.",
+                "OL48029W": "Macondo begins with a family and a prophecy and ends with a wind that erases the town. García Márquez writes generations in circles, each one carrying the same names and the same solitude."
+            },
+            authorBios: {
+                "J. R. R. Tolkien": "J. R. R. Tolkien was an English writer, poet and philologist best known for The Hobbit and The Lord of the Rings. He invented languages before he invented the stories that would use them.",
+                "Frank Herbert": "Frank Herbert was an American science-fiction writer whose Dune cycle turned ecology, religion and imperial politics into one of the genre's defining sagas.",
+                "F. Scott Fitzgerald": "F. Scott Fitzgerald was an American novelist and short-story writer, the voice of the Jazz Age and its hangover. The Great Gatsby is his most read and most taught book.",
+                "William Gibson": "William Gibson is an American-Canadian writer who named cyberspace and then spent a career complicating what the word could mean.",
+                "Gabriel García Márquez": "Gabriel García Márquez was a Colombian novelist and Nobel laureate, the best-known practitioner of magical realism in Latin American letters."
+            },
+            authorDates: {
+                "J. R. R. Tolkien": "1892 \u2013 1973",
+                "Frank Herbert": "1920 \u2013 1986",
+                "F. Scott Fitzgerald": "1896 \u2013 1940",
+                "William Gibson": "born 1948",
+                "Gabriel García Márquez": "1927 \u2013 2014"
+            },
+            settings: {
+                "OL82563W": "Middle-earth",
+                "OL1168007W": "Arrakis",
+                "OL1513254W": "Chiba City",
+                "OL48029W": "Macondo"
+            },
+            ratingCount: 164
+        },
+
         /* The plural + label the app shows in the section title, so the mock can
          * honour the same wording the real controllers produce. */
         labels: {
