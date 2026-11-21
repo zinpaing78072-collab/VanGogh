@@ -20,6 +20,7 @@ import {
 } from "./dom.js";
 import { state } from "./state.js";
 import { render } from "./render.js";
+import { rememberCurrent } from "./content.js";
 import { messageOf } from "./util.js";
 import { openThemeCard } from "./theme.js";
 
@@ -40,7 +41,18 @@ let saving = false;
 // overlap two replies, and the stale one must not overwrite the fresh one.
 let loadToken = 0;
 
+// The view Settings covered, so Cancel/Escape can put it back (a detail stays
+// a detail). Kept here rather than in state: it is a property of this page.
+let returnView = "browse";
+
 export function openSettings() {
+    // Snapshot the form first: if the user leaves Settings for another form,
+    // this one still has a session to come back to. The live state is kept, so
+    // a fetch already in flight can finish behind the page.
+    rememberCurrent();
+    if (state.view !== "settings") {
+        returnView = state.view;
+    }
     state.view = "settings";
     setStatus("");
     render();
@@ -49,7 +61,8 @@ export function openSettings() {
 }
 
 export function closeSettings() {
-    state.view = "browse";
+    state.view = returnView || "browse";
+    returnView = "browse";
     render();
 }
 

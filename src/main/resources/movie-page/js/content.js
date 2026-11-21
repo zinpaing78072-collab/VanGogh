@@ -5,13 +5,123 @@
  * never blocks on network), then the data drain is polled until this
  * generation resolves. Artwork drains double as the completion signal.
  */
-import { state, nextRequest, isCurrent, cancelDetailRequest } from "./state.js";
+import { state, sessions, nextRequest, nextDetailRequest, isCurrent, cancelDetailRequest } from "./state.js";
 import { render } from "./render.js";
 import { DOMAINS } from "./domains.js";
+import { openDetail, resumeDetailArt } from "./detail.js";
+import { searchInput } from "./dom.js";
 import { messageOf } from "./util.js";
+
+/* Sessions that survive navigation.
+ *
+ * The active form lives in `state`; this module snapshots it into
+ * `sessions[domain]` when the user leaves and copies it back when they return,
+ * so a form's last query, cards, artwork, open detail and scroll position come
+ * back without an IPC call. Page memory only — closing the app clears it.
+ */
+export function rememberCurrent() {
+    if (!state.domain || state.view === "settings" || state.status === "idle") return;
+    const domain = DOMAINS[state.domain];
+    if (!domain) return;
+
+    const view = state.view === domain.view ? domain.view : "browse";
+    sessions[state.domain] = {
+        view: view,
+        title: state.title,
+        status: state.status,
+        items: state.items,
+        error: state.error,
+        query: state.query,
+        kind: state.kind,
+        artwork: state.artwork,
+        detail: view === "browse" ? null : state[view],
+        scrollY: window.scrollY,
+    };
+}
+
+/** Restore a form's saved session. Returns false when there is none. */
+export function restoreSession(domainKey) {
+    const saved = sessions[domainKey];
+    if (!saved || !DOMAINS[domainKey]) return false;
+
+    // Save the form we are leaving before its live state is overwritten, and
+    // stop its browse pollers: restoring a session fires no request of its own,
+    // so nothing else would supersede them.
+    rememberCurrent();
+    nextRequest();
+
+    // A browse fetch that was still in flight has no poller left, so run it
+    // again instead of restoring a skeleton forever.
+    if (saved.view === "browse" && saved.status === "loading") {
+        loadContent(domainKey, saved.kind || "trending", saved.query || "");
+        return true;
+    }
+
+    cancelDetailRequest();
+    state.domain = domainKey;
+    state.title = saved.title;
+    state.status = saved.status;
+    state.items = saved.items || [];
+    state.error = saved.error || null;
+    state.query = saved.query || "";
+    state.kind = saved.kind || "trending";
+    state.artwork = saved.artwork || {};
+    state.song = null;
+    state.movie = null;
+    state.book = null;
+    state.game = null;
+    searchInput.value = state.query;
+
+    // Paint the form's grid even when a detail is what reopens: Back has to
+    // land on this form's cards, not on whatever the previous form left behind.
+    state.view = "browse";
+    render();
+
+    if (saved.view !== "browse" && saved.detail) {
+        state.view = saved.view;
+        state[saved.view] = saved.detail;
+        if (saved.detail.status === "ready") {
+            render();
+            restoreScroll(saved.scrollY);
+            // Any slot that had not streamed in before the user left resumes
+            // its drain; a complete stream answers −1 at once.
+            resumeDetailArt(domainKey, nextDetailRequest());
+        } else {
+            // Loading or failed when we left: request it again through the
+            // normal detail seam (its state carries the id/workKey it needs).
+            window.scrollTo(0, 0);
+            openDetail(domainKey, saved.detail);
+        }
+    } else {
+        restoreScroll(saved.scrollY);
+        // A poster stream that was still running when the user left resumes
+        // here; a complete one answers −1 at once.
+        if (saved.status === "ready") {
+            void pollPostersUntilDone(DOMAINS[domainKey].art, () => state.domain === domainKey);
+        }
+    }
+    return true;
+}
+
+// Only the latest restore may move the page: a click that lands before the
+// animation frame must not be scrolled by the form it just left.
+let scrollToken = 0;
+
+function restoreScroll(y) {
+    const token = ++scrollToken;
+    const target = Number(y) || 0;
+    requestAnimationFrame(() => {
+        if (token === scrollToken) window.scrollTo(0, target);
+    });
+}
 
 export async function loadContent(domainKey, kind, term) {
     const domain = DOMAINS[domainKey];
+    if (!domain) return;
+
+    // Snapshot the form we are leaving before this load overwrites state.
+    rememberCurrent();
+
     const seq = nextRequest();
 
     // A browse load always leaves a detail view: drop any pending detail
@@ -20,6 +130,8 @@ export async function loadContent(domainKey, kind, term) {
     state.view = "browse";
     state.song = null;
     state.movie = null;
+    state.book = null;
+    state.game = null;
     state.domain = domainKey;
     state.title = kind === "recommend" ? "AI Recommendations"
         : kind === "search" ? "Search Results"
@@ -27,6 +139,12 @@ export async function loadContent(domainKey, kind, term) {
     state.status = "loading";
     state.items = [];
     state.error = null;
+    state.query = term || "";
+    state.kind = kind;
+    state.artwork = {};
+    searchInput.value = state.query;
+    scrollToken += 1;
+    window.scrollTo(0, 0);
     render();
 
     if (!window.krema) {

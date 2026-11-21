@@ -6,9 +6,9 @@
  */
 import { DOMAINS } from "./domains.js";
 import { openSongDetail } from "./song-detail.js";
-import { openMovieDetail } from "./movie-detail.js";
-import { openBookDetail } from "./book-detail.js";
-import { openGameDetail } from "./game-detail.js";
+import { openMovieDetail, resumeMovieArt } from "./movie-detail.js";
+import { openBookDetail, resumeBookArt } from "./book-detail.js";
+import { openGameDetail, resumeGameArt } from "./game-detail.js";
 
 export function openDetail(domainKey, item) {
     if (domainKey === "music") {
@@ -29,4 +29,17 @@ export function openDetail(domainKey, item) {
     }
     const detail = DOMAINS[domainKey].detail(item);
     alert(`${detail.title}\n\n${detail.body || ""}`);
+}
+
+/* A session restores a ready detail instantly from state; this resumes the
+ * backend drain for any artwork slot that had not arrived when the user left.
+ * Songs carry their artwork in the detail reply, so they have nothing to resume. */
+export function resumeDetailArt(domainKey, seq) {
+    if (domainKey === "movie") {
+        resumeMovieArt(seq);
+    } else if (domainKey === "book") {
+        resumeBookArt(seq);
+    } else if (domainKey === "game") {
+        resumeGameArt(seq);
+    }
 }

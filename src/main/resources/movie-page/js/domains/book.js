@@ -51,6 +51,7 @@ function bookDetail(book) {
 
 export const bookDomain = {
     key: "book",
+    view: "book",
     request: "requestBooks",
     data: "pollBookData",
     art: "pollBookCovers",

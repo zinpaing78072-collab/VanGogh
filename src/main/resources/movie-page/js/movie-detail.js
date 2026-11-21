@@ -259,6 +259,9 @@ function detailMarkup(detail) {
 // ------------------------------------------------------------------- paint
 
 export function paintMovieView() {
+    // A reply can land while Settings covers the detail; painting here would
+    // unhide it over the Settings page. Artwork is still recorded in state.
+    if (state.view === "settings") return;
     const movie = state.movie;
     if (!movie) {
         movieView.innerHTML = "";
@@ -276,6 +279,8 @@ export function paintMovieView() {
         return;
     }
     movieView.innerHTML = detailMarkup(movie.detail);
+    // A restored session repaints every slot it already received.
+    Object.keys(movie.art || {}).forEach((slot) => paintArt(slot, movie.art[slot]));
 }
 
 /* Artwork arrives by slot: poster, cast:<i>, still:<i>, similar:<id>. The
@@ -324,6 +329,7 @@ export async function openMovieDetail(item) {
         year: item.year || "",
         detail: null,
         error: null,
+        art: {},
     };
     browseView.classList.add("hidden");
     paintMovieView();
@@ -350,6 +356,7 @@ export async function openMovieDetail(item) {
                     year: reply.detail.year,
                     detail: reply.detail,
                     error: null,
+                    art: state.movie.art || {},
                 };
                 paintMovieView();
                 pollArtwork(seq);
@@ -374,7 +381,7 @@ export async function openMovieDetail(item) {
 
 // The artwork drain doubles as the completion signal (−1 when done).
 async function pollArtwork(seq) {
-    while (window.krema && state.view === "movie" && isCurrentDetail(seq)) {
+    while (window.krema && isCurrentDetail(seq)) {
         let pending;
         try {
             pending = await window.krema.invoke("pollMovieDetailArt", {});
@@ -386,11 +393,22 @@ async function pollArtwork(seq) {
     }
 }
 
+/* Resume the artwork drain for a detail restored from a session. The backend's
+ * queue is still keyed to its own generation; only the page-side stop token is
+ * renewed, so the remaining slots stream into the repainted view. */
+export function resumeMovieArt(seq) {
+    void pollArtwork(seq);
+}
+
 // ------------------------------------------------------------------ events
 
 if (window.krema && typeof window.krema.on === "function") {
     window.krema.on("movieDetailArt", (data) => {
         if (data && data.payload) {
+            if (state.movie) {
+                state.movie.art = state.movie.art || {};
+                state.movie.art[data.payload.slot] = data.payload.dataUri;
+            }
             paintArt(data.payload.slot, data.payload.dataUri);
         }
     });

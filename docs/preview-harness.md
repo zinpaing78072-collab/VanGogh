@@ -195,11 +195,15 @@ node preview/check.js            # pass/fail, exit 1 on any failure
 node preview/check.js --verbose  # also prints each test's preview stats
 ```
 
-166 assertions across 20 groups: trending render, the sidebar (four form buttons,
+206 assertions across 23 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
 active marker), the switcher across all four forms, search hit and miss, the AI
 toggle (off by default, `kind=recommend` when on, survives a form switch, empty
-box falls back to trending), the song, movie, book and game detail views (each
+box falls back to trending), the per-form sessions (a search survives switching
+away and back with its query and posters and no new request, and an open movie
+detail — every artwork slot included — survives both a form switch and a
+Settings round-trip, and scroll positions come back while a fresh form starts
+at the top), the song, movie, book and game detail views (each
 bento/immersive tile, every streamed artwork slot, actions, Escape back to the
 grid), the Settings
 form (opens from the sidebar, paints

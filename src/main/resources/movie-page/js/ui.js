@@ -16,7 +16,7 @@
 import { searchInput, searchBtn, aiToggle, sidebar, sidebarToggle, sidebarNav, settingsNavItem } from "./dom.js";
 import { state } from "./state.js";
 import { DOMAINS } from "./domains.js";
-import { loadContent } from "./content.js";
+import { loadContent, restoreSession } from "./content.js";
 import { openSettings } from "./settings.js";
 
 function submitSearch() {
@@ -56,7 +56,14 @@ sidebarNav.addEventListener("click", (e) => {
     if (!item) return;
     const key = item.dataset.domain;
     if (!DOMAINS[key]) return;
-    loadContent(key, "trending", "");
+
+    // The active form already shows its session; reloading trending would throw
+    // it away. Settings is the exception — its form session is waiting behind it.
+    if (key === state.domain && state.view !== "settings") return;
+
+    if (!restoreSession(key)) {
+        loadContent(key, "trending", "");
+    }
 });
 
 // Settings sits in the sidebar foot, outside the form switcher: it opens the

@@ -48,6 +48,7 @@ function albumDetail(album) {
 
 export const musicDomain = {
     key: "music",
+    view: "song",
     request: "requestGeniusMusic",
     data: "pollGeniusMusicData",
     art: "pollGeniusMusicPosters",

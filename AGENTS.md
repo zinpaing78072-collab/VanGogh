@@ -78,7 +78,7 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
 `file://`. Never point a shell at `file://` again.
 
 - `js/app.js` — entry: imports wiring, subscribes artwork, seeds the first load
-- `js/dom.js` `js/util.js` `js/state.js` `js/cards.js` — page elements, helpers, state + request sequence, shared card builders
+- `js/dom.js` `js/util.js` `js/state.js` `js/cards.js` — page elements, helpers, state + request sequence + per-form session snapshots, shared card builders
 - `js/domains/{movie,game,music,book}.js` — one row per form: IPC names, labels, card class, id field, `card(item, idx, onOpen)`, `detail(item)`
 - `js/domains.js` — `DOMAINS` registry (`Object.fromEntries` over the rows) and `DOMAIN_KEYS`
 - `js/artwork.js` `js/detail.js` `js/render.js` `js/content.js` `js/ui.js` — artwork routing, the `openDetail` seam, rendering (incl. the active sidebar button), request lifecycle, search + sidebar switching/collapse
@@ -166,6 +166,18 @@ krema-core's `AssetServer` — because Chromium refuses module scripts from
   (Chromium's UA differs, so Windows looked fine). All three similar rails
   (`.movie-sim-card`, `.book-sim-card`, `.game-rel-card`) carry the fix and
   `preview/check.js` asserts the 2:3 shape — do the same for a new detail rail.
+
+**Sessions survive navigation.** One snapshot per content form lives in
+`sessions` (`js/state.js`); `js/content.js` saves it when the user leaves a form
+(`rememberCurrent`) and copies it back when they return (`restoreSession`), so
+the last query, cards, artwork, open detail and scroll position come back with
+no IPC. The active form's live state is the session; switching to a form with no
+snapshot loads trending. Page memory only — closing the app clears it. Artwork
+data URIs live in `state.artwork` (browse) and on each detail state object's
+`art` map, so a repaint reapplies them. Settings is a round-trip: opening it
+snapshots the form, Cancel/Escape returns to the grid or detail it covered, and
+the detail paint guards keep a late reply from unhiding over Settings. A form's
+own button is a no-op while that form is active; Back/Escape leave a detail.
 
 Rules that keep the graph acyclic: builders take the row as a parameter
 (`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click

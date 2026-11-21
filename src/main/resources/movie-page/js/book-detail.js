@@ -286,6 +286,9 @@ function detailMarkup(detail) {
 // ------------------------------------------------------------------- paint
 
 export function paintBookView() {
+    // A reply can land while Settings covers the detail; painting here would
+    // unhide it over the Settings page. Artwork is still recorded in state.
+    if (state.view === "settings") return;
     const book = state.book;
     if (!book) {
         bookView.innerHTML = "";
@@ -303,6 +306,8 @@ export function paintBookView() {
         return;
     }
     bookView.innerHTML = detailMarkup(book.detail);
+    // A restored session repaints every slot it already received.
+    Object.keys(book.art || {}).forEach((slot) => paintArt(slot, book.art[slot]));
 }
 
 /* Artwork arrives by slot: cover, author, edition:<i>, similar:<workKey>. The
@@ -351,6 +356,7 @@ export async function openBookDetail(item) {
         year: item.year || "",
         detail: null,
         error: null,
+        art: {},
     };
     browseView.classList.add("hidden");
     paintBookView();
@@ -377,6 +383,7 @@ export async function openBookDetail(item) {
                     year: reply.detail.year,
                     detail: reply.detail,
                     error: null,
+                    art: state.book.art || {},
                 };
                 paintBookView();
                 pollArtwork(seq);
@@ -401,7 +408,7 @@ export async function openBookDetail(item) {
 
 // The artwork drain doubles as the completion signal (−1 when done).
 async function pollArtwork(seq) {
-    while (window.krema && state.view === "book" && isCurrentDetail(seq)) {
+    while (window.krema && isCurrentDetail(seq)) {
         let pending;
         try {
             pending = await window.krema.invoke("pollBookDetailArt", {});
@@ -413,11 +420,22 @@ async function pollArtwork(seq) {
     }
 }
 
+/* Resume the artwork drain for a detail restored from a session. The backend's
+ * queue is still keyed to its own generation; only the page-side stop token is
+ * renewed, so the remaining slots stream into the repainted view. */
+export function resumeBookArt(seq) {
+    void pollArtwork(seq);
+}
+
 // ------------------------------------------------------------------ events
 
 if (window.krema && typeof window.krema.on === "function") {
     window.krema.on("bookDetailArt", (data) => {
         if (data && data.payload) {
+            if (state.book) {
+                state.book.art = state.book.art || {};
+                state.book.art[data.payload.slot] = data.payload.dataUri;
+            }
             paintArt(data.payload.slot, data.payload.dataUri);
         }
     });

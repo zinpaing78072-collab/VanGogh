@@ -393,8 +393,13 @@ class Page {
     async selectForm(value) {
         const before = (await this.stats()).generation;
         await this.evaluate(`document.querySelector('#sidebarNav [data-domain="${value}"]').click(); true`);
-        await this.waitFor(`window.__preview.stats().generation > ${before}`);
-        return this.settle();
+        // A form with a saved session restores without firing a request, so
+        // wait for the form to become active rather than for a new generation.
+        await this.waitFor(
+            `document.querySelector('#sidebarNav .nav-item.active[data-domain="${value}"]') !== null`);
+        await sleep(50);
+        const after = (await this.stats()).generation;
+        return after > before ? this.settle() : this.stats();
     }
 
     async search(term) {
@@ -535,6 +540,125 @@ const TESTS = [
                 book.meta[0]));
 
             return results;
+        }
+    },
+    {
+        name: "a form's last search survives switching away and back",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+            await page.search("Inception");
+            const searched = await page.dom();
+
+            await page.selectForm("game");
+            const game = await page.dom();
+            const afterGameGen = (await page.stats()).generation;
+            await page.selectForm("movie");
+            const back = await page.dom();
+            const backGen = (await page.stats()).generation;
+            const input = await page.evaluate(`document.getElementById("searchInput").value`);
+
+            return [
+                check("the search narrows the grid", searched.cards === 1, searched.cards),
+                check("a form visited for the first time still loads",
+                    game.cards === 6 && game.title === "Trending Games",
+                    game.cards + " / " + game.title),
+                check("returning restores the saved cards",
+                    back.cards === 1 && back.title === "Search Results",
+                    back.cards + " / " + back.title),
+                check("returning restores the query in the box", input === "Inception", input),
+                check("returning restores the posters", back.withArt === 1, back.withArt),
+                check("returning fires no request", backGen === afterGameGen,
+                    afterGameGen + " → " + backGen)
+            ].concat(artworkInvariants(back));
+        }
+    },
+    {
+        name: "an open detail survives form switches and Settings",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+
+            await page.evaluate(`document.querySelector("#movieGrid .movie-card").click(); true`);
+            await page.waitFor(`window.__preview.stats().movieDetailArtDone
+                && document.querySelectorAll("#movieView .movie-facts > div").length > 0`);
+            const opened = await page.stats();
+
+            await page.selectForm("music");
+            await page.selectForm("movie");
+            await page.waitFor(`!document.getElementById("movieView").classList.contains("hidden")`);
+
+            const restored = JSON.parse(await page.evaluate(`JSON.stringify({
+                movieVisible: !document.getElementById("movieView").classList.contains("hidden"),
+                title: ((document.querySelector("#movieView .movie-title") || {}).textContent || "").trim(),
+                posterArt: document.querySelectorAll("#movieView .movie-poster-img:not(.hidden)").length,
+                castArt: document.querySelectorAll("#movieView .movie-cast-img:not(.hidden)").length,
+                stillArt: document.querySelectorAll("#movieView .movie-shot-img:not(.hidden)").length,
+                simArt: document.querySelectorAll("#movieView .movie-sim-img:not(.hidden)").length,
+                generation: window.__preview.stats().movieDetailGeneration
+            })`));
+
+            await page.evaluate(`document.getElementById("settingsNav").click(); true`);
+            await page.waitFor(`!document.getElementById("settingsView").classList.contains("hidden")`);
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.getElementById("movieView").classList.contains("hidden")`);
+
+            const afterSettings = JSON.parse(await page.evaluate(`JSON.stringify({
+                movieVisible: !document.getElementById("movieView").classList.contains("hidden"),
+                title: ((document.querySelector("#movieView .movie-title") || {}).textContent || "").trim(),
+                generation: window.__preview.stats().movieDetailGeneration
+            })`));
+
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.getElementById("browseView").classList.contains("hidden")
+                && document.getElementById("movieView").classList.contains("hidden")`);
+            const back = await page.dom();
+
+            return [
+                check("the detail reopens after a form switch",
+                    restored.movieVisible && restored.title === "Inception",
+                    restored.movieVisible + " / " + restored.title),
+                check("every artwork slot comes back",
+                    restored.posterArt === 1 && restored.castArt === 8
+                        && restored.stillArt === 3 && restored.simArt === 5,
+                    restored.posterArt + "/" + restored.castArt + "/" + restored.stillArt + "/" + restored.simArt),
+                check("reopening the detail fires no request",
+                    restored.generation === opened.movieDetailGeneration,
+                    opened.movieDetailGeneration + " → " + restored.generation),
+                check("Settings returns to the detail it covered",
+                    afterSettings.movieVisible && afterSettings.title === "Inception"
+                        && afterSettings.generation === opened.movieDetailGeneration,
+                    afterSettings.movieVisible + " / " + afterSettings.title),
+                check("Back then returns to the restored grid",
+                    back.cards === 6 && back.title === "Trending Movies",
+                    back.cards + " / " + back.title)
+            ];
+        }
+    },
+    {
+        name: "a form's scroll position survives switching away and back",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            await page.settle();
+            // Narrow enough that the six-card grid is taller than the viewport.
+            await page.resize(600, 700);
+            await page.evaluate(`window.scrollTo(0, 300); true`);
+            await page.waitFor(`window.scrollY > 0`);
+            const before = await page.evaluate(`window.scrollY`);
+
+            await page.selectForm("game");
+            const left = await page.evaluate(`window.scrollY`);
+
+            await page.selectForm("movie");
+            await page.waitFor(`Math.abs(window.scrollY - ${before}) <= 1`);
+            const after = await page.evaluate(`window.scrollY`);
+            await page.resetViewport();
+
+            return [
+                check("a fresh form starts at the top", left === 0, left),
+                check("returning restores the scroll position",
+                    Math.abs(after - before) <= 1, before + " → " + after)
+            ];
         }
     },
     {

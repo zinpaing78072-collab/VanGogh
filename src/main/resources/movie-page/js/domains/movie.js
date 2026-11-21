@@ -4,6 +4,7 @@ import { posterDetail } from "./poster-detail.js";
 
 export const movieDomain = {
     key: "movie",
+    view: "movie",
     request: "requestMovies",
     data: "pollMovieData",
     art: "pollMoviePosters",

@@ -419,6 +419,9 @@ function errorMarkup(game) {
 // ------------------------------------------------------------------- paint
 
 export function paintGameView() {
+    // A reply can land while Settings covers the detail; painting here would
+    // unhide it over the Settings page. Artwork is still recorded in state.
+    if (state.view === "settings") return;
     const game = state.game;
     if (!game) {
         gameView.innerHTML = "";
@@ -536,7 +539,7 @@ export async function openGameDetail(item) {
 
 // The artwork drain doubles as the completion signal (−1 when done).
 async function pollArtwork(seq) {
-    while (window.krema && state.view === "game" && isCurrentDetail(seq)) {
+    while (window.krema && isCurrentDetail(seq)) {
         let pending;
         try {
             pending = await window.krema.invoke("pollGameDetailArt", {});
@@ -546,6 +549,13 @@ async function pollArtwork(seq) {
         if (pending == null || pending < 0) return;
         await delay(120);
     }
+}
+
+/* Resume the artwork drain for a detail restored from a session. The backend's
+ * queue is still keyed to its own generation; only the page-side stop token is
+ * renewed, so the remaining slots stream into the repainted view. */
+export function resumeGameArt(seq) {
+    void pollArtwork(seq);
 }
 
 // ------------------------------------------------------------------ events

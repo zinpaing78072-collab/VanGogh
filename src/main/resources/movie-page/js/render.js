@@ -5,6 +5,7 @@ import { grid, sectionTitle, sidebarNav, browseView, settingsView, settingsNavIt
 import { state } from "./state.js";
 import { DOMAINS } from "./domains.js";
 import { openDetail } from "./detail.js";
+import { applyArtwork } from "./artwork.js";
 import { paintSongView, closeSongView } from "./song-detail.js";
 import { paintMovieView, closeMovieView } from "./movie-detail.js";
 import { paintBookView, closeBookView } from "./book-detail.js";
@@ -110,6 +111,8 @@ function renderCards(domainKey, items) {
         return;
     }
     items.forEach((item, idx) => grid.appendChild(domain.card(item, idx, () => openDetail(domainKey, item))));
+    // A restored session paints its cards and their saved posters in one pass.
+    applyArtwork(domainKey);
 }
 
 function renderEmptyGrid(message) {

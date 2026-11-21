@@ -465,6 +465,9 @@ function detailMarkup(s) {
 // ------------------------------------------------------------------ paint
 
 export function paintSongView() {
+    // A reply can land while Settings covers the detail; painting here would
+    // unhide it over the Settings page.
+    if (state.view === "settings") return;
     const song = state.song;
     if (!song) {
         songView.innerHTML = "";

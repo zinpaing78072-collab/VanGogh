@@ -128,9 +128,10 @@ rail.
   the live state does not already show, and reloading trending would throw the
   session away. Back/Escape remain the way out of a detail.
 - **Settings is a round-trip, not a reset.** `openSettings()` snapshots the
-  active form (and cancels an in-flight detail request, which today can paint
-  over Settings); Cancel/Escape restores that snapshot. This also fixes the
-  existing latent paint-over.
+  active form, then covers it; Cancel/Escape restores the view it covered (grid
+  or detail). In-flight work is left running behind the page — the detail paint
+  functions ignore a paint while `state.view === "settings"`, which fixes the
+  existing latent paint-over and lets the artwork stream finish into state.
 - **Domain rows gain a `view` field** (`movie` → `"movie"`, `music` →
   `"song"`, `book` → `"book"`, `game` → `"game"`), so the session code never
   hardcodes the mapping. One line per row, per the registry contract.

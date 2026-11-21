@@ -12,8 +12,14 @@ export const state = {
     title: "Trending Movies",
     status: "idle",   // "idle" | "loading" | "ready" | "error"
     ai: false,        // AI recommendation mode (the header toggle)
+    query: "",        // the term the current grid answers
+    kind: "trending", // "trending" | "search" | "recommend"
     items: [],
     error: null,
+    // Browse artwork for the active form: id → data URI, filled by artwork.js.
+    // Kept in state so a restored session (or a Settings round-trip) repaints
+    // its posters without asking Java for them again.
+    artwork: {},
     // The open song detail: { status, id, title, artist, detail, artDataUri, error }
     song: null,
     // The open movie detail: { status, id, title, year, detail, error }
@@ -23,6 +29,11 @@ export const state = {
     // The open game detail: { status, id, title, year, detail, error }
     game: null,
 };
+
+// One saved session per content form, in page memory only. The active form
+// lives in `state`; content.js snapshots it here when the user navigates away
+// and copies it back when they return. Closing the app clears it.
+export const sessions = Object.create(null);
 
 let requestSeq = 0;
 let detailSeq = 0;

@@ -4,6 +4,7 @@ import { posterDetail } from "./poster-detail.js";
 
 export const gameDomain = {
     key: "game",
+    view: "game",
     request: "requestGames",
     data: "pollGameData",
     art: "pollGamePosters",
