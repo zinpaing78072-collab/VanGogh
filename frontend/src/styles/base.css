@@ -450,7 +450,7 @@ body {
 
 /* Book cards share the poster-card layout; the only difference is that
    book titles (long, subtitle-prone) wrap to two lines instead of
-   ellipsizing (design-system.pen: Book Card). */
+   ellipsizing (design system: Book Card). */
 .book-card .card-title {
     white-space: normal;
     display: -webkit-box;

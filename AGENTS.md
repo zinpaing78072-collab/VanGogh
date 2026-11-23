@@ -249,7 +249,7 @@ before starting the next. Never expand scope mid-slice.
 - Default branch: `main` (protected — never commit directly to `main`)
 - Sync with main before every coding sessions
 - Workflow: create a feature/fix branch (`feat/<short-name>`, `fix/<short-name>`), commit there, open a PR, merge after review. Keep `main` green.
-- Commit messages: short, imperative, lowercase first word (e.g. `add .pen file`, `switch ui shell to krema webview`). Use conventional-ish style; no strict prefix required.
+- Commit messages: short, imperative, lowercase first word (e.g. `add theme css file`, `switch ui shell to krema webview`). Use conventional-ish style; no strict prefix required.
 - Build artifacts (`target/`, `.class`, `.log`, `.DS_Store`) are gitignored — never commit them.
 - Run `mvn -q clean compile` (or `mvn test`) before committing; keep the build green.
 - Push branches to `origin`; merge into `main` via PR only. Do not rewrite published history on `main` or any shared branch.

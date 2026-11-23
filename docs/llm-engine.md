@@ -14,9 +14,6 @@ recommendation. The model *composes* the picks for the query; each pick is then
 movies, and one source per later slice). Re-running a search gives a fresh set —
 there is no reply cache.
 
-Design and the measured probe data:
-`docs/superpowers/specs/2026-11-19-llm-recommendation-engine-design.md`.
-
 ## Quick start
 
 1. Get a key from any OpenAI-compatible provider. The default model is

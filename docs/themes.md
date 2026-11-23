@@ -4,8 +4,6 @@ The app ships two skins — **Starry Night** (default) and **Liquid Neon** — a
 theme is a CSS file, not a mode in the code. This page explains how the layers
 fit and the exact steps for adding a third.
 
-Design record: `docs/superpowers/specs/2026-11-19-theme-switching-design.md`.
-
 ## The files
 
 | File | Owns |
@@ -140,8 +138,3 @@ when editing, or a stray gold glow reappears in the neon skin.
   phrase `Author · N pages` and an author name has no length limit. At five
   columns that phrase is the one thing that cannot fit — it wraps, like the
   book title.
-- **`docs/prototypes/night-city/`** holds `cyberpunk.css`, `cyberpunk.html`,
-  `cyberpunk.png` and `liquidmetal.jpeg` — the untracked prototype Liquid Neon
-  was derived from, moved out of the page directory at the React cutover so it
-  cannot ship. They are superseded (`?theme=liquidneon` in the harness is the way
-  to look at that skin now) and should not be edited.

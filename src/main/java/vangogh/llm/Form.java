@@ -7,7 +7,7 @@ package vangogh.llm;
  *
  * <p>Music asks for {@code song}, not album: the music form resolves against
  * Genius, which searches songs. Changing a noun invalidates the probe's
- * measured gates — see docs/superpowers/specs/2026-11-19-llm-recommendation-engine-design.md.
+ * measured gates (see docs/llm-engine.md).
  */
 public enum Form {
 
