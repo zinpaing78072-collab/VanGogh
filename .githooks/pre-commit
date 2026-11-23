@@ -1,0 +1,16 @@
+#!/bin/sh
+# Refuse a commit whose tracked page build does not match frontend/.
+#
+# src/main/resources/movie-page/ is committed Vite output, so a source edit
+# without a rebuild would ship a stale page. Only runs when the commit touches
+# the frontend sources or the page itself.
+set -e
+
+changed=$(git diff --cached --name-only --diff-filter=ACMR)
+if printf '%s\n' "$changed" | grep -qE '^(frontend/(src|public|index\.html|vite\.config\.ts|package\.json|package-lock\.json)|src/main/resources/movie-page/)'; then
+  if [ ! -d frontend/node_modules ]; then
+    echo "pre-commit: frontend dependencies are missing; run 'npm install' in frontend/." >&2
+    exit 1
+  fi
+  (cd frontend && npm run --silent check:dist)
+fi

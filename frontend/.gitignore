@@ -1,0 +1,6 @@
+node_modules/
+dist/
+dist-debug/
+coverage/
+*.local
+.DS_Store

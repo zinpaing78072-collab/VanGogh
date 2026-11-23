@@ -26,6 +26,9 @@ const net = require("net");
 const { startPreviewServer } = require("./serve.js");
 
 const VERBOSE = process.argv.includes("--verbose");
+// --page=frontend/dist runs the same assertions against a staged build.
+const PAGE_ARG = process.argv.find((arg) => arg.startsWith("--page="));
+const PAGE_DIR_ARG = PAGE_ARG ? PAGE_ARG.slice("--page=".length) : undefined;
 
 // --------------------------------------------------------------- the browser
 
@@ -454,7 +457,7 @@ const GRID_PROBE = `JSON.stringify((() => {
 
 async function measureGrid(page, width) {
     await page.resize(width, 860);
-    // js/ui.js collapses the sidebar below 900px, and that rail animates: wait
+    // hooks/useNarrowSidebar.ts collapses the sidebar below 900px, and that rail animates: wait
     // until it has stopped moving before trusting the card widths.
     await page.evaluate(`(async () => {
         const rail = document.querySelector(".sidebar");
@@ -1795,7 +1798,7 @@ const TESTS = [
 
 async function run() {
     const browserInfo = findBrowser();
-    const server = await startPreviewServer({ port: 0 });
+    const server = await startPreviewServer({ port: 0, pageDir: PAGE_DIR_ARG });
     let browser = null;
 
     const results = [];
