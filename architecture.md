@@ -118,20 +118,27 @@ Krema.app()
 
 ## Frontend integration
 
-- `src/main/resources/movie-page/index.html` — the shell is a `flex` row: a collapsible `aside.sidebar` (brand, menu, `.nav-item[data-domain]` form buttons, Settings at the foot) plus the content column (search header, card grid). A native `<select>` is avoided on purpose (its macOS popup freezes the window). It loads `krema-shim.js` plus the module entry `js/app.js`.
-- `src/main/resources/movie-page/js/` — ES modules, one per seam:
-  `dom`, `util`, `state`, `cards`, `domains/{movie,game,music,book}`,
-  `domains`, `artwork`, `detail`, `render`, `content`, `ui`, `app` (entry).
-  Both shells serve the directory over loopback HTTP; Chromium refuses module
-  scripts from `file://`.
-- Each row in `js/domains.js` carries its own IPC names, card class, id field,
-  card builder and detail builder; `render.js` paints from `state`, and
-  `content.js` polls the drains behind a request sequence guard.
+- `frontend/` — the React + TypeScript source. `vite build` writes the shipped
+  page into `src/main/resources/movie-page/` (committed), which both shells serve
+  over loopback HTTP. `mvn` never runs Node.
+- `src/main/resources/movie-page/index.html` — the built shell: a `flex` row,
+  a collapsible `aside.sidebar` (brand, menu, `.nav-item[data-domain]` form
+  buttons, Settings at the foot) plus the content column (search header, card
+  grid). A native `<select>` is avoided on purpose (its macOS popup freezes the
+  window). It loads `krema-shim.js` plus the hashed module bundle.
+- `frontend/src/bridge/` is the only place the IPC contract lives:
+  `domains.ts` holds one `DomainIpc` row per form (request/data/art/event names,
+  the detail request/poll/art triple, id field), `commands.ts` switches on the
+  row to call the typed `invoke`, and `types.ts` mirrors the Java records.
+- `frontend/src/app/` holds the store (the sessions map) and the named
+  transitions; `frontend/src/hooks/` runs the request → data drain → artwork
+  drain lifecycle behind a request-sequence guard, plus the detail drains.
 - Cards carry `data-<domain>-id`; artwork arrives per domain via
-  `window.krema.on(<domain event>, { payload: { id, dataUri } })` and lands on
-  the matching card through `js/artwork.js`.
-- Reuse `escapeHtml`/`messageOf` (`js/util.js`), the placeholder fallback in
-  `js/cards.js`, and the skeleton/empty states in `js/render.js`.
+  `window.krema.on(<domain event>, { payload: { id, dataUri } })` and lands in
+  the session's `artwork` map through `hooks/useArtwork.ts`.
+- Reuse `lib/format.ts` (`messageOf`, `secureLink`), the placeholder fallback in
+  `components/cards/CardShell.tsx`, and the skeleton/empty states in
+  `components/browse/BrowseView.tsx`.
 
 ## Adding a domain (checklist)
 
@@ -140,7 +147,7 @@ Krema.app()
 3. **Service** — `vangogh/<domain>/<Domain>Service.java` with search/trending + poster data-URI cache (mirror `TmdbMovieService.posterCache`, capped at 512).
 4. **Controller** — `vangogh/controller/<Domain>Controller.java` with `@KremaCommand` methods, `setEventEmitter`, IO thread pool, generation counter.
 5. **Register** — add controller instance to `.commands(...)` in `VanGoghApp.main()`.
-6. **Frontend** — add `js/domains/<domain>.js` (a row: IPC names, labels, card class, id field, `card`, `detail`) and one line in `js/domains.js`; add the form button (`data-domain="<domain>"`) with its icon to the sidebar nav in `index.html`. Nothing else needs to know the form exists.
+6. **Frontend** — add a `DomainIpc` row to `frontend/src/bridge/domains.ts`, a card in `frontend/src/components/cards/`, a detail view under `frontend/src/components/detail/<domain>/`, and the form button (`data-domain="<domain>"`) in `components/shell/Sidebar.tsx`. Nothing else needs to know the form exists. Then `npm run build` and commit the output.
 7. **Tests** — stub client + controller test following `MovieControllerTest` / `TmdbClientTest` patterns.
 
 ## Example: Music domain (sketch)
@@ -169,9 +176,9 @@ public CompletableFuture<List<MusicTrack>> searchMusic(String query) { … }
 
 Frontend:
 
-```js
-const tracks = await window.krema.invoke("searchMusic", { query });
-// render cards, listen to "poster" events for cover art
+```ts
+const items = await invoke("requestMusic", { kind, query });
+// poll the data drain, then listen for "poster" events for cover art
 ```
 
 ## Shared concerns
@@ -200,8 +207,8 @@ const tracks = await window.krema.invoke("searchMusic", { query });
 - `src/main/java/vangogh/book/OpenLibraryBookService.java` — Either spine over a second upstream API
 - `src/main/java/vangogh/net/TmdbClient.java` — client + proxy pattern
 - `src/main/java/vangogh/net/OpenLibraryClient.java` — keyless client + cover failover
-- `src/main/resources/movie-page/index.html` — app shell: sidebar markup (form buttons, collapse toggle) + content column
-- `src/main/resources/movie-page/js/` — frontend module patterns (per-domain row map, request lifecycle, rendering)
+- `src/main/resources/movie-page/index.html` — the built app shell (generated; edit `frontend/index.html` / the React shell instead)
+- `frontend/src/` — the frontend source (bridge contract, store, hooks, views); `src/main/resources/movie-page/` is its committed build output
 - `src/test/java/vangogh/controller/MovieControllerTest.java` — test pattern with stubbed client/emitter
 - Vendored Krema source (read-only reference): `repos/krema/krema/krema-core/` — `KremaCommand`, `EventEmitter`, `KremaEvent`
 

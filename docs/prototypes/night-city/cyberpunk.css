@@ -1,0 +1,786 @@
+/* Van Gogh — Night City skin (cyberpunk theme prototype)
+
+   Same layout, classes and ids as index.html — only the visual language
+   changes: rainy-neon street backdrop, magenta + cyan neon, mono display type,
+   angular HUD corners. Flat fills only: every surface is a single solid colour
+   (or a flat alpha tint), depth comes from 1px neon edges and glows. No
+   gradients anywhere.
+
+   Standalone page (no module JS, no IPC), so it opens straight in a browser.
+
+   Visual roles vs the Stargazer skin (style.css):
+   - Bars (header + sidebar) are near-black smoked glass with a cyan hairline
+   - Accent is a cyan→magenta neon pair: primary action = magenta, data/ratings
+     and borders = cyan
+   - Cards are unlit slabs with HUD corner brackets that ignite on hover
+   - Body sits on cyberpunk.png behind a flat darkening veil
+*/
+:root {
+    /* Night City palette */
+    --neon-pink:     #FF2E97;
+    --neon-pink-hot: #FF74C8;
+    --neon-cyan:     #00F0FF;
+
+    --night-0: #06030D;   /* page floor */
+    --night-1: #0D0719;   /* glass base */
+    --night-2: #1A0F33;   /* raised glass */
+
+    /* themed roles */
+    --bg: var(--night-0);
+    --panel: rgba(9, 5, 18, 0.86);                                 /* smoked glass */
+    --panel-hover: rgba(28, 15, 51, 0.92);
+    --panel-inset: rgba(4, 2, 9, 0.88);                            /* search field */
+    --panel-deep: #040109;                                         /* poster bed */
+    --accent: var(--neon-pink);
+    --accent-hover: var(--neon-pink-hot);
+    --accent-ink: #12001A;                                         /* text on neon */
+    --text: #F3EDFF;
+    --text-muted: #9A8ABF;
+    --rating: var(--neon-cyan);
+    --border: rgba(0, 240, 255, 0.20);
+
+    --blur-glass: blur(18px) saturate(1.5) brightness(0.82);
+    --radius: 4px;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+::selection {
+    background: var(--neon-pink);
+    color: #fff;
+}
+
+/* App shell — sidebar + content column (unchanged geometry). */
+.app-shell {
+    display: flex;
+    align-items: stretch;
+    min-height: 100vh;
+}
+
+.main-column {
+    flex: 1 1 auto;
+    min-width: 0;   /* without this, the grid's auto-fill track can force overflow */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sidebar — smoked-glass rail with a lit cyan seam on the right. */
+.sidebar {
+    flex: 0 0 auto;
+    width: 240px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 18px 14px 16px;
+    background-color: rgba(10, 5, 20, 0.45);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4) brightness(0.74);
+    backdrop-filter: blur(22px) saturate(1.4) brightness(0.74);
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+    transition: width 0.22s ease;
+    z-index: 110;
+}
+
+.sidebar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 4px 4px 18px;
+    border-bottom: 1px solid rgba(255, 46, 151, 0.18);
+    flex: 0 0 auto;
+}
+
+.sidebar-nav {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 14px 0 6px;
+}
+
+.sidebar-foot {
+    flex: 0 0 auto;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+}
+
+/* Labels read as console headings rather than prose. */
+.nav-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 46, 151, 0.68);
+    padding: 4px 12px 10px;
+}
+
+.nav-label-spaced {
+    margin-top: 18px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-left: 2px solid transparent;
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 500;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.nav-item svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    opacity: 0.78;
+    transition: opacity 0.16s ease, filter 0.16s ease;
+}
+
+.nav-item .nav-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-item:hover {
+    background-color: var(--panel-hover);
+    border-color: var(--border);
+    color: #fff;
+}
+
+.nav-item:hover svg {
+    opacity: 1;
+    color: var(--neon-cyan);
+}
+
+.nav-item.active {
+    background-color: #2C0E26;
+    border-color: #5A1C46;
+    border-left-color: var(--neon-pink);
+    color: #fff;
+    font-weight: 600;
+}
+
+.nav-item.active svg {
+    opacity: 1;
+    color: var(--neon-pink);
+}
+
+/* Collapsed rail: icons only. */
+.sidebar.collapsed {
+    width: 76px;
+}
+
+.sidebar.collapsed .brand,
+.sidebar.collapsed .nav-label,
+.sidebar.collapsed .nav-text {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-head {
+    justify-content: center;
+    padding-bottom: 18px;
+}
+
+.sidebar.collapsed .nav-item {
+    justify-content: center;
+    gap: 0;
+    padding: 11px 0;
+    border-left-width: 0;
+    border-bottom: 2px solid transparent;
+}
+
+.sidebar.collapsed .nav-item.active {
+    border-bottom-color: var(--neon-pink);
+}
+
+/* Icon buttons — sidebar toggle + the notification/profile corner. */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background-color: var(--panel-inset);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--neon-cyan);
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.icon-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.icon-btn:hover {
+    border-color: var(--neon-pink);
+    color: var(--neon-pink);
+    background-color: #2C0E26;
+}
+
+/* Notification + profile cluster in the header's top-right corner (dummy). */
+.quick-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+.quick-actions .icon-btn.round {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--panel);
+    -webkit-backdrop-filter: var(--blur-glass);
+    backdrop-filter: var(--blur-glass);
+}
+
+.quick-actions .icon-btn.round svg {
+    width: 19px;
+    height: 19px;
+}
+
+/* Header — near-black glass with a lit neon hairline. */
+.app-header {
+    background-color: var(--panel);
+    -webkit-backdrop-filter: var(--blur-glass);
+    backdrop-filter: var(--blur-glass);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 16px;
+}
+
+.brand {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.brand-mark {
+    color: var(--neon-cyan);
+    margin-right: 0.45em;
+    animation: markPulse 3.4s ease-in-out infinite;
+}
+
+@keyframes markPulse {
+    0%, 88%, 100% { opacity: 1; }
+    90%           { opacity: 0.35; }
+    92%           { opacity: 1; }
+    94%           { opacity: 0.6; }
+}
+
+.search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    max-width: 900px;
+    margin: 0;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 200px;
+    width: 100%;
+    background-color: var(--panel-inset);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    caret-color: var(--neon-pink);
+    padding: 12px 122px 12px 18px;   /* right padding clears the neon button */
+    font-family: inherit;
+    font-size: 15px;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.search-input::placeholder {
+    color: rgba(154, 138, 191, 0.85);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--neon-cyan);
+    background-color: #050109;
+}
+
+.search-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    border-radius: 3px;
+    /* cut corner — a flat shape detail, no gradient */
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+    padding: 9px 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.search-btn:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Main container */
+.container {
+    width: 100%;
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Section title — console heading with a lit marker. */
+.section-title {
+    position: relative;
+    font-size: 19px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    padding-left: 16px;
+    color: #fff;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.section-title::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.28em;
+    bottom: 0.28em;
+    width: 3px;
+    background-color: var(--neon-pink);
+}
+
+/* Card grid */
+.card-grid {
+    display: grid;
+    /* Exactly five cards per row, same as the app. */
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 20px;
+}
+
+/* Book cards wrap titles to two lines instead of ellipsizing. */
+.book-card .card-title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.25;
+}
+
+/* Movie card — translucent slab with HUD brackets that ignite on hover.
+   The glass is alpha only (no per-card backdrop blur): a blur pass on every
+   card in the grid is the dominant scroll cost, same note as style.css. */
+.movie-card {
+    position: relative;
+    background-color: rgba(18, 9, 36, 0.58);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    animation: cardIn 0.5s cubic-bezier(0.2, 0.7, 0.25, 1) both;
+    animation-delay: calc(var(--i, 0) * 35ms);
+}
+
+.movie-card::before,
+.movie-card::after {   /* corner brackets, top-left + bottom-right */
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--neon-cyan);
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 3;
+    transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.movie-card::before {
+    top: 6px;
+    left: 6px;
+    border-right: 0;
+    border-bottom: 0;
+}
+
+.movie-card::after {
+    right: 6px;
+    bottom: 6px;
+    border-left: 0;
+    border-top: 0;
+}
+
+.movie-card:hover {
+    transform: translateY(-4px);
+    background-color: rgba(32, 14, 60, 0.78);
+    border-color: var(--neon-pink);
+}
+
+.movie-card:hover::before,
+.movie-card:hover::after {
+    opacity: 1;
+    border-color: var(--neon-pink);
+}
+
+.movie-card:active {
+    transform: translateY(-1px) scale(0.985);
+}
+
+.card-poster {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    background-color: var(--panel-deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.10);
+}
+
+/* Music card cover — album art is square (1:1) */
+.card-cover {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background-color: var(--panel-deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.10);
+}
+
+.card-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: saturate(0.94) contrast(1.06) brightness(0.94);
+    transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.25, 1), filter 0.45s ease;
+}
+
+.card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: saturate(0.94) contrast(1.06) brightness(0.94);
+    transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.25, 1), filter 0.45s ease;
+}
+
+.movie-card:hover .card-poster img,
+.movie-card:hover .card-cover img {
+    transform: scale(1.06);
+    filter: saturate(1.25) contrast(1.12) brightness(1.02);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.poster-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: var(--night-2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.12);
+}
+
+.poster-placeholder svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 8px;
+    opacity: 0.4;
+    color: var(--neon-cyan);
+}
+
+.card-info {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-top: 1px solid rgba(0, 240, 255, 0.14);
+    /* no fill of its own: the card's glass runs all the way down, so the
+       blurred city shows through the lower half of the card (as style.css does) */
+}
+
+.card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    transition: color 0.25s ease;
+}
+
+.movie-card:hover .card-title {
+    color: var(--neon-cyan);
+}
+
+.card-meta {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Each meta token stays whole: a label never breaks mid-word. */
+.card-meta-item {
+    white-space: nowrap;
+}
+
+/* Genre tags — flat outlined chips under the year/rating line. Every card
+   carries two, so the info block is the same height across the grid. */
+.card-genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 2px;
+}
+
+.card-genre {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--text-muted);
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 2px;
+    padding: 1px 6px;
+}
+
+/* Music card subtitle — the artist line under the album title */
+.card-subtitle {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: -3px;
+    transition: color 0.25s ease;
+}
+
+.movie-card:hover .card-subtitle {
+    color: var(--neon-pink-hot);
+}
+
+.card-rating {
+    font-weight: 700;
+    color: var(--rating);
+}
+
+/* Empty state */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state p {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: #06030D;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 240, 255, 0.35);
+    border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 46, 151, 0.6);
+}
+
+/* Keyboard focus */
+button:focus-visible, .search-input:focus-visible, .nav-item:focus-visible {
+    outline: 2px solid var(--neon-cyan);
+    outline-offset: 2px;
+}
+
+/* Card entrance — staggered per card via --i */
+@keyframes cardIn {
+    from { opacity: 0; translate: 0 12px; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+/* Night City backdrop — cyberpunk.png behind a flat darkening veil. */
+.sky {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background: url("cyberpunk.png") center/cover no-repeat var(--bg);
+}
+
+.veil {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: rgba(6, 3, 13, 0.52);
+    /* Blurs cyberpunk.png the way style.css blurs starry.png: the city turns
+       into soft neon bokeh behind the bars and cards. */
+    -webkit-backdrop-filter: blur(10px) saturate(1.25) brightness(0.92);
+    backdrop-filter: blur(10px) saturate(1.25) brightness(0.92);
+}
+
+.veil::before { /* cool cast over the rain */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(10, 0, 30, 0.18);
+}
+
+/* Loading skeletons — same shapes as the app page, flat pulse instead of a sweep. */
+.skeleton-card {
+    cursor: default;
+    pointer-events: none;
+}
+
+.skeleton-poster,
+.skeleton-line {
+    background-color: var(--panel-deep);
+    animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-poster {
+    width: 100%;
+    height: 100%;
+}
+
+.skeleton-line {
+    height: 12px;
+    border-radius: 6px;
+}
+
+.skeleton-title {
+    width: 80%;
+}
+
+.skeleton-meta {
+    width: 55%;
+    height: 10px;
+}
+
+@keyframes skeletonPulse {
+    0%, 100% { background-color: #05020C; }
+    50%      { background-color: #170E2B; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .movie-card { transition: none; animation: none; }
+    .movie-card:hover { transform: none; }
+    .movie-card:active { transform: none; }
+    .card-poster img, .card-cover img { transition: none; }
+    .movie-card:hover .card-poster img,
+    .movie-card:hover .card-cover img { transform: none; }
+    .skeleton-poster,
+    .skeleton-line { animation: none; }
+    .brand-mark { animation: none; }
+}
+
+/* Responsive */
+@media (max-width: 1180px) {
+    .card-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .app-header {
+        gap: 12px;
+        padding: 12px 16px;
+    }
+    .search-bar {
+        max-width: none;
+        margin: 0;
+        min-width: 0;
+    }
+    .search-input {
+        min-width: 0;
+        padding-right: 116px;
+    }
+    .card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

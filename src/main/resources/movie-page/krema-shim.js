@@ -1,6 +1,6 @@
 /* Van Gogh JCEF shim: implements the window.krema API on top of CEF.
  *
- * The page (js/app.js and the modules it imports) expects:
+ * The page (the React bundle built from frontend/src) expects:
  *   window.krema.invoke("requestMovies", {kind, query}) → Promise<list>
  *   window.krema.invoke("requestGames",  {kind, query}) → Promise<list>
  *   window.krema.invoke("requestBooks",  {kind, query}) → Promise<generation>

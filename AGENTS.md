@@ -15,7 +15,9 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 ### Tech stack
 - **Language**: Java 25 (LTS), compiled with `--release 25`
 - **UI framework**: Krema 0.3.2 (system webview)
-- **Frontend**: HTML/CSS/JS served from classpath (`src/main/resources/movie-page/`)
+- **Frontend**: React 19 + TypeScript (strict) + Tailwind CSS v4, source in
+  `frontend/`, built by Vite into the committed classpath page
+  `src/main/resources/movie-page/`
 - **HTTP client**: Java 17+ `java.net.http.HttpClient` (Gson for JSON parsing) for the content sources; the LLM slice uses the official `com.openai:openai-java` SDK (OkHttp + Jackson) with `baseUrl` pointed at any OpenAI-compatible endpoint
 - **Data sources**: TMDB (The Movie Database) for movies, TheGamesDB for games, MusicBrainz (+ Cover Art Archive) for music, Open Library (+ Open Library Covers) for books
 - **Poster proxy**: `wsrv.nl` with persistent user preference stored in `~/.van-gogh/poster-proxy.conf`. Needed because `image.tmdb.org` is unreachable from this machine/ISP (TLS dies mid-handshake; `api.themoviedb.org` works) — poster loading depends on the proxy failover, see team-vault "Debug Record — TMDB posters blocked".
@@ -54,124 +56,124 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
     related songs (lyrics, duration and audio are dummy data in `DummyMedia`
     until those sources land)
   - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail); `requestBooks` with `kind=recommend` routes through the LLM engine (books resolved by `BookResolver`). `requestBookDetail` / `pollBookDetail` / `pollBookDetailArt` resolve one work (identity, record ledger, description + subjects, editions, author card, similar rail) with `BookDetailMapper` folding the work/editions/ratings/author payloads, and stream cover/author/edition/similar artwork as data URIs through `bookDetailArt` events keyed by slot (`cover`, `author`, `edition:<i>`, `similar:<workKey>`)
-  - `vangogh.theme.ThemeConfig` + `ThemeController` — the skin picker: `loadTheme` / `saveTheme` (synchronous, `~/.van-gogh/theme.conf`), reply `{status, theme, themes}`, so the Settings chips are rendered from the Java registry (`ThemeConfig.KNOWN`) and the page carries no theme ids, labels or colours. Theme = CSS only: `js/theme.js` moves `html[data-theme]` and the `#themeSkin` href. See `docs/themes.md`
-  - Frontend: ES modules under `src/main/resources/movie-page/js/` (entry
-    `js/app.js`, one file per seam — see "Frontend modules" below): shared card
-    grid with per-domain card shapes (movie/game portrait posters, music square
-    covers with an artist subtitle, books the Book Card), search bar, artwork
-    rendering. The content-form switcher is the collapsible sidebar: one
+  - `vangogh.theme.ThemeConfig` + `ThemeController` — the skin picker: `loadTheme` / `saveTheme` (synchronous, `~/.van-gogh/theme.conf`), reply `{status, theme, themes}`, so the Settings chips are rendered from the Java registry (`ThemeConfig.KNOWN`) and the page carries no theme ids, labels or colours. Theme = CSS only: `frontend/src/theme/theme.ts` moves `html[data-theme]` and the `#themeSkin` href. See `docs/themes.md`
+  - Frontend: React 19 + TypeScript + Tailwind v4 under `frontend/`, built by
+    Vite into `src/main/resources/movie-page/` (see "Frontend" below): shared
+    card grid with per-domain card shapes (movie/game portrait posters, music
+    square covers with an artist subtitle, books the Book Card), search bar,
+    artwork rendering. The content-form switcher is the collapsible sidebar: one
     `.nav-item[data-domain]` button per form (it replaced the old dropdown).
-    The active form lives in `state.domain` in `js/state.js`; `render.js` paints
-    the active button from it, and `js/ui.js` turns a click into the trending
-    load. Buttons without `data-domain` are inert shell chrome, except
-    Settings, which opens the Settings page. The header AI
+    The active form lives in `state.activeDomain` in `app/store.ts`; the sidebar
+    paints the active button from it, and a click runs the trending load.
+    Buttons without `data-domain` are inert shell chrome, except Settings,
+    which opens the Settings page. The header AI
     toggle (`#aiToggle`, `state.ai`) is opt-in and only changes the `kind` a
     search sends (`recommend` instead of `search`); it survives a form switch.
 - **Features pending**: the "Presentation build" features below. Loading states shipped (skeleton cards while a fetch is in flight); retry/empty polish is backlog.
 
-### Frontend modules (ES modules, both shells over loopback HTTP)
+### Frontend (React + TypeScript + Tailwind, built into the classpath)
 
-`index.html` loads `krema-shim.js` (classic) and `js/app.js`
-(`type="module"`). Both shells serve the page from the classpath over
-`http://127.0.0.1:<port>` — Krema through its own asset server, JCEF through
-krema-core's `AssetServer` — because Chromium refuses module scripts from
-`file://`. Never point a shell at `file://` again.
+The page is a React app. Source lives in `frontend/`; `vite build` writes the
+shipped page into `src/main/resources/movie-page/`, which **is committed** —
+both shells serve it from the classpath over `http://127.0.0.1:<port>` (Krema's
+asset server, krema-core's `AssetServer` for JCEF), and Maven must never need
+Node. `index.html` loads `krema-shim.js` (classic) and the hashed module bundle.
 
-- `js/app.js` — entry: imports wiring, subscribes artwork, seeds the first load
-- `js/dom.js` `js/util.js` `js/state.js` `js/cards.js` — page elements, helpers, state + request sequence, shared card builders
-- `js/domains/{movie,game,music,book}.js` — one row per form: IPC names, labels, card class, id field, `card(item, idx, onOpen)`, `detail(item)`
-- `js/domains.js` — `DOMAINS` registry (`Object.fromEntries` over the rows) and `DOMAIN_KEYS`
-- `js/artwork.js` `js/detail.js` `js/render.js` `js/content.js` `js/ui.js` — artwork routing, the `openDetail` seam, rendering (incl. the active sidebar button), request lifecycle, search + sidebar switching/collapse
-- `js/song-detail.js` + `music-detail.css` — the song-detail view behind a
-  music card: loading/error/ready states, the full-credits expander, the About
-  panel, listen links, the lyrics panel, the related rail (with Genius'
-  View-all link) and the demo player. The ready state is the bento layout from
-  `prototypes/song-detail-layouts/bento.html`: a 12-column tile grid (cover /
-  identity / details on top, lyrics + About in the middle, credits + related
-  below) that folds to 6 columns with the sidebar open and to one stack when
-  narrow. It paints itself (`paintSongView`/`closeSongView`); `render.js` only
-  decides visibility, so it never imports `render.js`.
-- `js/movie-detail.js` + `movie-detail.css` — the movie-detail view behind a
-  movie card, the bento layout from `prototypes/movie-detail-layouts/bento.html`:
-  a 12-column tile grid (poster / identity / facts on top, keywords + story,
-  cast and stills in the middle, similar rail below) that folds to 6 columns
-  with the sidebar open and to one stack when narrow. It paints itself
-  (`paintMovieView`/`closeMovieView`) from the `requestMovieDetail` reply, then
-  fills each artwork slot (`poster`, `cast:<i>`, `still:<i>`, `similar:<id>`)
-  from `movieDetailArt` events, so a missing image leaves its placeholder
-  instead of a broken icon. Back / Escape return to the intact grid; the
-  watchlist and favorite pills toggle locally; a similar card opens that film
-  in the same view. `render.js` only decides visibility — it never imports the
-  module.
-- `js/book-detail.js` + `book-detail.css` — the book-detail view behind a book
-  card, the bento layout from `prototypes/book-detail-layouts/bento.html`:
-  a 12-column tile grid (cover / identity / record on top, the description
-  beside the similar rail, then editions beside the author card) that folds to
-  6 columns with the sidebar open and to one stack when narrow. It paints
-  itself (`paintBookView`/`closeBookView`) from the `requestBookDetail` reply,
-  then fills each artwork slot (`cover`, `author`, `edition:<i>`,
-  `similar:<workKey>`) from `bookDetailArt` events, so a missing image leaves
-  its placeholder instead of a broken icon. Back / Escape return to the intact
-  grid; "Read sample" reveals the work's opening line in place; the
-  want-to-read and favorite pills toggle locally; a similar card opens that
-  work in the same view. `render.js` only decides visibility — it never
-  imports the module.
-- `js/game-detail.js` + `game-detail.css` — the game-detail view behind a game
-  card, the immersive layout from
-  `prototypes/game-detail/v2-immersive.html`: a fanart hero holding the boxart,
-  title, lede, chips and actions; a four-cell stat band; then a sticky record
-  rail beside an editorial article (opening pull quote, overview, screenshot
-  gallery with lightbox, platforms and play, provenance note); and the
-  related-games rail below. It paints itself (`paintGameView`/`closeGameView`)
-  from the `requestGameDetail` reply, then fills each artwork slot (`boxart`,
-  `hero`, `still:<i>`, `related:<id>`) from `gameDetailArt` events, so a
-  missing image leaves its placeholder instead of a broken icon. Back / Escape
-  return to the intact grid; the watchlist and favorite pills toggle locally;
-  a related card opens that game in the same view. `render.js` only decides
-  visibility — it never imports the module.
-- `js/settings.js` + `settings.css` — the Settings destination: the AI
-  recommendations form (provider presets, base URL, model, masked key with a
-  reveal toggle, timeout, titles). It calls `loadLlmSettings` on open and
-  `saveLlmSettings` on Save, then paints the reply — which carries the stored,
-  normalized values and only a `hasApiKey` flag, never the key itself. A blank
-  key keeps the stored one, so "change the model, keep the key" works; after a
-  successful save the field clears and its placeholder says the key is stored.
-  `render.js` shows it from `state.view === "settings"`; the sidebar item is
-  active exactly then, and Escape or Cancel returns to the intact grid.
-- `js/theme.js` — the Appearance card: the only module that knows a theme
-  exists. It asks `loadTheme` on startup (`app.js` awaits it before the first
-  content load) and on Settings open, paints one chip per theme from the reply,
-  and on a click applies the theme (two attributes) and saves it immediately.
-  The chip list is never hard-coded here — `ThemeConfig.KNOWN` in Java is the
-  registry. `.provider-chip` styling is shared with the AI presets; the two
-  groups are told apart by `data-provider` / `data-theme-id`.
-- CSS is layered, not per-component: `base.css` (structure + role tokens'
-  Starry defaults), `music-detail.css`, `movie-detail.css`, `book-detail.css`,
-  `game-detail.css`, `settings.css`
-  (structure only, role tokens only), then the active `theme-<id>.css` last (`#themeSkin`) —
-  `theme-starry.css`, `theme-liquidneon.css`. A theme owns backdrops, type
-  scale, radii and the header offsets; adding one is a CSS file plus a
-  `ThemeConfig.KNOWN` row (recipe: `docs/themes.md`).
+- `frontend/src/bridge/` — the **only** place `window.krema`, command names and
+  payload shapes appear: `bridge.ts` (typed `invoke`/`on`, unwraps Krema's
+  `{payload, timestamp}` envelope, the "API bridge not ready yet." error),
+  `types.ts` (hand-written mirrors of the Java records and replies),
+  `domains.ts` (one `DomainIpc` row per form: request/data/art/event names, the
+  detail request/poll/art triple, `idField`), `commands.ts` (domain → command
+  switches, so each call is narrowly typed).
+- `frontend/src/app/` — `store.ts` (module-level observable state +
+  `useSyncExternalStore`; the sessions map *is* the store), `actions.ts` (named
+  transitions; no bridge calls, so it tests in isolation), `types.ts`,
+  `navigation.ts`, `App.tsx` (subscriptions + layout).
+- `frontend/src/hooks/` — `useContent` (request → data drain → artwork drain),
+  `useDetail` (detail request + art drain, keyed by the detail `nonce`),
+  `useArtwork` (App-level event subscriptions), `useEscape`,
+  `useNarrowSidebar` (`NARROW_WIDTH = 900`).
+- `frontend/src/components/` — `shell/{Sidebar,Header}`, `browse/BrowseView`
+  plus `cards/` (shared `CardShell`/`CardArtwork`, portrait `PosterCard`,
+  `MusicCard`, `BookCard`, placeholders), `settings/SettingsView`, and one
+  folder per detail view: `detail/song` (incl. `player.ts`, the module-level
+  player store the detail and its `PlayerBar` share), `detail/movie`,
+  `detail/book`, `detail/game`.
+- `frontend/src/styles/` — `base.css` (structure + role tokens' Starry
+  defaults), `music-detail.css`, `movie-detail.css`, `book-detail.css`,
+  `game-detail.css`, `settings.css`, `tailwind.css`; imported once, in that
+  order, so the bundled sheet is a single `<link>`.
+- `frontend/public/` — `krema-shim.js`, `theme-starry.css`,
+  `theme-liquidneon.css`, the backdrops, `posters/`. Vite copies them to the
+  output root verbatim, so `#themeSkin` and the backdrop `url()`s still resolve
+  from the page directory.
+- `frontend/src/theme/theme.ts` — the only module that knows a theme exists:
+  `loadTheme`/`saveTheme`, moves `html[data-theme]` and the `#themeSkin` href.
+  `main.tsx` awaits it before the first render; the chip list is painted from
+  the reply (`ThemeConfig.KNOWN` is the registry).
+
+Build rules:
+
+- `cd frontend && npm run build` — writes the committed page. **Commit the
+  output with the source change**; a source edit without a rebuild ships a stale
+  page.
+- `npm run check:dist` rebuilds into a temp dir and byte-compares it against the
+  committed page; `.githooks/pre-commit` (installed by `npm install` through
+  `prepare`) runs it when a commit touches `frontend/` or the page.
+- `npm run verify` — typecheck, lint, Vitest, build, then `preview/check.js`
+  against the fresh output.
+- `npm run dev` / `npm run build:staging` — HMR and `frontend/dist` for UI work
+  (see "UI preview harness"). `node preview/check.js --page=frontend/dist`
+  drives the staging build.
+- `mvn compile exec:exec` and `mvn test` are untouched and require no Node.
+
+Layout and cascade invariants (unchanged, now enforced by the bundle):
+
+- CSS is layered, not per-component: structure and role tokens first, then the
+  active `theme-<id>.css` **last** (`#themeSkin`). The `themeLast()` Vite plugin
+  moves the theme link back to the end of `<head>` after Vite appends its own
+  bundle link — a theme must win the cascade without `!important`. Adding a
+  theme is a CSS file in `frontend/public/` plus a `ThemeConfig.KNOWN` row
+  (recipe: `docs/themes.md`).
 - **The responsive grid ladder is base-only** — one ladder at the end of
   `base.css` (5 columns, 4 ≤1180px, 3 ≤900px, 2 ≤768px), never duplicated in a
   theme file: a theme decorates, it does not reflow. The 900px step matches
-  `NARROW_WIDTH = 900` in `js/ui.js`, where the sidebar auto-collapses, so the
-  grid regains the rail's room on the same boundary — change one, change both.
-  `.card-meta-item` is `nowrap` (tokens stay whole) except in book cards, whose
-  meta is the prose phrase `Author · N pages`.
-- **A flex-column card that is a `<button>` needs `align-items: stretch`.** WebKit's
-  UA stylesheet sets `align-items: flex-start` on buttons, so the column's items keep
-  their intrinsic width; a poster whose `aspect-ratio` box holds only an absolutely
-  positioned `<img>` then collapses to 2×3px and the rail renders bare on macOS
-  (Chromium's UA differs, so Windows looked fine). Both similar rails
-  (`.movie-sim-card`, `.book-sim-card`) carry the fix and `preview/check.js` asserts
-  the 2:3 shape — do the same for a new detail rail.
+  `NARROW_WIDTH = 900` in `hooks/useNarrowSidebar.ts`, where the sidebar
+  auto-collapses, so the grid regains the rail's room on the same boundary —
+  change one, change both. `.card-meta-item` is `nowrap` (tokens stay whole)
+  except in book cards, whose meta is the prose phrase `Author · N pages`.
+- **A flex-column card that is a `<button>` needs `align-items: stretch`.**
+  WebKit's UA stylesheet sets `align-items: flex-start` on buttons, so the
+  column's items keep their intrinsic width; a poster whose `aspect-ratio` box
+  holds only an absolutely positioned `<img>` then collapses to 2×3px and the
+  rail renders bare on macOS (Chromium's UA differs, so Windows looked fine).
+  All three similar rails (`.movie-sim-card`, `.book-sim-card`,
+  `.game-rel-card`) carry the fix and `preview/check.js` asserts the 2:3 shape —
+  do the same for a new detail rail.
+- **Streamed artwork is state, never DOM surgery.** Every slot (`poster`,
+  `cast:<i>`, `still:<i>`, `similar:<id>`, `cover`, `author`, `edition:<i>`,
+  `similar:<workKey>`, `boxart`, `hero`, `related:<id>`) is a value in the
+  session's `art` map; a missing image leaves its placeholder instead of a
+  broken icon. The failed-URI components remember *which* URI failed, so a late
+  data URI is a fresh attempt.
 
-Rules that keep the graph acyclic: builders take the row as a parameter
-(`baseCard(row, …)`) instead of importing `DOMAINS`; cards take the click
-handler (`card(item, idx, onOpen)`) so `cards.js` never imports `detail.js`;
-`render.js` passes `openDetail` in. A new content form is a row file plus one
-line in `js/domains.js` — nothing else knows the form exists.
+**Sessions survive navigation.** One session per content form lives in the
+store (`app/types.ts` → `Session`), so leaving a form saves nothing and
+returning restores everything — last query, cards, artwork, open detail and
+scroll position — with no IPC. Switching to a form with no cards loads
+trending. Page memory only — closing the app clears it. A form's own button is
+a no-op while that form is active; Back/Escape leave a detail. Settings is a
+round-trip: `settingsReturn` remembers whether it covered the grid or a detail,
+and a detail's late reply cannot unhide over Settings. Leaving a loading form
+cancels its request and returning re-fires it; leaving a ready form keeps the
+cards and only resumes the poster drain.
+
+Rules that keep the graph acyclic: `bridge/domains.ts` is data only (no React);
+cards take an `onOpen` callback, so `cards/` never imports `actions.ts`;
+`BrowseView` passes `openDetail` in; the detail views paint themselves and
+`App` only decides visibility. A new content form is a `DomainIpc` row, a card,
+a detail view and its hook wiring — nothing else needs to know it exists.
 
 ### Presentation build — decided feature set (2026-11-10 brainstorm)
 
@@ -303,24 +305,28 @@ before starting the next. Never expand scope mid-slice.
 
 `node preview/serve.js` (Zed task "preview UI (browser, mock IPC)") serves the
 **real** page from `src/main/resources/movie-page/` over loopback HTTP with a
-fake `window.krema` injected, so CSS and page-side JS iterate on a browser
-refresh instead of `mvn compile exec:exec` plus a native window. `krema-shim.js`
-self-disables when a bridge is present, so no app code changes for this.
-`?scenario=slow|empty|error|noposters` reproduces the states that are otherwise
-unreproducible (skeletons, empty, error, missing artwork), and `?theme=<id>`
-starts the page with that skin stored. Fixtures are keyed to
-the real resolved-item shapes and survive the LLM engine slice. `node
-preview/check.js` (Zed task "check UI (headless)") is the same harness driven
-headless: assertions over the card grid, the sidebar (form buttons, inert
-items, section labels, collapse/reflow), search, the Settings form (loads the
-stored config, refuses a save with no key, saves and keeps the key off the
-page), the theme picker (chips from the reply, live repaint of shell + cards +
-AI toggle, one save, reopening shows it pressed, `?theme=` startup and
-fallback), the song, movie, book and game detail views (every bento/immersive
-tile, each artwork slot, actions, Escape back to the grid) and every scenario,
-exit 1 on failure. Full guide: `docs/preview-harness.md`. Layout,
-styling and page JS go through the preview; shell, IPC and network code still
-need a real app run.
+fake `window.krema` injected, so layout and styling iterate on a browser
+refresh instead of `mvn compile exec:exec` plus a native window. For React
+source edits, run `cd frontend && npm run dev` — Vite serves the source with
+HMR and the same fixtures/mock injected (`?scenario=…`, `?theme=…`). To exercise
+a production build, `npm run build:staging` writes `frontend/dist` and
+`node preview/serve.js` / `node preview/check.js` accept `VANGOGH_PAGE_DIR` /
+`--page=frontend/dist`. `krema-shim.js` self-disables when a bridge is present,
+so no app code changes for this. `?scenario=slow|empty|error|noposters`
+reproduces the states that are otherwise unreproducible (skeletons, empty,
+error, missing artwork), and `?theme=<id>` starts the page with that skin
+stored. Fixtures are keyed to the real resolved-item shapes and survive the LLM
+engine slice. `node preview/check.js` (Zed task "check UI (headless)") is the
+same harness driven headless: assertions over the card grid, the sidebar (form
+buttons, inert items, section labels, collapse/reflow), search, the Settings
+form (loads the stored config, refuses a save with no key, saves and keeps the
+key off the page), the theme picker (chips from the reply, live repaint of
+shell + cards + AI toggle, one save, reopening shows it pressed, `?theme=`
+startup and fallback), the song, movie, book and game detail views (every
+bento/immersive tile, each artwork slot, actions, Escape back to the grid) and
+every scenario, exit 1 on failure. Full guide: `docs/preview-harness.md`.
+Layout, styling and page-side code go through the preview; shell, IPC and
+network code still need a real app run.
 
 ### JCEF experiment (merged to `main` via PR #28; further shell work happens on its own branches)
 

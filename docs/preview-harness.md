@@ -1,38 +1,54 @@
 # UI preview harness
 
-The real page, in a normal browser, with a fake IPC bridge. Refresh to see a CSS
-or JS edit — no `mvn`, no native window, no API keys, no poster proxy.
+The real page, in a normal browser, with a fake IPC bridge. Refresh (or let HMR
+do it) to see a UI edit — no `mvn`, no native window, no API keys, no poster
+proxy.
 
 Why it exists: the app is a system-webview desktop app, so the only way to look
 at a UI change used to be `mvn compile exec:exec` and then squint at a native
 window. That loop is minutes long, cannot be automated, and an agent cannot
-observe its result at all. Everything under `src/main/resources/movie-page/`
-is plain ES modules, so it can run anywhere that serves it over HTTP. The page
-has exactly one shell seam — `window.krema.invoke` and `window.krema.on` — and
-`krema-shim.js` already self-disables when a bridge is present
-(`krema-shim.js:22`). The harness fills that seam with fixtures.
+observe its result at all. The page is a static bundle served over loopback
+HTTP, so it can run anywhere that serves it. The page has exactly one shell
+seam — `window.krema.invoke` and `window.krema.on` — and `krema-shim.js`
+already self-disables when a bridge is present. The harness fills that seam
+with fixtures.
 
-Nothing in `src/main/java` or in the app's own JS is modified for this.
+Nothing in `src/main/java` or in the app's own code is modified for this.
 
 ## Run it
 
+Two loops, pick by what you changed:
+
 ```sh
-node preview/serve.js           # → http://127.0.0.1:8788
-PORT=9000 node preview/serve.js
+cd frontend && npm run dev       # → http://localhost:5173 — React source, HMR
 ```
 
-Or the Zed task **preview UI (browser, mock IPC)**. Node 22 is already installed;
-there are no dependencies and no build step.
+Vite serves `frontend/src` and injects `preview/fixtures.js` +
+`preview/mock-krema.js` before `</head>`, exactly like `preview/serve.js` does
+for the built page. This is the fast loop for components, styles and page
+logic.
+
+```sh
+node preview/serve.js            # → http://127.0.0.1:8788 (the built page)
+PORT=9000 node preview/serve.js
+VANGOGH_PAGE_DIR=frontend/dist node preview/serve.js
+```
+
+Use the second form when you need to look at what actually ships, or at a
+staging build (`npm run build:staging`). Or the Zed tasks **preview UI (browser,
+mock IPC)** and **check UI (headless)**. Node 22 is installed; the harness
+itself has no dependencies, but `npm run dev` needs `npm install` once in
+`frontend/`.
 
 | Path | Serves |
 |---|---|
 | `/` | redirects to the app, keeping `?scenario=` |
-| `/movie-page/*` | `src/main/resources/movie-page/*` (the real files) |
+| `/movie-page/*` | `src/main/resources/movie-page/*` (the committed Vite output) |
 | `/preview/*` | `preview/*` |
 
 `index.html` is the only transformed response: two classic scripts are injected
-before `</head>`, ahead of the deferred module entry point, so the mock bridge
-always wins the race against `krema-shim.js`.
+before `</head>`, ahead of the module bundle, so the mock bridge always wins the
+race against `krema-shim.js`.
 
 ## Scenarios
 
@@ -73,9 +89,9 @@ skeletons and the staggered artwork stream are both exercised.
 
 | Command | Reply |
 |---|---|
-| `requestMovies` / `requestGames` / `requestMusic` / `requestBooks` | request generation (kicks off a fetch) |
-| `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` | `{ status: "pending" \| "done" \| "error" \| "superseded", items?, error? }` |
-| `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` / `pollBookCovers` | remaining count, `-1` when done |
+| `requestMovies` / `requestGames` / `requestGeniusMusic` / `requestBooks` | request generation (kicks off a fetch) |
+| `pollMovieData` / `pollGameData` / `pollGeniusMusicData` / `pollBookData` | `{ status: "pending" \| "done" \| "error" \| "superseded", items?, error? }` |
+| `pollMoviePosters` / `pollGamePosters` / `pollGeniusMusicPosters` / `pollBookCovers` | remaining count, `-1` when done |
 | `requestSongDetail` / `pollSongDetail` | song-detail generation, then `{ status, detail?, artDataUri?, error? }` |
 | `requestMovieDetail` / `pollMovieDetail` / `pollMovieDetailArt` | movie-detail generation, then `{ status, detail?, error? }`; the art drain returns the remaining count, `-1` when done |
 | `requestBookDetail` / `pollBookDetail` / `pollBookDetailArt` | book-detail generation, then `{ status, detail?, error? }`; the art drain returns the remaining count, `-1` when done |
@@ -86,10 +102,10 @@ skeletons and the staggered artwork stream are both exercised.
 | `on("bookDetailArt")` | `{ payload: { slot, dataUri }, timestamp }` — slots `cover`, `author`, `edition:<i>`, `similar:<workKey>` |
 | `on("gameDetailArt")` | `{ payload: { slot, dataUri }, timestamp }` — slots `boxart`, `hero`, `still:<i>`, `related:<id>` |
 
-A superseded generation answers `superseded`, so the `requestSeq` guard in
-`js/state.js` is exercised rather than bypassed. An unmocked command rejects
-with `preview: command not mocked: <name>` and logs a warning — add it to the
-mock rather than letting it fail silently.
+A superseded generation answers `superseded`, so the request-sequence guard in
+`frontend/src/hooks/useContent.ts` is exercised rather than bypassed. An
+unmocked command rejects with `preview: command not mocked: <name>` and logs a
+warning — add it to the mock rather than letting it fail silently.
 
 ## Fixtures
 
@@ -147,8 +163,9 @@ the placeholder path stays visible.
 This is the point of the harness. A verification loop that used to need a human
 looking at a native window is now:
 
-1. edit `base.css`, a `theme-<id>.css` sheet, or a `js/` module
-2. `browser.reload`
+1. edit a component, `frontend/src/styles/base.css`, a `theme-<id>.css` sheet in
+   `frontend/public/`, or anything under `frontend/src/`
+2. let Vite HMR repaint (`npm run dev`), or `npm run build` + `browser.reload`
 3. `browser.snapshot` / `browser.evaluate` for structure, `browser.screenshot` for looks
 4. `browser.console` with `level: "error"` — the mock logs every request and
    subscription with a `[preview]` prefix, so a wiring mistake is visible
@@ -180,10 +197,12 @@ Settled-state assertions worth copying:
   .filter(e => e.scrollHeight > e.clientHeight + 2).length                          // 0
 ```
 
-Music cards open the song-detail view (`js/song-detail.js`), movie cards open
-the movie-detail view (`js/movie-detail.js`), book cards open the book-detail
-view (`js/book-detail.js`) and game cards open the game-detail view
-(`js/game-detail.js`) through `openDetail`, so no dialog blocks the page.
+Music cards open the song-detail view (`components/detail/song/SongDetailView.tsx`),
+movie cards open the movie-detail view (`components/detail/movie/MovieDetailView.tsx`),
+book cards open the book-detail view (`components/detail/book/BookDetailView.tsx`)
+and game cards open the game-detail view
+(`components/detail/game/GameDetailView.tsx`) through `openDetail`, so no dialog
+blocks the page.
 
 Those checks are codified in `preview/check.js` (see below), so prefer running
 it over pasting the snippets by hand.
@@ -191,15 +210,23 @@ it over pasting the snippets by hand.
 ## Automated checks
 
 ```sh
-node preview/check.js            # pass/fail, exit 1 on any failure
-node preview/check.js --verbose  # also prints each test's preview stats
+node preview/check.js                          # pass/fail, exit 1 on any failure
+node preview/check.js --verbose                # also prints each test's preview stats
+node preview/check.js --page=frontend/dist     # a staging build instead
 ```
 
-166 assertions across 20 groups: trending render, the sidebar (four form buttons,
+`cd frontend && npm run verify` runs typecheck, lint, Vitest, a fresh build and
+then this gate against the shipped output.
+
+206 assertions across 23 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
 active marker), the switcher across all four forms, search hit and miss, the AI
 toggle (off by default, `kind=recommend` when on, survives a form switch, empty
-box falls back to trending), the song, movie, book and game detail views (each
+box falls back to trending), the per-form sessions (a search survives switching
+away and back with its query and posters and no new request, and an open movie
+detail — every artwork slot included — survives both a form switch and a
+Settings round-trip, and scroll positions come back while a fresh form starts
+at the top), the song, movie, book and game detail views (each
 bento/immersive tile, every streamed artwork slot, actions, Escape back to the
 grid), the Settings
 form (opens from the sidebar, paints
@@ -221,9 +248,9 @@ The responsive groups drive `Emulation.setDeviceMetricsOverride` through
 `page.resize(width, height)` and read the grid back with `measureGrid(page,
 width)`, which returns the column count, the first card's width, and the three
 overflow numbers. Two things make it trustworthy: it waits for the sidebar rail
-to stop animating (below 900px `js/ui.js` collapses it, and the card widths are
-meaningless mid-transition), and it answers "does text fit" by checking text
-boxes against the card box rather than trusting `scrollWidth`.
+to stop animating (below 900px `hooks/useNarrowSidebar.ts` collapses it, and the
+card widths are meaningless mid-transition), and it answers "does text fit" by
+checking text boxes against the card box rather than trusting `scrollWidth`.
 
 Two timing traps the theme tests document, because both look like a broken skin:
 the swapped `<link>` loads asynchronously (wait for the new sheet to appear in
@@ -268,5 +295,5 @@ need a real run of the app:
 - the TMDB poster proxy and its failover, real API responses and rate limits
 - anything in `src/main/java` — 16 test classes cover that side with stubs
 
-Rule of thumb: **layout, styling and page-side JS go through the preview; shell,
-IPC and network code go through the app.**
+Rule of thumb: **layout, styling and page-side code go through the preview;
+shell, IPC and network code go through the app.**

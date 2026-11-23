@@ -1,10 +1,11 @@
 /* Preview fixtures — the fake payloads the mock bridge serves.
  *
- * Loaded as a classic script BEFORE js/app.js, so window.__previewFixtures is
- * populated by the time the page starts asking for content.
+ * Loaded as a classic script BEFORE the module bundle, so
+ * window.__previewFixtures is populated by the time the page starts asking for
+ * content.
  *
  * Item shapes are the REAL resolved-item shapes the controllers hand the page
- * (see js/cards.js, js/domains/*.js). The upcoming LLM engine picks *titles*
+ * (see frontend/src/bridge/types.ts). The upcoming LLM engine picks *titles*
  * that the content sources resolve into these same objects, so these fixtures
  * stay valid across that slice — only the picking changes, not the card data.
  *

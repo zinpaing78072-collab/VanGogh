@@ -5,13 +5,13 @@
  * Why a server instead of just opening the file: index.html loads ES modules,
  * and Chromium refuses module scripts from file:// (the same constraint that
  * made both shells serve the page over loopback HTTP in the first place).
- * Serving the resources dir means index.html, base.css, the theme sheets,
- * js/*.js and posters/ all load exactly as the packaged app loads them — the
+ * Serving the resources dir means index.html, the bundled CSS/JS, the theme
+ * sheets and posters/ all load exactly as the packaged app loads them — the
  * preview is the shipped page, not a copy that can drift.
  *
  * The only transformed response is index.html, which gains two classic
  * scripts before </head>. Classic scripts run before the deferred module
- * (js/app.js), so the mock bridge is always installed first.
+ * bundle, so the mock bridge is always installed first.
  *
  *   node preview/serve.js            → http://127.0.0.1:8788
  *   PORT=9000 node preview/serve.js
@@ -29,7 +29,12 @@ const path = require("path");
 const url = require("url");
 
 const ROOT = path.resolve(__dirname, "..");
-const PAGE_DIR = path.join(ROOT, "src", "main", "resources", "movie-page");
+const DEFAULT_PAGE_DIR = path.join(ROOT, "src", "main", "resources", "movie-page");
+// The port can be staged in frontend/dist before cutover; --page or
+// VANGOGH_PAGE_DIR points the harness at it.
+const PAGE_DIR = process.env.VANGOGH_PAGE_DIR
+    ? path.resolve(ROOT, process.env.VANGOGH_PAGE_DIR)
+    : DEFAULT_PAGE_DIR;
 const PREVIEW_DIR = path.join(ROOT, "preview");
 const HOST = "127.0.0.1";
 
@@ -69,7 +74,7 @@ function insideDir(base, target) {
     return resolved.startsWith(root) ? resolved : null;
 }
 
-function serveFile(res, filePath, method) {
+function serveFile(res, filePath, method, pageDir) {
     const type = MIME[path.extname(filePath).toLowerCase()] || "application/octet-stream";
 
     fs.readFile(filePath, (err, buf) => {
@@ -79,7 +84,7 @@ function serveFile(res, filePath, method) {
         }
 
         // The one transformed response: inject the mock bridge into the page.
-        if (path.basename(filePath) === "index.html" && filePath.startsWith(PAGE_DIR)) {
+        if (path.basename(filePath) === "index.html" && filePath.startsWith(pageDir)) {
             let html = buf.toString("utf8");
             if (html.indexOf("/preview/mock-krema.js") === -1) {
                 html = html.replace("</head>", "    " + INJECT + "\n</head>");
@@ -92,7 +97,8 @@ function serveFile(res, filePath, method) {
     });
 }
 
-function handler(req, res) {
+function makeHandler(pageDir) {
+  return function handler(req, res) {
     const parsed = url.parse(req.url);
     const pathname = decodeURIComponent(parsed.pathname || "/");
     const method = req.method || "GET";
@@ -114,7 +120,7 @@ function handler(req, res) {
     let rest = "";
 
     if (pathname.startsWith("/movie-page/")) {
-        base = PAGE_DIR;
+        base = pageDir;
         rest = pathname.slice("/movie-page/".length);
     } else if (pathname.startsWith("/preview/")) {
         base = PREVIEW_DIR;
@@ -136,11 +142,12 @@ function handler(req, res) {
             return;
         }
         if (stat.isDirectory()) {
-            serveFile(res, path.join(target, "index.html"), method);
+            serveFile(res, path.join(target, "index.html"), method, pageDir);
             return;
         }
-        serveFile(res, target, method);
+        serveFile(res, target, method, pageDir);
     });
+  };
 }
 
 // Starts the server and resolves once it is listening. port 0 asks the OS for
@@ -148,7 +155,8 @@ function handler(req, res) {
 function startPreviewServer(options) {
     const opts = options || {};
     const port = opts.port !== undefined ? opts.port : Number(process.env.PORT || 8788);
-    const server = http.createServer(handler);
+    const pageDir = opts.pageDir ? path.resolve(ROOT, opts.pageDir) : PAGE_DIR;
+    const server = http.createServer(makeHandler(pageDir));
 
     return new Promise((resolve, reject) => {
         server.once("error", reject);
