@@ -823,7 +823,7 @@ const TESTS = [
                 visiblePlaceholders: document.querySelectorAll("#movieView .poster-placeholder:not(.hidden)").length,
                 broken: [...document.querySelectorAll("#movieView img")]
                     .filter(i => i.getAttribute("src") && i.complete && i.naturalWidth === 0).length,
-                trailer: (document.querySelector("#movieView a.movie-action-primary") || {}).href || "",
+                trailerButton: !!document.querySelector('#movieView [data-action="trailer"]'),
                 tmdb: [...document.querySelectorAll("#movieView a.movie-action")]
                     .map(a => a.href).filter(h => h.indexOf("themoviedb.org") !== -1).length,
                 actions: document.querySelectorAll("#movieView .movie-action").length,
@@ -836,6 +836,31 @@ const TESTS = [
                 pressed: document.querySelector('#movieView [data-action="watchlist"]').getAttribute("aria-pressed"),
                 text: document.querySelector('#movieView [data-action="watchlist"]').textContent.trim()
             })`));
+
+            // The trailer plays in-page: the button opens an embedded YouTube
+            // player, and Escape closes the player without leaving the detail.
+            await page.evaluate(`document.querySelector('#movieView [data-action="trailer"]').click(); true`);
+            await page.waitFor(`!!document.querySelector(".movie-trailer iframe")`);
+            const trailer = JSON.parse(await page.evaluate(`JSON.stringify((function () {
+                var overlay = document.querySelector(".movie-trailer");
+                var frame = document.querySelector(".movie-trailer-frame").getBoundingClientRect();
+                var topLeft = document.elementFromPoint(6, 6);
+                return {
+                    overlay: !!overlay,
+                    dialog: overlay.getAttribute("role"),
+                    lightbox: overlay.dataset.lightboxOpen,
+                    src: overlay.querySelector("iframe").src,
+                    title: overlay.querySelector("iframe").title,
+                    coversShell: !!topLeft && overlay.contains(topLeft),
+                    ratio: frame.width / frame.height,
+                    inViewport: frame.top >= 0 && frame.left >= 0
+                        && frame.bottom <= window.innerHeight && frame.right <= window.innerWidth
+                };
+            })())`));
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.querySelector(".movie-trailer")`);
+            const trailerClosed = await page.evaluate(
+                `!document.getElementById("movieView").classList.contains("hidden")`);
 
             // The related rail opens another film through the same detail pair.
             const firstGen = stats.movieDetailGeneration;
@@ -892,8 +917,19 @@ const TESTS = [
                 check("every queued image was emitted", stats.movieDetailArtEmitted === 17,
                     stats.movieDetailArtEmitted),
                 check("identity carries trailer, watchlist, favorite and TMDB actions",
-                    d.trailer.indexOf("youtube.com") !== -1 && d.tmdb === 1 && d.actions === 4,
-                    d.trailer + " / " + d.actions),
+                    d.trailerButton && d.tmdb === 1 && d.actions === 4,
+                    d.trailerButton + " / " + d.tmdb + " / " + d.actions),
+                check("the trailer opens an in-page YouTube embed",
+                    trailer.overlay && trailer.dialog === "dialog" && trailer.lightbox === "true"
+                        && trailer.src.indexOf("youtube.com/embed/preview") !== -1
+                        && trailer.title === "Inception trailer",
+                    trailer.src + " / " + trailer.title),
+                check("the player covers the shell at 16:9",
+                    trailer.coversShell && Math.abs(trailer.ratio - 16 / 9) < 0.02
+                        && trailer.inViewport,
+                    trailer.coversShell + " / " + trailer.ratio.toFixed(3)),
+                check("Escape closes the player and stays on the detail",
+                    trailerClosed === true, trailerClosed),
                 check("watchlist toggles on and says so",
                     watchlist.pressed === "true" && watchlist.text.indexOf("In watchlist") !== -1,
                     watchlist.pressed + " / " + watchlist.text),

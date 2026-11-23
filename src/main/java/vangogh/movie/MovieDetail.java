@@ -36,7 +36,8 @@ public record MovieDetail(
         /** TMDB poster URL (w500 path); streamed as a data URI in slot "poster". */
         String posterUrl,
         String tmdbUrl,
-        /** YouTube trailer/watch page when TMDB carries one, else empty. */
+        /** YouTube trailer/watch page when TMDB carries one, else empty. The page
+         *  embeds it in an in-page player, so the trailer plays inside the app. */
         String trailerUrl,
         /** The Details ledger, in display order. */
         java.util.List<Fact> facts,
