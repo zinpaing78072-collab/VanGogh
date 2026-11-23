@@ -1,9 +1,12 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { backToBrowse, openDetail } from "../../../app/actions";
 import { useStore } from "../../../app/store";
 import type { Movie, MovieDetail, SimilarMovie } from "../../../bridge/types";
+import { useEscape } from "../../../hooks/useEscape";
 import { cn } from "../../../lib/cn";
 import { secureLink } from "../../../lib/format";
+import { youtubeEmbedUrl, youtubeVideoId } from "../../../lib/youtube";
 
 /**
  * Movie detail: the bento layout from prototypes/movie-detail-layouts/bento.html.
@@ -97,6 +100,72 @@ function SlotArt({
       {mark}
       {children}
     </>
+  );
+}
+
+/**
+ * The in-page YouTube player. A fixed overlay above the shell (sidebar 110,
+ * header 100) so the trailer is watchable without leaving the app.
+ *
+ * It renders through a portal on `document.body`: the detail section's entry
+ * animation makes `.movie-view` a containing block and stacking context, which
+ * would both pin a `position: fixed` child to the section and trap it below
+ * the sidebar.
+ *
+ * `data-lightbox-open` tells the app-level Escape handler to leave this detail
+ * alone: Escape closes the player, and a second Escape leaves the page (the
+ * same convention as the game lightbox). The iframe unmounts on close, which
+ * also stops playback.
+ */
+function TrailerOverlay({
+  videoId,
+  title,
+  onClose,
+}: {
+  videoId: string;
+  title: string;
+  onClose: () => void;
+}) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEscape(onClose);
+
+  useEffect(() => {
+    closeRef.current?.focus();
+  }, []);
+
+  return createPortal(
+    <div
+      className="movie-trailer"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${title} trailer`}
+      data-lightbox-open="true"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <button
+        ref={closeRef}
+        type="button"
+        className="movie-trailer-close"
+        data-action="close-trailer"
+        aria-label="Close trailer"
+        onClick={onClose}
+      >
+        ×
+      </button>
+      <div className="movie-trailer-frame">
+        <iframe
+          className="movie-trailer-video"
+          src={youtubeEmbedUrl(videoId)}
+          title={`${title} trailer`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -194,9 +263,11 @@ function ErrorMarkup({ movie, error }: { movie: Partial<Movie>; error: string })
 function Identity({ detail }: { detail: MovieDetail }) {
   const [watchlist, setWatchlist] = useState(false);
   const [favorite, setFavorite] = useState(false);
+  const [trailerOpen, setTrailerOpen] = useState(false);
   const runtime = formatRuntime(detail.runtimeMinutes);
   const chips = [detail.year, detail.certification, runtime].filter(Boolean);
   const trailer = secureLink(detail.trailerUrl);
+  const videoId = youtubeVideoId(trailer);
   const tmdb = secureLink(detail.tmdbUrl);
 
   return (
@@ -236,7 +307,16 @@ function Identity({ detail }: { detail: MovieDetail }) {
       ) : null}
 
       <div className="movie-actions">
-        {trailer ? (
+        {videoId ? (
+          <button
+            type="button"
+            className="movie-action movie-action-primary"
+            data-action="trailer"
+            onClick={() => setTrailerOpen(true)}
+          >
+            <span aria-hidden="true">▶</span> Watch trailer
+          </button>
+        ) : trailer ? (
           <a
             className="movie-action movie-action-primary"
             href={trailer}
@@ -275,6 +355,14 @@ function Identity({ detail }: { detail: MovieDetail }) {
           </a>
         ) : null}
       </div>
+
+      {trailerOpen && videoId ? (
+        <TrailerOverlay
+          videoId={videoId}
+          title={detail.title}
+          onClose={() => setTrailerOpen(false)}
+        />
+      ) : null}
     </>
   );
 }
@@ -471,7 +559,7 @@ function ReadyMarkup({
           </div>
         </div>
         <div className="movie-tile t-ident">
-          <Identity detail={detail} />
+          <Identity key={detail.id} detail={detail} />
         </div>
         <FactsTile detail={detail} />
         <StoryTile detail={detail} />
