@@ -7,8 +7,7 @@ import { secureLink } from "../../../lib/format";
 import { useEscape } from "../../../hooks/useEscape";
 
 /**
- * Game detail: the immersive layout from
- * prototypes/game-detail/v2-immersive.html.
+ * Game detail: the immersive layout.
  *
  * A fanart hero holds the boxart and the identity, a four-cell stat band
  * follows, then a sticky record rail beside the editorial article (pull quote,
