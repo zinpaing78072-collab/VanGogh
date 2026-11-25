@@ -970,7 +970,7 @@ const TESTS = [
                 similar: document.querySelectorAll("#bookView .book-sim-card").length,
                 tiles: document.querySelectorAll("#bookView .book-bento > .book-tile").length,
                 actions: document.querySelectorAll("#bookView .book-action").length,
-                sample: document.querySelectorAll("#bookView .book-sample").length,
+                sampleButton: !!document.querySelector('#bookView [data-action="sample"]'),
                 coverArt: document.querySelectorAll("#bookView .book-cover-img:not(.hidden)").length,
                 authorArt: document.querySelectorAll("#bookView .book-author-img:not(.hidden)").length,
                 editionArt: document.querySelectorAll("#bookView .book-edition-img:not(.hidden)").length,
@@ -987,13 +987,29 @@ const TESTS = [
                     - document.getElementById("bookView").clientWidth)
             })`));
 
-            // The sample toggle reveals the work's opening line, in place.
+            // Browse sample opens the Internet Archive reader in an overlay;
+            // Escape closes the reader without leaving the detail.
             await page.evaluate(`document.querySelector('#bookView [data-action="sample"]').click(); true`);
-            const sample = JSON.parse(await page.evaluate(`JSON.stringify({
-                pressed: document.querySelector('#bookView [data-action="sample"]').getAttribute("aria-pressed"),
-                visible: !document.querySelector("#bookView .book-sample").classList.contains("hidden"),
-                text: document.querySelector("#bookView .book-sample").textContent.trim()
-            })`));
+            await page.waitFor(`!!document.querySelector(".book-sample-overlay iframe")`);
+            const sample = JSON.parse(await page.evaluate(`JSON.stringify((function () {
+                var overlay = document.querySelector(".book-sample-overlay");
+                var frame = document.querySelector(".book-sample-frame").getBoundingClientRect();
+                var topLeft = document.elementFromPoint(6, 6);
+                return {
+                    overlay: !!overlay,
+                    dialog: overlay.getAttribute("role"),
+                    lightbox: overlay.dataset.lightboxOpen,
+                    src: overlay.querySelector("iframe").src,
+                    title: overlay.querySelector("iframe").title,
+                    coversShell: !!topLeft && overlay.contains(topLeft),
+                    inViewport: frame.top >= 0 && frame.left >= 0
+                        && frame.bottom <= window.innerHeight && frame.right <= window.innerWidth
+                };
+            })())`));
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.querySelector(".book-sample-overlay")`);
+            const sampleClosed = await page.evaluate(
+                `!document.getElementById("bookView").classList.contains("hidden")`);
 
             // The similar rail opens another work through the same detail pair.
             const firstGen = stats.bookDetailGeneration;
@@ -1034,7 +1050,7 @@ const TESTS = [
                 check("similar rail renders", d.similar === 5, d.similar),
                 check("detail lays out as seven bento tiles", d.tiles === 7, d.tiles),
                 check("identity carries sample, want-to-read, favorite and Open Library actions",
-                    d.sample === 1 && d.actions === 4, d.sample + " / " + d.actions),
+                    d.sampleButton && d.actions === 4, d.sampleButton + " / " + d.actions),
                 check("cover streams into its slot", d.coverArt === 1, d.coverArt),
                 check("the author photo paints the byline and the author tile", d.authorArt === 2, d.authorArt),
                 check("every covered edition streams into its slot", d.editionArt === 3, d.editionArt),
@@ -1047,9 +1063,16 @@ const TESTS = [
                     d.visiblePlaceholders + " placeholders / " + d.broken + " broken"),
                 check("every queued image was emitted", stats.bookDetailArtEmitted === 10,
                     stats.bookDetailArtEmitted),
-                check("read sample toggles the opening line in place",
-                    sample.pressed === "true" && sample.visible && sample.text.indexOf("Bilbo Baggins") !== -1,
-                    sample.pressed + " / " + sample.text.slice(0, 40)),
+                check("Browse sample opens the Internet Archive reader",
+                    sample.overlay && sample.dialog === "dialog" && sample.lightbox === "true"
+                        && sample.src.indexOf("archive.org/embed/lordofrings0000tolk") !== -1
+                        && sample.title === "The Lord of the Rings sample reader",
+                    sample.src + " / " + sample.title),
+                check("the sample reader covers the shell and fits the viewport",
+                    sample.coversShell && sample.inViewport,
+                    sample.coversShell + " / " + sample.inViewport),
+                check("Escape closes the sample and stays on the detail",
+                    sampleClosed === true, sampleClosed),
                 check("detail view does not overflow horizontally", d.overflow === 0, d.overflow),
                 check("a similar card opens that work in the same view",
                     related.title === relatedTitle && related.generation === firstGen + 1,

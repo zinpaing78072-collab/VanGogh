@@ -316,18 +316,60 @@
     filter: brightness(1.06);
 }
 
-/* The "Read sample" panel: the work's opening line, in the voice of the book. */
-.book-sample {
-    max-width: 62ch;
-    padding: 12px 16px;
-    border-left: 2px solid var(--accent);
-    border-radius: 0 10px 10px 0;
+/* The "Browse sample" reader: an in-page overlay above the shell, sized like a
+ * reading window rather than a video. The iframe owns the Internet Archive
+ * BookReader UI; the close button and backdrop belong to the page. */
+.book-sample-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: grid;
+    place-items: center;
+    padding: 34px;
+    background: rgba(4, 8, 18, 0.88);
+    backdrop-filter: blur(10px);
+}
+
+.book-sample-frame {
+    position: relative;
+    width: min(1160px, 100%);
+    height: min(78vh, 780px);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #111;
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 40px 90px -40px #000;
+}
+
+.book-sample-reader {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.book-sample-close {
+    position: absolute;
+    top: 20px;
+    right: 22px;
+    z-index: 1;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
     background: var(--panel-inset);
-    font-size: 13px;
-    line-height: 1.7;
-    font-style: italic;
-    color: var(--text-soft-strong);
-    text-wrap: pretty;
+    color: var(--text);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.book-sample-close:hover {
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
 }
 
 /* -------------------------------------------------------------- tile heads */
@@ -725,6 +767,8 @@
 
     .book-tile.t-cover { max-width: 300px; }
     .book-view { padding: 16px 16px 24px; }
+    .book-sample-overlay { padding: 14px; }
+    .book-sample-frame { height: 72vh; }
     .book-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .book-editions-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .book-sim-row { grid-auto-columns: 150px; }

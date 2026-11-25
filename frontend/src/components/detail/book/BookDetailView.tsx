@@ -1,7 +1,9 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { backToBrowse, openDetail } from "../../../app/actions";
 import { useStore } from "../../../app/store";
 import type { Book, BookAuthor, BookDetail } from "../../../bridge/types";
+import { useEscape } from "../../../hooks/useEscape";
 import { cn } from "../../../lib/cn";
 import { secureLink } from "../../../lib/format";
 
@@ -89,6 +91,67 @@ function SlotArt({
       {mark}
       {children}
     </>
+  );
+}
+
+/**
+ * The in-app sample reader: the first scanned edition in the Internet Archive
+ * BookReader, portaled above the shell (sidebar 110, header 100). Public-domain
+ * books read in full; in-copyright scans show the library's preview/borrow UI.
+ *
+ * `data-lightbox-open` keeps the app-level Escape handler from leaving the
+ * detail while the reader is open — Escape closes the reader first, exactly
+ * like the movie trailer and game lightbox.
+ */
+function SampleOverlay({
+  src,
+  title,
+  onClose,
+}: {
+  src: string;
+  title: string;
+  onClose: () => void;
+}) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEscape(onClose);
+
+  useEffect(() => {
+    closeRef.current?.focus();
+  }, []);
+
+  return createPortal(
+    <div
+      className="book-sample-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${title} sample`}
+      data-lightbox-open="true"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <button
+        ref={closeRef}
+        type="button"
+        className="book-sample-close"
+        data-action="close-sample"
+        aria-label="Close sample"
+        onClick={onClose}
+      >
+        ×
+      </button>
+      <div className="book-sample-frame">
+        <iframe
+          className="book-sample-reader"
+          src={src}
+          title={`${title} sample reader`}
+          allow="fullscreen; clipboard-write"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -222,6 +285,7 @@ function Identity({
     detail.editionCount ? detail.editionCount + " editions" : "",
   ].filter(Boolean);
   const openLibrary = secureLink(detail.openLibraryUrl);
+  const sample = secureLink(detail.sampleUrl);
 
   return (
     <>
@@ -252,15 +316,14 @@ function Identity({
       ) : null}
 
       <div className="book-actions">
-        {detail.firstSentence ? (
+        {sample ? (
           <button
             type="button"
-            className={cn("book-action book-action-primary", sampleOpen && "active")}
+            className="book-action book-action-primary"
             data-action="sample"
-            aria-pressed={sampleOpen}
-            onClick={() => setSampleOpen((current) => !current)}
+            onClick={() => setSampleOpen(true)}
           >
-            <span aria-hidden="true">📖</span> {sampleOpen ? "Hide sample" : "Read sample"}
+            <span aria-hidden="true">📖</span> Browse sample
           </button>
         ) : null}
         <button
@@ -293,8 +356,12 @@ function Identity({
         ) : null}
       </div>
 
-      {detail.firstSentence ? (
-        <p className={cn("book-sample", !sampleOpen && "hidden")}>{detail.firstSentence}</p>
+      {sampleOpen && sample ? (
+        <SampleOverlay
+          src={sample}
+          title={detail.title}
+          onClose={() => setSampleOpen(false)}
+        />
       ) : null}
     </>
   );
@@ -500,7 +567,7 @@ function ReadyMarkup({ detail, art }: { detail: BookDetail; art: Record<string, 
           </div>
         </div>
         <div className="book-tile t-ident">
-          <Identity detail={detail} authorUri={art.author || ""} />
+          <Identity key={detail.workKey} detail={detail} authorUri={art.author || ""} />
         </div>
         <FactsTile detail={detail} />
         <StoryTile detail={detail} />

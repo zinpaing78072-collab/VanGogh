@@ -45,7 +45,7 @@ class BookControllerTest {
     private static final BookDetail DETAIL = new BookDetail(
             "OL2172356W", "Do Androids Dream of Electric Sheep?", 1968, 224, 90,
             4.0, 164, "It was January 2021, and Rick Deckard had a license to kill.",
-            "A merry little surge of electricity piped by automatic alarm.",
+            "https://archive.org/embed/doandroidsdream0000dick",
             java.util.List.of("Androids", "Science fiction"), "2021",
             "https://covers.openlibrary.org/b/id/207515-L.jpg",
             "https://openlibrary.org/works/OL2172356W",

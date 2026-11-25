@@ -159,7 +159,8 @@ class OpenLibraryBookServiceTest {
           "size": 90,
           "entries": [
             {"covers": [123], "publish_date": "1969", "number_of_pages": 210,
-             "isbn_13": ["9780451038005"], "publishers": ["Signet"]},
+             "isbn_13": ["9780451038005"], "publishers": ["Signet"],
+             "ocaid": "doandroidsdream0000dick"},
             {"covers": [456], "publish_date": "2017", "number_of_pages": 224,
              "isbn_13": ["9780547572345"], "publishers": ["Mariner"]},
             {"covers": [789], "publish_date": "2022", "number_of_pages": 221,
@@ -256,7 +257,7 @@ class OpenLibraryBookServiceTest {
         assertEquals(3.96, detail.rating(), 0.001);
         assertEquals(164, detail.ratingCount());
         assertEquals("It was January 2021, and Rick Deckard had a license to kill.", detail.description());
-        assertEquals("A merry little surge of electricity piped by automatic alarm.", detail.firstSentence());
+        assertEquals("https://archive.org/embed/doandroidsdream0000dick", detail.sampleUrl());
         assertEquals(java.util.List.of("Androids", "Science fiction", "Robotic pets"), detail.subjects());
         assertEquals("2021", detail.setting());
         assertEquals("https://covers.openlibrary.org/b/id/207515-L.jpg", detail.coverUrl());
@@ -321,6 +322,7 @@ class OpenLibraryBookServiceTest {
         assertEquals(0, detail.rating(), 0.001);
         assertEquals(0, detail.editionCount());
         assertTrue(detail.editions().isEmpty());
+        assertEquals("", detail.sampleUrl());
         assertTrue(detail.similar().isEmpty());
         assertEquals("", detail.author().name());
         // The work's own record still paints.
