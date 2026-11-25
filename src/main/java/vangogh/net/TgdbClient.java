@@ -6,6 +6,7 @@ import io.vavr.control.Option;
 import io.vavr.control.Try;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -27,6 +28,7 @@ public class TgdbClient {
     private static final String IMAGE_BASE = "https://cdn.thegamesdb.net/images/original/";
     private static final String CDN_ROOT = "https://cdn.thegamesdb.net/images/";
     static final String IMAGE_PROXY = "https://wsrv.nl/?url=";
+    private static final int TRENDING_IDS_PER_REQUEST = 8;
     private static final Duration POSTER_TIMEOUT = Duration.ofSeconds(5);
     private static final Path PROXY_MARKER = Path.of(System.getProperty("user.home"), ".van-gogh", "poster-proxy.conf");
 
@@ -53,10 +55,50 @@ public class TgdbClient {
     }
 
     public Try<ApiResponse> trending() {
-        String url = BASE + "Games/ByGameID?apikey=" + apiKey
-                + "&id=139623,65101,114899,136323,14517,130236,142770,60527"
-                + "&fields=players,publishers,genres,overview,rating,platform&include=boxart,platform&page=1";
-        return send(url);
+        String[] ids = ("97544,139623,65101,114899,136323,14517,130236,142770,60527,"
+                + "121320,68304,120341,135318,52926,2642,128915,135811,53456").split(",");
+
+        return Try.of(() -> {
+            JsonObject combined = null;
+            for (int start = 0; start < ids.length; start += TRENDING_IDS_PER_REQUEST) {
+                int end = Math.min(start + TRENDING_IDS_PER_REQUEST, ids.length);
+                String batch = String.join(",", java.util.Arrays.copyOfRange(ids, start, end));
+                String url = BASE + "Games/ByGameID?apikey=" + apiKey
+                        + "&id=" + URLEncoder.encode(batch, StandardCharsets.UTF_8)
+                        + "&fields=players,publishers,genres,overview,rating,platform"
+                        + "&include=boxart,platform&page=1";
+
+                ApiResponse response = send(url).get();
+                if (!response.isSuccess()) {
+                    return response;
+                }
+                JsonObject payload = JsonParser.parseString(response.body).getAsJsonObject();
+                combined = mergeTrendingResponses(combined, payload);
+            }
+            return new ApiResponse(200, combined.toString(), null);
+        });
+    }
+
+    static JsonObject mergeTrendingResponses(JsonObject accumulated, JsonObject next) {
+        if (accumulated == null) {
+            return next.deepCopy();
+        }
+
+        next.entrySet().forEach(entry -> {
+            String key = entry.getKey();
+            JsonElement value = entry.getValue();
+            if (!accumulated.has(key)) {
+                accumulated.add(key, value.deepCopy());
+            } else {
+                JsonElement current = accumulated.get(key);
+                if (current.isJsonObject() && value.isJsonObject()) {
+                    mergeTrendingResponses(current.getAsJsonObject(), value.getAsJsonObject());
+                } else if (current.isJsonArray() && value.isJsonArray()) {
+                    value.getAsJsonArray().forEach(element -> current.getAsJsonArray().add(element.deepCopy()));
+                }
+            }
+        });
+        return accumulated;
     }
 
     /** One record with every field the detail page reads (the ids, not the names). */
