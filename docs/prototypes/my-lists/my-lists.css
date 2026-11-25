@@ -1516,8 +1516,12 @@
 }
 
 .ml-queue {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    /* Two horizontal cards per row on a wide window; the card itself keeps the
+       poster + copy + actions shape. One column once a half-width card can no
+       longer hold a 118px poster beside readable copy. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
     gap: 10px;
 }
 
@@ -2025,6 +2029,12 @@
 
     .ml-cover-wall {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1180px) {
+    .ml-queue {
+        grid-template-columns: 1fr;
     }
 }
 

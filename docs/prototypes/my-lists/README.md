@@ -20,7 +20,7 @@ library in `data.js`, and a reload resets it.
 | [`v2-ledger.html`](v2-ledger.html) | **02 · Management-first — The Ledger** | The dense read: smart views with counts, a sortable table, row selection that raises a bulk-action bar, compact density. |
 | [`v3-studio.html`](v3-studio.html) | **03 · Insight-first — The Studio** | The library as a lens on taste: bento stats, favorites wall, watchlist queue, week timeline, "draft from my taste" CTA. |
 | [`v4-board.html`](v4-board.html) | **04 · Tracking-first — The Board** (speculative) | A third axis on top of saving: Want to / In progress / Finished lanes, drag or arrow to move, Favorites stays a star. |
-| [`v5-queue.html`](v5-queue.html) | **05 · Status-first — The Queue** (speculative, revision of 04) | The board's statuses folded into one list: a status dropdown replaces the three lanes, and horizontal rows keep full-size artwork in its own shape. |
+| [`v5-queue.html`](v5-queue.html) | **05 · Status-first — The Queue** (speculative, revision of 04) | The board's statuses folded into one list: a status dropdown replaces the three lanes, and two horizontal cards per row keep full-size artwork in its own shape. |
 
 `v1-shelf.html?view=favorites` opens the shelf pre-filtered to Favorites (the
 sidebar Favorites link uses it).
@@ -90,11 +90,12 @@ speculative part; the saving model is unchanged.
 **05 Queue** — a review revision of the board, added after the first round of
 feedback. The three lane containers are gone: a status dropdown (All saved /
 Want to / In progress / Finished, each with a count) filters the same library in
-place, so there is one list instead of three columns. Rows are horizontal with
-full-size artwork in its natural shape — a 2:3 poster for films, books and games
-and a 1:1 cover for albums, centered — instead of the board's tiny shared
-thumbnail. Each row keeps favorite, advance-status and remove actions, and the
-page keeps the form chips and Favorites-only toggle.
+place, so there is one list instead of three columns. Rows are horizontal, two
+per row on a wide window and one per row below 1180 px, with full-size artwork in
+its natural shape — a 2:3 poster for films, books and games and a 1:1 cover for
+albums, centered — instead of the board's tiny shared thumbnail. Each row keeps
+favorite, advance-status and remove actions, and the page keeps the form chips
+and Favorites-only toggle.
 
 Nothing persists across reloads, and no page mutates another page's state.
 
