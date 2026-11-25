@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { backToBrowse, closeSettings, openSettings } from "./actions";
+import { backToBrowse, closeSettings, escapeProfile, openSettings } from "./actions";
 import { switchDomain } from "./navigation";
 import { useStore } from "./store";
 import { useArtwork } from "../hooks/useArtwork";
@@ -11,6 +11,7 @@ import { Sidebar } from "../components/shell/Sidebar";
 import { Header } from "../components/shell/Header";
 import { BrowseView } from "../components/browse/BrowseView";
 import { SettingsView } from "../components/settings/SettingsView";
+import { ProfileView } from "../components/profile/ProfileView";
 import { MovieDetailView } from "../components/detail/movie/MovieDetailView";
 import { SongDetailView } from "../components/detail/song/SongDetailView";
 import { BookDetailView } from "../components/detail/book/BookDetailView";
@@ -28,6 +29,8 @@ export function App() {
   useDetail(domain);
 
   useEscape(closeSettings, view === "settings");
+  // Profile's Escape is two-stage: close the editor, then the page.
+  useEscape(escapeProfile, view === "profile");
 
   // Escape leaves a detail. The game lightbox is an overlay on top of it, so it
   // gets the key first (it marks itself open with data-lightbox-open).
@@ -63,6 +66,8 @@ export function App() {
           <BrowseView hidden={view !== "browse"} />
 
           <SettingsView hidden={view !== "settings"} />
+
+          <ProfileView hidden={view !== "profile"} />
 
           <section
             className={cn(

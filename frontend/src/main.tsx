@@ -5,6 +5,7 @@ import "./styles/movie-detail.css";
 import "./styles/book-detail.css";
 import "./styles/game-detail.css";
 import "./styles/settings.css";
+import "./styles/profile.css";
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
 import { initTheme } from "./theme/theme";

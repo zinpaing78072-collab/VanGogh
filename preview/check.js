@@ -1531,6 +1531,160 @@ const TESTS = [
         }
     },
     {
+        name: "profile: identity, universe, collections, edit round-trip",
+        path: "/movie-page/index.html",
+        run: async (page) => {
+            const probe = async () => JSON.parse(await page.evaluate(`JSON.stringify((() => {
+                const visible = !document.getElementById("profileView").classList.contains("hidden");
+                const grid = document.getElementById("profileCollections");
+                const stats = document.querySelector(".profile-stats");
+                return {
+                    visible,
+                    headerActive: document.getElementById("profileBtn").classList.contains("active"),
+                    formsActive: document.querySelectorAll("#sidebarNav .nav-item.active").length,
+                    name: document.getElementById("profileName").textContent,
+                    member: document.querySelector(".profile-member").textContent,
+                    stats: [...document.querySelectorAll(".profile-stat-value")]
+                        .map(e => e.textContent).join(" / "),
+                    statLabels: [...document.querySelectorAll(".profile-stat-label")]
+                        .map(e => e.textContent).join(" / "),
+                    collectionTitles: [...document.querySelectorAll(".profile-collection-title")]
+                        .map(e => e.textContent).join(" / "),
+                    collectionCounts: [...document.querySelectorAll(".profile-collection-count")]
+                        .map(e => e.textContent).join(" / "),
+                    collectionColumns: grid
+                        ? getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).length : 0,
+                    statColumns: stats
+                        ? getComputedStyle(stats).gridTemplateColumns.trim().split(/\\s+/).length : 0,
+                    links: document.querySelectorAll(".profile-collection-link").length,
+                    disabledLinks: document.querySelectorAll(".profile-collection-link:disabled").length,
+                    overflow: Math.max(0,
+                        document.documentElement.scrollWidth - document.documentElement.clientWidth),
+                    scrollY: window.scrollY,
+                    editing: document.getElementById("profileEditPanel") !== null,
+                    editExpanded: document.getElementById("editProfile").getAttribute("aria-expanded"),
+                    browseVisible: !document.getElementById("browseView").classList.contains("hidden")
+                };
+            })())`));
+
+            await page.settle();
+            const gridBefore = (await page.dom()).cards;
+
+            // Open from the header's avatar, from a scrolled grid: the page must
+            // start at its own top and the form buttons must go quiet.
+            await page.evaluate(`window.scrollTo(0, 220); true`);
+            await page.evaluate(`document.getElementById("profileBtn").click(); true`);
+            await page.waitFor(`!document.getElementById("profileView").classList.contains("hidden")`);
+            await new Promise((resolve) => setTimeout(resolve, 60));
+            const open = await probe();
+
+            // Edit: prefilled, focused, then saved into the page-local store.
+            await page.evaluate(`document.getElementById("editProfile").click(); true`);
+            await page.waitFor(`document.getElementById("profileEditPanel") !== null`);
+            const editValues = JSON.parse(await page.evaluate(`JSON.stringify({
+                name: document.getElementById("profileNameInput").value,
+                member: document.getElementById("profileMemberInput").value,
+                focused: document.activeElement === document.getElementById("profileNameInput")
+            })`));
+
+            await page.evaluate(`
+                document.getElementById("profileNameInput").value = "Vincent";
+                document.getElementById("profileMemberInput").value = "April, 2024";
+                document.getElementById("profileSave").click(); true
+            `);
+            await page.waitFor(`document.getElementById("profileEditPanel") === null`);
+            const saved = await probe();
+
+            // Escape is two-stage: close the editor, keep the page; then leave.
+            await page.evaluate(`document.getElementById("editProfile").click(); true`);
+            await page.waitFor(`document.getElementById("profileEditPanel") !== null`);
+            await page.evaluate(
+                `document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); true`);
+            await page.waitFor(`document.getElementById("profileEditPanel") === null
+                && !document.getElementById("profileView").classList.contains("hidden")`);
+            const afterFirstEscape = await probe();
+
+            await page.evaluate(
+                `document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); true`);
+            await page.waitFor(`document.getElementById("profileView").classList.contains("hidden")`);
+            const closed = await probe();
+            const gridAfter = await page.dom();
+
+            // Back closes to the covered view too; reopening keeps the edited
+            // identity (it lives in the store, not the backend).
+            await page.evaluate(`document.getElementById("profileBtn").click(); true`);
+            await page.waitFor(`!document.getElementById("profileView").classList.contains("hidden")`);
+            const reopened = await probe();
+            await page.evaluate(`document.getElementById("profileBack").click(); true`);
+            await page.waitFor(`document.getElementById("profileView").classList.contains("hidden")`);
+            const backed = await probe();
+
+            // The ladder: two collection tiles per row below 1180, one below
+            // 640; stats stack below 900. Nothing may overflow sideways.
+            await page.evaluate(`document.getElementById("profileBtn").click(); true`);
+            await page.waitFor(`!document.getElementById("profileView").classList.contains("hidden")`);
+            await page.resize(1000, 900);
+            await new Promise((resolve) => setTimeout(resolve, 120));
+            const mid = await probe();
+            await page.resize(600, 900);
+            await new Promise((resolve) => setTimeout(resolve, 120));
+            const narrow = await probe();
+            await page.resetViewport();
+
+            return [
+                check("the header avatar opens the profile",
+                    open.visible && open.headerActive && open.browseVisible === false,
+                    open.visible + " / active " + open.headerActive),
+                check("no form button is active behind the overlay",
+                    open.formsActive === 0, open.formsActive),
+                check("entering starts at the top of the page",
+                    open.scrollY === 0, open.scrollY + "px"),
+                check("identity matches the sketch",
+                    open.name === "John" && open.member === "Member since March, 2024",
+                    open.name + " / " + open.member),
+                check("three universe numbers, in the sketch's order",
+                    open.stats === "230 / 12 / 1,034"
+                        && open.statLabels === "Favorite / Total Playlist / Entertainment Action",
+                    open.stats + " / " + open.statLabels),
+                check("four collection tiles with their counts",
+                    open.collectionTitles
+                        === "Movies Collection / Music Collection / TV Shows Collection / Books Collection"
+                        && open.collectionCounts === "112 items / 45 items / 50 items / 94 items",
+                    open.collectionTitles + " / " + open.collectionCounts),
+                check('"View collection" is present but inert until the lists land',
+                    open.links === 4 && open.disabledLinks === 4,
+                    open.links + " links / " + open.disabledLinks + " disabled"),
+                check("Edit Profile is prefilled, focused, and expanded",
+                    editValues.name === "John" && editValues.member === "March, 2024"
+                        && editValues.focused && saved.editExpanded === "false",
+                    JSON.stringify(editValues)),
+                check("Save updates the identity without leaving the page",
+                    saved.name === "Vincent" && saved.member === "Member since April, 2024"
+                        && !saved.editing && saved.visible,
+                    saved.name + " / " + saved.member),
+                check("Escape closes the editor but stays on the profile",
+                    !afterFirstEscape.editing && afterFirstEscape.visible,
+                    afterFirstEscape.editing + " / " + afterFirstEscape.visible),
+                check("a second Escape returns to the intact grid",
+                    !closed.visible && closed.browseVisible && closed.formsActive === 1
+                        && gridAfter.cards === gridBefore && gridAfter.title === "Trending Movies",
+                    closed.visible + " / " + gridAfter.cards + " cards, " + gridAfter.title),
+                check("Back closes the page and keeps the edited identity",
+                    !backed.visible && reopened.name === "Vincent",
+                    backed.visible + " / " + reopened.name),
+                check("collections step 4 -> 2 -> 1 columns; stats stack below 900",
+                    open.collectionColumns === 4 && mid.collectionColumns === 2
+                        && narrow.collectionColumns === 1 && mid.statColumns === 3
+                        && narrow.statColumns === 1,
+                    open.collectionColumns + " / " + mid.collectionColumns + " / "
+                        + narrow.collectionColumns + " cols"),
+                check("the profile never overflows horizontally",
+                    open.overflow === 0 && mid.overflow === 0 && narrow.overflow === 0,
+                    open.overflow + " / " + mid.overflow + " / " + narrow.overflow)
+            ];
+        }
+    },
+    {
         name: "scenario: empty",
         path: "/movie-page/index.html?scenario=empty",
         run: async (page) => {

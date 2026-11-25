@@ -1,0 +1,603 @@
+/* Profile page — the user's entertainment universe.
+ *
+ * The hand-drawn screen: identity, three headline numbers and four collection
+ * tiles. Presentation slice only — the counts are fixtures (profileData.ts) and
+ * the collection links are disabled until the lists are wired. Role tokens keep
+ * the page on the active theme; flat fills keep Liquid Neon's "no gradients"
+ * rule, and the accent tint is the only colour a tile adds.
+ */
+
+.profile-view {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.profile-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+/* ------------------------------------------------------------------ topbar */
+
+.profile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.profile-back,
+.profile-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.profile-back {
+    background-color: var(--panel-firm-a76);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+}
+
+.profile-back:hover {
+    color: var(--text);
+    border-color: var(--accent-hover);
+}
+
+.profile-back svg {
+    width: 16px;
+    height: 16px;
+}
+
+.profile-edit {
+    background-color: var(--accent);
+    border: 1px solid transparent;
+    color: var(--accent-ink);
+    box-shadow: 0 6px 18px -6px var(--accent-a55);
+}
+
+.profile-edit:hover {
+    background-color: var(--accent-hover);
+}
+
+.profile-edit svg {
+    width: 15px;
+    height: 15px;
+}
+
+.profile-edit[aria-expanded="true"] {
+    background-color: var(--panel-firm-a76);
+    border-color: var(--accent-hover-a42);
+    color: var(--accent-hover);
+    box-shadow: none;
+}
+
+/* -------------------------------------------------------------------- hero */
+
+.profile-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding: 26px 28px;
+    background-color: var(--panel);
+    -webkit-backdrop-filter: var(--blur-glass);
+    backdrop-filter: var(--blur-glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 18px 40px -28px rgba(4, 8, 18, 0.9);
+    overflow: hidden;
+}
+
+/* A quiet Van Gogh star in the empty right half — decoration, not content. */
+.profile-hero::after {
+    content: "✶";
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 104px;
+    line-height: 1;
+    color: var(--accent-hover);
+    opacity: 0.08;
+    pointer-events: none;
+}
+
+.profile-avatar {
+    position: relative;
+    flex: 0 0 92px;
+    width: 92px;
+    height: 92px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background-color: var(--panel-inset);
+    border: 1px solid var(--accent-hover-a55);
+    color: var(--accent-hover);
+    box-shadow: 0 0 0 4px var(--accent-a12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        0 18px 34px -20px rgba(4, 8, 18, 0.9);
+}
+
+.profile-avatar svg {
+    width: 42px;
+    height: 42px;
+}
+
+.profile-identity {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+}
+
+.profile-name {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.6px;
+    line-height: 1.15;
+    color: var(--text);
+    text-shadow: 0 2px 18px rgba(4, 8, 18, 0.6);
+}
+
+.profile-member {
+    margin-top: 4px;
+    font-size: 14px;
+    color: var(--label-soft);
+    text-shadow: 0 2px 14px rgba(4, 8, 18, 0.85);
+}
+
+/* ------------------------------------------------------------------ editor */
+
+.profile-edit-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+    align-items: end;
+    gap: 14px;
+    margin-top: 14px;
+    padding: 18px 20px 16px;
+    background-color: var(--panel-firm-a76);
+    border: 1px solid var(--accent-hover-a32);
+    border-radius: var(--radius);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.profile-edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.profile-edit-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.profile-edit-input {
+    width: 100%;
+    background-color: var(--panel-inset);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    caret-color: var(--accent-hover);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 11px;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.profile-edit-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background-color: var(--panel-firm-a70);
+}
+
+.profile-edit-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.profile-btn {
+    background-color: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.profile-btn:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+.profile-btn.primary {
+    background-color: var(--accent);
+    border-color: transparent;
+    color: var(--accent-ink);
+    font-weight: 700;
+}
+
+.profile-btn.primary:hover {
+    background-color: var(--accent-hover);
+}
+
+.profile-edit-hint {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------------- universe */
+
+.profile-universe {
+    margin-top: 18px;
+    padding: 22px 24px 24px;
+    background-color: var(--panel);
+    -webkit-backdrop-filter: var(--blur-glass);
+    backdrop-filter: var(--blur-glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 18px 40px -28px rgba(4, 8, 18, 0.9);
+}
+
+.profile-universe-head {
+    margin-bottom: 16px;
+}
+
+.profile-section-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--text);
+    text-shadow: 0 2px 18px rgba(4, 8, 18, 0.6);
+}
+
+.profile-section-sub {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------------- stats */
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    list-style: none;
+}
+
+.profile-stat {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background-color: var(--panel-inset);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.profile-stat::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 2px;
+    background-color: var(--accent);
+    opacity: 0.7;
+}
+
+.profile-stat-icon {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background-color: var(--accent-a12);
+    border: 1px solid var(--accent-hover-a28);
+    color: var(--accent-hover);
+}
+
+.profile-stat-icon svg {
+    width: 19px;
+    height: 19px;
+}
+
+.profile-stat-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.profile-stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    line-height: 1.1;
+    color: var(--text);
+}
+
+.profile-stat-label {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------- collections */
+
+.profile-collections-title {
+    margin: 22px 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--label);
+}
+
+.profile-collection-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.profile-collection {
+    /* Per-tile accent: the two media forms stay gold, the reading/listening
+       forms lean on the muted role token. */
+    --profile-tile-accent: var(--accent-hover);
+    --profile-tile-tint: var(--accent-a12);
+    display: flex;
+    flex-direction: column;
+    background-color: var(--panel-firm-a55);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.18s ease, transform 0.18s ease;
+}
+
+.profile-collection[data-collection="music"],
+.profile-collection[data-collection="books"] {
+    --profile-tile-accent: var(--text-muted);
+    --profile-tile-tint: var(--muted-a12);
+}
+
+.profile-collection:hover {
+    border-color: var(--profile-tile-accent);
+    transform: translateY(-2px);
+}
+
+.profile-collection-art {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    background-color: var(--profile-tile-tint);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.profile-collection-art::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background-color: var(--profile-tile-accent);
+    opacity: 0.65;
+}
+
+.profile-collection-mark {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background-color: var(--panel-firm-a70);
+    border: 1px solid var(--profile-tile-accent);
+    color: var(--profile-tile-accent);
+}
+
+.profile-collection-mark svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* The item count as a watermark: the tile reads at a glance, the number is
+   still repeated in the body where it is legible. */
+.profile-collection-ghost {
+    position: absolute;
+    right: 10px;
+    bottom: -10px;
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+    color: var(--text);
+    opacity: 0.06;
+    pointer-events: none;
+}
+
+.profile-collection-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 3px;
+    padding: 14px 16px 15px;
+}
+
+.profile-collection-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text);
+}
+
+.profile-collection-count {
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+
+.profile-collection-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    align-self: flex-start;
+    margin-top: auto;
+    padding: 10px 0 0;
+    background: none;
+    border: 0;
+    color: var(--text-soft);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.16s ease;
+}
+
+.profile-collection-link svg {
+    width: 13px;
+    height: 13px;
+    color: var(--profile-tile-accent);
+}
+
+.profile-collection-link:disabled {
+    cursor: default;
+    opacity: 0.8;
+}
+
+/* The header's profile button lights up while the page is open. */
+.quick-actions .icon-btn.round.avatar.active {
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
+    box-shadow: 0 0 20px var(--accent-hover-a22);
+}
+
+/* -------------------------------------------------------------- responsive */
+
+@media (max-width: 1180px) {
+    .profile-collection-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .profile-view {
+        padding: 18px;
+    }
+
+    .profile-hero {
+        gap: 16px;
+        padding: 20px;
+    }
+
+    .profile-avatar {
+        flex-basis: 72px;
+        width: 72px;
+        height: 72px;
+    }
+
+    .profile-avatar svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .profile-name {
+        font-size: 26px;
+    }
+
+    .profile-stats {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .profile-edit-panel {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .profile-collection-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* One tile per row: switch to the sketch's horizontal cut (art left, copy
+       right) so a 16:9 block does not swallow the phone-sized column. */
+    .profile-collection {
+        flex-direction: row;
+    }
+
+    .profile-collection-art {
+        flex: 0 0 112px;
+        min-height: 112px;
+        aspect-ratio: auto;
+        border-bottom: 0;
+        border-right: 1px solid var(--border);
+    }
+
+    .profile-collection-art::before {
+        inset: 0 auto 0 0;
+        width: 2px;
+        height: auto;
+    }
+
+    .profile-collection-mark {
+        width: 44px;
+        height: 44px;
+    }
+
+    .profile-collection-mark svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .profile-collection-ghost {
+        right: 6px;
+        bottom: -6px;
+        font-size: 48px;
+    }
+
+    .profile-collection-body {
+        padding: 12px 14px 13px;
+    }
+
+    .profile-universe {
+        padding: 18px 16px 18px;
+    }
+
+    .profile-topbar {
+        flex-wrap: wrap;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .profile-collection,
+    .profile-back,
+    .profile-edit,
+    .profile-btn,
+    .profile-collection-link {
+        transition: none;
+    }
+
+    .profile-collection:hover {
+        transform: none;
+    }
+}

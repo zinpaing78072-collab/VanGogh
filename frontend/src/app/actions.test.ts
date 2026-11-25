@@ -4,18 +4,24 @@ import {
   activeSession,
   backToBrowse,
   browseTitle,
+  cancelProfileEdit,
+  closeProfile,
   closeSettings,
+  escapeProfile,
   failBrowse,
   failDetail,
   finishBrowse,
   finishDetail,
   openDetail,
+  openProfile,
   openSettings,
   rememberView,
+  saveProfileEdit,
   saveScroll,
   setBrowseArtwork,
   setDetailArt,
   startBrowse,
+  startProfileEdit,
   toggleAi,
 } from "./actions";
 import { getState, resetStore } from "./store";
@@ -217,6 +223,72 @@ describe("settings round-trip", () => {
   it("is a no-op to close when not open", () => {
     const before = getState();
     closeSettings();
+    expect(getState()).toBe(before);
+  });
+});
+
+describe("profile round-trip", () => {
+  it("returns to the detail it covered", () => {
+    openDetail("movie", { id: 1 });
+    openProfile();
+    expect(getState().view).toBe("profile");
+    expect(getState().profileReturn).toBe("detail");
+
+    closeProfile();
+    expect(getState().view).toBe("detail");
+  });
+
+  it("returns to the grid when opened over browse", () => {
+    openProfile();
+    closeProfile();
+    expect(getState().view).toBe("browse");
+  });
+
+  it("keeps the editor local and cancels it on Escape first", () => {
+    openProfile();
+    startProfileEdit();
+    expect(getState().profile.editing).toBe(true);
+
+    escapeProfile();
+    expect(getState().view).toBe("profile");
+    expect(getState().profile.editing).toBe(false);
+
+    escapeProfile();
+    expect(getState().view).toBe("browse");
+  });
+
+  it("saves a trimmed name and keeps a blank field", () => {
+    openProfile();
+    startProfileEdit();
+    saveProfileEdit("  Vincent  ", "   ");
+
+    const profile = getState().profile;
+    expect(profile.name).toBe("Vincent");
+    expect(profile.memberSince).toBe("March, 2024");
+    expect(profile.editing).toBe(false);
+  });
+
+  it("cancels without touching the stored identity", () => {
+    openProfile();
+    startProfileEdit();
+    cancelProfileEdit();
+
+    expect(getState().profile).toMatchObject({
+      name: "John",
+      memberSince: "March, 2024",
+      editing: false,
+    });
+  });
+
+  it("leaves the page when the user picks a form", () => {
+    openProfile();
+    activateDomain("movie");
+    expect(getState().view).toBe("browse");
+  });
+
+  it("is a no-op to close when not open", () => {
+    const before = getState();
+    closeProfile();
     expect(getState()).toBe(before);
   });
 });

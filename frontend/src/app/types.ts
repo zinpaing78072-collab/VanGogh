@@ -14,8 +14,8 @@ export type { QueryKind };
 
 export type DomainKey = "movie" | "music" | "book" | "game";
 
-/** The global page view. "settings" sits outside the per-form sessions. */
-export type ViewKind = "browse" | "detail" | "settings";
+/** The global page view. "settings" and "profile" sit outside the sessions. */
+export type ViewKind = "browse" | "detail" | "settings" | "profile";
 
 export type Status = "idle" | "loading" | "ready" | "error";
 
@@ -60,6 +60,17 @@ export interface Sessions {
 
 export type AnySession = Sessions[DomainKey];
 
+/**
+ * The profile page is presentation-level for now: the identity is page-local
+ * state, and the numbers/collections are fixtures. Keeping it in the store
+ * lets Escape and the header button drive one editor state.
+ */
+export interface ProfileState {
+  name: string;
+  memberSince: string;
+  editing: boolean;
+}
+
 export interface AppState {
   activeDomain: DomainKey;
   view: ViewKind;
@@ -67,4 +78,7 @@ export interface AppState {
   sessions: Sessions;
   /** Which view Settings was opened over, so Cancel/Escape can return. */
   settingsReturn: "browse" | "detail";
+  /** Which view Profile was opened over. */
+  profileReturn: ViewKind;
+  profile: ProfileState;
 }
