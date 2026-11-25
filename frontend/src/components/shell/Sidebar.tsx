@@ -7,7 +7,7 @@ interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
   activeDomain: DomainKey;
-  view: "browse" | "detail" | "settings";
+  view: "browse" | "detail" | "settings" | "profile";
   onSelect: (domain: DomainKey) => void;
   onSettings: () => void;
 }
@@ -129,6 +129,7 @@ export function Sidebar({
   onSettings,
 }: SidebarProps) {
   const onSettingsView = view === "settings";
+  const onProfileView = view === "profile";
   const action = collapsed ? "Expand sidebar" : "Collapse sidebar";
 
   return (
@@ -180,7 +181,7 @@ export function Sidebar({
             icon={key}
             label={DOMAINS[key].label}
             collapsed={collapsed}
-            active={!onSettingsView && key === activeDomain}
+            active={!onSettingsView && !onProfileView && key === activeDomain}
             dataDomain={key}
             onClick={() => onSelect(key)}
           />

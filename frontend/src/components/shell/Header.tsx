@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useStore } from "../../app/store";
-import { toggleAi } from "../../app/actions";
+import { openProfile, toggleAi } from "../../app/actions";
 import { loadContent } from "../../hooks/useContent";
+import { cn } from "../../lib/cn";
 import type { DomainKey } from "../../app/types";
 
 interface HeaderProps {
@@ -18,6 +19,7 @@ interface HeaderProps {
  */
 export function Header({ domain }: HeaderProps) {
   const ai = useStore((state) => state.ai);
+  const view = useStore((state) => state.view);
   const storedQuery = useStore((state) => state.sessions[domain].browse.query);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -86,10 +88,12 @@ export function Header({ domain }: HeaderProps) {
         </button>
         <button
           type="button"
-          className="icon-btn round avatar"
+          className={cn("icon-btn round avatar", view === "profile" && "active")}
+          id="profileBtn"
           aria-label="Profile"
-          aria-disabled="true"
-          title="Profile (coming soon)"
+          aria-current={view === "profile" ? "page" : undefined}
+          title="Profile"
+          onClick={openProfile}
         >
           <svg
             viewBox="0 0 24 24"

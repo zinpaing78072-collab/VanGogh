@@ -61,7 +61,15 @@ export function browseTitle(key: DomainKey, kind: QueryKind): string {
 /** Switch the visible form. The session's own view decides browse vs detail. */
 export function activateDomain(key: DomainKey): void {
   setState((state) => {
-    if (state.activeDomain === key && state.view !== "settings") return state;
+    // From Settings/Profile the same form's button must still leave the
+    // overlay, so only Browse and Detail are "already there" no-ops.
+    if (
+      state.activeDomain === key &&
+      state.view !== "settings" &&
+      state.view !== "profile"
+    ) {
+      return state;
+    }
     const target = state.sessions[key];
     const reopenDetail = target.view === "detail" && target.detail !== null;
     return {
@@ -237,6 +245,72 @@ export function closeSettings(): void {
   setState((state) =>
     state.view !== "settings" ? state : { ...state, view: state.settingsReturn }
   );
+}
+
+/** Profile is an overlay page like Settings: remember what it covered. */
+export function openProfile(): void {
+  setState((state) => {
+    if (state.view === "profile") return state;
+    return {
+      ...state,
+      profileReturn: state.view,
+      view: "profile",
+    };
+  });
+}
+
+export function closeProfile(): void {
+  setState((state) => {
+    if (state.view !== "profile") return state;
+    const profile = state.profile.editing
+      ? { ...state.profile, editing: false }
+      : state.profile;
+    const view = state.profileReturn === "profile" ? "browse" : state.profileReturn;
+    return { ...state, view, profile };
+  });
+}
+
+export function startProfileEdit(): void {
+  setState((state) =>
+    state.profile.editing
+      ? state
+      : { ...state, profile: { ...state.profile, editing: true } }
+  );
+}
+
+export function cancelProfileEdit(): void {
+  setState((state) =>
+    state.profile.editing
+      ? { ...state, profile: { ...state.profile, editing: false } }
+      : state
+  );
+}
+
+/**
+ * Save the page-local identity. A blank field keeps the stored value, the same
+ * forgiving rule the Settings form uses for an untouched API key.
+ */
+export function saveProfileEdit(name: string, memberSince: string): void {
+  setState((state) => {
+    if (!state.profile.editing) return state;
+    return {
+      ...state,
+      profile: {
+        ...state.profile,
+        name: name.trim() || state.profile.name,
+        memberSince: memberSince.trim() || state.profile.memberSince,
+        editing: false,
+      },
+    };
+  });
+}
+
+/** Escape closes the editor first, then the page. */
+export function escapeProfile(): void {
+  const state = getState();
+  if (state.view !== "profile") return;
+  if (state.profile.editing) cancelProfileEdit();
+  else closeProfile();
 }
 
 export function toggleAi(): void {

@@ -28,6 +28,12 @@ export function initialState(): AppState {
     view: "browse",
     ai: false,
     settingsReturn: "browse",
+    profileReturn: "browse",
+    profile: {
+      name: "John",
+      memberSince: "March, 2024",
+      editing: false,
+    },
     sessions: {
       movie: emptySession("Trending Movies"),
       music: emptySession("Trending Music"),

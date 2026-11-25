@@ -10,7 +10,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 - **Input**: A keyword or content name (e.g. `"Inception"`, `"Taylor Swift"`, `"Minecraft"`)
 - **Output**: Related content across Movies, Music, Books, and Games (all four wired)
 - **Mechanism**: The frontend invokes `requestMovies` / `requestGames` / `requestGeniusMusic` / `requestBooks` — these `@KremaCommand` handlers only *kick off* the IO-pool fetch and return the request's generation immediately (blocking the UI thread on network I/O froze the window; see the Windows constraint below). Card metadata arrives through the `pollMovieData` / `pollGameData` / `pollGeniusMusicData` / `pollBookData` drains (`pending` / `done` / `error` / `superseded`); artwork streams through the `pollMoviePosters` / `pollGamePosters` / `pollGeniusMusicPosters` / `pollBookCovers` drains (emitting `"poster"` / `"gamePoster"` / `"musicPoster"` / `"bookCover"`). Skeleton cards show while a fetch is in flight.
-- **Navigation**: a collapsible sidebar switches the content form with one button per form (Music / Movies / Books / Games) — all four connect to their APIs (TMDB, TheGamesDB, Genius, Open Library). **Settings** (sidebar foot) opens two cards: **Appearance** (theme picker, read/written through `loadTheme` / `saveTheme` into `~/.van-gogh/theme.conf`) and **AI recommendations** (reads and writes `~/.van-gogh/llm.conf` through `loadLlmSettings` / `saveLlmSettings`, so a key saved there is the key the engine uses). The other menu items (Home, My Lists, Favorites) and the notification/profile buttons are shell chrome with no backend yet; `Menu` and `Library` are section labels, not destinations.
+- **Navigation**: a collapsible sidebar switches the content form with one button per form (Music / Movies / Books / Games) — all four connect to their APIs (TMDB, TheGamesDB, Genius, Open Library). **Settings** (sidebar foot) opens two cards: **Appearance** (theme picker, read/written through `loadTheme` / `saveTheme` into `~/.van-gogh/theme.conf`) and **AI recommendations** (reads and writes `~/.van-gogh/llm.conf` through `loadLlmSettings` / `saveLlmSettings`, so a key saved there is the key the engine uses). The other menu items (Home, My Lists, Favorites) and the notification button are shell chrome with no backend yet; the header avatar opens the **Profile** page (a presentation slice: identity, universe stats and collection tiles, with no profile store behind it). `Menu` and `Library` are section labels, not destinations.
 
 ### Tech stack
 - **Language**: Java 25 (LTS), compiled with `--release 25`
@@ -57,6 +57,14 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
     until those sources land)
   - `BookController`, `OpenLibraryBookService`, and `OpenLibraryClient` — Open Library search/weekly-trending and cover streaming (books are the design-system Book Card: poster-card layout, `year  Author · N pages` meta, own click detail); `requestBooks` with `kind=recommend` routes through the LLM engine (books resolved by `BookResolver`). `requestBookDetail` / `pollBookDetail` / `pollBookDetailArt` resolve one work (identity, record ledger, description + subjects, editions, author card, similar rail) with `BookDetailMapper` folding the work/editions/ratings/author payloads, and stream cover/author/edition/similar artwork as data URIs through `bookDetailArt` events keyed by slot (`cover`, `author`, `edition:<i>`, `similar:<workKey>`)
   - `vangogh.theme.ThemeConfig` + `ThemeController` — the skin picker: `loadTheme` / `saveTheme` (synchronous, `~/.van-gogh/theme.conf`), reply `{status, theme, themes}`, so the Settings chips are rendered from the Java registry (`ThemeConfig.KNOWN`) and the page carries no theme ids, labels or colours. Theme = CSS only: `frontend/src/theme/theme.ts` moves `html[data-theme]` and the `#themeSkin` href. See `docs/themes.md`
+  - Profile page — presentation slice: the header avatar opens `ProfileView`
+    (identity + "Member since", the "My Entertainment Universe" numbers, four
+    collection tiles). It is an overlay like Settings: Back/Escape return to the
+    covered browse/detail and Escape closes the inline editor first. The identity
+    edit is page-local (`state.profile`; no backend or My Lists/Favorites write),
+    and "View collection" stays inert until those stores exist. Fixtures:
+    `frontend/src/components/profile/profileData.ts`; skin:
+    `frontend/src/styles/profile.css`.
   - Frontend: React 19 + TypeScript + Tailwind v4 under `frontend/`, built by
     Vite into `src/main/resources/movie-page/` (see "Frontend" below): shared
     card grid with per-domain card shapes (movie/game portrait posters, music
@@ -96,14 +104,15 @@ Node. `index.html` loads `krema-shim.js` (classic) and the hashed module bundle.
   `useNarrowSidebar` (`NARROW_WIDTH = 900`).
 - `frontend/src/components/` — `shell/{Sidebar,Header}`, `browse/BrowseView`
   plus `cards/` (shared `CardShell`/`CardArtwork`, portrait `PosterCard`,
-  `MusicCard`, `BookCard`, placeholders), `settings/SettingsView`, and one
+  `MusicCard`, `BookCard`, placeholders), `settings/SettingsView`,
+  `profile/ProfileView` (plus its `profileData.ts` fixtures), and one
   folder per detail view: `detail/song` (incl. `player.ts`, the module-level
   player store the detail and its `PlayerBar` share), `detail/movie`,
   `detail/book`, `detail/game`.
 - `frontend/src/styles/` — `base.css` (structure + role tokens' Starry
   defaults), `music-detail.css`, `movie-detail.css`, `book-detail.css`,
-  `game-detail.css`, `settings.css`, `tailwind.css`; imported once, in that
-  order, so the bundled sheet is a single `<link>`.
+  `game-detail.css`, `settings.css`, `profile.css`, `tailwind.css`; imported
+  once, in that order, so the bundled sheet is a single `<link>`.
 - `frontend/public/` — `krema-shim.js`, `theme-starry.css`,
   `theme-liquidneon.css`, the backdrops, `posters/`. Vite copies them to the
   output root verbatim, so `#themeSkin` and the backdrop `url()`s still resolve
@@ -163,11 +172,11 @@ store (`app/types.ts` → `Session`), so leaving a form saves nothing and
 returning restores everything — last query, cards, artwork, open detail and
 scroll position — with no IPC. Switching to a form with no cards loads
 trending. Page memory only — closing the app clears it. A form's own button is
-a no-op while that form is active; Back/Escape leave a detail. Settings is a
-round-trip: `settingsReturn` remembers whether it covered the grid or a detail,
-and a detail's late reply cannot unhide over Settings. Leaving a loading form
-cancels its request and returning re-fires it; leaving a ready form keeps the
-cards and only resumes the poster drain.
+a no-op while that form is active; Back/Escape leave a detail. Settings and
+Profile are round-trips: `settingsReturn` / `profileReturn` remember whether the
+overlay covered the grid or a detail, and a detail's late reply cannot unhide
+over either. Leaving a loading form cancels its request and returning re-fires
+it; leaving a ready form keeps the cards and only resumes the poster drain.
 
 Rules that keep the graph acyclic: `bridge/domains.ts` is data only (no React);
 cards take an `onOpen` callback, so `cards/` never imports `actions.ts`;
@@ -323,7 +332,9 @@ form (loads the stored config, refuses a save with no key, saves and keeps the
 key off the page), the theme picker (chips from the reply, live repaint of
 shell + cards + AI toggle, one save, reopening shows it pressed, `?theme=`
 startup and fallback), the song, movie, book and game detail views (every
-bento/immersive tile, each artwork slot, actions, Escape back to the grid) and
+bento/immersive tile, each artwork slot, actions, Escape back to the grid), the
+profile screen (identity, the universe numbers, the four collection counts, the
+inert "View collection", the editor round-trip and the two-stage Escape) and
 every scenario, exit 1 on failure. Full guide: `docs/preview-harness.md`.
 Layout, styling and page-side code go through the preview; shell, IPC and
 network code still need a real app run.

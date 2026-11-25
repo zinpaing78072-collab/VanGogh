@@ -17,9 +17,19 @@ import { loadContent, resumePosters } from "../hooks/useContent";
  */
 export function switchDomain(key: DomainKey): void {
   const state = getState();
-  if (key === state.activeDomain && state.view !== "settings") return;
+  if (
+    key === state.activeDomain &&
+    state.view !== "settings" &&
+    state.view !== "profile"
+  ) {
+    return;
+  }
 
-  saveScroll(state.activeDomain, window.scrollY);
+  // Settings/Profile scroll their own page; the covered form keeps the scroll
+  // it had, so leaving the overlay must not overwrite it with 0.
+  if (state.view !== "settings" && state.view !== "profile") {
+    saveScroll(state.activeDomain, window.scrollY);
+  }
 
   const target = state.sessions[key];
 
