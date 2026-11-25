@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Van Gogh · My Lists design explorations</title>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="my-lists.css">
+<link rel="stylesheet" href="theme-liquidneon.css">
+</head>
+<body>
+<div class="sky" aria-hidden="true"></div>
+<div class="veil" aria-hidden="true"></div>
+
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+        <div class="sidebar-head">
+            <div class="brand"><span class="brand-mark" aria-hidden="true">✶</span><span class="brand-text">Van Gogh</span></div>
+            <button type="button" id="sidebarToggle" class="icon-btn sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Main navigation">
+            <p class="nav-label">Menu</p>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+                <span class="nav-text">Home</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <span class="nav-text">Music</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+                <span class="nav-text">Movies</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span class="nav-text">Books</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+                <span class="nav-text">Games</span>
+            </button>
+
+            <p class="nav-label nav-label-spaced">Library</p>
+            <a class="nav-item" href="v1-shelf.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+                <span class="nav-text">My Lists</span>
+            </a>
+            <a class="nav-item" href="v1-shelf.html?view=favorites">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                <span class="nav-text">Favorites</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-foot">
+            <button type="button" class="nav-item" aria-disabled="true" title="Settings lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span class="nav-text">Settings</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="main-column">
+        <header class="app-header">
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search movies, books, music, games…" aria-label="Search">
+                <button type="button" id="aiToggle" class="ai-toggle" aria-pressed="false" aria-label="AI recommendations" title="AI recommendations off">AI</button>
+                <button id="searchBtn" class="search-btn">Search</button>
+            </div>
+            <div class="quick-actions">
+                <button type="button" class="icon-btn round" aria-label="Notifications" aria-disabled="true" title="Notifications (coming soon)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                </button>
+                <button type="button" class="icon-btn round avatar" aria-label="Profile" aria-disabled="true" title="Profile (coming soon)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="container ml-container">
+            <div class="ml-pagehead">
+                <div class="ml-heading">
+                    <p class="ml-eyebrow">Design explorations <span class="ml-proto">Liquid Neon</span></p>
+                    <h1 class="ml-title">My Lists<span class="slash">/</span>Five Directions</h1>
+                    <p class="ml-sub">Five static browser mock-ups of the My Lists destination, in the app's Liquid Neon skin.
+                        Nothing here is wired to the app: no IPC, no backend, no storage. The pages exist to compare layout
+                        directions and put possible features on screen before the real slice starts.</p>
+                </div>
+            </div>
+
+            <p class="ml-intro">
+                <b>The decided model</b> (AGENTS.md, 2026-11-10): a card saves into <b>My Lists</b> — Watchlist and Favorites,
+                across all four content forms. Favorites feed the AI engine. A whole query's saved results go into
+                <b>My Searches</b>, a separate destination. Detail opens from every card, everywhere. Storage will be SQLite.
+                The variants below interpret that model differently, and mark the parts they invent.
+            </p>
+
+            <div class="ml-gallery">
+                <a class="ml-panel ml-variant" href="v1-shelf.html">
+                    <div class="ml-variant-thumb" aria-hidden="true">
+                        <div class="mini-shell">
+                            <div class="mini-rail"></div>
+                            <div class="mini-body">
+                                <div class="mini-head"></div>
+                                <div class="mini-sub"></div>
+                                <div class="mini-toolbar"></div>
+                                <div class="mini-grid">
+                                    <i></i><i></i><i></i><i></i><i></i><i></i>
+                                    <i></i><i></i><i></i><i></i><i></i><i></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ml-variant-body">
+                        <p class="ml-variant-kicker">01 · Filter-first</p>
+                        <h2>The Shelf</h2>
+                        <p>The recommended core. One card grid for all four forms, with list and form filters, a library
+                            search, sort, and favorite/remove actions on each card. Feels like browsing; scales to the
+                            presentation without a new interaction model.</p>
+                        <ul><li>Segmented Watchlist / Favorites</li><li>Form chips + counts</li><li>Inline card actions</li><li>Saved date per card</li></ul>
+                        <span class="ml-variant-link">Open the shelf
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </span>
+                    </div>
+                </a>
+
+                <a class="ml-panel ml-variant" href="v2-ledger.html">
+                    <div class="ml-variant-thumb" aria-hidden="true">
+                        <div class="mini-shell">
+                            <div class="mini-rail"></div>
+                            <div class="mini-body">
+                                <div class="mini-head"></div>
+                                <div class="mini-sub"></div>
+                                <div class="mini-ledger">
+                                    <div class="mini-side"></div>
+                                    <div class="mini-rows">
+                                        <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ml-variant-body">
+                        <p class="ml-variant-kicker">02 · Management-first</p>
+                        <h2>The Ledger</h2>
+                        <p>The dense read. Smart views on the left, a sortable table on the right, checkboxes that raise a
+                            bulk-action bar, compact and comfortable densities. Built for the moment the library is too big
+                            to scan as posters.</p>
+                        <ul><li>Bulk favorite / watchlist / remove</li><li>Sortable columns</li><li>Smart views + counts</li><li>Compact mode</li></ul>
+                        <span class="ml-variant-link">Open the ledger
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </span>
+                    </div>
+                </a>
+
+                <a class="ml-panel ml-variant" href="v3-studio.html">
+                    <div class="ml-variant-thumb" aria-hidden="true">
+                        <div class="mini-shell">
+                            <div class="mini-rail"></div>
+                            <div class="mini-body">
+                                <div class="mini-head"></div>
+                                <div class="mini-sub"></div>
+                                <div class="mini-bento">
+                                    <i></i><i></i><i></i><i></i><i></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ml-variant-body">
+                        <p class="ml-variant-kicker">03 · Insight-first</p>
+                        <h2>The Studio</h2>
+                        <p>The library as a lens on taste: a bento of counts, a favorites wall, a watchlist queue, the
+                            week's saves, and a “draft from my taste” call to action that makes the AI handoff explicit.
+                            The strongest story for the presentation.</p>
+                        <ul><li>Taste profile + counts</li><li>Favorites wall</li><li>In-progress rail</li><li>Draft-from-library CTA</li></ul>
+                        <span class="ml-variant-link">Open the studio
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </span>
+                    </div>
+                </a>
+
+                <a class="ml-panel ml-variant" href="v4-board.html">
+                    <div class="ml-variant-thumb" aria-hidden="true">
+                        <div class="mini-shell">
+                            <div class="mini-rail"></div>
+                            <div class="mini-body">
+                                <div class="mini-head"></div>
+                                <div class="mini-sub"></div>
+                                <div class="mini-board">
+                                    <div class="mini-lane"><i></i><i></i><i></i></div>
+                                    <div class="mini-lane"><i></i><i></i></div>
+                                    <div class="mini-lane"><i></i><i></i><i></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ml-variant-body">
+                        <p class="ml-variant-kicker">04 · Tracking-first (speculative)</p>
+                        <h2>The Board</h2>
+                        <p>Adds a third axis to the saving model: progress. Cards move from Want to through In progress to
+                            Finished by drag or arrow, while Favorites stays a star. Tests whether tracking belongs here or
+                            belongs to a later slice.</p>
+                        <ul><li>Drag between lanes</li><li>Favorites as a flag</li><li>Progress bar</li><li>Status counts</li></ul>
+                        <span class="ml-variant-link">Open the board
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </span>
+                    </div>
+                </a>
+
+                <a class="ml-panel ml-variant ml-variant-wide" href="v5-queue.html">
+                    <div class="ml-variant-thumb" aria-hidden="true">
+                        <div class="mini-shell">
+                            <div class="mini-rail"></div>
+                            <div class="mini-body">
+                                <div class="mini-head"></div>
+                                <div class="mini-sub"></div>
+                                <div class="mini-status"></div>
+                                <div class="mini-rows">
+                                    <i></i><i></i><i></i><i></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ml-variant-body">
+                        <p class="ml-variant-kicker">05 · Status-first — revision of 04</p>
+                        <h2>The Queue</h2>
+                        <p>The board's statuses without the three columns: one dropdown switches the whole list between
+                            Want to, In progress and Finished. Rows stay horizontal with full-size posters — 2:3 for films,
+                            books and games, 1:1 for albums — so the artwork keeps its real shape.</p>
+                        <ul><li>Status dropdown + counts</li><li>Full-size poster rows</li><li>Favorite / advance / remove</li><li>Form filter + favorites-only</li></ul>
+                        <span class="ml-variant-link">Open the queue
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="ml-notes">
+                <section class="ml-panel ml-hud ml-note">
+                    <h3>Decided — do not re-litigate</h3>
+                    <ul>
+                        <li>One library across Movies, Music, Books, Games.</li>
+                        <li>Watchlist + Favorites, saved from any card.</li>
+                        <li>Favorites feed the AI engine.</li>
+                        <li>Detail opens from every card.</li>
+                        <li>My Searches is a separate destination.</li>
+                        <li>SQLite is the storage answer from day one.</li>
+                    </ul>
+                </section>
+
+                <section class="ml-panel ml-hud ml-note">
+                    <h3>Speculative — proposals only</h3>
+                    <ul>
+                        <li>Progress statuses (Want to / In progress / Finished).</li>
+                        <li>Custom named lists, beyond Watchlist + Favorites.</li>
+                        <li>Bulk export and arbitrary sorting.</li>
+                        <li>Saved dates, personal notes, “why I saved it”.</li>
+                        <li>Continue-where-you-left-off progress in percent.</li>
+                        <li>Draft-from-library as a first-class AI action.</li>
+                    </ul>
+                </section>
+
+                <section class="ml-panel ml-hud ml-note">
+                    <h3>Implementation seam</h3>
+                    <p>A real slice needs a library store and a command pair that follows the Windows rule (synchronous UI
+                        thread, IO-pool work behind a generation): load the saved rows, then mutate them. The four rendered
+                        cards already exist; the saved item adds <code>lists</code>, <code>savedAt</code>, and an identity
+                        the detail request understands. The prototypes intentionally never touch <code>window.krema</code>.</p>
+                </section>
+            </div>
+
+            <p class="ml-footnote">
+                Static prototypes · sample artwork downloaded once (TMDB / TheGamesDB / Cover Art Archive / Open Library) ·
+                open <a href="README.md">README.md</a> for provenance and run instructions.
+            </p>
+        </main>
+    </div>
+</div>
+
+<script src="prototype.js"></script>
+</body>
+</html>

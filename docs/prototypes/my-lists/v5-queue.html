@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Van Gogh · My Lists prototype — 05 The Queue</title>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="my-lists.css">
+<!-- theme sheet last: it must win the cascade, exactly like the app -->
+<link rel="stylesheet" href="theme-liquidneon.css">
+</head>
+<body>
+<div class="sky" aria-hidden="true"></div>
+<div class="veil" aria-hidden="true"></div>
+
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+        <div class="sidebar-head">
+            <div class="brand"><span class="brand-mark" aria-hidden="true">✶</span><span class="brand-text">Van Gogh</span></div>
+            <button type="button" id="sidebarToggle" class="icon-btn sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Main navigation">
+            <p class="nav-label">Menu</p>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+                <span class="nav-text">Home</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <span class="nav-text">Music</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+                <span class="nav-text">Movies</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span class="nav-text">Books</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+                <span class="nav-text">Games</span>
+            </button>
+
+            <p class="nav-label nav-label-spaced">Library</p>
+            <a class="nav-item active" href="v1-shelf.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+                <span class="nav-text">My Lists</span>
+            </a>
+            <a class="nav-item" href="v1-shelf.html?view=favorites">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                <span class="nav-text">Favorites</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-foot">
+            <button type="button" class="nav-item" aria-disabled="true" title="Settings lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span class="nav-text">Settings</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="main-column">
+        <header class="app-header">
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search movies, books, music, games…" aria-label="Search">
+                <button type="button" id="aiToggle" class="ai-toggle" aria-pressed="false" aria-label="AI recommendations" title="AI recommendations off">AI</button>
+                <button id="searchBtn" class="search-btn">Search</button>
+            </div>
+            <div class="quick-actions">
+                <button type="button" class="icon-btn round" aria-label="Notifications" aria-disabled="true" title="Notifications (coming soon)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                </button>
+                <button type="button" class="icon-btn round avatar" aria-label="Profile" aria-disabled="true" title="Profile (coming soon)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="container ml-container">
+            <div class="ml-pagehead">
+                <div class="ml-heading">
+                    <p class="ml-eyebrow">Library <span class="ml-proto">Prototype 05</span></p>
+                    <h1 class="ml-title">My Lists<span class="slash">/</span>Queue</h1>
+                    <p class="ml-sub">The board folded into one list. A <strong>status dropdown</strong> replaces the three lanes:
+                        switch between Want to, In progress and Finished without leaving the page. Rows stay horizontal with
+                        full-size posters — 2:3 for films, books and games, 1:1 for albums — so no artwork is squashed.</p>
+                </div>
+                <div class="ml-actions">
+                    <a class="ml-btn" href="v4-board.html">Board</a>
+                    <a class="ml-btn primary" href="index.html">All explorations</a>
+                </div>
+            </div>
+
+            <div class="ml-counts" id="queueSummary" aria-live="polite"></div>
+
+            <div class="ml-panel ml-toolbar">
+                <div class="ml-sort-wrap ml-status-wrap">
+                    <button type="button" class="ml-select ml-status-select" data-menu-trigger="statusMenu" aria-haspopup="true">
+                        Status <span class="ml-status-value" id="statusLabel">All saved</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div class="ml-menu ml-menu-left hidden" id="statusMenu" role="menu">
+                        <button type="button" role="menuitemradio" data-status-filter="all" aria-checked="true">All saved <span class="count" data-status-count="all">0</span></button>
+                        <button type="button" role="menuitemradio" data-status-filter="want" aria-checked="false">Want to <span class="count" data-status-count="want">0</span></button>
+                        <button type="button" role="menuitemradio" data-status-filter="progress" aria-checked="false">In progress <span class="count" data-status-count="progress">0</span></button>
+                        <button type="button" role="menuitemradio" data-status-filter="done" aria-checked="false">Finished <span class="count" data-status-count="done">0</span></button>
+                    </div>
+                </div>
+
+                <div class="ml-chips" role="group" aria-label="Content form">
+                    <button type="button" class="ml-chip" data-queue-form="all" aria-pressed="true">All forms</button>
+                    <button type="button" class="ml-chip" data-queue-form="movie" aria-pressed="false">Movies</button>
+                    <button type="button" class="ml-chip" data-queue-form="music" aria-pressed="false">Music</button>
+                    <button type="button" class="ml-chip" data-queue-form="book" aria-pressed="false">Books</button>
+                    <button type="button" class="ml-chip" data-queue-form="game" aria-pressed="false">Games</button>
+                </div>
+
+                <div class="ml-toolbar-spacer"></div>
+
+                <button type="button" class="ml-select" id="favoritesOnly" aria-pressed="false" title="Show favorites only">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>
+                    Favorites only
+                </button>
+            </div>
+
+            <div class="ml-queue" id="queue"></div>
+            <div class="ml-empty hidden" id="queueEmpty">
+                <strong>Nothing in this status</strong>
+                Pick another status from the dropdown, or save a card from any content form.
+            </div>
+
+            <div class="ml-board-note">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+                <span>Status tracking is still speculation — the decided saving model is Watchlist + Favorites. This page
+                    tests the same idea as the board, but with a dropdown instead of three columns, so the library reads as
+                    one list and the artwork keeps its real shape.</span>
+            </div>
+
+            <p class="ml-footnote">
+                Prototype 05 · status changes are local only · <a href="v4-board.html">← 04 Board</a> ·
+                <a href="index.html">All explorations →</a>
+            </p>
+        </main>
+    </div>
+</div>
+
+<script src="data.js"></script>
+<script src="prototype.js"></script>
+</body>
+</html>

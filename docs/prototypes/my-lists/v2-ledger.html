@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Van Gogh · My Lists prototype — 02 The Ledger</title>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="my-lists.css">
+<link rel="stylesheet" href="theme-liquidneon.css">
+</head>
+<body>
+<div class="sky" aria-hidden="true"></div>
+<div class="veil" aria-hidden="true"></div>
+
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+        <div class="sidebar-head">
+            <div class="brand"><span class="brand-mark" aria-hidden="true">✶</span><span class="brand-text">Van Gogh</span></div>
+            <button type="button" id="sidebarToggle" class="icon-btn sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Main navigation">
+            <p class="nav-label">Menu</p>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+                <span class="nav-text">Home</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <span class="nav-text">Music</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+                <span class="nav-text">Movies</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span class="nav-text">Books</span>
+            </button>
+            <button type="button" class="nav-item" aria-disabled="true" title="Browsing lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+                <span class="nav-text">Games</span>
+            </button>
+
+            <p class="nav-label nav-label-spaced">Library</p>
+            <a class="nav-item active" href="v1-shelf.html" aria-current="page">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+                <span class="nav-text">My Lists</span>
+            </a>
+            <a class="nav-item" href="v1-shelf.html?view=favorites">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                <span class="nav-text">Favorites</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-foot">
+            <button type="button" class="nav-item" aria-disabled="true" title="Settings lives in the app">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span class="nav-text">Settings</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="main-column">
+        <header class="app-header">
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search movies, books, music, games…" aria-label="Search">
+                <button type="button" id="aiToggle" class="ai-toggle" aria-pressed="false" aria-label="AI recommendations" title="AI recommendations off">AI</button>
+                <button id="searchBtn" class="search-btn">Search</button>
+            </div>
+            <div class="quick-actions">
+                <button type="button" class="icon-btn round" aria-label="Notifications" aria-disabled="true" title="Notifications (coming soon)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                </button>
+                <button type="button" class="icon-btn round avatar" aria-label="Profile" aria-disabled="true" title="Profile (coming soon)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="container ml-container">
+            <div class="ml-pagehead">
+                <div class="ml-heading">
+                    <p class="ml-eyebrow">Library <span class="ml-proto">Prototype 02</span></p>
+                    <h1 class="ml-title">My Lists<span class="slash">/</span>Ledger</h1>
+                    <p class="ml-sub">The management read: every saved record in one dense, sortable sheet with
+                        <strong>bulk actions</strong>, smart views and a compact mode. Built for a library that has outgrown a card grid.</p>
+                </div>
+                <div class="ml-actions">
+                    <button type="button" class="ml-btn" id="exportBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M8 11l4 4 4-4"/><path d="M4 20h16"/></svg>
+                        Export
+                    </button>
+                    <button type="button" class="ml-btn primary" id="newListBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                        New list
+                    </button>
+                </div>
+            </div>
+
+            <div class="ml-ledger">
+                <aside class="ml-panel ml-rail" aria-label="Library views">
+                    <p class="ml-rail-label">Smart views</p>
+                    <button type="button" class="ml-rail-item" data-view="all" aria-pressed="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+                        All saved <span class="count" data-rail-count="all">0</span>
+                    </button>
+                    <button type="button" class="ml-rail-item" data-view="watchlist" aria-pressed="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                        Watchlist <span class="count" data-rail-count="watchlist">0</span>
+                    </button>
+                    <button type="button" class="ml-rail-item" data-view="favorites" aria-pressed="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                        Favorites <span class="count" data-rail-count="favorites">0</span>
+                    </button>
+                    <button type="button" class="ml-rail-item" data-view="recent" aria-pressed="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/></svg>
+                        Recently added <span class="count" data-rail-count="recent">0</span>
+                    </button>
+
+                    <div class="ml-rail-sep"></div>
+                    <p class="ml-rail-label">Content forms</p>
+                    <button type="button" class="ml-rail-item" data-view="movie" aria-pressed="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+                        Movies <span class="count" data-rail-count="movie">0</span>
+                    </button>
+                    <button type="button" class="ml-rail-item" data-view="music" aria-pressed="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                        Music <span class="count" data-rail-count="music">0</span>
+                    </button>
+                    <button type="button" class="ml-rail-item" data-view="book" aria-pressed="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        Books <span class="count" data-rail-count="book">0</span>
+                    </button>
+                    <button type="button" class="ml-rail-item" data-view="game" aria-pressed="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+                        Games <span class="count" data-rail-count="game">0</span>
+                    </button>
+                </aside>
+
+                <section class="ml-panel ml-table-panel" id="tablePanel" aria-label="Saved items">
+                    <div class="ml-panel-head">
+                        <span class="ml-panel-title">Saved items</span>
+                        <span class="ml-panel-note">Select rows to act on many at once</span>
+                    </div>
+
+                    <div class="ml-toolbar" style="margin:0; border-bottom:1px solid var(--muted-a14); border-radius:0;">
+                        <div class="ml-search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                            <input type="search" id="ledgerSearch" placeholder="Search titles, creators…" aria-label="Search saved items">
+                        </div>
+                        <div class="ml-toolbar-spacer"></div>
+                        <button type="button" class="ml-select" id="densityBtn" aria-pressed="false" title="Toggle compact rows">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                            Compact
+                        </button>
+                    </div>
+
+                    <div class="ml-table-wrap">
+                        <table class="ml-table" id="ledgerTable">
+                            <thead>
+                                <tr>
+                                    <th class="cell-check"><input type="checkbox" class="ml-check" id="selectAll" aria-label="Select all rows"></th>
+                                    <th class="cell-art">Art</th>
+                                    <th class="sortable" data-sort-col="form">Form <span class="arrow"></span></th>
+                                    <th class="sortable" data-sort-col="title">Title <span class="arrow"></span></th>
+                                    <th class="cell-status">Status</th>
+                                    <th class="sortable cell-saved" data-sort-col="saved">Saved <span class="arrow">↓</span></th>
+                                    <th class="cell-actions"><span class="hidden">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledgerBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="ml-table-foot" id="tableFoot"></div>
+                </section>
+            </div>
+
+            <p class="ml-footnote">
+                Prototype 02 · local sample data · status pills are derived from the board's speculative tracking field ·
+                <a href="v1-shelf.html">← 01 Shelf</a> · <a href="v3-studio.html">03 Studio →</a>
+            </p>
+        </main>
+    </div>
+</div>
+
+<div class="ml-bulkbar" id="bulkbar" aria-live="polite">
+    <span class="ml-bulk-count" id="bulkCount"><b>0</b> selected</span>
+    <button type="button" class="ml-btn small" id="bulkFavorite">Favorite</button>
+    <button type="button" class="ml-btn small" id="bulkWatchlist">Watchlist</button>
+    <button type="button" class="ml-btn small" id="bulkRemove">Remove</button>
+    <button type="button" class="ml-icon-btn" id="bulkClear" aria-label="Clear selection" title="Clear selection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+</div>
+
+<script src="data.js"></script>
+<script src="prototype.js"></script>
+</body>
+</html>
