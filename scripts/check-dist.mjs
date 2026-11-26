@@ -20,7 +20,10 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
 const frontend = path.join(root, "frontend");
 const committed = path.join(root, "src", "main", "resources", "movie-page");
-const vite = path.join(frontend, "node_modules", ".bin", "vite");
+// Run Vite's entry through the current Node binary: the .bin/vite shim is a
+// shell script on Unix and a .cmd on Windows, and neither is spawnable as-is
+// on every platform.
+const vite = path.join(frontend, "node_modules", "vite", "bin", "vite.js");
 
 function walk(dir, base = dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -44,7 +47,7 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "vangogh-dist-"));
 let failed = false;
 
 try {
-  execFileSync(vite, ["build", "--outDir", tmp, "--emptyOutDir"], {
+  execFileSync(process.execPath, [vite, "build", "--outDir", tmp, "--emptyOutDir"], {
     cwd: frontend,
     stdio: "pipe",
   });
