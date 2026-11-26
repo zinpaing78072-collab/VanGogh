@@ -17,6 +17,7 @@ class TgdbGameServiceTest {
                     "id": 42,
                     "game_title": "Sample Game",
                     "release_date": "2024-06-15",
+                    "rating": "M - Mature 17+",
                     "genres": [1],
                     "overview": "An adventure."
                   }
@@ -42,6 +43,7 @@ class TgdbGameServiceTest {
         assertEquals(42, game.id());
         assertEquals("Sample Game", game.game_title());
         assertEquals("2024-06-15", game.release_date());
+        assertEquals("M - Mature 17+", game.ageRating());
         assertEquals("Action", game.genre());
         assertEquals("https://cdn.thegamesdb.net/images/original/boxart/front/front.jpg", game.posterUrl());
     }
