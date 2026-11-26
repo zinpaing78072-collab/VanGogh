@@ -22,6 +22,28 @@ card list, and `pollMusicPosters` drains cover art while emitting
 MusicBrainz WS2 + Cover Art Archive — things a future refactor or slice would
 trip on. Client code: `vangogh/net/MusicBrainzClient`.
 
+## Genius trending access
+
+Trending reads the chart route the Genius website itself calls,
+`https://genius.com/api/songs/chart?page=1&per_page=20&time_period=day`
+(`GeniusClient.chartUrl()`). The documented API's `/charts/songs` answers
+`403 {"meta":{"status":403,"message":"Action forbidden for current scope"}}`
+for ordinary client tokens — including the bundled demo token — so it is only a
+fallback for a token whose scope allows charts. Search and song detail still go
+through `api.genius.com` with the Bearer token.
+
+**The web chart route requires a browser-like User-Agent.** Without one it
+answers 403 as well (a Cloudflare check), so every `GeniusClient` request sends
+a desktop Chrome UA; keep that header when refactoring the client. With it the
+route answers 200 JSON and `parseChart` maps `response.chart_items[].item`
+directly (the item carries id/title/artist_names/artwork/release date). A
+non-`chart_items` body — a Cloudflare challenge page or an API error — is
+treated as a failed attempt so the fallback can run, and the web route's own
+response is what surfaces if both fail.
+
+`time_period` accepts `day` (default here), `week`, `month` and `all_time`.
+`GENIUS_ACCESS_TOKEN` still overrides the bundled demo token for search/detail.
+
 ## MusicBrainz WS2
 
 **No popularity data exists.** MusicBrainz has no "trending", no play counts,
