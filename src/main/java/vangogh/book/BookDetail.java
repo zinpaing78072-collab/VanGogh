@@ -26,8 +26,9 @@ public record BookDetail(
         int ratingCount,
         /** Open Library description prose, trimmed for the story tile. */
         String description,
-        /** The opening line, used by the page's "Read sample" panel. */
-        String firstSentence,
+        /** Internet Archive reader URL for the first scanned edition, or empty.
+         *  Opens as the page's in-app "Browse sample" overlay. */
+        String sampleUrl,
         java.util.List<String> subjects,
         /** The first {@code subject_times} entry ("2021"), or empty. */
         String setting,

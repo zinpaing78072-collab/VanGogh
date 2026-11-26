@@ -228,7 +228,7 @@ export interface BookDetail {
   rating: number;
   ratingCount: number;
   description: string;
-  firstSentence: string;
+  sampleUrl: string;
   subjects: string[];
   setting: string;
   coverUrl: string;

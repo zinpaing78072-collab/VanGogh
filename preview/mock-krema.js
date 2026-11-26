@@ -703,7 +703,9 @@
             rating: rating,
             ratingCount: ratingCount,
             description: (extras.descriptions || {})[item.workKey] || "",
-            firstSentence: item.firstSentence || "",
+            sampleUrl: (extras.iaIds || {})[item.workKey]
+                ? "https://archive.org/embed/" + extras.iaIds[item.workKey]
+                : "",
             subjects: item.subjects
                 ? String(item.subjects).split(/[,;\u00b7]/).map(function (s) { return s.trim(); })
                     .filter(Boolean)

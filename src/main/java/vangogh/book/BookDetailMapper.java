@@ -33,6 +33,8 @@ public final class BookDetailMapper {
     private static final int MAX_BIO = 1100;
     private static final int MAX_SUBJECT_LENGTH = 60;
     private static final Pattern YEAR = Pattern.compile("\\b(\\d{4})\\b");
+    /** Internet Archive identifiers are URL-path safe; anything else is dropped. */
+    private static final Pattern IA_ID = Pattern.compile("[A-Za-z0-9._-]+");
 
     private BookDetailMapper() {}
 
@@ -119,15 +121,7 @@ public final class BookDetailMapper {
                 .getOrElse(0);
 
         String description = cap(text(work, "description"), MAX_DESCRIPTION);
-        String firstSentence = text(work, "first_sentence");
-        if (firstSentence.isEmpty()) {
-            firstSentence = array(work, "excerpts").stream()
-                    .filter(JsonElement::isJsonObject)
-                    .map(e -> text(e.getAsJsonObject(), "excerpt"))
-                    .filter(s -> !s.isEmpty())
-                    .findFirst()
-                    .orElse("");
-        }
+        String sampleUrl = sampleUrl(editions);
 
         String setting = array(work, "subject_times").stream()
                 .map(BookDetailMapper::asString)
@@ -164,7 +158,7 @@ public final class BookDetailMapper {
                 rating,
                 ratingCount,
                 description,
-                firstSentence,
+                sampleUrl,
                 subjectList,
                 setting,
                 coverUrl,
@@ -228,6 +222,24 @@ public final class BookDetailMapper {
     }
 
     // ----------------------------------------------------------- editions
+
+    /**
+     * The Internet Archive reader URL for the first edition carrying a scan
+     * ({@code ocaid}), or empty. That is the page's "Browse sample" source:
+     * full pages for public-domain works, the lending preview for the rest.
+     */
+    private static String sampleUrl(JsonObject editions) {
+        for (JsonElement element : array(editions, "entries")) {
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            String ocaid = text(element.getAsJsonObject(), "ocaid");
+            if (IA_ID.matcher(ocaid).matches()) {
+                return "https://archive.org/embed/" + ocaid;
+            }
+        }
+        return "";
+    }
 
     private static List<Edition> editions(JsonObject editions) {
         List<Edition> covered = new ArrayList<>();

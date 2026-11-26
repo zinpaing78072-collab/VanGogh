@@ -455,6 +455,15 @@
                 "OL1513254W": "Chiba City",
                 "OL48029W": "Macondo"
             },
+            /* Internet Archive scans, shaped like the editions payload's
+             * `ocaid`; the page builds the BookReader URL from them. */
+            iaIds: {
+                "OL82563W": "lordofrings0000tolk",
+                "OL1168007W": "dune0000herb",
+                "OL27448W": "greatgatsby0000fitz",
+                "OL1513254W": "neuromancer0000gibs",
+                "OL48029W": "cienanosdesoleda0000garc"
+            },
             ratingCount: 164
         },
 

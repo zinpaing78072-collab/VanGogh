@@ -218,7 +218,7 @@ node preview/check.js --page=frontend/dist     # a staging build instead
 `cd frontend && npm run verify` runs typecheck, lint, Vitest, a fresh build and
 then this gate against the shipped output.
 
-209 assertions across 23 groups: trending render, the sidebar (four form buttons,
+225 assertions across 24 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
 active marker), the switcher across all four forms, search hit and miss, the AI
 toggle (off by default, `kind=recommend` when on, survives a form switch, empty
@@ -230,7 +230,9 @@ at the top), the song, movie, book and game detail views (each
 bento/immersive tile, every streamed artwork slot, actions, Escape back to the
 grid; the movie detail also opens its trailer in an in-page YouTube embed that
 covers the shell at 16:9, and Escape closes the player without leaving the
-detail), the Settings
+detail; the book detail opens its Internet Archive sample in an in-page reader
+overlay that covers the shell and fits the viewport, and Escape closes the
+reader without leaving the detail), the profile screen, the Settings
 form (opens from the sidebar, paints
 the loaded config, fills the base URL from a preset, refuses a save with no key,
 saves and clears the field, keeps the stored key off the page and on a second
