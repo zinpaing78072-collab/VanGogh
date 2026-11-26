@@ -105,6 +105,18 @@ class GeniusMusicServiceTest {
         { "response": { "song": { "id": 1, "title": "Bare" } } }
         """;
 
+    private static final String CHART_JSON = """
+        {"response":{"chart_items":[
+          {"_type":"chart_item","type":"song","item":{
+            "id":14109835,
+            "title":"Ako ang bagyo",
+            "artist_names":"SHEAN",
+            "release_date_for_display":"October 2, 2026",
+            "song_art_image_thumbnail_url":"https://images.genius.com/song.300x300x1.png"
+          }}
+        ],"next_page":2}}
+        """;
+
     /** Stub client returning a canned /songs/:id payload. */
     static class StubClient extends GeniusClient {
         ApiResponse songResponse = new ApiResponse(200, SONG_JSON, null);
@@ -117,6 +129,57 @@ class GeniusMusicServiceTest {
         public Try<ApiResponse> song(String id) {
             return Try.success(songResponse);
         }
+    }
+
+    static class StubChartClient extends GeniusClient {
+        ApiResponse chartResponse = new ApiResponse(200, CHART_JSON, null);
+        ApiResponse searchResponse = new ApiResponse(200, "{}", null);
+        int searchCalls;
+
+        StubChartClient() {
+            super("stub-token");
+        }
+
+        @Override
+        public Try<ApiResponse> chartSongs() {
+            return Try.success(chartResponse);
+        }
+
+        @Override
+        public Try<ApiResponse> search(String query) {
+            searchCalls++;
+            return Try.success(searchResponse);
+        }
+    }
+
+    @Test
+    void trendingMapsTheCurrentGeniusChartPayload() {
+        StubChartClient client = new StubChartClient();
+
+        Either<FetchError, java.util.List<Song>> result =
+                new GeniusMusicService(client).fetchTrending();
+
+        assertTrue(result.isRight(), () -> "expected a right, got " + result);
+        Song song = result.get().get(0);
+        assertEquals("14109835", song.id());
+        assertEquals("Ako ang bagyo", song.title());
+        assertEquals("SHEAN", song.artist());
+        assertEquals(2026, song.year());
+        assertEquals("https://images.genius.com/song.300x300x1.png", song.posterUrl());
+        assertEquals(0, client.searchCalls);
+    }
+
+    @Test
+    void chartFailureIsReportedInsteadOfReturningUnrelatedSearchResults() {
+        StubChartClient client = new StubChartClient();
+        client.chartResponse = new ApiResponse(503, "chart unavailable", null);
+
+        Either<FetchError, java.util.List<Song>> result =
+                new GeniusMusicService(client).fetchTrending();
+
+        assertTrue(result.isLeft());
+        assertTrue(result.getLeft() instanceof FetchError.HttpStatus);
+        assertEquals(0, client.searchCalls);
     }
 
     @Test

@@ -36,23 +36,11 @@ public class GeniusMusicService {
     }
 
     public Either<FetchError, java.util.List<Song>> fetchTrending() {
-        // The provided client token may not have the "charts" scope (403). Fall
-        // back to a broad search so the app still shows results instead of an
-        // error screen.
-        Either<FetchError, java.util.List<Song>> chart =
-                client.chartSongs(20, 1)
-                        .toEither()
-                        .mapLeft(e -> (FetchError) new FetchError.Transport("Genius trending", e))
-                        .flatMap(res -> requireSuccess("Genius trending", res))
-                        .flatMap(this::parseChart);
-        if (chart.isRight()) {
-            return chart;
-        }
-        return client.search("the")
+        return client.chartSongs()
                 .toEither()
                 .mapLeft(e -> (FetchError) new FetchError.Transport("Genius trending", e))
-                .flatMap(res -> requireSuccess("Genius trending (search fallback)", res))
-                .flatMap(this::parseSearch);
+                .flatMap(res -> requireSuccess("Genius trending", res))
+                .flatMap(this::parseChart);
     }
 
     /**

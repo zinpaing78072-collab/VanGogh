@@ -39,7 +39,11 @@ export function switchDomain(key: DomainKey): void {
     return;
   }
 
-  if (target.browse.status === "idle") {
+  const refreshMusicChart =
+    key === "music" &&
+    target.browse.status === "ready" &&
+    target.browse.kind === "trending";
+  if (target.browse.status === "idle" || refreshMusicChart) {
     void loadContent(key, "trending", "");
     return;
   }
