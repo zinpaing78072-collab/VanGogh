@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en" data-theme="liquidneon">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Favorites — 04 Mixer · Van Gogh prototype</title>
+<link rel="stylesheet" href="favorites.css">
+</head>
+<body>
+<div class="sky"></div>
+<div class="veil"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+    <div class="sidebar-head">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✶</span><span class="brand-text">Van Gogh</span></div>
+      <button type="button" id="sidebarToggle" class="icon-btn sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <p class="nav-label">Menu</p>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        <span class="nav-text">Home</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <span class="nav-text">Music</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+        <span class="nav-text">Movies</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span class="nav-text">Books</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+        <span class="nav-text">Games</span>
+      </button>
+
+      <p class="nav-label nav-label-spaced">Library</p>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+        <span class="nav-text">My Lists</span>
+      </button>
+      <button type="button" class="nav-item active" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="nav-text">Favorites</span>
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nav-text">Settings</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-column">
+    <header class="app-header">
+      <form class="search-bar" id="searchForm" role="search">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search movies, books, music, games…" autocomplete="off">
+        <button type="button" class="ai-toggle" id="aiToggle" aria-pressed="true" aria-label="AI recommendations" title="AI recommendations on">AI</button>
+        <button type="submit" class="search-btn">Search</button>
+      </form>
+      <div class="quick-actions">
+        <button type="button" class="icon-btn round" data-inert aria-label="Notifications" title="Notifications (coming soon)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </button>
+        <button type="button" class="icon-btn round" data-inert aria-label="Profile" title="Profile (coming soon)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="container" id="favoritesView">
+      <nav class="proto-bar" aria-label="Prototype variants">
+        <strong>Prototype</strong>
+        <a href="index.html">Gallery</a>
+        <a href="v1-shelf.html">01 Shelf</a>
+        <a href="v2-constellation.html">02 Constellation</a>
+        <a href="v3-log.html">03 Signal Log</a>
+        <a href="v4-mixer.html" aria-current="page">04 Mixer</a>
+      </nav>
+
+      <p class="eyebrow">Library // Favorites // Engine</p>
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">The Mixer <span class="count" id="seedCount">3 / 8</span></h1>
+          <p class="page-lede">Favorites feed the engine. Pick a handful as <strong>seeds</strong>, watch the taste profile change, then compose a brief for all four forms.</p>
+        </div>
+        <div class="page-actions">
+          <button type="button" class="nbtn" id="surprise">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>
+            Surprise me
+          </button>
+        </div>
+      </div>
+
+      <div class="mixer-hero">
+        <section class="mixer-panel" aria-labelledby="composeTitle">
+          <h1 id="composeTitle">Compose from what you keep.</h1>
+          <p class="lede">Every seed below is a real favorite. The profile on the right is what the engine would read before it writes a pick.</p>
+
+          <div class="seed-tray" id="seedTray" aria-label="Selected seeds"></div>
+
+          <div class="mixer-actions">
+            <button type="button" class="nbtn primary" id="generate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>
+              Generate briefs
+            </button>
+            <button type="button" class="nbtn ghost small" id="clearSeeds">Clear</button>
+            <span class="mixer-hint" id="seedHint">3 of 8 seeds · add up to five more</span>
+          </div>
+        </section>
+
+        <section class="mixer-panel" aria-labelledby="profileTitle">
+          <p class="section-label" id="profileTitle">Taste profile</p>
+          <div class="snapshot-score"><strong id="strength">—</strong><span>signal<br>strength</span></div>
+          <p class="snapshot-sub" id="profileSub">Reading 3 seeds…</p>
+          <div id="profileMeters"></div>
+          <div class="snapshot-block" style="margin-top:18px">
+            <p class="peek-label">Dominant vibes</p>
+            <div class="tag-cloud" id="profileTags"></div>
+          </div>
+          <div class="snapshot-block">
+            <p class="peek-label">Decade spread</p>
+            <div id="profileDecades"></div>
+          </div>
+        </section>
+      </div>
+
+      <section class="seed-picker" aria-labelledby="pickerTitle">
+        <div class="toolbar">
+          <div class="domain-tabs" id="pickerTabs" role="group" aria-label="Filter seeds by form"></div>
+          <div class="toolbar-right">
+            <span class="mixer-hint" id="pickerHint">Tap a card to seed the mix</span>
+          </div>
+        </div>
+        <h2 class="section-label" id="pickerTitle">Pick your seeds</h2>
+        <div class="seed-grid" id="seedGrid"></div>
+      </section>
+
+      <section aria-labelledby="previewTitle">
+        <h2 class="section-label" id="previewTitle">What the engine would compose</h2>
+        <div class="pick-grid" id="pickGrid"></div>
+        <p class="peek-footnote">Composition briefs only — this prototype has no model call. The real engine writes its own picks, titles and reasons from these seeds.</p>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="favorites.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var state = {
+    seeds: ["m-inception", "s-dark-side", "b-piranesi"],
+    pickerDomain: "all",
+    generating: false,
+    generated: false
+  };
+  var MAX = 8;
+
+  var tray = document.getElementById("seedTray");
+  var grid = document.getElementById("seedGrid");
+  var tabs = document.getElementById("pickerTabs");
+  var pickGrid = document.getElementById("pickGrid");
+  var seedCount = document.getElementById("seedCount");
+  var seedHint = document.getElementById("seedHint");
+  var profileMeters = document.getElementById("profileMeters");
+  var profileTags = document.getElementById("profileTags");
+  var profileDecades = document.getElementById("profileDecades");
+  var profileSub = document.getElementById("profileSub");
+  var strength = document.getElementById("strength");
+  var generate = document.getElementById("generate");
+
+  function seedItems() {
+    return state.seeds.map(VG.getItem).filter(Boolean);
+  }
+
+  function seedThumb(item) {
+    return '<span class="pick-seed" data-domain="' + item.domain + '">' +
+      '<img src="' + VG.esc(item.img) + '" alt="">' +
+    "</span>";
+  }
+
+  function renderTray() {
+    var items = seedItems();
+    tray.classList.toggle("is-empty", !items.length);
+    tray.innerHTML = items.length
+      ? items.map(function (item) {
+          return '<span class="seed" data-domain="' + item.domain + '" title="' + VG.esc(item.title) + '">' +
+            '<img src="' + VG.esc(item.img) + '" alt="' + VG.esc(item.title) + '">' +
+            '<button type="button" data-unseed="' + item.id + '" aria-label="Remove ' + VG.esc(item.title) + ' seed">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
+            "</button></span>";
+        }).join("")
+      : '<span class="seed-empty">No seeds — tap any favorite below to start</span>';
+    seedCount.textContent = items.length + " / " + MAX;
+    seedHint.textContent = items.length
+      ? items.length + " of " + MAX + " seeds" + (items.length === MAX ? " · full" : " · add up to " + (MAX - items.length) + " more")
+      : "Pick a few favorites below";
+    generate.disabled = !items.length;
+  }
+
+  function renderTabs() {
+    var labels = { all: "All", movie: "Movies", music: "Music", book: "Books", game: "Games" };
+    tabs.innerHTML = ["all", "movie", "music", "book", "game"].map(function (key) {
+      var count = key === "all" ? VG.all().length : VG.all().filter(function (item) { return item.domain === key; }).length;
+      return '<button type="button" class="domain-tab" data-domain="' + key + '" aria-pressed="' +
+        (state.pickerDomain === key) + '">' +
+        (key === "all" ? "" : '<span class="domain-dot"></span>') +
+        labels[key] + ' <span class="n">' + count + "</span></button>";
+    }).join("");
+  }
+
+  function renderGrid() {
+    var items = VG.all().filter(function (item) {
+      return state.pickerDomain === "all" || item.domain === state.pickerDomain;
+    });
+    grid.innerHTML = items.map(function (item) {
+      var on = state.seeds.indexOf(item.id) !== -1;
+      return '<button type="button" class="seed-tile" data-seed="' + item.id + '" aria-pressed="' + on + '" ' +
+        'aria-label="' + (on ? "Remove " : "Add ") + VG.esc(item.title) + ' seed">' +
+        '<span class="seed-tile-art ' + VG.artClass(item) + '">' +
+          '<img src="' + VG.esc(item.img) + '" alt="" loading="lazy">' +
+          '<span class="seed-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg></span>' +
+        "</span>" +
+        '<span class="seed-tile-title">' + VG.esc(item.title) + "</span>" +
+      "</button>";
+    }).join("");
+  }
+
+  function renderProfile() {
+    var items = seedItems();
+    var counts = VG.domainCounts(items);
+    var total = items.length || 1;
+    var tags = VG.tagCounts(items).slice(0, 8);
+    var decades = {};
+    items.forEach(function (item) {
+      var decade = Math.floor(item.year / 10) * 10;
+      decades[decade] = (decades[decade] || 0) + 1;
+    });
+    var topDecades = Object.keys(decades).map(Number).sort(function (a, b) { return decades[b] - decades[a]; }).slice(0, 3);
+    var forms = VG.DOMAIN_ORDER.filter(function (key) { return counts[key]; }).length;
+
+    strength.textContent = items.length ? Math.min(97, 48 + tags.length * 3 + forms * 5) : "—";
+    profileSub.textContent = items.length
+      ? items.length + " seeds · " + forms + " forms · " + tags.length + " vibes"
+      : "No seeds selected";
+
+    profileMeters.innerHTML = VG.DOMAIN_ORDER.map(function (key) {
+      var d = VG.DOMAINS[key];
+      var pct = Math.round((counts[key] / total) * 100);
+      return '<div class="profile-row"><span><span class="domain-dot" style="display:inline-block;margin-right:6px"></span>' +
+        d.label + '</span><span class="n">' + counts[key] + "</span></div>" +
+        '<div class="profile-meter" data-domain="' + key + '"><span style="--w:' + pct + '%"></span></div>';
+    }).join("");
+
+    profileTags.innerHTML = tags.length
+      ? tags.map(function (entry, index) {
+          return '<span class="tag' + (index === 0 ? " big" : "") + '">' + VG.esc(entry.tag) + "</span>";
+        }).join("")
+      : '<span class="tag">Pick a seed</span>';
+
+    profileDecades.innerHTML = topDecades.length
+      ? topDecades.map(function (decade) {
+          return '<div class="profile-row"><span>' + decade + 's</span><span class="n">' + decades[decade] + "</span></div>" +
+            '<div class="profile-meter"><span style="--w:' + Math.round((decades[decade] / total) * 100) + '%"></span></div>';
+        }).join("")
+      : '<p class="snapshot-sub">No decades yet.</p>';
+  }
+
+  var PICK_COPY = {
+    movie: {
+      title: "Three films for a rainy night",
+      body: "Lean into the crime and sci-fi seeds: practical effects, neon streets, a score that carries the last act.",
+      empty: "Add a movie seed to brief the film pick."
+    },
+    music: {
+      title: "One album, no skips",
+      body: "A front-to-back listen that matches the headphones-and-weather seeds — analog warmth over algorithm pop.",
+      empty: "Add a music seed to brief the album pick."
+    },
+    book: {
+      title: "Two late-night reads",
+      body: "Short chapters, strange worlds, one book you will finish at 2 a.m. and one you will want to reread.",
+      empty: "Add a book seed to brief the reading pick."
+    },
+    game: {
+      title: "A long-haul weekend game",
+      body: "Systems to sink into, a world worth getting lost in, and enough friction to make the quiet parts land.",
+      empty: "Add a game seed to brief the game pick."
+    }
+  };
+
+  function renderPicks() {
+    var items = seedItems();
+    pickGrid.innerHTML = VG.DOMAIN_ORDER.map(function (key) {
+      var d = VG.DOMAINS[key];
+      var domainSeeds = items.filter(function (item) { return item.domain === key; }).slice(0, 3);
+      var copy = PICK_COPY[key];
+      var hasSeeds = domainSeeds.length > 0;
+      var status;
+      if (state.generating) status = "Composing…";
+      else if (!hasSeeds) status = "Needs a seed";
+      else if (state.generated) status = "Brief ready";
+      else status = "Ready to compose";
+
+      return '<article class="pick' + (state.generating ? " is-loading" : "") + '" data-domain="' + key + '">' +
+        '<div class="pick-body">' +
+          '<p class="pick-domain">' + d.label + "</p>" +
+          "<h3>" + (hasSeeds ? VG.esc(copy.title) : "Waiting for a " + d.label.toLowerCase() + " seed") + "</h3>" +
+          "<p>" + VG.esc(hasSeeds ? copy.body : copy.empty) + "</p>" +
+        "</div>" +
+        '<div class="pick-seeds">' + (domainSeeds.length
+          ? domainSeeds.map(seedThumb).join("")
+          : '<span class="pick-seed empty" aria-hidden="true">+</span>') + "</div>" +
+        '<div class="pick-status"><i></i>' + status + "</div>" +
+      "</article>";
+    }).join("");
+  }
+
+  function render() {
+    renderTray();
+    renderTabs();
+    renderGrid();
+    renderProfile();
+    renderPicks();
+  }
+
+  function toggleSeed(id) {
+    var at = state.seeds.indexOf(id);
+    if (at !== -1) {
+      state.seeds.splice(at, 1);
+    } else {
+      if (state.seeds.length >= MAX) {
+        VG.toast("Eight seeds is the cap — remove one first");
+        return;
+      }
+      state.seeds.push(id);
+    }
+    state.generated = false;
+    render();
+  }
+
+  tray.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-unseed]");
+    if (!button) return;
+    toggleSeed(button.getAttribute("data-unseed"));
+  });
+
+  grid.addEventListener("click", function (event) {
+    var tile = event.target.closest("[data-seed]");
+    if (!tile) return;
+    toggleSeed(tile.getAttribute("data-seed"));
+  });
+
+  tabs.addEventListener("click", function (event) {
+    var tab = event.target.closest("[data-domain]");
+    if (!tab) return;
+    state.pickerDomain = tab.getAttribute("data-domain");
+    renderTabs();
+    renderGrid();
+  });
+
+  generate.addEventListener("click", function () {
+    if (!state.seeds.length) return;
+    state.generating = true;
+    renderPicks();
+    setTimeout(function () {
+      state.generating = false;
+      state.generated = true;
+      renderPicks();
+      VG.toast("Composed 4 briefs from " + state.seeds.length + " seeds");
+    }, 1200);
+  });
+
+  document.getElementById("clearSeeds").addEventListener("click", function () {
+    state.seeds = [];
+    state.generated = false;
+    render();
+  });
+
+  document.getElementById("surprise").addEventListener("click", function () {
+    var pool = VG.all().slice();
+    var picks = [];
+    while (picks.length < MAX && pool.length) {
+      picks.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0].id);
+    }
+    state.seeds = picks;
+    state.generated = false;
+    render();
+    VG.toast("Shuffled 8 seeds");
+  });
+
+  document.addEventListener("favorites:change", function () {
+    state.seeds = state.seeds.filter(function (id) { return !!VG.getItem(id); });
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

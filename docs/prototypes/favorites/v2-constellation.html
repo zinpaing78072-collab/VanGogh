@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en" data-theme="liquidneon">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Favorites — 02 Constellation · Van Gogh prototype</title>
+<link rel="stylesheet" href="favorites.css">
+</head>
+<body>
+<div class="sky"></div>
+<div class="veil"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+    <div class="sidebar-head">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✶</span><span class="brand-text">Van Gogh</span></div>
+      <button type="button" id="sidebarToggle" class="icon-btn sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <p class="nav-label">Menu</p>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        <span class="nav-text">Home</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <span class="nav-text">Music</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+        <span class="nav-text">Movies</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span class="nav-text">Books</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+        <span class="nav-text">Games</span>
+      </button>
+
+      <p class="nav-label nav-label-spaced">Library</p>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+        <span class="nav-text">My Lists</span>
+      </button>
+      <button type="button" class="nav-item active" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="nav-text">Favorites</span>
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nav-text">Settings</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-column">
+    <header class="app-header">
+      <form class="search-bar" id="searchForm" role="search">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search movies, books, music, games…" autocomplete="off">
+        <button type="button" class="ai-toggle" id="aiToggle" aria-pressed="false" aria-label="AI recommendations" title="AI recommendations off">AI</button>
+        <button type="submit" class="search-btn">Search</button>
+      </form>
+      <div class="quick-actions">
+        <button type="button" class="icon-btn round" data-inert aria-label="Notifications" title="Notifications (coming soon)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </button>
+        <button type="button" class="icon-btn round" data-inert aria-label="Profile" title="Profile (coming soon)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="container" id="favoritesView">
+      <nav class="proto-bar" aria-label="Prototype variants">
+        <strong>Prototype</strong>
+        <a href="index.html">Gallery</a>
+        <a href="v1-shelf.html">01 Shelf</a>
+        <a href="v2-constellation.html" aria-current="page">02 Constellation</a>
+        <a href="v3-log.html">03 Signal Log</a>
+        <a href="v4-mixer.html">04 Mixer</a>
+      </nav>
+
+      <p class="eyebrow">Library // Favorites // Collections</p>
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Constellation <span class="count" id="totalCount">35</span></h1>
+          <p class="page-lede">Your favorites arranged into <strong>collections</strong>. Drag a card onto a lane to file it; everything else waits in Unfiled.</p>
+        </div>
+        <div class="page-actions">
+          <button type="button" class="nbtn" id="newCollection">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            New collection
+          </button>
+        </div>
+      </div>
+
+      <div class="collection-summary" id="collectionSummary"></div>
+
+      <div class="collections-layout">
+        <aside class="collection-nav" aria-label="Collections">
+          <p class="section-label">Index</p>
+          <div id="collectionNav"></div>
+          <button type="button" class="new-collection" id="newCollectionInline">+ New collection</button>
+        </aside>
+
+        <div id="lanes"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="favorites.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var collections = window.COLLECTIONS || [];
+  var summary = document.getElementById("collectionSummary");
+  var nav = document.getElementById("collectionNav");
+  var lanes = document.getElementById("lanes");
+  var totalCount = document.getElementById("totalCount");
+
+  function laneHTML(collection) {
+    var items = VG.all().filter(function (item) {
+      return (item.collection || null) === (collection ? collection.id : null);
+    });
+    var id = collection ? collection.id : "";
+    var title = collection ? collection.title : "Unfiled";
+    var colour = collection ? collection.colour : "#9A8ABF";
+    var blurb = collection ? collection.blurb : "Kept, not filed yet. Drag a card into a collection.";
+    var cards = items.map(function (item, index) {
+      return VG.cardHTML(item, index, { draggable: true });
+    }).join("");
+    return (
+      '<section class="collection-lane" id="lane-' + (id || "unfiled") + '">' +
+        '<div class="lane-head">' +
+          "<div>" +
+            '<div class="lane-title"><span class="collection-swatch" style="--c:' + colour + '"></span>' +
+              VG.esc(title) + ' <span class="n">' + items.length + "</span></div>" +
+            '<p class="lane-desc">' + VG.esc(blurb) + "</p>" +
+          "</div>" +
+          '<div class="lane-head-actions">' +
+            '<button type="button" class="mini-btn" data-add="' + (id || "unfiled") + '">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Add' +
+            "</button>" +
+          "</div>" +
+        "</div>" +
+        '<div class="lane-rail" data-drop="' + id + '" role="list" aria-label="' + VG.esc(title) + ' favorites">' +
+          (cards || '<div class="lane-empty">Drop a favorite here</div>') +
+        "</div>" +
+      "</section>"
+    );
+  }
+
+  function render() {
+    var items = VG.all();
+    var counts = VG.collectionCounts(items);
+    totalCount.textContent = items.length;
+
+    summary.innerHTML = collections.map(function (c) {
+      return '<button type="button" class="collection-tile" data-jump="' + c.id + '" style="--c:' + c.colour + '">' +
+        '<span class="collection-swatch"></span>' +
+        '<span class="n">' + (counts[c.id] || 0) + "</span>" +
+        "<strong>" + VG.esc(c.title) + "</strong>" +
+        "<span>" + VG.esc(c.blurb) + "</span>" +
+        "</button>";
+    }).join("");
+
+    nav.innerHTML =
+      '<button type="button" data-jump="all" class="active"><span class="collection-swatch" style="--c:#FF2E97"></span>' +
+        'All collections <span class="n">' + items.length + "</span></button>" +
+      collections.map(function (c) {
+        return '<button type="button" data-jump="' + c.id + '"><span class="collection-swatch" style="--c:' +
+          c.colour + '"></span>' + VG.esc(c.title) + ' <span class="n">' + (counts[c.id] || 0) + "</span></button>";
+      }).join("") +
+      '<button type="button" data-jump="unfiled"><span class="collection-swatch" style="--c:#9A8ABF"></span>' +
+        'Unfiled <span class="n">' + counts.unfiled + "</span></button>";
+
+    lanes.innerHTML = collections.map(function (c) { return laneHTML(c); }).join("") +
+      laneHTML(null);
+  }
+
+  function jump(id) {
+    var lane = document.getElementById("lane-" + (id === "all" ? collections[0].id : id));
+    if (lane) lane.scrollIntoView({ behavior: "smooth", block: "start" });
+    nav.querySelectorAll("[data-jump]").forEach(function (button) {
+      button.classList.toggle("active", button.getAttribute("data-jump") === id);
+    });
+  }
+
+  document.addEventListener("click", function (event) {
+    var jumpButton = event.target.closest("[data-jump]");
+    if (jumpButton) {
+      jump(jumpButton.getAttribute("data-jump"));
+      return;
+    }
+    var add = event.target.closest("[data-add]");
+    if (add) {
+      VG.toast("Drag a favorite from any lane onto this one to file it");
+      return;
+    }
+    if (event.target.closest("#newCollection") || event.target.closest("#newCollectionInline")) {
+      VG.toast("Creating collections is not wired in this prototype");
+    }
+  });
+
+  lanes.addEventListener("dragstart", function (event) {
+    var card = event.target.closest("[data-fav-card]");
+    if (!card) return;
+    event.dataTransfer.setData("text/plain", card.getAttribute("data-id"));
+    event.dataTransfer.effectAllowed = "move";
+    card.classList.add("dragging");
+  });
+
+  lanes.addEventListener("dragend", function (event) {
+    var card = event.target.closest("[data-fav-card]");
+    if (card) card.classList.remove("dragging");
+    lanes.querySelectorAll(".drag-over").forEach(function (rail) { rail.classList.remove("drag-over"); });
+  });
+
+  lanes.addEventListener("dragover", function (event) {
+    var rail = event.target.closest("[data-drop]");
+    if (!rail) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    rail.classList.add("drag-over");
+  });
+
+  lanes.addEventListener("dragleave", function (event) {
+    var rail = event.target.closest("[data-drop]");
+    if (rail && !rail.contains(event.relatedTarget)) rail.classList.remove("drag-over");
+  });
+
+  lanes.addEventListener("drop", function (event) {
+    var rail = event.target.closest("[data-drop]");
+    if (!rail) return;
+    event.preventDefault();
+    rail.classList.remove("drag-over");
+    var id = event.dataTransfer.getData("text/plain");
+    var target = rail.getAttribute("data-drop") || null;
+    if (id) VG.moveToCollection(id, target);
+  });
+
+  document.addEventListener("favorites:change", render);
+
+  render();
+})();
+</script>
+</body>
+</html>

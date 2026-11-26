@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en" data-theme="liquidneon">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Favorites — 01 Shelf · Van Gogh prototype</title>
+<link rel="stylesheet" href="favorites.css">
+</head>
+<body>
+<div class="sky"></div>
+<div class="veil"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+    <div class="sidebar-head">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✶</span><span class="brand-text">Van Gogh</span></div>
+      <button type="button" id="sidebarToggle" class="icon-btn sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <p class="nav-label">Menu</p>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        <span class="nav-text">Home</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <span class="nav-text">Music</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+        <span class="nav-text">Movies</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span class="nav-text">Books</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+        <span class="nav-text">Games</span>
+      </button>
+
+      <p class="nav-label nav-label-spaced">Library</p>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+        <span class="nav-text">My Lists</span>
+      </button>
+      <button type="button" class="nav-item active" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="nav-text">Favorites</span>
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nav-text">Settings</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-column">
+    <header class="app-header">
+      <form class="search-bar" id="searchForm" role="search">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search movies, books, music, games…" autocomplete="off">
+        <button type="button" class="ai-toggle" id="aiToggle" aria-pressed="false" aria-label="AI recommendations" title="AI recommendations off">AI</button>
+        <button type="submit" class="search-btn">Search</button>
+      </form>
+      <div class="quick-actions">
+        <button type="button" class="icon-btn round" data-inert aria-label="Notifications" title="Notifications (coming soon)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </button>
+        <button type="button" class="icon-btn round" data-inert aria-label="Profile" title="Profile (coming soon)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="container" id="favoritesView">
+      <nav class="proto-bar" aria-label="Prototype variants">
+        <strong>Prototype</strong>
+        <a href="index.html">Gallery</a>
+        <a href="v1-shelf.html" aria-current="page">01 Shelf</a>
+        <a href="v2-constellation.html">02 Constellation</a>
+        <a href="v3-log.html">03 Signal Log</a>
+        <a href="v4-mixer.html">04 Mixer</a>
+      </nav>
+
+      <p class="eyebrow">Library // Favorites</p>
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Favorites <span class="count" id="totalCount">35</span></h1>
+          <p class="page-lede" id="pageLede">Every form on one shelf. <strong>Last saved 2h ago</strong> · 4 collections · 35 notes kept with the things you love.</p>
+        </div>
+        <div class="page-actions">
+          <button type="button" class="nbtn" id="selectToggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>
+            <span id="selectLabel">Select</span>
+          </button>
+          <div class="segmented" role="group" aria-label="View density">
+            <button type="button" id="viewGrid" aria-pressed="true" aria-label="Grid view" title="Grid view">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </button>
+            <button type="button" id="viewList" aria-pressed="false" aria-label="List view" title="List view">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-strip" id="statStrip"></div>
+
+      <div class="toolbar">
+        <div class="domain-tabs" id="domainTabs" role="group" aria-label="Filter by form"></div>
+        <div class="toolbar-right">
+          <label class="field" aria-label="Filter favorites">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="favSearch" placeholder="Filter favorites…" autocomplete="off">
+          </label>
+          <div class="menu-wrap">
+            <button type="button" class="nbtn small" id="sortButton" aria-expanded="false" aria-haspopup="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5h10M11 9h7M11 13h4"/><path d="M3 17l3 3 3-3M6 18V4"/></svg>
+              <span id="sortLabel">Recently saved</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="menu" id="sortMenu" hidden>
+              <button type="button" data-sort="recent" aria-checked="true">Recently saved <span class="tick">✓</span></button>
+              <button type="button" data-sort="title" aria-checked="false">Title A–Z <span class="tick"></span></button>
+              <button type="button" data-sort="year" aria-checked="false">Release year <span class="tick"></span></button>
+              <button type="button" data-sort="rating" aria-checked="false">Highest rated <span class="tick"></span></button>
+              <button type="button" data-sort="domain" aria-checked="false">Form <span class="tick"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tag-row" id="tagRow"></div>
+
+      <div class="card-grid" id="favGrid" aria-live="polite"></div>
+
+      <div class="bulk-bar" role="status" aria-live="polite">
+        <span class="bulk-count" id="bulkCount">0 selected</span>
+        <div class="menu-wrap">
+          <button type="button" class="nbtn small" id="bulkCollection">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-7l-2-2H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1z"/></svg>
+            Add to collection
+          </button>
+          <div class="menu bulk-menu" id="bulkMenu" hidden></div>
+        </div>
+        <button type="button" class="nbtn small danger" id="bulkRemove">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+          Remove
+        </button>
+        <button type="button" class="nbtn small ghost" id="bulkCancel">Cancel</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="favorites.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var params = new URLSearchParams(window.location.search);
+  if (params.get("state") === "empty") {
+    window.FAVORITES = [];
+  }
+
+  var state = {
+    domain: "all",
+    query: "",
+    tag: "all",
+    sort: "recent",
+    view: "grid",
+    selecting: false,
+    selected: []
+  };
+
+  var SORTS = {
+    recent: "Recently saved",
+    title: "Title A–Z",
+    year: "Release year",
+    rating: "Highest rated",
+    domain: "Form"
+  };
+
+  var BARS = {
+    movie: [10, 16, 12, 20, 15, 24, 30],
+    music: [8, 14, 10, 18, 12, 20, 26],
+    book: [6, 12, 16, 11, 18, 15, 24],
+    game: [5, 9, 14, 12, 17, 20, 26]
+  };
+
+  var grid = document.getElementById("favGrid");
+  var tabs = document.getElementById("domainTabs");
+  var tagRow = document.getElementById("tagRow");
+  var statStrip = document.getElementById("statStrip");
+  var totalCount = document.getElementById("totalCount");
+  var pageLede = document.getElementById("pageLede");
+  var favSearch = document.getElementById("favSearch");
+  var bulkCount = document.getElementById("bulkCount");
+
+  function domainTab(key, label, count) {
+    return '<button type="button" class="domain-tab" data-domain="' + key + '" ' +
+      'aria-pressed="' + (state.domain === key) + '">' +
+      (key === "all" ? "" : '<span class="domain-dot"></span>') +
+      label + ' <span class="n">' + count + "</span></button>";
+  }
+
+  function statHTML(key, label) {
+    var items = VG.all();
+    var count = items.filter(function (item) { return item.domain === key; }).length;
+    var bars = (count === 0 ? [6, 6, 6, 6, 6, 6, 6] : (BARS[key] || [])).map(function (h) {
+      return '<i style="--h:' + Math.round((h / 30) * 100) + '%"></i>';
+    }).join("");
+    return '<div class="stat" data-domain="' + key + '" style="--fill:' + Math.min(100, Math.round((count / 12) * 100)) + '%">' +
+      '<div class="stat-label"><span class="domain-dot"></span>' + label + "</div>" +
+      '<div class="stat-value">' + count + ' <small>saved</small></div>' +
+      '<div class="stat-bars" aria-hidden="true">' + bars + "</div>" +
+      "</div>";
+  }
+
+  function renderStats() {
+    statStrip.innerHTML =
+      statHTML("movie", "Movies") +
+      statHTML("music", "Music") +
+      statHTML("book", "Books") +
+      statHTML("game", "Games");
+  }
+
+  function renderLede() {
+    var items = VG.all();
+    if (!items.length) {
+      pageLede.innerHTML = "Nothing saved yet. <strong>Tap a heart in Browse</strong> and it lands on this shelf.";
+      return;
+    }
+    var collections = (window.COLLECTIONS || []).length;
+    pageLede.innerHTML = "Every form on one shelf. <strong>Last saved " + VG.lastSavedLabel(items) +
+      "</strong> · " + collections + (collections === 1 ? " collection · " : " collections · ") +
+      items.length + (items.length === 1 ? " note kept" : " notes kept") + " with the things you love.";
+  }
+
+  function renderTabs() {
+    var counts = VG.domainCounts(VG.all());
+    tabs.innerHTML =
+      domainTab("all", "All", counts.all) +
+      domainTab("movie", "Movies", counts.movie) +
+      domainTab("music", "Music", counts.music) +
+      domainTab("book", "Books", counts.book) +
+      domainTab("game", "Games", counts.game);
+  }
+
+  function renderTags() {
+    var counts = VG.tagCounts(VG.all()).slice(0, 7);
+    var html = '<button type="button" class="chip" data-tag="all" aria-pressed="' +
+      (state.tag === "all") + '">All vibes</button>';
+    html += counts.map(function (entry) {
+      return '<button type="button" class="chip" data-tag="' + VG.esc(entry.tag) + '" aria-pressed="' +
+        (state.tag === entry.tag) + '">' + VG.esc(entry.tag) + ' <span class="n">' + entry.count + "</span></button>";
+    }).join("");
+    tagRow.innerHTML = html;
+  }
+
+  function render() {
+    var items = VG.filterItems(VG.all(), state);
+    items = VG.sortItems(items, state.sort);
+    totalCount.textContent = VG.all().length;
+    renderLede();
+    renderStats();
+    renderTabs();
+    renderTags();
+
+    if (VG.all().length === 0) {
+      grid.className = "card-grid";
+      grid.innerHTML = VG.emptyHTML({
+        kicker: "Shelf empty",
+        title: "Nothing saved yet",
+        body: "Tap the heart on any card in Browse and it lands on this shelf.",
+        cta: "Back to the gallery",
+        href: "index.html"
+      });
+      return;
+    }
+
+    if (!items.length) {
+      grid.className = "card-grid";
+      grid.innerHTML = VG.emptyHTML({
+        kicker: "No matches",
+        title: "Nothing in this cut",
+        body: "Try another form, another vibe, or clear the filter.",
+        cta: "Clear filters",
+        href: "#",
+        secondary: '<button type="button" class="nbtn" id="clearFilters">Reset</button>'
+      });
+      var clear = document.getElementById("clearFilters");
+      var clearPrimary = grid.querySelector(".fav-empty .nbtn.primary");
+      var resetFilters = function () {
+        state.domain = "all";
+        state.tag = "all";
+        state.query = "";
+        favSearch.value = "";
+        render();
+      };
+      if (clear) clear.addEventListener("click", resetFilters);
+      if (clearPrimary) {
+        clearPrimary.addEventListener("click", function (event) {
+          event.preventDefault();
+          resetFilters();
+        });
+      }
+      return;
+    }
+
+    if (state.view === "list") {
+      grid.className = "card-grid list-mode";
+      grid.innerHTML = items.map(function (item, index) {
+        return VG.rowHTML(item, index);
+      }).join("");
+      return;
+    }
+
+    grid.className = "card-grid";
+    grid.innerHTML = items.map(function (item, index) {
+      return VG.cardHTML(item, index, {
+        selectable: state.selecting,
+        selectedIds: state.selected
+      });
+    }).join("");
+  }
+
+  function setSelecting(on) {
+    state.selecting = on;
+    if (!on) state.selected = [];
+    document.body.classList.toggle("selecting", on);
+    document.getElementById("selectLabel").textContent = on ? "Done" : "Select";
+    bulkCount.textContent = state.selected.length + " selected";
+    render();
+  }
+
+  /* toolbar events */
+  tabs.addEventListener("click", function (event) {
+    var tab = event.target.closest("[data-domain]");
+    if (!tab) return;
+    state.domain = tab.getAttribute("data-domain");
+    render();
+  });
+
+  tagRow.addEventListener("click", function (event) {
+    var chip = event.target.closest("[data-tag]");
+    if (!chip) return;
+    var tag = chip.getAttribute("data-tag");
+    state.tag = state.tag === tag ? "all" : tag;
+    render();
+  });
+
+  favSearch.addEventListener("input", function () {
+    state.query = favSearch.value;
+    render();
+  });
+
+  document.getElementById("sortButton").addEventListener("click", function () {
+    var menu = document.getElementById("sortMenu");
+    menu.hidden = !menu.hidden;
+    this.setAttribute("aria-expanded", String(!menu.hidden));
+  });
+
+  document.getElementById("sortMenu").addEventListener("click", function (event) {
+    var choice = event.target.closest("[data-sort]");
+    if (!choice) return;
+    state.sort = choice.getAttribute("data-sort");
+    document.getElementById("sortLabel").textContent = SORTS[state.sort];
+    this.querySelectorAll("[data-sort]").forEach(function (button) {
+      var on = button === choice;
+      button.setAttribute("aria-checked", String(on));
+      button.querySelector(".tick").textContent = on ? "✓" : "";
+    });
+    this.hidden = true;
+    document.getElementById("sortButton").setAttribute("aria-expanded", "false");
+    render();
+  });
+
+  document.addEventListener("click", function (event) {
+    if (!event.target.closest(".menu-wrap")) {
+      document.querySelectorAll(".menu").forEach(function (menu) { menu.hidden = true; });
+      var sortButton = document.getElementById("sortButton");
+      if (sortButton) sortButton.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  document.getElementById("viewGrid").addEventListener("click", function () {
+    state.view = "grid";
+    this.setAttribute("aria-pressed", "true");
+    document.getElementById("viewList").setAttribute("aria-pressed", "false");
+    if (state.selecting) setSelecting(false);
+    render();
+  });
+
+  document.getElementById("viewList").addEventListener("click", function () {
+    state.view = "list";
+    this.setAttribute("aria-pressed", "true");
+    document.getElementById("viewGrid").setAttribute("aria-pressed", "false");
+    if (state.selecting) setSelecting(false);
+    render();
+  });
+
+  document.getElementById("selectToggle").addEventListener("click", function () {
+    if (state.view === "list") {
+      VG.toast("Selection works in the grid view");
+      return;
+    }
+    setSelecting(!state.selecting);
+  });
+
+  document.getElementById("bulkCancel").addEventListener("click", function () {
+    setSelecting(false);
+  });
+
+  document.addEventListener("favorites:toggle-select", function (event) {
+    var id = event.detail.id;
+    var at = state.selected.indexOf(id);
+    if (at === -1) state.selected.push(id);
+    else state.selected.splice(at, 1);
+    bulkCount.textContent = state.selected.length + " selected";
+    render();
+  });
+
+  document.getElementById("bulkRemove").addEventListener("click", function () {
+    if (!state.selected.length) return;
+    var removed = [];
+    state.selected.forEach(function (id) {
+      var list = VG.all();
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id === id) {
+          removed.push({ item: list[i], index: i });
+          list.splice(i, 1);
+          break;
+        }
+      }
+    });
+    state.selected = [];
+    document.dispatchEvent(new CustomEvent("favorites:change", { detail: { type: "remove" } }));
+    VG.toast("Removed " + removed.length + (removed.length === 1 ? " favorite" : " favorites"), "Undo", function () {
+      removed.sort(function (a, b) { return a.index - b.index; }).forEach(function (entry) {
+        VG.restoreFavorite(entry.item, entry.index);
+      });
+      render();
+    });
+    bulkCount.textContent = "0 selected";
+    render();
+  });
+
+  var bulkMenu = document.getElementById("bulkMenu");
+  bulkMenu.innerHTML =
+    (window.COLLECTIONS || []).map(function (c) {
+      return '<button type="button" data-move="' + c.id + '"><span class="fav-collection" style="--col:' +
+        c.colour + '"><i></i>' + VG.esc(c.title) + "</span></button>";
+    }).join("") +
+    '<button type="button" data-move=""><span class="fav-unfiled">Unfiled</span></button>';
+
+  document.getElementById("bulkCollection").addEventListener("click", function () {
+    if (!state.selected.length) {
+      VG.toast("Select a few favorites first");
+      return;
+    }
+    bulkMenu.hidden = !bulkMenu.hidden;
+  });
+
+  bulkMenu.addEventListener("click", function (event) {
+    var choice = event.target.closest("[data-move]");
+    if (!choice) return;
+    var target = choice.getAttribute("data-move");
+    var count = state.selected.length;
+    state.selected.forEach(function (id) {
+      var item = VG.getItem(id);
+      if (item) item.collection = target || null;
+    });
+    bulkMenu.hidden = true;
+    state.selected = [];
+    bulkCount.textContent = "0 selected";
+    document.dispatchEvent(new CustomEvent("favorites:change", { detail: { type: "move" } }));
+    var collection = target ? VG.collectionById(target) : null;
+    VG.toast("Moved " + count + (count === 1 ? " favorite to " : " favorites to ") +
+      (collection ? "“" + collection.title + "”" : "Unfiled"));
+    render();
+  });
+
+  document.addEventListener("favorites:change", function () {
+    if (state.selecting) {
+      state.selected = state.selected.filter(function (id) { return !!VG.getItem(id); });
+      bulkCount.textContent = state.selected.length + " selected";
+    }
+    render();
+  });
+
+  /* states for the gallery */
+  if (params.get("state") === "loading") {
+    renderStats();
+    renderTabs();
+    renderTags();
+    grid.innerHTML = VG.skeletonsHTML(10);
+    setTimeout(render, 1600);
+  } else {
+    render();
+  }
+})();
+</script>
+</body>
+</html>

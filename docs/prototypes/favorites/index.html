@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en" data-theme="liquidneon">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Favorites prototypes — Van Gogh</title>
+<link rel="stylesheet" href="favorites.css">
+</head>
+<body>
+<div class="sky"></div>
+<div class="veil"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+    <div class="sidebar-head">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✶</span><span class="brand-text">Van Gogh</span></div>
+      <button type="button" id="sidebarToggle" class="icon-btn sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <p class="nav-label">Menu</p>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        <span class="nav-text">Home</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <span class="nav-text">Music</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+        <span class="nav-text">Movies</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span class="nav-text">Books</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+        <span class="nav-text">Games</span>
+      </button>
+
+      <p class="nav-label nav-label-spaced">Library</p>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+        <span class="nav-text">My Lists</span>
+      </button>
+      <button type="button" class="nav-item active" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="nav-text">Favorites</span>
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nav-text">Settings</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-column">
+    <header class="app-header">
+      <form class="search-bar" id="searchForm" role="search">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search movies, books, music, games…" autocomplete="off">
+        <button type="button" class="ai-toggle" id="aiToggle" aria-pressed="false" aria-label="AI recommendations" title="AI recommendations off">AI</button>
+        <button type="submit" class="search-btn">Search</button>
+      </form>
+      <div class="quick-actions">
+        <button type="button" class="icon-btn round" data-inert aria-label="Notifications" title="Notifications (coming soon)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </button>
+        <button type="button" class="icon-btn round" data-inert aria-label="Profile" title="Profile (coming soon)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="container" id="favoritesView">
+      <p class="eyebrow">Prototype // Favorites // Liquid Neon</p>
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Favorites, four ways</h1>
+          <p class="page-lede">Four static directions for the Favorites screen, all in the <strong>Liquid Neon</strong> skin. No IPC, no backend — just the shell, the sample library and the interactions worth arguing about.</p>
+        </div>
+      </div>
+
+      <div class="palette-strip" aria-label="Liquid Neon palette">
+        <span class="swatch"><i style="background:#FF2E97"></i>#FF2E97 accent</span>
+        <span class="swatch"><i style="background:#00F0FF"></i>#00F0FF signal</span>
+        <span class="swatch"><i style="background:#A78BFA"></i>#A78BFA books</span>
+        <span class="swatch"><i style="background:#C8FF4D"></i>#C8FF4D games</span>
+        <span class="swatch"><i style="background:#06030D"></i>#06030D floor</span>
+      </div>
+
+      <div class="gallery-grid">
+        <a class="gallery-card" href="v1-shelf.html">
+          <div class="gallery-preview" aria-hidden="true">
+            <span class="num">01</span>
+            <div class="wire wire-shelf"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="gallery-body">
+            <p class="kicker">The default candidate</p>
+            <h2>Shelf</h2>
+            <p>The whole library on one mixed grid: form tabs, vibe chips, sort, grid/list density, bulk select and a peek drawer. The closest thing to a shipping screen.</p>
+            <span class="open">Open prototype →</span>
+          </div>
+        </a>
+
+        <a class="gallery-card" href="v2-constellation.html">
+          <div class="gallery-preview" aria-hidden="true">
+            <span class="num">02</span>
+            <div class="wire wire-board"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="gallery-body">
+            <p class="kicker">Curation first</p>
+            <h2>Constellation</h2>
+            <p>Favorites grouped into named collections with their own colour and blurb. Drag a card between lanes to file it; unfiled items wait in their own tray.</p>
+            <span class="open">Open prototype →</span>
+          </div>
+        </a>
+
+        <a class="gallery-card" href="v3-log.html">
+          <div class="gallery-preview" aria-hidden="true">
+            <span class="num">03</span>
+            <div class="wire wire-log"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="gallery-body">
+            <p class="kicker">Memory first</p>
+            <h2>Signal Log</h2>
+            <p>Favorites as a dated feed, with the note you wrote next to each save and a taste snapshot that measures forms, vibes and decades as you filter.</p>
+            <span class="open">Open prototype →</span>
+          </div>
+        </a>
+
+        <a class="gallery-card" href="v4-mixer.html">
+          <div class="gallery-preview" aria-hidden="true">
+            <span class="num">04</span>
+            <div class="wire wire-mixer"><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="gallery-body">
+            <p class="kicker">Favorites feed the engine</p>
+            <h2>The Mixer</h2>
+            <p>Pick up to eight favorites as seeds, watch the live taste profile, then generate one composition brief per form. The product promise made visible.</p>
+            <span class="open">Open prototype →</span>
+          </div>
+        </a>
+      </div>
+
+      <h2 class="section-label">Feature coverage</h2>
+      <div class="feature-matrix">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Feature</th>
+              <th scope="col">01 Shelf</th>
+              <th scope="col">02 Constellation</th>
+              <th scope="col">03 Signal Log</th>
+              <th scope="col">04 Mixer</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Cross-form grid</td><td class="yes">●</td><td class="yes">●</td><td>—</td><td>—</td></tr>
+            <tr><td>Form filter + counts</td><td class="yes">●</td><td>—</td><td class="yes">●</td><td class="yes">●</td></tr>
+            <tr><td>Vibe tags</td><td class="yes">●</td><td>—</td><td class="yes">●</td><td class="yes">●</td></tr>
+            <tr><td>Search inside favorites</td><td class="yes">●</td><td>—</td><td class="yes">●</td><td>—</td></tr>
+            <tr><td>Sort + grid/list density</td><td class="yes">●</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Move to collection</td><td class="yes">●</td><td class="yes">●</td><td>—</td><td>—</td></tr>
+            <tr><td>Drag between collections</td><td>—</td><td class="yes">●</td><td>—</td><td>—</td></tr>
+            <tr><td>Notes per favorite</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td>—</td></tr>
+            <tr><td>Saved-date history</td><td>—</td><td>—</td><td class="yes">●</td><td>—</td></tr>
+            <tr><td>Bulk select + move/remove</td><td class="yes">●</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Peek drawer from any card</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td>—</td></tr>
+            <tr><td>Taste profile</td><td>—</td><td>—</td><td class="yes">●</td><td class="yes">●</td></tr>
+            <tr><td>Recommendation seeds</td><td>—</td><td>—</td><td>—</td><td class="yes">●</td></tr>
+            <tr><td>Empty state</td><td class="yes">●</td><td>—</td><td class="yes">●</td><td>—</td></tr>
+            <tr><td>Loading skeletons</td><td class="yes">●</td><td>—</td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="section-label">States worth reviewing</h2>
+      <div class="note-grid" style="margin-bottom:30px">
+        <div class="note">
+          <h3>Empty shelf</h3>
+          <p>The first-run case: no favorites at all. It has to explain where favorites come from without sounding like an error.</p>
+          <p style="margin-top:10px"><a class="nbtn small" href="v1-shelf.html?state=empty">Open empty state</a></p>
+        </div>
+        <div class="note">
+          <h3>Loading shelf</h3>
+          <p>Skeletons that match the mixed card shapes, with the stats and tabs already painted from the cached counts.</p>
+          <p style="margin-top:10px"><a class="nbtn small" href="v1-shelf.html?state=loading">Open loading state</a></p>
+        </div>
+        <div class="note">
+          <h3>Filtered to nothing</h3>
+          <p>Pick a form and a vibe that never overlap, or type a nonsense search. The reset path is the design, not the message.</p>
+          <p style="margin-top:10px"><a class="nbtn small" href="v1-shelf.html">Try it in Shelf</a></p>
+        </div>
+      </div>
+
+      <h2 class="section-label">Notes for review</h2>
+      <div class="note-grid">
+        <div class="note">
+          <h3>What is real</h3>
+          <p>The shell (rail, header, search, AI toggle), the Liquid Neon tokens, the card ladder and the artwork all come from the app. Movie posters are the committed set; game boxart, album covers and book covers are the ones the earlier detail prototypes used.</p>
+        </div>
+        <div class="note">
+          <h3>What is invented</h3>
+          <p>Notes, tags, collections, saved dates and the taste numbers are sample copy. The four Mixer briefs are hand-written placeholders: there is no model call in these pages.</p>
+        </div>
+        <div class="note">
+          <h3>Open questions</h3>
+          <p>Does Favorites default to the mixed shelf or to collections? Are notes part of the save flow? Does the mixer live here or in the AI search panel? The prototypes are here to make those calls cheaper.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="favorites.js"></script>
+</body>
+</html>

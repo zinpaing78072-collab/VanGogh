@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en" data-theme="liquidneon">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Favorites — 03 Signal Log · Van Gogh prototype</title>
+<link rel="stylesheet" href="favorites.css">
+</head>
+<body>
+<div class="sky"></div>
+<div class="veil"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+    <div class="sidebar-head">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✶</span><span class="brand-text">Van Gogh</span></div>
+      <button type="button" id="sidebarToggle" class="icon-btn sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <p class="nav-label">Menu</p>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        <span class="nav-text">Home</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <span class="nav-text">Music</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M17 4v16M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+        <span class="nav-text">Movies</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span class="nav-text">Books</span>
+      </button>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6.5 12h4M8.5 10v4"/><path d="M16 10.5h.01M18.5 13.5h.01"/></svg>
+        <span class="nav-text">Games</span>
+      </button>
+
+      <p class="nav-label nav-label-spaced">Library</p>
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+        <span class="nav-text">My Lists</span>
+      </button>
+      <button type="button" class="nav-item active" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="nav-text">Favorites</span>
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <button type="button" class="nav-item" data-inert>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nav-text">Settings</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-column">
+    <header class="app-header">
+      <form class="search-bar" id="searchForm" role="search">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search movies, books, music, games…" autocomplete="off">
+        <button type="button" class="ai-toggle" id="aiToggle" aria-pressed="false" aria-label="AI recommendations" title="AI recommendations off">AI</button>
+        <button type="submit" class="search-btn">Search</button>
+      </form>
+      <div class="quick-actions">
+        <button type="button" class="icon-btn round" data-inert aria-label="Notifications" title="Notifications (coming soon)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </button>
+        <button type="button" class="icon-btn round" data-inert aria-label="Profile" title="Profile (coming soon)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="container" id="favoritesView">
+      <nav class="proto-bar" aria-label="Prototype variants">
+        <strong>Prototype</strong>
+        <a href="index.html">Gallery</a>
+        <a href="v1-shelf.html">01 Shelf</a>
+        <a href="v2-constellation.html">02 Constellation</a>
+        <a href="v3-log.html" aria-current="page">03 Signal Log</a>
+        <a href="v4-mixer.html">04 Mixer</a>
+      </nav>
+
+      <p class="eyebrow">Library // Favorites // Activity</p>
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Signal Log <span class="count" id="totalCount">35</span></h1>
+          <p class="page-lede">Favorites as a history, not a shelf: <strong>what you kept, when, and why</strong>. The notes are the point.</p>
+        </div>
+        <div class="page-actions">
+          <a class="nbtn primary" href="v4-mixer.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>
+            Compose from this
+          </a>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="domain-tabs" id="domainTabs" role="group" aria-label="Filter by form"></div>
+        <div class="toolbar-right">
+          <label class="field" aria-label="Search the log">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="logSearch" placeholder="Search notes and titles…" autocomplete="off">
+          </label>
+        </div>
+      </div>
+
+      <div class="log-layout">
+        <div id="logMain"></div>
+        <aside class="snapshot" id="snapshot" aria-label="Taste snapshot"></aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="favorites.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var state = { domain: "all", query: "" };
+  var logMain = document.getElementById("logMain");
+  var snapshot = document.getElementById("snapshot");
+  var tabs = document.getElementById("domainTabs");
+  var search = document.getElementById("logSearch");
+  var totalCount = document.getElementById("totalCount");
+
+  function renderTabs() {
+    var counts = VG.domainCounts(VG.all());
+    var labels = { all: "All", movie: "Movies", music: "Music", book: "Books", game: "Games" };
+    tabs.innerHTML = ["all", "movie", "music", "book", "game"].map(function (key) {
+      return '<button type="button" class="domain-tab" data-domain="' + key + '" aria-pressed="' +
+        (state.domain === key) + '">' +
+        (key === "all" ? "" : '<span class="domain-dot"></span>') +
+        labels[key] + ' <span class="n">' + counts[key] + "</span></button>";
+    }).join("");
+  }
+
+  function meterRow(label, value, max, colour) {
+    var pct = max ? Math.round((value / max) * 100) : 0;
+    return '<div class="meter-row"><span>' + VG.esc(label) + '</span><span class="n">' + value + "</span></div>" +
+      '<div class="meter" data-domain="' + (colour || "") + '"><span style="--w:' + pct + '%"></span></div>';
+  }
+
+  function renderSnapshot(items) {
+    var total = items.length || 1;
+    var counts = VG.domainCounts(items);
+    var tags = VG.tagCounts(items).slice(0, 8);
+    var decades = {};
+    items.forEach(function (item) {
+      var decade = Math.floor(item.year / 10) * 10;
+      decades[decade] = (decades[decade] || 0) + 1;
+    });
+    var topDecades = Object.keys(decades).map(Number).sort(function (a, b) { return decades[b] - decades[a]; }).slice(0, 4);
+    var strength = items.length
+      ? Math.min(97, 52 + tags.length * 2 + VG.DOMAIN_ORDER.filter(function (key) { return counts[key]; }).length * 4)
+      : "—";
+
+    var mix = VG.DOMAIN_ORDER.map(function (key) {
+      var d = VG.DOMAINS[key];
+      return meterRow(d.label, counts[key], total, key);
+    }).join("");
+
+    snapshot.innerHTML =
+      '<p class="section-label">Taste snapshot</p>' +
+      '<div class="snapshot-score"><strong>' + strength + '</strong><span>signal<br>strength</span></div>' +
+      '<p class="snapshot-sub">' + (items.length
+        ? items.length + " saved · " + VG.DOMAIN_ORDER.filter(function (key) { return counts[key]; }).length +
+          " forms · " + tags.length + " vibes"
+        : "No signal in this cut") + "</p>" +
+      '<div class="snapshot-block"><p class="peek-label">Form mix</p>' + mix + "</div>" +
+      '<div class="snapshot-block"><p class="peek-label">Top vibes</p><div class="snapshot-tags">' +
+        (tags.length ? tags.map(function (entry) {
+          return '<span class="tag">' + VG.esc(entry.tag) + " " + entry.count + "</span>";
+        }).join("") : '<span class="tag">No vibes yet</span>') +
+      "</div></div>" +
+      '<div class="snapshot-block"><p class="peek-label">Decades</p>' +
+        (topDecades.length ? topDecades.map(function (decade) {
+          return '<div class="meter-row"><span>' + decade + 's</span><span class="n">' + decades[decade] + "</span></div>" +
+            '<div class="meter"><span style="--w:' + Math.round((decades[decade] / total) * 100) + '%"></span></div>';
+        }).join("") : '<p class="snapshot-sub">Nothing to measure yet.</p>') +
+      "</div>" +
+      '<div class="snapshot-cta"><p>Favorites are the strongest signal the engine gets. Turn this log into a fresh set of picks.</p>' +
+        '<a class="nbtn primary" href="v4-mixer.html">Compose picks →</a></div>';
+  }
+
+  function render() {
+    var items = VG.filterItems(VG.all(), state);
+    items = VG.sortItems(items, "recent");
+    totalCount.textContent = VG.all().length;
+    renderTabs();
+    renderSnapshot(items);
+
+    if (!items.length) {
+      logMain.innerHTML = VG.emptyHTML({
+        kicker: VG.all().length ? "No matches" : "Log empty",
+        title: VG.all().length ? "Nothing in this cut" : "No signal yet",
+        body: VG.all().length
+          ? "Try another form or a different search term."
+          : "Save a few favorites and this page becomes a record of what you kept.",
+        cta: "Back to the gallery",
+        href: "index.html"
+      });
+      return;
+    }
+
+    var groups = VG.groupByDate(items);
+    logMain.innerHTML = groups.map(function (group) {
+      return '<section class="log-group">' +
+        '<div class="log-date">' + VG.esc(group.label) + ' <span class="n">' + group.items.length + "</span></div>" +
+        '<div class="log-list">' +
+          group.items.map(function (item, index) {
+            return VG.rowHTML(item, index, { className: "log-row" });
+          }).join("") +
+        "</div>" +
+      "</section>";
+    }).join("");
+  }
+
+  tabs.addEventListener("click", function (event) {
+    var tab = event.target.closest("[data-domain]");
+    if (!tab) return;
+    state.domain = tab.getAttribute("data-domain");
+    render();
+  });
+
+  search.addEventListener("input", function () {
+    state.query = search.value;
+    render();
+  });
+
+  document.addEventListener("favorites:change", render);
+
+  render();
+})();
+</script>
+</body>
+</html>
