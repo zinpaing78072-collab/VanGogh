@@ -39,7 +39,7 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 ### Project state
 - **Features wired**:
   - `VanGoghApp` — Krema window builder (title, identifier, size, debug mode, assets, events, commands)
-  - `MovieController` — `@KremaCommand requestMovies(kind, query)` (non-blocking kickoff, returns the generation), data + poster drains, generation-counted poster streaming via `events.emit("poster", ...)`; `kind=recommend` routes through the LLM engine (below). `requestMovieDetail` / `pollMovieDetail` / `pollMovieDetailArt` resolve one film for the detail page (identity, facts ledger, cast & crew, stills, similar rail) with its own generation pair, streaming poster/headshots/stills/similar posters as data URIs through `movieDetailArt` events keyed by slot (`poster`, `cast:<i>`, `still:<i>`, `similar:<id>`). The identity's **Watch trailer** button opens the TMDB trailer in an in-page YouTube embed (portaled above the shell) rather than linking out; a trailer URL that is not YouTube falls back to the plain watch link
+  - `MovieController` — `@KremaCommand requestMovies(kind, query)` (non-blocking kickoff, returns the generation), data + poster drains, generation-counted poster streaming via `events.emit("poster", ...)`; `kind=recommend` routes through the LLM engine (below). `requestMovieDetail` / `pollMovieDetail` / `pollMovieDetailArt` resolve one film for the detail page (identity, facts ledger, cast & crew, stills, similar rail) with its own generation pair, streaming poster/headshots/stills/similar posters as data URIs through `movieDetailArt` events keyed by slot (`poster`, `cast:<i>`, `still:<i>`, `similar:<id>`). The identity's **Watch trailer** button opens the TMDB trailer in the shared in-page YouTube player (portaled above the shell) rather than linking out; a trailer URL that is not YouTube falls back to the plain watch link
   - `vangogh.llm` (`LlmConfig`, `LlmClient`, `PromptFactory`, `Pick`, `TitleParser`, `Normalize`), `vangogh.recommend` (`PickResolver`, `RecommendationService`), `MovieResolver`, `SongResolver`, `BookResolver`, and `GameResolver` — the AI recommendation engine (all four forms wired): one model request composes `title | disambiguator` picks, then TMDB resolves movie picks, Genius resolves song picks, Open Library resolves book picks and TheGamesDB resolves game picks in parallel. Config lives in `~/.van-gogh/llm.conf` — the single source of truth, written by the Settings page and re-read on every AI search (no restart, no environment overrides); the AI toggle is opt-in, so direct search and trending are unchanged — see `docs/llm-engine.md`
   - `TmdbMovieService` — trending + search, genre label map, poster data-URI cache (bounded at 512 entries)
   - `TmdbClient` — TMDB API calls, poster proxy with auto failover + preference persistence
@@ -51,7 +51,9 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
     `requestSongDetail` / `pollSongDetail` resolve one
     song for the detail page: credits (written/produced/featuring plus the full
     `custom_performances` bill), album, release date, pageviews, the editorial
-    About copy, listen/watch links, language + translation count, artwork
+    About copy, the YouTube video link (Spotify and SoundCloud entries are
+    filtered out; the video opens in the shared in-page player at Genius'
+    recorded timestamp), language + translation count, artwork
     palette, artist/album identity, recording location, community stats and
     related songs (lyrics, duration and audio are dummy data in `DummyMedia`
     until those sources land)

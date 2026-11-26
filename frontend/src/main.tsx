@@ -1,5 +1,6 @@
 import "./styles/tailwind.css";
 import "./styles/base.css";
+import "./styles/youtube-player.css";
 import "./styles/music-detail.css";
 import "./styles/movie-detail.css";
 import "./styles/book-detail.css";

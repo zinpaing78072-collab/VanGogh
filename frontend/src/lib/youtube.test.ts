@@ -39,4 +39,12 @@ describe("youtubeEmbedUrl", () => {
       "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&playsinline=1"
     );
   });
+
+  it("starts at the Genius timestamp when one is recorded", () => {
+    expect(youtubeEmbedUrl("dQw4w9WgXcQ", 42)).toBe(
+      "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&playsinline=1&start=42"
+    );
+    expect(youtubeEmbedUrl("dQw4w9WgXcQ", 0)).not.toContain("start=");
+    expect(youtubeEmbedUrl("dQw4w9WgXcQ", -5)).not.toContain("start=");
+  });
 });

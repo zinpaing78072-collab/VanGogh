@@ -486,13 +486,20 @@ a.song-artist:hover {
     border: 1px solid var(--border);
     background: var(--panel-inset);
     color: var(--text);
+    font-family: inherit;
     text-decoration: none;
+    cursor: pointer;
     transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .song-listen-link:hover {
     border-color: var(--accent-hover);
     background: var(--panel-hover);
+}
+
+.listen-play {
+    font-size: 9px;
+    color: var(--accent-hover);
 }
 
 .listen-provider {

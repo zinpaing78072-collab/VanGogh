@@ -695,6 +695,8 @@ const TESTS = [
                     return !!panel && panel.classList.contains("hidden");
                 })(),
                 listenLinks: document.querySelectorAll("#songView .song-listen-link").length,
+                listenProviders: [...document.querySelectorAll("#songView .listen-provider")]
+                    .map(e => e.textContent.trim()).join(", "),
                 aboutParas: document.querySelectorAll("#songView .about-body p").length,
                 hasAboutToggle: document.querySelectorAll('#songView [data-action="about"]').length,
                 verified: document.querySelectorAll("#songView .artist-verified").length,
@@ -711,6 +713,25 @@ const TESTS = [
                 overflow: Math.max(0, document.getElementById("songView").scrollWidth
                     - document.getElementById("songView").clientWidth)
             })`));
+
+            // Only the YouTube entry is offered, and it plays in-page at the
+            // timestamp Genius recorded. Escape closes the player, not the song.
+            await page.evaluate(`document.querySelector('#songView [data-action="video"]').click(); true`);
+            await page.waitFor(`!!document.querySelector(".youtube-player iframe")`);
+            const video = JSON.parse(await page.evaluate(`JSON.stringify((function () {
+                var overlay = document.querySelector(".youtube-player");
+                var iframe = overlay.querySelector("iframe");
+                return {
+                    overlay: !!overlay,
+                    dialog: overlay.getAttribute("role"),
+                    src: iframe.src,
+                    title: iframe.title
+                };
+            })())`));
+            await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
+            await page.waitFor(`!document.querySelector(".youtube-player")`);
+            const videoClosed = await page.evaluate(
+                `!document.getElementById("songView").classList.contains("hidden")`);
 
             await page.evaluate(`document.querySelector('#songView [data-action="credits"]').click(); true`);
             const creditsOpen = JSON.parse(await page.evaluate(`JSON.stringify({
@@ -752,7 +773,17 @@ const TESTS = [
                     d.creditsToggle === 1 && d.creditsHidden
                         && creditsOpen.open && creditsOpen.rows === 3,
                     d.creditsToggle + "/" + creditsOpen.rows),
-                check("listen links render per provider", d.listenLinks === 2, d.listenLinks),
+                check("only the YouTube video is offered",
+                    d.listenLinks === 1 && d.listenProviders === "YouTube",
+                    d.listenLinks + " / " + d.listenProviders),
+                check("the video opens the in-page player at its timestamp",
+                    video.overlay && video.dialog === "dialog"
+                        && video.src.indexOf("youtube.com/embed/preview") !== -1
+                        && video.src.indexOf("start=42") !== -1
+                        && video.title === "Rumours — Fleetwood Mac video",
+                    video.src + " / " + video.title),
+                check("Escape closes the video and stays on the song",
+                    videoClosed === true, videoClosed),
                 check("About this song is collapsed behind Read more",
                     d.aboutParas === 3 && d.hasAboutToggle === 1
                         && aboutOpen.expanded && aboutOpen.label === "Show less",
@@ -840,10 +871,10 @@ const TESTS = [
             // The trailer plays in-page: the button opens an embedded YouTube
             // player, and Escape closes the player without leaving the detail.
             await page.evaluate(`document.querySelector('#movieView [data-action="trailer"]').click(); true`);
-            await page.waitFor(`!!document.querySelector(".movie-trailer iframe")`);
+            await page.waitFor(`!!document.querySelector(".youtube-player iframe")`);
             const trailer = JSON.parse(await page.evaluate(`JSON.stringify((function () {
-                var overlay = document.querySelector(".movie-trailer");
-                var frame = document.querySelector(".movie-trailer-frame").getBoundingClientRect();
+                var overlay = document.querySelector(".youtube-player");
+                var frame = document.querySelector(".youtube-player-frame").getBoundingClientRect();
                 var topLeft = document.elementFromPoint(6, 6);
                 return {
                     overlay: !!overlay,
@@ -858,7 +889,7 @@ const TESTS = [
                 };
             })())`));
             await page.evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); true`);
-            await page.waitFor(`!document.querySelector(".movie-trailer")`);
+            await page.waitFor(`!document.querySelector(".youtube-player")`);
             const trailerClosed = await page.evaluate(
                 `!document.getElementById("movieView").classList.contains("hidden")`);
 

@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { useState, type ReactNode } from "react";
 import { backToBrowse, openDetail } from "../../../app/actions";
 import { useStore } from "../../../app/store";
 import type { Movie, MovieDetail, SimilarMovie } from "../../../bridge/types";
-import { useEscape } from "../../../hooks/useEscape";
 import { cn } from "../../../lib/cn";
 import { secureLink } from "../../../lib/format";
-import { youtubeEmbedUrl, youtubeVideoId } from "../../../lib/youtube";
+import { youtubeVideoId } from "../../../lib/youtube";
+import { YouTubePlayerOverlay } from "../../media/YouTubePlayer";
 
 /**
  * Movie detail: the bento layout from prototypes/movie-detail-layouts/bento.html.
@@ -100,72 +99,6 @@ function SlotArt({
       {mark}
       {children}
     </>
-  );
-}
-
-/**
- * The in-page YouTube player. A fixed overlay above the shell (sidebar 110,
- * header 100) so the trailer is watchable without leaving the app.
- *
- * It renders through a portal on `document.body`: the detail section's entry
- * animation makes `.movie-view` a containing block and stacking context, which
- * would both pin a `position: fixed` child to the section and trap it below
- * the sidebar.
- *
- * `data-lightbox-open` tells the app-level Escape handler to leave this detail
- * alone: Escape closes the player, and a second Escape leaves the page (the
- * same convention as the game lightbox). The iframe unmounts on close, which
- * also stops playback.
- */
-function TrailerOverlay({
-  videoId,
-  title,
-  onClose,
-}: {
-  videoId: string;
-  title: string;
-  onClose: () => void;
-}) {
-  const closeRef = useRef<HTMLButtonElement>(null);
-  useEscape(onClose);
-
-  useEffect(() => {
-    closeRef.current?.focus();
-  }, []);
-
-  return createPortal(
-    <div
-      className="movie-trailer"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`${title} trailer`}
-      data-lightbox-open="true"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <button
-        ref={closeRef}
-        type="button"
-        className="movie-trailer-close"
-        data-action="close-trailer"
-        aria-label="Close trailer"
-        onClick={onClose}
-      >
-        ×
-      </button>
-      <div className="movie-trailer-frame">
-        <iframe
-          className="movie-trailer-video"
-          src={youtubeEmbedUrl(videoId)}
-          title={`${title} trailer`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-          allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
-      </div>
-    </div>,
-    document.body
   );
 }
 
@@ -357,9 +290,9 @@ function Identity({ detail }: { detail: MovieDetail }) {
       </div>
 
       {trailerOpen && videoId ? (
-        <TrailerOverlay
+        <YouTubePlayerOverlay
           videoId={videoId}
-          title={detail.title}
+          title={`${detail.title} trailer`}
           onClose={() => setTrailerOpen(false)}
         />
       ) : null}

@@ -276,8 +276,9 @@
                 { label: "Label", names: ["Preview Records", "Preview Music Group"] }
             ],
             media: [
-                { provider: "YouTube", type: "video", url: "https://www.youtube.com/watch?v=preview", startSeconds: 0 },
-                { provider: "SoundCloud", type: "audio", url: "https://soundcloud.com/preview", startSeconds: 0 }
+                { provider: "YouTube", type: "video", url: "https://www.youtube.com/watch?v=preview", startSeconds: 42 },
+                { provider: "SoundCloud", type: "audio", url: "https://soundcloud.com/preview", startSeconds: 0 },
+                { provider: "Spotify", type: "audio", url: "https://open.spotify.com/track/preview", startSeconds: 0 }
             ],
             about: "First paragraph of Genius editorial copy, long enough to need the collapsed state. "
                 + "It keeps going so the clamp has something to hide behind the fade.\n\n"

@@ -1,0 +1,64 @@
+/* Shared in-app YouTube player (movie trailer, song video links).
+ *
+ * A fixed overlay above the shell (sidebar 110, header 100), outside the
+ * detail flow, so opening it never reflows the page. The frame width is capped
+ * by the viewport height as well as the viewport width, which keeps the 16:9
+ * frame fully visible in a short window. Role tokens only.
+ */
+
+.youtube-player {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: grid;
+    place-items: center;
+    padding: 34px;
+    background: rgba(4, 8, 18, 0.88);
+    backdrop-filter: blur(10px);
+}
+
+.youtube-player-frame {
+    position: relative;
+    width: min(1120px, 100%, calc((100vh - 68px) * 16 / 9));
+    aspect-ratio: 16 / 9;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 40px 90px -40px #000;
+}
+
+.youtube-player-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.youtube-player-close {
+    position: absolute;
+    top: 20px;
+    right: 22px;
+    z-index: 1;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--panel-inset);
+    color: var(--text);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.youtube-player-close:hover {
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
+}
+
+@media (max-width: 1000px) {
+    .youtube-player { padding: 14px; }
+}

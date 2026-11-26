@@ -46,7 +46,8 @@ public record SongDetail(
         String relationshipsIndexUrl,
         /** Full label → names bill from {@code custom_performances}. */
         java.util.List<Credit> credits,
-        /** Outbound listen/watch links ({@code media}); no audio is streamed here. */
+        /** Outbound listen/watch links ({@code media}); the page offers only the YouTube
+         *  entries, played in the in-page player, and drops the other providers. */
         java.util.List<MediaLink> media,
         /** Artwork palette; primary and secondary tint the hero border and tag. */
         String artPrimaryColor,

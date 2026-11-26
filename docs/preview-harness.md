@@ -126,9 +126,10 @@ get generated SVG gradient covers, coloured from a hash of the item id, so cards
 are visually distinct instead of a wall of identical grey boxes.
 
 `songDetail` holds the song-detail extras the Genius payload supplies — dummy
-lyrics/duration/audio plus credits, listen links, the About paragraphs, the
-language and translation count, the artwork palette and the community stats — so
-the detail test exercises the real view rather than a lookalike.
+lyrics/duration/audio plus credits, the YouTube video link (with SoundCloud and
+Spotify entries the page must drop), the About paragraphs, the language and
+translation count, the artwork palette and the community stats — so the detail
+test exercises the real view rather than a lookalike.
 
 `movieDetail` holds the film extras the TMDB payload supplies — tagline, runtime,
 certification, keywords, the facts ledger, cast & crew, stills and the similar
@@ -218,7 +219,7 @@ node preview/check.js --page=frontend/dist     # a staging build instead
 `cd frontend && npm run verify` runs typecheck, lint, Vitest, a fresh build and
 then this gate against the shipped output.
 
-209 assertions across 23 groups: trending render, the sidebar (four form buttons,
+211 assertions across 23 groups: trending render, the sidebar (four form buttons,
 inert placeholder items, section labels, collapse and card reflow, and the
 active marker), the switcher across all four forms, search hit and miss, the AI
 toggle (off by default, `kind=recommend` when on, survives a form switch, empty
@@ -228,9 +229,10 @@ detail — every artwork slot included — survives both a form switch and a
 Settings round-trip, and scroll positions come back while a fresh form starts
 at the top), the song, movie, book and game detail views (each
 bento/immersive tile, every streamed artwork slot, actions, Escape back to the
-grid; the movie detail also opens its trailer in an in-page YouTube embed that
-covers the shell at 16:9, and Escape closes the player without leaving the
-detail), the Settings
+grid; the movie detail also opens its trailer in the shared in-page YouTube
+player that covers the shell at 16:9, and the song detail opens its YouTube
+video at Genius' timestamp, while Spotify/SoundCloud links are absent; Escape
+closes the player without leaving the detail), the Settings
 form (opens from the sidebar, paints
 the loaded config, fills the base URL from a preset, refuses a save with no key,
 saves and clears the field, keeps the stored key off the page and on a second

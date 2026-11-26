@@ -4,6 +4,8 @@ import { backToBrowse, openDetail } from "../../../app/actions";
 import type { Credit, SongDetail, Song, RelatedSong } from "../../../bridge/types";
 import { formatCount, formatStat, formatTime, isHexColor, secureLink } from "../../../lib/format";
 import { cn } from "../../../lib/cn";
+import { youtubeVideoId } from "../../../lib/youtube";
+import { YouTubePlayerOverlay } from "../../media/YouTubePlayer";
 import { hidePlayer, resetPlayer, seekPlayer, togglePlayer } from "./player";
 
 /**
@@ -238,35 +240,82 @@ function AlbumCell({ detail }: { detail: SongDetail }) {
   );
 }
 
-function mediaHref(media: { url: string; provider: string; startSeconds: number }): string {
-  const url = String(media.url || "");
-  const start = Number(media.startSeconds) || 0;
-  if (start <= 0 || !/youtube/i.test(media.provider || "")) return url;
-  return url + (url.includes("?") ? "&" : "?") + "t=" + start + "s";
-}
-
 function mediaType(type: string): string {
   return type === "video" ? "Video" : type === "audio" ? "Audio" : "Link";
 }
 
+/**
+ * Genius carries a media array of outbound links. The page offers only the
+ * YouTube entries — Spotify and SoundCloud links are dropped — and a YouTube
+ * entry opens in the shared in-page player at Genius' recorded timestamp,
+ * instead of leaving the app.
+ */
 function ListenLinks({ detail }: { detail: SongDetail }) {
-  const links = (detail.media || []).filter((item) => secureLink(item.url));
+  const [video, setVideo] = useState<{
+    videoId: string;
+    startSeconds: number;
+    title: string;
+  } | null>(null);
+  const title = detail.artist ? `${detail.title} — ${detail.artist}` : detail.title;
+  const links = (detail.media || []).filter(
+    (item) =>
+      /^youtube$/i.test(String(item.provider || "").trim()) && Boolean(secureLink(item.url))
+  );
   if (!links.length) return null;
+
   return (
-    <div className="song-listen" aria-label="Listen and watch">
-      {links.map((item, index) => (
-        <a
-          key={index}
-          className="song-listen-link"
-          href={secureLink(mediaHref(item))}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span className="listen-provider">{item.provider || "Link"}</span>
-          <span className="listen-type">{mediaType(item.type)}</span>
-        </a>
-      ))}
-    </div>
+    <>
+      <div className="song-listen" aria-label="Watch">
+        {links.map((item, index) => {
+          const href = secureLink(item.url);
+          const videoId = youtubeVideoId(item.url);
+          const label = (
+            <>
+              <span className="listen-play" aria-hidden="true">
+                ▶
+              </span>
+              <span className="listen-provider">{item.provider || "YouTube"}</span>
+              <span className="listen-type">{mediaType(item.type)}</span>
+            </>
+          );
+          return videoId ? (
+            <button
+              key={index}
+              type="button"
+              className="song-listen-link"
+              data-action="video"
+              onClick={() =>
+                setVideo({
+                  videoId,
+                  startSeconds: Number(item.startSeconds) || 0,
+                  title,
+                })
+              }
+            >
+              {label}
+            </button>
+          ) : (
+            <a
+              key={index}
+              className="song-listen-link"
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {label}
+            </a>
+          );
+        })}
+      </div>
+      {video ? (
+        <YouTubePlayerOverlay
+          videoId={video.videoId}
+          title={`${video.title} video`}
+          startSeconds={video.startSeconds}
+          onClose={() => setVideo(null)}
+        />
+      ) : null}
+    </>
   );
 }
 

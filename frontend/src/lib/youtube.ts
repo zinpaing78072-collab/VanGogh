@@ -42,10 +42,12 @@ export function youtubeVideoId(href: string | null | undefined): string {
 }
 
 /** The in-page player URL: autoplay after the button click, no related-video grid. */
-export function youtubeEmbedUrl(videoId: string): string {
+export function youtubeEmbedUrl(videoId: string, startSeconds = 0): string {
+  const start = Math.max(0, Math.round(Number(startSeconds) || 0));
   return (
     "https://www.youtube.com/embed/" +
     encodeURIComponent(videoId) +
-    "?autoplay=1&rel=0&playsinline=1"
+    "?autoplay=1&rel=0&playsinline=1" +
+    (start > 0 ? "&start=" + start : "")
   );
 }
