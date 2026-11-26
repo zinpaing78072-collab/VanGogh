@@ -29,6 +29,13 @@ public class TgdbClient {
     private static final String CDN_ROOT = "https://cdn.thegamesdb.net/images/";
     static final String IMAGE_PROXY = "https://wsrv.nl/?url=";
     private static final int TRENDING_IDS_PER_REQUEST = 8;
+    /** The trending catalogue, in display order — the only place a trending id is edited. */
+    private static final String TRENDING_IDS = "39932,139623,65101,114899,136323,14517,130236,142770,60527,"
+            + "121320,68304,116401,60138,52211,24893,128915,135811,53456,928,2474";
+    /** Fields/includes shared by every game query, so one edit here reaches search, trending and detail. */
+    private static final String GAME_FIELDS = "players,publishers,genres,overview,rating,platform";
+    private static final String GAME_INCLUDES = "boxart,platform";
+    private static final String GAME_DETAIL_FIELDS = GAME_FIELDS + ",developers,youtube";
     private static final Duration POSTER_TIMEOUT = Duration.ofSeconds(5);
     private static final Path PROXY_MARKER = Path.of(System.getProperty("user.home"), ".van-gogh", "poster-proxy.conf");
 
@@ -50,13 +57,12 @@ public class TgdbClient {
     public Try<ApiResponse> searchGame(String query) {
         String url = BASE + "Games/ByGameName?apikey=" + apiKey
                 + "&name=" + URLEncoder.encode(query, StandardCharsets.UTF_8)
-                + "&fields=players,publishers,genres,overview,rating,platform&include=boxart,platform&page=1";
+                + "&fields=" + GAME_FIELDS + "&include=" + GAME_INCLUDES + "&page=1";
         return send(url);
     }
 
     public Try<ApiResponse> trending() {
-        String[] ids = ("97544,139623,65101,114899,136323,14517,130236,142770,60527,"
-                + "121320,68304,120341,135318,52926,2642,128915,135811,53456").split(",");
+        String[] ids = TRENDING_IDS.split(",");
 
         return Try.of(() -> {
             JsonObject combined = null;
@@ -65,8 +71,7 @@ public class TgdbClient {
                 String batch = String.join(",", java.util.Arrays.copyOfRange(ids, start, end));
                 String url = BASE + "Games/ByGameID?apikey=" + apiKey
                         + "&id=" + URLEncoder.encode(batch, StandardCharsets.UTF_8)
-                        + "&fields=players,publishers,genres,overview,rating,platform"
-                        + "&include=boxart,platform&page=1";
+                        + "&fields=" + GAME_FIELDS + "&include=" + GAME_INCLUDES + "&page=1";
 
                 ApiResponse response = send(url).get();
                 if (!response.isSuccess()) {
@@ -105,8 +110,8 @@ public class TgdbClient {
     public Try<ApiResponse> gameById(int id) {
         String url = BASE + "Games/ByGameID?apikey=" + apiKey
                 + "&id=" + id
-                + "&fields=players,publishers,genres,overview,rating,platform,developers,youtube"
-                + "&include=boxart,platform&page=1";
+                + "&fields=" + GAME_DETAIL_FIELDS
+                + "&include=" + GAME_INCLUDES + "&page=1";
         return send(url);
     }
 

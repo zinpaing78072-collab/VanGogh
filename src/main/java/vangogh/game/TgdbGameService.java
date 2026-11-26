@@ -157,15 +157,16 @@ public class TgdbGameService {
                 .filter(s -> !s.isEmpty())
                 .getOrElse("Untitled");
         String release = optString(g, "release_date");
-        double rating = 0.0;
-        // API rating is currently a string, e.g. "M - Mature 17+"; don't parse it numerically.
+        // The API's rating is an age rating string, e.g. "M - Mature 17+", not a
+        // numeric score — it passes through to the card untouched.
+        String ageRating = optString(g, "rating");
         String genre = Option.of(g.get("genres"))
                 .filter(j -> !j.isJsonNull())
                 .map(j -> genreLabel(j.getAsJsonArray()))
                 .getOrElse("");
         String overview = optString(g, "overview");
         String posterUrl = findFrontBoxart(boxartData, id);
-        return new Game(id, title, release, rating, genre, overview, posterUrl);
+        return new Game(id, title, release, ageRating, genre, overview, posterUrl);
     }
 
     static JsonObject extractBoxartData(JsonObject root) {

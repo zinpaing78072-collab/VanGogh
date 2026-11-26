@@ -34,7 +34,8 @@ export interface Game {
   id: number;
   game_title: string;
   release_date: string;
-  rating: number;
+  /** TheGamesDB's age rating string, e.g. "E10+ - Everyone 10+". */
+  ageRating: string;
   genre: string;
   overview: string;
   posterUrl: string;

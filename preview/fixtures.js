@@ -73,7 +73,7 @@
             id: "10225",
             game_title: "Minecraft",
             year: "2011",
-            rating: 9.2,
+            ageRating: "E10+ - Everyone 10+",
             genre: "Sandbox",
             overview: "Build, explore and survive in a procedurally generated world made of blocks."
         },
@@ -81,7 +81,7 @@
             id: "9034",
             game_title: "The Legend of Zelda: Breath of the Wild",
             year: "2017",
-            rating: 9.7,
+            ageRating: "E10+ - Everyone 10+",
             genre: "Action Adventure",
             overview: "Wake up in a ruined Hyrule and reclaim the kingdom from Calamity Ganon."
         },
@@ -89,16 +89,16 @@
             id: "7720",
             game_title: "Hollow Knight",
             year: "2017",
-            rating: 9.0,
+            ageRating: "E10+ - Everyone 10+",
             genre: "Metroidvania",
             overview: "Descend into Hallownest, a ruined insect kingdom, and uncover its secrets."
         },
         {
-            // stress: very long single-token title, no rating
+            // stress: very long single-token title, no age rating
             id: "4411",
             game_title: "Supercalifragilisticexpialidociousdeluxeultimateedition",
             year: "2023",
-            rating: null,
+            ageRating: "",
             genre: "Arcade",
             overview: "A deliberately unbreakable title, to prove the card truncates instead of overflowing."
         },
@@ -106,7 +106,7 @@
             id: "5502",
             game_title: "Stardew Valley",
             year: "2016",
-            rating: 8.9,
+            ageRating: "E10+ - Everyone 10+",
             genre: "Farming Sim",
             overview: "Inherit your grandfather's farm and build a new life in the valley."
         },
@@ -114,7 +114,7 @@
             id: "3310",
             game_title: "Elden Ring",
             year: "2022",
-            rating: 9.5,
+            ageRating: "M - Mature 17+",
             genre: "Action RPG",
             overview: "Rise, Tarnished, and be guided by grace to brandish the power of the Elden Ring."
         }

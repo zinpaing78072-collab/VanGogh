@@ -4,7 +4,7 @@ public record Game(
         int id,
         String game_title,
         String release_date,
-        double rating,
+        String ageRating,
         String genre,
         String overview,
         String posterUrl   

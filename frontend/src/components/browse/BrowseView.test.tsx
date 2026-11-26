@@ -2,7 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { failBrowse, finishBrowse, startBrowse } from "../../app/actions";
 import { getState, resetStore, setState } from "../../app/store";
-import type { Book, Movie } from "../../bridge/types";
+import type { Book, Game, Movie } from "../../bridge/types";
 import { BrowseView } from "./BrowseView";
 
 const MOVIES: Movie[] = [
@@ -21,6 +21,18 @@ const MOVIES: Movie[] = [
     year: 2010,
     rating: 8.4,
     genre: "Action",
+    overview: "",
+    posterUrl: "",
+  },
+];
+
+const GAMES: Game[] = [
+  {
+    id: 10225,
+    game_title: "Minecraft",
+    release_date: "2011-11-18",
+    ageRating: "E10+ - Everyone 10+",
+    genre: "Sandbox",
     overview: "",
     posterUrl: "",
   },
@@ -82,6 +94,16 @@ describe("BrowseView", () => {
     render(<BrowseView hidden={false} />);
 
     expect(screen.getByText("No movies found.")).toBeTruthy();
+  });
+
+  it("shows the game's age rating instead of an empty star score", () => {
+    setState((state) => ({ ...state, activeDomain: "game" }));
+    finishBrowse("game", GAMES);
+    const { container } = render(<BrowseView hidden={false} />);
+
+    const meta = container.querySelector("#movieGrid .game-card .card-meta");
+    expect(meta?.textContent).toContain("E10+ - Everyone 10+");
+    expect(meta?.textContent).not.toContain("★");
   });
 
   it("renders book cards keyed by workKey", () => {
