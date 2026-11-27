@@ -20,7 +20,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Vavr-based rewrite: the game fetch returns an {@link Either} value and runs
@@ -53,10 +52,8 @@ public class GameController {
     private final AtomicInteger posterDelivered = new AtomicInteger();
     private final AtomicInteger posterSkipped = new AtomicInteger();
 
-    /** One-slot holder for the latest completed fetch (written by the IO pool, drained on the UI thread). */
-    private record PendingData(int generation, Either<FetchError, java.util.List<Game>> result) {}
-
-    private final AtomicReference<PendingData> pendingData = new AtomicReference<>();
+    /** One-slot handoff for the latest completed fetch (written by the IO pool, drained on the UI thread). */
+    private final LatestResult<Either<FetchError, java.util.List<Game>>> pendingData = new LatestResult<>();
 
     /** The reply the data drain hands the page (Gson-serialized; null fields omitted). */
     public record GameDataReply(int generation, String status, String error, java.util.List<Game> items) {}
@@ -106,7 +103,7 @@ public class GameController {
     public int requestGames(String kind, String query) {
         int gen = generation.incrementAndGet();
         resetPosterTracking();
-        pendingData.set(null);
+        pendingData.clear();
 
         Future.of(executor, () -> fetchGames(kind, query))
                 .onComplete(result -> deliverData(gen, result));
@@ -150,8 +147,9 @@ public class GameController {
                 Future.run(executor, () -> fetchAndOffer(game.id(), game.posterUrl(), gen)));
 
         // Set last: the drain hands the page items only after the poster
-        // bookkeeping above is in place.
-        pendingData.set(new PendingData(gen, either));
+        // bookkeeping above is in place. park() drops the result if a newer
+        // request took over while this one was computing.
+        pendingData.park(gen, either);
     }
 
     /**
@@ -161,21 +159,17 @@ public class GameController {
      */
     @KremaCommand
     public GameDataReply pollGameData(int generation) {
-        PendingData pending = pendingData.get();
-        if (pending == null) {
-            return new GameDataReply(generation, "pending", null, null);
+        // A newer request owns the grid; this poller must stop quietly rather
+        // than accept whatever happens to be parked.
+        if (this.generation.get() > generation) {
+            return new GameDataReply(generation, "superseded", null, null);
         }
-        if (pending.generation() > generation) {
-            // A newer request owns the grid; this poller should stop quietly.
-            return new GameDataReply(pending.generation(), "superseded", null, null);
-        }
-        // Consume: the page renders what it drained; a later poll sees empty.
-        // Safe without CAS — a new writer can only appear via requestGames,
-        // which runs on this same UI thread after this handler returns.
-        pendingData.set(null);
-        return pending.result().fold(
-                error -> new GameDataReply(pending.generation(), "error", FetchError.uiMessage(error), null),
-                games -> new GameDataReply(pending.generation(), "done", null, games));
+        return pendingData.take(generation).fold(
+                () -> new GameDataReply(generation, "pending", null, null),
+                either -> either.fold(
+                        error -> new GameDataReply(
+                                generation, "error", FetchError.uiMessage(error), null),
+                        games -> new GameDataReply(generation, "done", null, games)));
     }
 
     @KremaCommand
@@ -216,15 +210,14 @@ public class GameController {
 
     // -------------------------------------------------------------- detail
 
-    /** One-slot holder for the latest completed detail fetch. */
-    private record PendingDetail(int generation, Either<FetchError, GameDetail> result) {}
+    /** One-slot handoff for the latest completed detail fetch. */
+    private final LatestResult<Either<FetchError, GameDetail>> pendingDetail = new LatestResult<>();
 
     private record ArtRef(String slot, String url) {}
 
     private record PendingArt(String slot, String dataUri) {}
 
     private final AtomicInteger detailGeneration = new AtomicInteger();
-    private final AtomicReference<PendingDetail> pendingDetail = new AtomicReference<>();
 
     private final ConcurrentLinkedQueue<PendingArt> detailArtQueue = new ConcurrentLinkedQueue<>();
     private final AtomicInteger detailArtTotal = new AtomicInteger();
@@ -246,7 +239,7 @@ public class GameController {
     @KremaCommand
     public int requestGameDetail(int id) {
         int gen = detailGeneration.incrementAndGet();
-        pendingDetail.set(null);
+        pendingDetail.clear();
         resetDetailArt();
 
         Future.of(executor, () -> service.gameDetail(id))
@@ -291,7 +284,7 @@ public class GameController {
                 : result.get();
 
         either.peek(detail -> queueDetailArt(detail, gen));
-        pendingDetail.set(new PendingDetail(gen, either));
+        pendingDetail.park(gen, either);
     }
 
     /**
@@ -300,18 +293,15 @@ public class GameController {
      */
     @KremaCommand
     public GameDetailReply pollGameDetail(int generation) {
-        PendingDetail pending = pendingDetail.get();
-        if (pending == null) {
-            return new GameDetailReply(generation, "pending", null, null);
+        if (detailGeneration.get() > generation) {
+            return new GameDetailReply(generation, "superseded", null, null);
         }
-        if (pending.generation() > generation) {
-            return new GameDetailReply(pending.generation(), "superseded", null, null);
-        }
-        pendingDetail.set(null);
-        return pending.result().fold(
-                error -> new GameDetailReply(pending.generation(), "error",
-                        FetchError.uiMessage(error), null),
-                detail -> new GameDetailReply(pending.generation(), "done", null, detail));
+        return pendingDetail.take(generation).fold(
+                () -> new GameDetailReply(generation, "pending", null, null),
+                either -> either.fold(
+                        error -> new GameDetailReply(
+                                generation, "error", FetchError.uiMessage(error), null),
+                        detail -> new GameDetailReply(generation, "done", null, detail)));
     }
 
     /**

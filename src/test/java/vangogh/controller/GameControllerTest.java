@@ -443,12 +443,10 @@ class GameControllerTest {
         int secondGen = controller.requestGames("trending", "");
         assertTrue(secondGen > firstGen);
 
-        // The first poller must never consume the second request's result —
-        // two loops can poll the same one-slot drain. Whether the first poll
-        // observes "pending" (fetch still in flight) or "superseded" (resolved
-        // and dropped as stale) is timing-dependent; "done" would mean it
-        // stole the newer request's data.
-        assertNotEquals("done", controller.pollGameData(firstGen).status());
+        // The first poller must never consume the second request's result: a
+        // stale poller is superseded by generation alone, whatever the one-slot
+        // drain happens to hold.
+        assertEquals("superseded", controller.pollGameData(firstGen).status());
 
         // The newer request still delivers through the drain.
         assertEquals("done", drainData(controller, secondGen).status());

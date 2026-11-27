@@ -169,10 +169,10 @@ class MusicControllerTest {
         int secondGen = controller.requestMusic("trending", "");
         assertTrue(secondGen > firstGen);
 
-        // The first poller must never consume the second request's result.
-        // "pending" vs "superseded" is timing-dependent; "done" would mean it
-        // stole the newer request's data.
-        assertNotEquals("done", controller.pollMusicData(firstGen).status());
+        // The first poller must never consume the second request's result: a
+        // stale poller is superseded by generation alone, whatever the one-slot
+        // drain happens to hold.
+        assertEquals("superseded", controller.pollMusicData(firstGen).status());
 
         assertEquals("done", drainData(controller, secondGen).status());
     }

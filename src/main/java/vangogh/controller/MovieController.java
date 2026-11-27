@@ -20,7 +20,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Vavr-based rewrite: the movie fetch returns an {@link Either} value and runs
@@ -54,25 +53,20 @@ public class MovieController {
     private final AtomicInteger posterDelivered = new AtomicInteger();
     private final AtomicInteger posterSkipped = new AtomicInteger();
 
-    /** One-slot holder for the latest completed fetch (written by the IO pool, drained on the UI thread). */
-    private record PendingData(int generation, Either<FetchError, List<Movie>> result) {}
-
-    private final AtomicReference<PendingData> pendingData = new AtomicReference<>();
+    /** One-slot handoff for the latest completed fetch (written by the IO pool, drained on the UI thread). */
+    private final LatestResult<Either<FetchError, List<Movie>>> pendingData = new LatestResult<>();
 
     /** The reply the data drain hands the page (Gson-serialized; null fields omitted). */
     public record MovieDataReply(int generation, String status, String error, List<Movie> items) {}
 
     // ------------------------------------------------------------ movie detail
 
-    /** One-slot holder for the latest completed detail fetch. */
-    private record PendingDetail(int generation, Either<FetchError, MovieDetail> result) {}
-
     private record ArtRef(String slot, String url) {}
 
     private record PendingArt(String slot, String dataUri) {}
 
     private final AtomicInteger detailGeneration = new AtomicInteger();
-    private final AtomicReference<PendingDetail> pendingDetail = new AtomicReference<>();
+    private final LatestResult<Either<FetchError, MovieDetail>> pendingDetail = new LatestResult<>();
 
     private final ConcurrentLinkedQueue<PendingArt> detailArtQueue = new ConcurrentLinkedQueue<>();
     private final AtomicInteger detailArtTotal = new AtomicInteger();
@@ -123,7 +117,7 @@ public class MovieController {
     public int requestMovies(String kind, String query) {
         int gen = generation.incrementAndGet();
         resetPosterTracking();
-        pendingData.set(null);
+        pendingData.clear();
 
         Future.of(executor, () -> fetchMovies(kind, query))
                 .onComplete(result -> deliverData(gen, result));
@@ -172,8 +166,9 @@ public class MovieController {
                 Future.run(executor, () -> fetchAndOffer(movie.id(), movie.posterUrl(), gen)));
 
         // Set last: the drain hands the page items only after the poster
-        // bookkeeping above is in place.
-        pendingData.set(new PendingData(gen, either));
+        // bookkeeping above is in place. park() drops the result if a newer
+        // request took over while this one was computing.
+        pendingData.park(gen, either);
     }
 
     /**
@@ -183,21 +178,17 @@ public class MovieController {
      */
     @KremaCommand
     public MovieDataReply pollMovieData(int generation) {
-        PendingData pending = pendingData.get();
-        if (pending == null) {
-            return new MovieDataReply(generation, "pending", null, null);
+        // A newer request owns the grid; this poller must stop quietly rather
+        // than accept whatever happens to be parked.
+        if (this.generation.get() > generation) {
+            return new MovieDataReply(generation, "superseded", null, null);
         }
-        if (pending.generation() > generation) {
-            // A newer request owns the grid; this poller should stop quietly.
-            return new MovieDataReply(pending.generation(), "superseded", null, null);
-        }
-        // Consume: the page renders what it drained; a later poll sees empty.
-        // Safe without CAS — a new writer can only appear via requestMovies,
-        // which runs on this same UI thread after this handler returns.
-        pendingData.set(null);
-        return pending.result().fold(
-                error -> new MovieDataReply(pending.generation(), "error", FetchError.uiMessage(error), null),
-                movies -> new MovieDataReply(pending.generation(), "done", null, movies));
+        return pendingData.take(generation).fold(
+                () -> new MovieDataReply(generation, "pending", null, null),
+                either -> either.fold(
+                        error -> new MovieDataReply(
+                                generation, "error", FetchError.uiMessage(error), null),
+                        movies -> new MovieDataReply(generation, "done", null, movies)));
     }
 
     @KremaCommand
@@ -238,13 +229,11 @@ public class MovieController {
     @KremaCommand
     public int requestMovieDetail(int id) {
         int gen = detailGeneration.incrementAndGet();
-        pendingDetail.set(null);
+        pendingDetail.clear();
         resetDetailArt();
 
-        Future.of(executor, () -> {
-            Either<FetchError, MovieDetail> result = service.movieDetail(id);
-            return new PendingDetail(gen, result);
-        }).onComplete(result -> deliverDetail(gen, result));
+        Future.of(executor, () -> service.movieDetail(id))
+                .onComplete(result -> deliverDetail(gen, result));
         return gen;
     }
 
@@ -279,19 +268,19 @@ public class MovieController {
         }
     }
 
-    private void deliverDetail(int gen, Try<PendingDetail> result) {
+    private void deliverDetail(int gen, Try<Either<FetchError, MovieDetail>> result) {
         if (detailGeneration.get() != gen) {
             return;
         }
-        PendingDetail pending = result.isFailure()
-                ? new PendingDetail(gen, Either.left(new FetchError.Transport("TMDB movie", result.getCause())))
+        Either<FetchError, MovieDetail> either = result.isFailure()
+                ? Either.left(new FetchError.Transport("TMDB movie", result.getCause()))
                 : result.get();
 
         // Fan out artwork before the drain can hand the page this request: the
         // total is in place by the time the page's first art poll runs.
-        pending.result().peek(detail -> queueDetailArt(detail, gen));
+        either.peek(detail -> queueDetailArt(detail, gen));
 
-        pendingDetail.set(pending);
+        pendingDetail.park(gen, either);
     }
 
     /**
@@ -300,17 +289,15 @@ public class MovieController {
      */
     @KremaCommand
     public MovieDetailReply pollMovieDetail(int generation) {
-        PendingDetail pending = pendingDetail.get();
-        if (pending == null) {
-            return new MovieDetailReply(generation, "pending", null, null);
+        if (detailGeneration.get() > generation) {
+            return new MovieDetailReply(generation, "superseded", null, null);
         }
-        if (pending.generation() > generation) {
-            return new MovieDetailReply(pending.generation(), "superseded", null, null);
-        }
-        pendingDetail.set(null);
-        return pending.result().fold(
-                error -> new MovieDetailReply(pending.generation(), "error", FetchError.uiMessage(error), null),
-                detail -> new MovieDetailReply(pending.generation(), "done", null, detail));
+        return pendingDetail.take(generation).fold(
+                () -> new MovieDetailReply(generation, "pending", null, null),
+                either -> either.fold(
+                        error -> new MovieDetailReply(
+                                generation, "error", FetchError.uiMessage(error), null),
+                        detail -> new MovieDetailReply(generation, "done", null, detail)));
     }
 
     /**

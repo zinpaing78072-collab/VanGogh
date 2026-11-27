@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Music-domain command handler, same contract as {@link GameController}:
@@ -44,10 +43,8 @@ public class MusicController {
     private final AtomicInteger posterDelivered = new AtomicInteger();
     private final AtomicInteger posterSkipped = new AtomicInteger();
 
-    /** One-slot holder for the latest completed fetch (written by the IO pool, drained on the UI thread). */
-    private record PendingData(int generation, Either<FetchError, java.util.List<Album>> result) {}
-
-    private final AtomicReference<PendingData> pendingData = new AtomicReference<>();
+    /** One-slot handoff for the latest completed fetch (written by the IO pool, drained on the UI thread). */
+    private final LatestResult<Either<FetchError, java.util.List<Album>>> pendingData = new LatestResult<>();
 
     /** The reply the data drain hands the page (Gson-serialized; null fields omitted). */
     public record MusicDataReply(int generation, String status, String error, java.util.List<Album> items) {}
@@ -78,13 +75,13 @@ public class MusicController {
     public int requestMusic(String kind, String query) {
         int gen = generation.incrementAndGet();
         resetPosterTracking();
-        pendingData.set(null);
+        pendingData.clear();
 
         // The AI toggle ships before this form's engine slice. Say so instead
         // of quietly running a direct search behind an AI-looking toggle.
         if ("recommend".equalsIgnoreCase(kind)) {
-            pendingData.set(new PendingData(gen, Either.left(new FetchError.BadInput(
-                    "kind", "AI recommendations are not wired for this form yet"))));
+            pendingData.park(gen, Either.left(new FetchError.BadInput(
+                    "kind", "AI recommendations are not wired for this form yet")));
             return gen;
         }
 
@@ -124,8 +121,9 @@ public class MusicController {
                 Future.run(executor, () -> fetchAndOffer(album.id(), album.posterUrl(), gen)));
 
         // Set last: the drain hands the page items only after the cover
-        // bookkeeping above is in place.
-        pendingData.set(new PendingData(gen, either));
+        // bookkeeping above is in place. park() drops the result if a newer
+        // request took over while this one was computing.
+        pendingData.park(gen, either);
     }
 
     /**
@@ -135,21 +133,17 @@ public class MusicController {
      */
     @KremaCommand
     public MusicDataReply pollMusicData(int generation) {
-        PendingData pending = pendingData.get();
-        if (pending == null) {
-            return new MusicDataReply(generation, "pending", null, null);
+        // A newer request owns the grid; this poller must stop quietly rather
+        // than accept whatever happens to be parked.
+        if (this.generation.get() > generation) {
+            return new MusicDataReply(generation, "superseded", null, null);
         }
-        if (pending.generation() > generation) {
-            // A newer request owns the grid; this poller should stop quietly.
-            return new MusicDataReply(pending.generation(), "superseded", null, null);
-        }
-        // Consume: the page renders what it drained; a later poll sees empty.
-        // Safe without CAS — a new writer can only appear via requestMusic,
-        // which runs on this same UI thread after this handler returns.
-        pendingData.set(null);
-        return pending.result().fold(
-                error -> new MusicDataReply(pending.generation(), "error", FetchError.uiMessage(error), null),
-                albums -> new MusicDataReply(pending.generation(), "done", null, albums));
+        return pendingData.take(generation).fold(
+                () -> new MusicDataReply(generation, "pending", null, null),
+                either -> either.fold(
+                        error -> new MusicDataReply(
+                                generation, "error", FetchError.uiMessage(error), null),
+                        albums -> new MusicDataReply(generation, "done", null, albums)));
     }
 
     @KremaCommand

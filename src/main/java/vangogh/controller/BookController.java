@@ -20,7 +20,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The book domain's IPC handler, following the movie/game drain contract
@@ -50,25 +49,22 @@ public class BookController {
     private final AtomicInteger coverDelivered = new AtomicInteger();
     private final AtomicInteger coverSkipped = new AtomicInteger();
 
-    /** One-slot holder for the latest completed fetch (written by the IO pool, drained on the UI thread). */
-    private record PendingData(int generation, Either<FetchError, java.util.List<Book>> result) {}
-
-    private final AtomicReference<PendingData> pendingData = new AtomicReference<>();
+    /** One-slot handoff for the latest completed fetch (written by the IO pool, drained on the UI thread). */
+    private final LatestResult<Either<FetchError, java.util.List<Book>>> pendingData = new LatestResult<>();
 
     /** The reply the data drain hands the page (Gson-serialized; null fields omitted). */
     public record BookDataReply(int generation, String status, String error, java.util.List<Book> items) {}
 
     // ------------------------------------------------------------ detail
 
-    /** One-slot holder for the latest completed detail fetch. */
-    private record PendingDetail(int generation, Either<FetchError, BookDetail> result) {}
+    /** One-slot handoff for the latest completed detail fetch. */
+    private final LatestResult<Either<FetchError, BookDetail>> pendingDetail = new LatestResult<>();
 
     private record ArtRef(String slot, String url) {}
 
     private record PendingArt(String slot, String dataUri) {}
 
     private final AtomicInteger detailGeneration = new AtomicInteger();
-    private final AtomicReference<PendingDetail> pendingDetail = new AtomicReference<>();
 
     private final ConcurrentLinkedQueue<PendingArt> detailArtQueue = new ConcurrentLinkedQueue<>();
     private final AtomicInteger detailArtTotal = new AtomicInteger();
@@ -123,7 +119,7 @@ public class BookController {
     public int requestBooks(String kind, String query) {
         int gen = generation.incrementAndGet();
         resetCoverTracking();
-        pendingData.set(null);
+        pendingData.clear();
 
         Future.of(executor, () -> fetchBooks(kind, query))
                 .onComplete(result -> deliverData(gen, result));
@@ -167,8 +163,9 @@ public class BookController {
                 Future.run(executor, () -> fetchAndOffer(book.workKey(), book.coverUrl(), gen)));
 
         // Set last: the drain hands the page items only after the cover
-        // bookkeeping above is in place.
-        pendingData.set(new PendingData(gen, either));
+        // bookkeeping above is in place. park() drops the result if a newer
+        // request took over while this one was computing.
+        pendingData.park(gen, either);
     }
 
     /**
@@ -178,21 +175,17 @@ public class BookController {
      */
     @KremaCommand
     public BookDataReply pollBookData(int generation) {
-        PendingData pending = pendingData.get();
-        if (pending == null) {
-            return new BookDataReply(generation, "pending", null, null);
+        // A newer request owns the grid; this poller must stop quietly rather
+        // than accept whatever happens to be parked.
+        if (this.generation.get() > generation) {
+            return new BookDataReply(generation, "superseded", null, null);
         }
-        if (pending.generation() > generation) {
-            // A newer request owns the grid; this poller should stop quietly.
-            return new BookDataReply(pending.generation(), "superseded", null, null);
-        }
-        // Consume: the page renders what it drained; a later poll sees empty.
-        // Safe without CAS — a new writer can only appear via requestBooks,
-        // which runs on this same UI thread after this handler returns.
-        pendingData.set(null);
-        return pending.result().fold(
-                error -> new BookDataReply(pending.generation(), "error", FetchError.uiMessage(error), null),
-                books -> new BookDataReply(pending.generation(), "done", null, books));
+        return pendingData.take(generation).fold(
+                () -> new BookDataReply(generation, "pending", null, null),
+                either -> either.fold(
+                        error -> new BookDataReply(
+                                generation, "error", FetchError.uiMessage(error), null),
+                        books -> new BookDataReply(generation, "done", null, books)));
     }
 
     @KremaCommand
@@ -233,7 +226,7 @@ public class BookController {
     @KremaCommand
     public int requestBookDetail(String workKey) {
         int gen = detailGeneration.incrementAndGet();
-        pendingDetail.set(null);
+        pendingDetail.clear();
         resetDetailArt();
 
         Future.of(executor, () -> service.bookDetail(workKey))
@@ -278,7 +271,7 @@ public class BookController {
                 : result.get();
 
         either.peek(detail -> queueDetailArt(detail, gen));
-        pendingDetail.set(new PendingDetail(gen, either));
+        pendingDetail.park(gen, either);
     }
 
     /**
@@ -287,18 +280,15 @@ public class BookController {
      */
     @KremaCommand
     public BookDetailReply pollBookDetail(int generation) {
-        PendingDetail pending = pendingDetail.get();
-        if (pending == null) {
-            return new BookDetailReply(generation, "pending", null, null);
+        if (detailGeneration.get() > generation) {
+            return new BookDetailReply(generation, "superseded", null, null);
         }
-        if (pending.generation() > generation) {
-            return new BookDetailReply(pending.generation(), "superseded", null, null);
-        }
-        pendingDetail.set(null);
-        return pending.result().fold(
-                error -> new BookDetailReply(pending.generation(), "error",
-                        FetchError.uiMessage(error), null),
-                detail -> new BookDetailReply(pending.generation(), "done", null, detail));
+        return pendingDetail.take(generation).fold(
+                () -> new BookDetailReply(generation, "pending", null, null),
+                either -> either.fold(
+                        error -> new BookDetailReply(
+                                generation, "error", FetchError.uiMessage(error), null),
+                        detail -> new BookDetailReply(generation, "done", null, detail)));
     }
 
     /**
