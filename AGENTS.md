@@ -391,7 +391,15 @@ To run:
   (`requestSongDetail` / `pollSongDetail`, `requestMovieDetail` /
   `pollMovieDetail` plus `pollMovieDetailArt`, `requestBookDetail` /
   `pollBookDetail` plus `pollBookDetailArt`), so opening a detail cannot
-  supersede the browse request or its artwork stream. Drop the dance
+  supersede the browse request or its artwork stream. Every one-slot drain
+  parks through `LatestResult` (`vangogh.controller`): a completion that is no
+  longer current is dropped, a parked result is handed only to the poller with
+  the same generation, and a `poll*` whose generation is no longer live answers
+  `superseded`. Do not reintroduce a plain "check the generation, then set the
+  slot" — a stale completion passes the check, loses the CPU to a newer request
+  that clears the slot, then parks itself, and the old poller is handed data
+  that is no longer current (this was a real, intermittently failing test).
+  Drop the dance
   when the project can move to a Krema release whose eval is thread-safe on
   Windows (0.3.3+ source does not fix it either; nothing newer is published on
   Maven Central).

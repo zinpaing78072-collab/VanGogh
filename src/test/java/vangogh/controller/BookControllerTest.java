@@ -353,11 +353,10 @@ class BookControllerTest {
         int secondGen = controller.requestBooks("trending", "");
         assertTrue(secondGen > firstGen);
 
-        // The first poller must never consume the second request's result —
-        // two loops can poll the same one-slot drain. Whether the first poll
-        // observes "pending" or "superseded" is timing-dependent; "done"
-        // would mean it stole the newer request's data.
-        assertNotEquals("done", controller.pollBookData(firstGen).status());
+        // The first poller must never consume the second request's result: a
+        // stale poller is superseded by generation alone, whatever the one-slot
+        // drain happens to hold.
+        assertEquals("superseded", controller.pollBookData(firstGen).status());
 
         // The newer request still delivers through the drain.
         assertEquals("done", drainData(controller, secondGen).status());

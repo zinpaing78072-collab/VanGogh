@@ -20,7 +20,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class GeniusController {
 
@@ -41,14 +40,12 @@ public class GeniusController {
     private final AtomicInteger posterDelivered = new AtomicInteger();
     private final AtomicInteger posterSkipped = new AtomicInteger();
 
-    private record PendingData(int generation, Either<FetchError, java.util.List<Song>> result) {}
+    private final LatestResult<Either<FetchError, java.util.List<Song>>> pendingData = new LatestResult<>();
 
-    private final AtomicReference<PendingData> pendingData = new AtomicReference<>();
-
-    private record PendingDetail(int generation, Either<FetchError, SongDetail> result, String artDataUri) {}
+    private record DetailOutcome(Either<FetchError, SongDetail> result, String artDataUri) {}
 
     private final AtomicInteger detailGeneration = new AtomicInteger();
-    private final AtomicReference<PendingDetail> pendingDetail = new AtomicReference<>();
+    private final LatestResult<DetailOutcome> pendingDetail = new LatestResult<>();
 
     public record MusicDataReply(int generation, String status, String error, java.util.List<Song> items) {}
     public record SongDetailReply(int generation, String status, String error,
@@ -95,7 +92,7 @@ public class GeniusController {
     public int requestGeniusMusic(String kind, String query) {
         int gen = generation.incrementAndGet();
         resetPosterTracking();
-        pendingData.set(null);
+        pendingData.clear();
 
         Future.of(executor, () -> fetchSongs(kind, query))
                 .onComplete(result -> deliverData(gen, result));
@@ -130,22 +127,20 @@ public class GeniusController {
         Future.traverse(executor, posterable, song ->
                 Future.run(executor, () -> fetchAndOffer(song.id(), song.posterUrl(), gen)));
 
-        pendingData.set(new PendingData(gen, either));
+        pendingData.park(gen, either);
     }
 
     @KremaCommand
     public MusicDataReply pollGeniusMusicData(int generation) {
-        PendingData pending = pendingData.get();
-        if (pending == null) {
-            return new MusicDataReply(generation, "pending", null, null);
+        if (this.generation.get() > generation) {
+            return new MusicDataReply(generation, "superseded", null, null);
         }
-        if (pending.generation() > generation) {
-            return new MusicDataReply(pending.generation(), "superseded", null, null);
-        }
-        pendingData.set(null);
-        return pending.result().fold(
-                error -> new MusicDataReply(pending.generation(), "error", FetchError.uiMessage(error), null),
-                songs -> new MusicDataReply(pending.generation(), "done", null, songs));
+        return pendingData.take(generation).fold(
+                () -> new MusicDataReply(generation, "pending", null, null),
+                either -> either.fold(
+                        error -> new MusicDataReply(
+                                generation, "error", FetchError.uiMessage(error), null),
+                        songs -> new MusicDataReply(generation, "done", null, songs)));
     }
 
     /**
@@ -159,44 +154,41 @@ public class GeniusController {
     @KremaCommand
     public int requestSongDetail(String id) {
         int gen = detailGeneration.incrementAndGet();
-        pendingDetail.set(null);
+        pendingDetail.clear();
 
         Future.of(executor, () -> {
             Either<FetchError, SongDetail> result = service.songDetail(id);
             String art = result.isRight()
                     ? service.posterDataUri(result.get().artUrl()).getOrElse("")
                     : "";
-            return new PendingDetail(gen, result, art);
+            return new DetailOutcome(result, art);
         }).onComplete(result -> deliverDetail(gen, result));
         return gen;
     }
 
-    private void deliverDetail(int gen, Try<PendingDetail> result) {
+    private void deliverDetail(int gen, Try<DetailOutcome> result) {
         if (detailGeneration.get() != gen) {
             return;
         }
-        PendingDetail pending = result.isFailure()
-                ? new PendingDetail(gen,
+        DetailOutcome outcome = result.isFailure()
+                ? new DetailOutcome(
                         Either.left(new FetchError.Transport("Genius song", result.getCause())), "")
                 : result.get();
-        pendingDetail.set(pending);
+        pendingDetail.park(gen, outcome);
     }
 
     @KremaCommand
     public SongDetailReply pollSongDetail(int generation) {
-        PendingDetail pending = pendingDetail.get();
-        if (pending == null) {
-            return new SongDetailReply(generation, "pending", null, null, null);
+        if (detailGeneration.get() > generation) {
+            return new SongDetailReply(generation, "superseded", null, null, null);
         }
-        if (pending.generation() > generation) {
-            return new SongDetailReply(pending.generation(), "superseded", null, null, null);
-        }
-        pendingDetail.set(null);
-        return pending.result().fold(
-                error -> new SongDetailReply(pending.generation(),
-                        "error", FetchError.uiMessage(error), null, null),
-                detail -> new SongDetailReply(pending.generation(),
-                        "done", null, detail, pending.artDataUri()));
+        return pendingDetail.take(generation).fold(
+                () -> new SongDetailReply(generation, "pending", null, null, null),
+                outcome -> outcome.result().fold(
+                        error -> new SongDetailReply(generation,
+                                "error", FetchError.uiMessage(error), null, null),
+                        detail -> new SongDetailReply(generation,
+                                "done", null, detail, outcome.artDataUri())));
     }
 
     @KremaCommand
