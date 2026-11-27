@@ -24,6 +24,7 @@ public sealed interface FetchError {
             case HttpStatus h -> h.api() + " failed: HTTP " + h.status() + " " + h.bodyExcerpt();
             case Payload p -> p.api() + " payload unreadable (" + p.where() + ")";
             case BadInput b -> b.field() + ": " + b.reason();
+            case Storage s -> s.op() + " failed: " + s.cause().getMessage();
         };
     }
 
@@ -38,4 +39,7 @@ public sealed interface FetchError {
 
     /** A caller-side argument is missing or malformed (e.g. an IPC command's args). */
     record BadInput(String field, String reason) implements FetchError {}
+
+    /** The local SQLite operation failed (open, constraint, or query). */
+    record Storage(String op, Throwable cause) implements FetchError {}
 }
