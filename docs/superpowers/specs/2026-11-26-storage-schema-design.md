@@ -3,7 +3,7 @@
 Status: draft for approval
 Written: 2026-11-27
 Slice: storage foundation (data layer only)
-Supersedes the vault's pending "Storage Schema v2" DDL section
+Supersedes the vault's "Storage Schema v2" DDL section
 (`10 Projects/VanGogh/Storage Schema v2.md`), with one naming change:
 `profile` becomes `user` (decided 2026-11-27).
 
