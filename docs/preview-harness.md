@@ -9,9 +9,8 @@ at a UI change used to be `mvn compile exec:exec` and then squint at a native
 window. That loop is minutes long, cannot be automated, and an agent cannot
 observe its result at all. The page is a static bundle served over loopback
 HTTP, so it can run anywhere that serves it. The page has exactly one shell
-seam — `window.krema.invoke` and `window.krema.on` — and `krema-shim.js`
-already self-disables when a bridge is present. The harness fills that seam
-with fixtures.
+seam — `window.krema.invoke` and `window.krema.on` — and the harness fills that
+seam with fixtures.
 
 Nothing in `src/main/java` or in the app's own code is modified for this.
 
@@ -47,8 +46,8 @@ itself has no dependencies, but `npm run dev` needs `npm install` once in
 | `/preview/*` | `preview/*` |
 
 `index.html` is the only transformed response: two classic scripts are injected
-before `</head>`, ahead of the module bundle, so the mock bridge always wins the
-race against `krema-shim.js`.
+before `</head>`, ahead of the module bundle, so the mock bridge is installed
+before the app asks for it.
 
 ## Scenarios
 
@@ -294,8 +293,7 @@ The harness fakes the bridge, so it says nothing about the bridge. These still
 need a real run of the app:
 
 - IPC threading and drain delivery (the Windows `engine.eval` constraint)
-- the JMV/native shell: window creation, `-XstartOnFirstThread`, the JCEF
-  native-menu freeze
+- the JVM/native shell: window creation and `-XstartOnFirstThread`
 - the TMDB poster proxy and its failover, real API responses and rate limits
 - anything in `src/main/java` — 16 test classes cover that side with stubs
 

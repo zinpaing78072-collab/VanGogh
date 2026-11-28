@@ -83,9 +83,9 @@ VanGogh is a desktop application (Java 25 + Krema 0.3.2 system webview) that rec
 
 The page is a React app. Source lives in `frontend/`; `vite build` writes the
 shipped page into `src/main/resources/movie-page/`, which **is committed** —
-both shells serve it from the classpath over `http://127.0.0.1:<port>` (Krema's
-asset server, krema-core's `AssetServer` for JCEF), and Maven must never need
-Node. `index.html` loads `krema-shim.js` (classic) and the hashed module bundle.
+the Krema shell serves it from the classpath over `http://127.0.0.1:<port>`
+(krema-core's `AssetServer`), and Maven must never need Node. `index.html` loads
+the hashed module bundle.
 
 - `frontend/src/bridge/` — the **only** place `window.krema`, command names and
   payload shapes appear: `bridge.ts` (typed `invoke`/`on`, unwraps Krema's
@@ -113,7 +113,7 @@ Node. `index.html` loads `krema-shim.js` (classic) and the hashed module bundle.
   defaults), `music-detail.css`, `movie-detail.css`, `book-detail.css`,
   `game-detail.css`, `settings.css`, `profile.css`, `tailwind.css`; imported
   once, in that order, so the bundled sheet is a single `<link>`.
-- `frontend/public/` — `krema-shim.js`, `theme-starry.css`,
+- `frontend/public/` — `theme-starry.css`,
   `theme-liquidneon.css`, the backdrops, `posters/`. Vite copies them to the
   output root verbatim, so `#themeSkin` and the backdrop `url()`s still resolve
   from the page directory.
@@ -289,8 +289,7 @@ before starting the next. Never expand scope mid-slice.
 - The workspace config routes Code Runner's Java Run Code action through
   `mvn compile exec:exec`; do not run `javac VanGoghApp.java` directly, since
   that omits the other project classes and Maven dependencies.
-- Main class: `vangogh.app.VanGoghApp` (Krema shell) or
-  `vangogh.app.jcef.JcefVanGoghApp` (JCEF experiment shell — see below).
+- Main class: `vangogh.app.VanGoghApp` (Krema shell).
 - IPC: frontend calls `await window.krema.invoke("requestMovies", { kind, query })`
   (or `requestGames`) — the handler kicks off the IO-pool fetch and returns
   the request generation immediately (never blocks the UI thread). The page
@@ -320,8 +319,8 @@ source edits, run `cd frontend && npm run dev` — Vite serves the source with
 HMR and the same fixtures/mock injected (`?scenario=…`, `?theme=…`). To exercise
 a production build, `npm run build:staging` writes `frontend/dist` and
 `node preview/serve.js` / `node preview/check.js` accept `VANGOGH_PAGE_DIR` /
-`--page=frontend/dist`. `krema-shim.js` self-disables when a bridge is present,
-so no app code changes for this. `?scenario=slow|empty|error|noposters`
+`--page=frontend/dist`. No app code changes are needed for this.
+`?scenario=slow|empty|error|noposters`
 reproduces the states that are otherwise unreproducible (skeletons, empty,
 error, missing artwork), and `?theme=<id>` starts the page with that skin
 stored. Fixtures are keyed to the real resolved-item shapes and survive the LLM
@@ -339,81 +338,35 @@ every scenario, exit 1 on failure. Full guide: `docs/preview-harness.md`.
 Layout, styling and page-side code go through the preview; shell, IPC and
 network code still need a real app run.
 
-### JCEF experiment (merged to `main` via PR #28; further shell work happens on its own branches)
+### IPC threading constraint (krema-core 0.3.2)
 
-A standalone shell swap that replaces Krema's OS system webview with a bundled
-Chromium engine via `me.friwi:jcefmaven:152.0.6`. The existing controllers
-(`MovieController`, `GameController`) are shell-agnostic — they receive a
-`JcefEventEmitter` (a Krema `EventEmitter` subclass) via `setEventEmitter()`
-and their `@KremaCommand` methods are called directly by the JCEF bridge.
-
-Files:
-- `src/main/java/vangogh/app/jcef/JcefVanGoghApp.java` — `main()`: boots
-  `CefApp`, serves `/movie-page` from the classpath through krema-core's
-  `AssetServer` over loopback HTTP (the same load path as the Krema shell — and
-  the reason ES modules work in this shell), creates a Swing `JFrame` hosting a
-  **windowed**-rendered `CefBrowser` (OSR is deliberately not used — the
-  OSR/JOGL path crashes on macOS, see the app's own comments).
-- `src/main/java/vangogh/app/jcef/JcefBridge.java` — `CefMessageRouter`
-  handler for JS→Java (`window.krema.invoke` → controller methods) plus
-  `JcefEventEmitter` wiring for Java→JS poster events.
-- `src/main/java/vangogh/app/jcef/JcefEventEmitter.java` — extends Krema's
-  `EventEmitter`, overrides **both** `emit` overloads to deliver via
-  `executeJavaScript` on the Swing EDT (the base class's path would hit the
-  null engine).
-- `src/main/resources/movie-page/krema-shim.js` — implements
-  `window.krema.invoke/on` on top of `cefQuery` and `window.__krema_emit`
-  (payloads wrapped as `{payload, timestamp}`, like Krema's bridge). It is part
-  of the page and loaded by `index.html`, and it returns immediately when
-  `window.krema` already exists — the Krema shell injects its native bridge
-  before page scripts, so the shim is inert there. No HTML rewriting anywhere.
-- `pom.xml` — adds `me.friwi:jcefmaven` dependency and macOS
-  `--add-opens java.desktop/...=ALL-UNNAMED` flags (required by jcefmaven;
-  harmless for Krema).
-
-To run:
-- **Krema** (default): `mvn compile exec:exec` — Zed task "run van-gogh (Krema)" or the `java-main` ▶ indicator.
-- **JCEF**: `mvn compile exec:exec -Pjcef` — Zed task "run van-gogh (JCEF)" or "java run (JcefVanGoghApp via exec:exec -Pjcef)". Uses the vendored `jcef-bundle/` install dir, so no ~100 MB download; delete that dir to force a fresh CEF install.
-- Windows constraint (krema-core 0.3.2, same family as the `AppNativePreload`
-  workaround): `engine.eval` is silently dropped when called off the UI thread,
-  so async command replies and backend events never reach the page. Rule:
-  every command that touches the page must be synchronous (handlers run on the
-  UI thread) — and that thread must never block on network I/O either: the
-  original handlers fetched synchronously and the whole window froze for the
-  round-trip (see "Debug Record — UI thread blocked by content fetches").
-  Delivery is drain-based for all four content slices: the request commands kick
-  off IO-pool fetches and return at once; card metadata drains through
-  `pollMovieData` / `pollGameData` / `pollMusicData` / `pollBookData` and
-  posters through `pollMoviePosters` / `pollGamePosters` / `pollMusicPosters` /
-  `pollBookCovers` (which doubles as the completion signal, returning −1 when
-  nothing is pending) — all synchronous UI-thread commands. The song, movie and
-  book details follow the same rule with their own generation pairs
-  (`requestSongDetail` / `pollSongDetail`, `requestMovieDetail` /
-  `pollMovieDetail` plus `pollMovieDetailArt`, `requestBookDetail` /
-  `pollBookDetail` plus `pollBookDetailArt`), so opening a detail cannot
-  supersede the browse request or its artwork stream. Every one-slot drain
-  parks through `LatestResult` (`vangogh.controller`): a completion that is no
-  longer current is dropped, a parked result is handed only to the poller with
-  the same generation, and a `poll*` whose generation is no longer live answers
-  `superseded`. Do not reintroduce a plain "check the generation, then set the
-  slot" — a stale completion passes the check, loses the CPU to a newer request
-  that clears the slot, then parks itself, and the old poller is handed data
-  that is no longer current (this was a real, intermittently failing test).
-  Drop the dance
-  when the project can move to a Krema release whose eval is thread-safe on
-  Windows (0.3.3+ source does not fix it either; nothing newer is published on
-  Maven Central).
-- macOS constraint (jcef windowed rendering): any native NSMenu tracking
-  session — the OS app menu bar, the green button's hover menu (fullscreen
-  on/off via the green button; the native `<select>` popup was the other
-  trigger, and the page no longer contains a `<select>` — the content switcher
-  is plain sidebar buttons) — can trap the AppKit thread permanently.
-  The window stops taking all input while the renderer keeps running; only
-  relaunching recovers. Fullscreen: green button only (user decision
-  2026-11-14 — no DOM/keyboard toggle); aim-and-click it quickly, a long
-  hover pops its menu and can freeze. Accepted for the experiment — do not
-  rediscover this. Details: vault "Debug Record — JCEF window freezes on
-  native menus".
+`engine.eval` is silently dropped when called off the UI thread (same family as
+the `AppNativePreload` workaround), so async command replies and backend events
+never reach the page. Rule: every command that touches the page must be
+synchronous (handlers run on the UI thread) — and that thread must never block
+on network I/O either: the original handlers fetched synchronously and the
+whole window froze for the round-trip (see "Debug Record — UI thread blocked by
+content fetches"). Delivery is drain-based for all four content slices: the
+request commands kick off IO-pool fetches and return at once; card metadata
+drains through `pollMovieData` / `pollGameData` / `pollMusicData` /
+`pollBookData` and posters through `pollMoviePosters` / `pollGamePosters` /
+`pollMusicPosters` / `pollBookCovers` (which doubles as the completion signal,
+returning −1 when nothing is pending) — all synchronous UI-thread commands. The
+song, movie and book details follow the same rule with their own generation
+pairs (`requestSongDetail` / `pollSongDetail`, `requestMovieDetail` /
+`pollMovieDetail` plus `pollMovieDetailArt`, `requestBookDetail` /
+`pollBookDetail` plus `pollBookDetailArt`), so opening a detail cannot supersede
+the browse request or its artwork stream. Every one-slot drain parks through
+`LatestResult` (`vangogh.controller`): a completion that is no longer current is
+dropped, a parked result is handed only to the poller with the same generation,
+and a `poll*` whose generation is no longer live answers `superseded`. Do not
+reintroduce a plain "check the generation, then set the slot" — a stale
+completion passes the check, loses the CPU to a newer request that clears the
+slot, then parks itself, and the old poller is handed data that is no longer
+current (this was a real, intermittently failing test). Drop the dance when the
+project can move to a Krema release whose eval is thread-safe on Windows
+(0.3.3+ source does not fix it either; nothing newer is published on Maven
+Central).
 
 ## Vendored repositories (git subtree)
 

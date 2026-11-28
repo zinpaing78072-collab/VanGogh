@@ -1,9 +1,9 @@
 /* Preview mock bridge — a stand-in for Krema's window.krema.
  *
- * Loaded as a classic script in <head>, before krema-shim.js, which
- * self-disables because it only installs when window.krema is missing
- * (krema-shim.js:22). Nothing under src/main/java or the app's own JS changes
- * for this to work: the page has exactly one shell seam, invoke() + on().
+ * Loaded as a classic script in <head>, before the module bundle, so the seam
+ * is filled before the app asks for it. Nothing under src/main/java or the
+ * app's own JS changes for this to work: the page has exactly one shell seam,
+ * invoke() + on().
  *
  * Implements the real contracts, not simplified ones:
  *   invoke("request<Form>", { kind, query })  → generation (kicks off a fetch)

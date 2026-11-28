@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * <p>Regression: the original chain used {@code takeUntil(...).lastOption()},
  * but vavr's {@code takeUntil} EXCLUDES the element satisfying the predicate,
  * so the successful attempt was always dropped and posters never loaded in
- * any shell (Krema or JCEF). These tests pin the intended semantics.
+ * any shell. These tests pin the intended semantics.
  */
 class PosterFailoverTest {
 
