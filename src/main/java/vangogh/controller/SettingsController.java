@@ -35,7 +35,7 @@ public class SettingsController {
     public record LlmSettingsReply(
             String status, String error,
             String baseUrl, String model, int timeoutSeconds, int titles,
-            boolean hasApiKey, String configPath) {}
+            double temperature, boolean hasApiKey, String configPath) {}
 
     @KremaCommand
     public LlmSettingsReply loadLlmSettings() {
@@ -49,7 +49,7 @@ public class SettingsController {
      */
     @KremaCommand
     public LlmSettingsReply saveLlmSettings(String baseUrl, String model, String apiKey,
-                                            int timeoutSeconds, int titles) {
+                                            int timeoutSeconds, int titles, double temperature) {
         String key = apiKey == null || apiKey.isBlank()
                 ? LlmConfig.read(file).apiKey()
                 : apiKey.trim();
@@ -57,19 +57,19 @@ public class SettingsController {
             return failed(new FetchError.BadInput("apiKey", "required — enter a key"));
         }
 
-        LlmConfig next = new LlmConfig(baseUrl, key, model, timeoutSeconds, titles);
+        LlmConfig next = new LlmConfig(baseUrl, key, model, timeoutSeconds, titles, temperature);
         return next.save(file).fold(this::failed, this::ok);
     }
 
     private LlmSettingsReply ok(LlmConfig config) {
         return new LlmSettingsReply("ok", null,
                 config.baseUrl(), config.model(),
-                config.timeoutSeconds(), config.titles(),
+                config.timeoutSeconds(), config.titles(), config.temperature(),
                 config.hasApiKey(), file.toString());
     }
 
     private LlmSettingsReply failed(FetchError error) {
         return new LlmSettingsReply("error", FetchError.uiMessage(error),
-                null, null, 0, 0, false, file.toString());
+                null, null, 0, 0, 0, false, file.toString());
     }
 }

@@ -185,7 +185,7 @@ class BookControllerTest {
     private BookController recommendController(OpenLibraryBookService service, StubLlm llm,
                                                ExecutorService io) {
         RecommendationService engine = new RecommendationService(io, llm,
-                () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 10)));
+                () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 10, LlmConfig.DEFAULT_TEMPERATURE)));
         return new BookController(service, io, engine);
     }
 

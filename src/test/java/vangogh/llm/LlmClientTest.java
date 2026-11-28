@@ -63,7 +63,7 @@ class LlmClientTest {
     }
 
     private static LlmConfig config(String baseUrl) {
-        return new LlmConfig(baseUrl, "test-key", "test-model", 10, 5);
+        return new LlmConfig(baseUrl, "test-key", "test-model", 10, 5, 0.3);
     }
 
     private interface Handler {
@@ -122,7 +122,9 @@ class LlmClientTest {
         assertEquals("Bearer test-key", auth.get(0));
         JsonObject body = JsonParser.parseString(bodies.get(0)).getAsJsonObject();
         assertEquals("test-model", body.get("model").getAsString());
-        assertEquals(0.7, body.get("temperature").getAsDouble());
+        // The temperature comes from the config, not a constant: the Settings
+        // page's value is what the model receives.
+        assertEquals(0.3, body.get("temperature").getAsDouble());
         JsonArray messages = body.getAsJsonArray("messages");
         assertEquals("system", messages.get(0).getAsJsonObject().get("role").getAsString());
         assertEquals("system text", messages.get(0).getAsJsonObject().get("content").getAsString());

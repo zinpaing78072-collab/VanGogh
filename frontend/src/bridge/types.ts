@@ -294,6 +294,8 @@ export interface LlmSettingsReply {
   model: string;
   timeoutSeconds: number;
   titles: number;
+  /** 0.0–2.0, the range every OpenAI-compatible endpoint accepts. */
+  temperature: number;
   hasApiKey: boolean;
   configPath: string;
 }
@@ -370,6 +372,7 @@ export interface CommandMap {
       apiKey: string;
       timeoutSeconds: number;
       titles: number;
+      temperature: number;
     };
     reply: LlmSettingsReply;
   };

@@ -182,7 +182,7 @@ class MovieControllerTest {
     private MovieController recommendController(StubClient client, Either<FetchError, String> llmResult,
                                                 ExecutorService io) {
         RecommendationService engine = new RecommendationService(io, new StubLlm(llmResult),
-                () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 10)));
+                () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 10, LlmConfig.DEFAULT_TEMPERATURE)));
         return new MovieController(serviceWith(client), io, engine);
     }
 

@@ -19,3 +19,4 @@ apiKey = sk-or-v1-...
 # model   = baidu/ernie-5.5-flash-preview:free
 # timeoutSeconds = 60
 # titles = 10
+# temperature = 0.7

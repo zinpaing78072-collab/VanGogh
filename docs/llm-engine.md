@@ -60,6 +60,7 @@ key typed into Settings is always the key the engine uses. The Settings page
 | `model` | `baidu/ernie-5.5-flash-preview:free` | Chat model id |
 | `timeoutSeconds` | `60` | Per-request timeout, clamped to 10–300 |
 | `titles` | `10` | Titles asked of the model, clamped to 1–50 |
+| `temperature` | `0.7` | Model temperature, clamped to 0.0–2.0 (OpenAI's documented range) |
 
 The key lives outside the working tree and is never committed. Any
 OpenAI-compatible endpoint works: transport is the official
@@ -78,8 +79,8 @@ methods, no drains (one small file read/write needs no IO pool):
 
 | Command | Args | Reply |
 |---|---|---|
-| `loadLlmSettings` | — | `{ status, error, baseUrl, model, timeoutSeconds, titles, hasApiKey, configPath }` |
-| `saveLlmSettings` | `{ baseUrl, model, apiKey, timeoutSeconds, titles }` | the same shape, painted from the stored, normalized values |
+| `loadLlmSettings` | — | `{ status, error, baseUrl, model, timeoutSeconds, titles, temperature, hasApiKey, configPath }` |
+| `saveLlmSettings` | `{ baseUrl, model, apiKey, timeoutSeconds, titles, temperature }` | the same shape, painted from the stored, normalized values |
 
 The stored key never crosses the bridge: load replies with `hasApiKey` only, so
 the field starts empty with the hint "Key saved — type a new one to replace
@@ -148,7 +149,8 @@ values (`RateLimitException` → the friendly message, other
 The prompt is a measured contract, pinned by `PromptFactoryTest`: format rules
 in the system message, then `List <N> <noun> titles related to: <query>` and
 `Format each line as: title | <label>`. The music noun is **song** (Genius
-resolves songs), not album. Model temperature is 0.7.
+resolves songs), not album. Temperature comes from the config (default 0.7,
+0.0–2.0): higher invents more, lower stays closer to the obvious picks.
 
 Movie resolution keeps the probe's rule: exact normalized title among the top 5
 results, the release year must match when the model supplied one, the highest

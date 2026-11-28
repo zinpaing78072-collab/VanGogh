@@ -52,6 +52,7 @@ class LlmConfigTest {
                 model = file-model
                 timeoutSeconds = 45
                 titles = 7
+                temperature = 1.3
                 """);
 
         LlmConfig config = LlmConfig.load(file).get();
@@ -61,6 +62,7 @@ class LlmConfigTest {
         assertEquals("file-model", config.model());
         assertEquals(45, config.timeoutSeconds());
         assertEquals(7, config.titles());
+        assertEquals(1.3, config.temperature());
     }
 
     @Test
@@ -73,6 +75,7 @@ class LlmConfigTest {
         assertEquals(LlmConfig.DEFAULT_MODEL, config.model());
         assertEquals(LlmConfig.DEFAULT_TIMEOUT_SECONDS, config.timeoutSeconds());
         assertEquals(LlmConfig.DEFAULT_TITLES, config.titles());
+        assertEquals(LlmConfig.DEFAULT_TEMPERATURE, config.temperature());
     }
 
     @Test
@@ -89,6 +92,29 @@ class LlmConfigTest {
         LlmConfig clamped = LlmConfig.load(file).get();
         assertEquals(10, clamped.timeoutSeconds());
         assertEquals(1, clamped.titles());
+    }
+
+    @Test
+    void temperatureFallsBackToTheDefaultWhenMalformedOrNotFinite() throws Exception {
+        Path file = temp.resolve("llm.conf");
+        Files.writeString(file, "apiKey=k\ntemperature=warm\n");
+        assertEquals(LlmConfig.DEFAULT_TEMPERATURE, LlmConfig.load(file).get().temperature());
+
+        Files.writeString(file, "apiKey=k\ntemperature=NaN\n");
+        assertEquals(LlmConfig.DEFAULT_TEMPERATURE, LlmConfig.load(file).get().temperature());
+
+        Files.writeString(file, "apiKey=k\ntemperature=Infinity\n");
+        assertEquals(LlmConfig.DEFAULT_TEMPERATURE, LlmConfig.load(file).get().temperature());
+    }
+
+    @Test
+    void temperatureIsClampedToTheProvidersRange() throws Exception {
+        Path file = temp.resolve("llm.conf");
+        Files.writeString(file, "apiKey=k\ntemperature=9\n");
+        assertEquals(LlmConfig.MAX_TEMPERATURE, LlmConfig.load(file).get().temperature());
+
+        Files.writeString(file, "apiKey=k\ntemperature=-1\n");
+        assertEquals(LlmConfig.MIN_TEMPERATURE, LlmConfig.load(file).get().temperature());
     }
 
     @Test
@@ -112,17 +138,19 @@ class LlmConfigTest {
         Path file = temp.resolve("nested/llm.conf");
 
         LlmConfig saved = new LlmConfig(
-                "https://example.test/v1/", "new-key", "model-x", 45, 7).save(file).get();
+                "https://example.test/v1/", "new-key", "model-x", 45, 7, 1.25).save(file).get();
 
         // The reply the page paints is what was normalized and written.
         assertEquals("https://example.test/v1", saved.baseUrl());
         assertEquals("model-x", saved.model());
         assertEquals(45, saved.timeoutSeconds());
         assertEquals(7, saved.titles());
+        assertEquals(1.25, saved.temperature());
 
         LlmConfig reread = LlmConfig.load(file).get();
         assertEquals(saved, reread);
         assertTrue(Files.readString(file).contains("apiKey = new-key"));
+        assertTrue(Files.readString(file).contains("temperature = 1.25"));
     }
 
     @Test
@@ -130,10 +158,11 @@ class LlmConfigTest {
         Path file = temp.resolve("llm.conf");
 
         LlmConfig saved = new LlmConfig(
-                "https://example.test/v1", "k", "m", 5000, 0).save(file).get();
+                "https://example.test/v1", "k", "m", 5000, 0, 9).save(file).get();
 
         assertEquals(300, saved.timeoutSeconds());
         assertEquals(1, saved.titles());
+        assertEquals(LlmConfig.MAX_TEMPERATURE, saved.temperature());
         assertEquals(saved, LlmConfig.read(file));
     }
 
@@ -142,7 +171,7 @@ class LlmConfigTest {
         Path file = temp.resolve("llm.conf");
         Files.writeString(file, "apiKey=old\nmodel=old-model\n");
 
-        new LlmConfig("https://example.test/v1", "fresh", "new-model", 60, 10).save(file).get();
+        new LlmConfig("https://example.test/v1", "fresh", "new-model", 60, 10, LlmConfig.DEFAULT_TEMPERATURE).save(file).get();
 
         assertFalse(Files.readString(file).contains("old-model"));
         try (var entries = Files.list(temp)) {
@@ -156,7 +185,7 @@ class LlmConfigTest {
         assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
         Path file = temp.resolve("llm.conf");
 
-        new LlmConfig("https://example.test/v1", "k", "m", 60, 10).save(file).get();
+        new LlmConfig("https://example.test/v1", "k", "m", 60, 10, LlmConfig.DEFAULT_TEMPERATURE).save(file).get();
 
         Set<PosixFilePermission> expected = EnumSet.of(
                 PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
@@ -168,11 +197,11 @@ class LlmConfigTest {
         Path file = temp.resolve("llm.conf");
 
         assertInstanceOf(FetchError.BadInput.class,
-                new LlmConfig("https://x/v1", null, "m", 60, 10).save(file).getLeft());
+                new LlmConfig("https://x/v1", null, "m", 60, 10, LlmConfig.DEFAULT_TEMPERATURE).save(file).getLeft());
         assertInstanceOf(FetchError.BadInput.class,
-                new LlmConfig("  ", "k", "m", 60, 10).save(file).getLeft());
+                new LlmConfig("  ", "k", "m", 60, 10, LlmConfig.DEFAULT_TEMPERATURE).save(file).getLeft());
         assertInstanceOf(FetchError.BadInput.class,
-                new LlmConfig("https://x/v1", "k", null, 60, 10).save(file).getLeft());
+                new LlmConfig("https://x/v1", "k", null, 60, 10, LlmConfig.DEFAULT_TEMPERATURE).save(file).getLeft());
 
         assertFalse(Files.exists(file), "nothing may be written when validation fails");
     }
@@ -184,7 +213,7 @@ class LlmConfigTest {
         Files.writeString(directory.resolve("occupied.txt"), "keep");
 
         Either<FetchError, LlmConfig> saved = new LlmConfig(
-                "https://x/v1", "k", "m", 60, 10).save(directory);
+                "https://x/v1", "k", "m", 60, 10, LlmConfig.DEFAULT_TEMPERATURE).save(directory);
 
         assertTrue(saved.isLeft());
         assertInstanceOf(FetchError.Transport.class, saved.getLeft());
@@ -192,7 +221,7 @@ class LlmConfigTest {
 
     @Test
     void toStringNeverPrintsTheKey() {
-        LlmConfig config = new LlmConfig("https://x/v1", "sk-secret", "m", 60, 10);
+        LlmConfig config = new LlmConfig("https://x/v1", "sk-secret", "m", 60, 10, LlmConfig.DEFAULT_TEMPERATURE);
 
         String rendered = config.toString();
 
@@ -203,6 +232,6 @@ class LlmConfigTest {
 
     @Test
     void aMissingKeyIsRenderedAsMissing() {
-        assertTrue(new LlmConfig("u", null, "m", 60, 10).toString().contains("<missing>"));
+        assertTrue(new LlmConfig("u", null, "m", 60, 10, LlmConfig.DEFAULT_TEMPERATURE).toString().contains("<missing>"));
     }
 }

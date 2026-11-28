@@ -33,6 +33,7 @@ class SettingsControllerTest {
         assertEquals(LlmConfig.DEFAULT_MODEL, reply.model());
         assertEquals(LlmConfig.DEFAULT_TIMEOUT_SECONDS, reply.timeoutSeconds());
         assertEquals(LlmConfig.DEFAULT_TITLES, reply.titles());
+        assertEquals(LlmConfig.DEFAULT_TEMPERATURE, reply.temperature());
         assertFalse(reply.hasApiKey());
         assertEquals(file().toString(), reply.configPath());
     }
@@ -45,6 +46,7 @@ class SettingsControllerTest {
                 model = stored-model
                 timeoutSeconds = 45
                 titles = 7
+                temperature = 1.1
                 """);
 
         var reply = new SettingsController(file()).loadLlmSettings();
@@ -54,6 +56,7 @@ class SettingsControllerTest {
         assertEquals("stored-model", reply.model());
         assertEquals(45, reply.timeoutSeconds());
         assertEquals(7, reply.titles());
+        assertEquals(1.1, reply.temperature());
         assertTrue(reply.hasApiKey());
         assertFalse(reply.toString().contains("secret-key"), "the key must not cross the bridge");
     }
@@ -61,7 +64,7 @@ class SettingsControllerTest {
     @Test
     void saveWritesTheFileAndReturnsTheNormalizedValues() {
         var reply = new SettingsController(file()).saveLlmSettings(
-                "https://example.test/v1/", "model-x", "fresh-key", 45, 7);
+                "https://example.test/v1/", "model-x", "fresh-key", 45, 7, 1.1);
 
         assertEquals("ok", reply.status());
         assertNull(reply.error());
@@ -69,6 +72,7 @@ class SettingsControllerTest {
         assertEquals("model-x", reply.model());
         assertEquals(45, reply.timeoutSeconds());
         assertEquals(7, reply.titles());
+        assertEquals(1.1, reply.temperature());
         assertTrue(reply.hasApiKey());
         assertTrue(Files.exists(file()));
     }
@@ -76,10 +80,10 @@ class SettingsControllerTest {
     @Test
     void aBlankKeyKeepsTheStoredKey() throws Exception {
         new SettingsController(file()).saveLlmSettings(
-                "https://example.test/v1", "model-a", "original-key", 60, 10);
+                "https://example.test/v1", "model-a", "original-key", 60, 10, 0.4);
 
         var reply = new SettingsController(file()).saveLlmSettings(
-                "https://example.test/v1", "model-b", "", 60, 10);
+                "https://example.test/v1", "model-b", "", 60, 10, 0.4);
 
         assertEquals("ok", reply.status());
         LlmConfig reread = LlmConfig.load(file()).get();
@@ -90,7 +94,7 @@ class SettingsControllerTest {
     @Test
     void savingWithNoKeyAnywhereIsAnError() {
         var reply = new SettingsController(file()).saveLlmSettings(
-                "https://example.test/v1", "model", "   ", 60, 10);
+                "https://example.test/v1", "model", "   ", 60, 10, 0.7);
 
         assertEquals("error", reply.status());
         assertTrue(reply.error().contains("apiKey"), reply.error());
@@ -100,7 +104,7 @@ class SettingsControllerTest {
     @Test
     void invalidInputIsReportedAsAValueNotAThrow() {
         var reply = new SettingsController(file()).saveLlmSettings(
-                "  ", "model", "key", 60, 10);
+                "  ", "model", "key", 60, 10, 0.7);
 
         assertEquals("error", reply.status());
         assertTrue(reply.error().contains("baseUrl"), reply.error());
@@ -110,9 +114,10 @@ class SettingsControllerTest {
     @Test
     void numbersAreClampedOnTheWayIn() {
         var reply = new SettingsController(file()).saveLlmSettings(
-                "https://example.test/v1", "model", "key", 9000, 0);
+                "https://example.test/v1", "model", "key", 9000, 0, 5);
 
         assertEquals(300, reply.timeoutSeconds());
         assertEquals(1, reply.titles());
+        assertEquals(LlmConfig.MAX_TEMPERATURE, reply.temperature());
     }
 }

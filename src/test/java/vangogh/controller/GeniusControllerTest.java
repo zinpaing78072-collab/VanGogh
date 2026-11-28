@@ -145,7 +145,7 @@ class GeniusControllerTest {
     private GeniusController recommendController(GeniusMusicService service, StubLlm llm,
                                                  ExecutorService io) {
         RecommendationService engine = new RecommendationService(io, llm,
-                () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 10)));
+                () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 10, LlmConfig.DEFAULT_TEMPERATURE)));
         return new GeniusController(service, io, engine);
     }
 

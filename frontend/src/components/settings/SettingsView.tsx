@@ -40,6 +40,13 @@ function clampNumber(value: string, fallback: number, min: number, max: number):
   return Math.min(max, Math.max(min, parsed));
 }
 
+/** Temperature is decimal: 0.0–2.0, one step per tenth. */
+function clampDecimal(value: string, fallback: number, min: number, max: number): number {
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+}
+
 interface Tone {
   text: string;
   tone: "" | "ok" | "error";
@@ -112,6 +119,7 @@ function LlmForm() {
   const apiKeyRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<HTMLInputElement>(null);
   const titlesRef = useRef<HTMLInputElement>(null);
+  const temperatureRef = useRef<HTMLInputElement>(null);
 
   const [provider, setProvider] = useState("openrouter");
   const [hasStoredKey, setHasStoredKey] = useState(false);
@@ -129,6 +137,12 @@ function LlmForm() {
     if (modelRef.current) modelRef.current.value = reply.model || "";
     if (timeoutRef.current) timeoutRef.current.value = String(reply.timeoutSeconds || "");
     if (titlesRef.current) titlesRef.current.value = String(reply.titles || "");
+    // 0 is a real temperature, so no `||` here — only a missing number clears it.
+    if (temperatureRef.current) {
+      temperatureRef.current.value = Number.isFinite(reply.temperature)
+        ? String(reply.temperature)
+        : "";
+    }
     if (reply.configPath) setConfigPath(reply.configPath);
 
     setHasStoredKey(reply.hasApiKey === true);
@@ -217,6 +231,7 @@ function LlmForm() {
         apiKey: apiKeyRef.current?.value ?? "",
         timeoutSeconds: clampNumber(timeoutRef.current?.value ?? "", 60, 10, 300),
         titles: clampNumber(titlesRef.current?.value ?? "", 10, 1, 50),
+        temperature: clampDecimal(temperatureRef.current?.value ?? "", 0.7, 0, 2),
       });
 
       if (reply && reply.status === "error") {
@@ -382,6 +397,23 @@ function LlmForm() {
             defaultValue="10"
           />
           <p className="settings-hint">1–50 picks, one catalog lookup each.</p>
+        </div>
+        <div className="settings-field">
+          <label className="settings-label" htmlFor="settingsTemperature">
+            Temperature
+          </label>
+          <input
+            className="settings-input"
+            id="settingsTemperature"
+            name="temperature"
+            type="number"
+            min="0"
+            max="2"
+            step="0.1"
+            ref={temperatureRef}
+            defaultValue="0.7"
+          />
+          <p className="settings-hint">0–2. Higher invents more; 0.7 is the default.</p>
         </div>
       </div>
 

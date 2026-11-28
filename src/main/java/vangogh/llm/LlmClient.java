@@ -41,9 +41,6 @@ public class LlmClient {
     /** The SDK retries 429/5xx itself; four retries cover the free tier's bursts. */
     static final int MAX_RETRIES = 4;
 
-    /** Free-tier models need some invention; the prompt pins the format, not the choice. */
-    private static final double TEMPERATURE = 0.7;
-
     private static final int BODY_EXCERPT = 300;
 
     /** Null means "let the SDK use its own sleeper"; tests inject a no-wait one. */
@@ -67,7 +64,7 @@ public class LlmClient {
     public Either<FetchError, String> complete(LlmConfig config, String system, String user) {
         ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
                 .model(config.model())
-                .temperature(TEMPERATURE)
+                .temperature(config.temperature())
                 .addSystemMessage(system)
                 .addUserMessage(user)
                 .build();
