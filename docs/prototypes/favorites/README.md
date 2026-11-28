@@ -88,7 +88,7 @@ record uses the fields the real cards already show (`title`, `sub`, `year`,
 - Cards are keyboard reachable (`Tab`, `Enter` / `Space` opens the peek drawer);
   `Escape` closes the peek.
 - The peek drawer, toast and menus are plain DOM, not native dialogs or
-  `<select>` elements — the same constraint the app has on macOS/JCEF.
+  `<select>` elements — the same constraint the app has on macOS.
 - Live regions: `aria-live="polite"` on the grid, `role="status"` on the bulk
   bar, labelled icon buttons, `aria-pressed` on toggles and chips.
 - `prefers-reduced-motion` disables hover lifts and the brand-mark pulse.

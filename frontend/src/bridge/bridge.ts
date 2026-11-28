@@ -9,10 +9,9 @@ import type {
 /**
  * The only module that touches window.krema.
  *
- * Krema's native bridge and krema-shim.js (JCEF) both expose
- * `invoke(command, args)` and `on(event, handler)`. Every command is a
- * synchronous UI-thread call on the Java side; the page never blocks, it
- * polls the drains.
+ * Krema's native bridge exposes `invoke(command, args)` and
+ * `on(event, handler)`. Every command is a synchronous UI-thread call on the
+ * Java side; the page never blocks, it polls the drains.
  */
 
 interface KremaBridge {
@@ -55,8 +54,8 @@ export function on<K extends EventName>(
   const bridge = window.krema;
   if (!bridge || typeof bridge.on !== "function") return;
   bridge.on(event, (data) => {
-    // Krema wraps payloads as { payload, timestamp }; the JCEF shim does the
-    // same. Accept a bare payload too so tests can emit directly.
+    // Krema wraps payloads as { payload, timestamp }. Accept a bare payload
+    // too so tests can emit directly.
     const wrapped = data as { payload?: unknown } | null | undefined;
     const payload =
       wrapped && typeof wrapped === "object" && "payload" in wrapped

@@ -125,7 +125,7 @@ Krema.app()
   a collapsible `aside.sidebar` (brand, menu, `.nav-item[data-domain]` form
   buttons, Settings at the foot) plus the content column (search header, card
   grid). A native `<select>` is avoided on purpose (its macOS popup freezes the
-  window). It loads `krema-shim.js` plus the hashed module bundle.
+  window). It loads the hashed module bundle.
 - `frontend/src/bridge/` is the only place the IPC contract lives:
   `domains.ts` holds one `DomainIpc` row per form (request/data/art/event names,
   the detail request/poll/art triple, id field), `commands.ts` switches on the

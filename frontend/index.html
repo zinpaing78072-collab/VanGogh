@@ -13,10 +13,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- Classic, so it runs before the deferred module bundle: the JCEF shim
-         must exist before React asks for anything, and it self-disables when
-         Krema's native bridge is already injected. -->
-    <script src="/krema-shim.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
