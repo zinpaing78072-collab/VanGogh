@@ -50,7 +50,9 @@ export function App() {
       <div className="sky" aria-hidden="true" />
       <div className="veil" aria-hidden="true" />
 
-      <div className="app-shell">
+      {/* data-sidebar is the grid's hook: the card ladder reads it to give the
+          collapsed rail's room back as a sixth card (base.css). */}
+      <div className="app-shell" data-sidebar={collapsed ? "collapsed" : "open"}>
         <Sidebar
           collapsed={collapsed}
           onToggle={toggle}

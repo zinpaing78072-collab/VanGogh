@@ -441,11 +441,17 @@ body {
 /* Card grid */
 .card-grid {
     display: grid;
-    /* Five cards per row at desktop width. The sidebar takes horizontal room,
-       so the tracks shrink evenly instead of the row count changing — until the
-       ladder at the end of this file steps the count down. */
+    /* Five cards per row at desktop width with the rail open. The open sidebar
+       takes horizontal room, so its 240px costs the sixth card: collapsing it to
+       the icon rail (data-sidebar on .app-shell) hands that room back and the
+       row grows to six. The ladder at the end of this file steps both counts
+       down as the window narrows. */
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 20px;
+}
+
+.app-shell[data-sidebar="collapsed"] .card-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 /* Book cards share the poster-card layout; the only difference is that
@@ -725,27 +731,38 @@ button:focus-visible, .search-input:focus-visible, .nav-item:focus-visible {
  *
  * The step is a property of the grid's room, not of the theme, so no theme file
  * carries a breakpoint: a theme decorates, it does not reflow. Each value keeps
- * a card wide enough for a whole meta token and a two-line title:
+ * a card wide enough for a whole meta token and a two-line title. Every step
+ * carries both counts, so the collapsed rail's extra column only exists where
+ * the open rail is what costs it — below 900px the rail is already collapsed by
+ * default (NARROW_WIDTH), so the shared steps there are the only ones:
  *
- *   1180px → 4 columns  (five ~160px posters is a contact sheet, not a shelf)
- *    900px → 3 columns  (js/ui.js collapses the 240px sidebar below 900 too,
- *                        so the cards get that room back on the same boundary)
+ *   1180px → 4 columns open / 5 collapsed  (five ~160px posters is a contact
+ *                        sheet, not a shelf)
+ *    900px → 3 columns  (useNarrowSidebar collapses the 240px sidebar below 900
+ *                        too, so the cards get that room back on the same
+ *                        boundary)
  *    768px → 2 columns  (one row of cards reads better than three cramped)
  */
 @media (max-width: 1180px) {
     .card-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
+
+    .app-shell[data-sidebar="collapsed"] .card-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 900px) {
-    .card-grid {
+    .card-grid,
+    .app-shell[data-sidebar="collapsed"] .card-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 768px) {
-    .card-grid {
+    .card-grid,
+    .app-shell[data-sidebar="collapsed"] .card-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .app-header {

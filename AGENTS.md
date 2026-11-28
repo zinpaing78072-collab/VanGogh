@@ -146,8 +146,12 @@ Layout and cascade invariants (unchanged, now enforced by the bundle):
   theme is a CSS file in `frontend/public/` plus a `ThemeConfig.KNOWN` row
   (recipe: `docs/themes.md`).
 - **The responsive grid ladder is base-only** — one ladder at the end of
-  `base.css` (5 columns, 4 ≤1180px, 3 ≤900px, 2 ≤768px), never duplicated in a
-  theme file: a theme decorates, it does not reflow. The 900px step matches
+  `base.css` (5 columns with the rail open, 4 ≤1180px, 3 ≤900px, 2 ≤768px),
+  never duplicated in a theme file: a theme decorates, it does not reflow. The
+  collapsed rail is worth one more card where the open rail is what costs it —
+  6 columns above 1180px, 5 ≤1180px — read from `data-sidebar` on `.app-shell`,
+  and every ladder step below 900px keeps one count because the rail is already
+  collapsed there. The 900px step matches
   `NARROW_WIDTH = 900` in `hooks/useNarrowSidebar.ts`, where the sidebar
   auto-collapses, so the grid regains the rail's room on the same boundary —
   change one, change both. `.card-meta-item` is `nowrap` (tokens stay whole)

@@ -1287,6 +1287,10 @@ const TESTS = [
                 active: (document.querySelector("#sidebarNav .nav-item.active") || {dataset: {}}).dataset.domain || "",
                 sidebarWidth: document.getElementById("sidebar").getBoundingClientRect().width,
                 gridWidth: document.getElementById("movieGrid").getBoundingClientRect().width,
+                columns: getComputedStyle(document.getElementById("movieGrid"))
+                    .gridTemplateColumns.trim().split(/\\s+/).length,
+                cardWidth: Math.round(document.querySelector("#movieGrid .movie-card:not(.skeleton-card)")
+                    .getBoundingClientRect().width),
                 brandDisplay: getComputedStyle(document.querySelector(".brand")).display,
                 expanded: document.getElementById("sidebarToggle").getAttribute("aria-expanded"),
                 title: document.getElementById("sectionTitle").textContent
@@ -1327,6 +1331,11 @@ const TESTS = [
                 check("collapsing hands the width to the card grid",
                     collapsed.gridWidth > open.gridWidth + 100,
                     open.gridWidth + " → " + collapsed.gridWidth),
+                check("the open rail costs the sixth card, the collapsed rail buys it",
+                    open.columns === 5 && collapsed.columns === 6 && restored.columns === 5,
+                    open.columns + " → " + collapsed.columns + " → " + restored.columns + " columns"),
+                check("the sixth card is still a readable card",
+                    collapsed.cardWidth >= 150, collapsed.cardWidth + "px"),
                 check("expanding restores the labels and the width",
                     restored.sidebarWidth > 200 && restored.brandDisplay !== "none"
                         && restored.expanded === "true",
@@ -1832,8 +1841,14 @@ const TESTS = [
             // has landed, or every comparison sees the old skin.
             const skinLoaded = await page.evaluate(`new Promise((resolve) => {
                 const hrefs = () => [...document.styleSheets].map((s) => String(s.href || ""));
+                // A <link> appears in document.styleSheets with its href before
+                // the sheet is parsed, so the href alone is not proof the skin is
+                // live. --neon-cyan exists only in the Liquid Neon file, so a
+                // resolved value means the cascade has actually moved.
                 const active = () => hrefs().some((h) => h.indexOf("theme-liquidneon.css") !== -1)
-                    && !hrefs().some((h) => h.indexOf("theme-starry.css") !== -1);
+                    && !hrefs().some((h) => h.indexOf("theme-starry.css") !== -1)
+                    && getComputedStyle(document.documentElement)
+                        .getPropertyValue("--neon-cyan").trim() !== "";
                 if (active()) return resolve(true);
                 const tick = setInterval(() => { if (active()) { clearInterval(tick); resolve(true); } }, 25);
                 setTimeout(() => { clearInterval(tick); resolve(false); }, 3000);
@@ -2016,6 +2031,20 @@ const TESTS = [
                 const narrow = await measureGrid(page, 600);
                 forms.push({ form: form, wide: wide, narrow: narrow });
             }
+            await page.selectForm("movie");
+            await page.resetViewport();
+            await page.waitFor(`document.getElementById("sidebar").getBoundingClientRect().width > 200`);
+
+            // The rail's own column: collapsing it buys the sixth card on the
+            // two wide steps only. Below 900px the rail is already collapsed by
+            // default, so the shared steps own that room and nothing changes.
+            await page.evaluate(`document.getElementById("sidebarToggle").click(); true`);
+            await page.waitFor(`document.getElementById("sidebar").getBoundingClientRect().width < 100`);
+            const collapsedWide = await measureGrid(page, 1280);
+            const collapsedMid = await measureGrid(page, 1180);
+            const collapsedNarrow = await measureGrid(page, 900);
+            await page.evaluate(`document.getElementById("sidebarToggle").click(); true`);
+            await page.waitFor(`document.getElementById("sidebar").getBoundingClientRect().width > 200`);
             await page.resetViewport();
 
             const squeezed = rows.filter((r) => r.cardWidth < 150).map((r) => r.vw + "→" + r.cardWidth);
@@ -2040,7 +2069,17 @@ const TESTS = [
                     "the " + f.form + " cards fit five columns and two",
                     f.wide.columns === 5 && f.narrow.columns === 2 && clean(f.wide) && clean(f.narrow),
                     f.wide.columns + " cols/" + f.wide.escaping + " escape → "
-                        + f.narrow.columns + " cols/" + f.narrow.escaping + " escape")));
+                        + f.narrow.columns + " cols/" + f.narrow.escaping + " escape")))
+                .concat([
+                    check("the collapsed rail shows six cards at 1280px",
+                        collapsedWide.columns === 6 && collapsedWide.cardWidth >= 150,
+                        collapsedWide.columns + " columns / card " + collapsedWide.cardWidth + "px"),
+                    check("and five at 1180px, where the open rail shows four",
+                        collapsedMid.columns === 5 && collapsedMid.cardWidth >= 150,
+                        collapsedMid.columns + " columns / card " + collapsedMid.cardWidth + "px"),
+                    check("below 900px the shared step wins over the rail's column",
+                        collapsedNarrow.columns === 3, collapsedNarrow.columns + " columns")
+                ]);
         }
     },
     {

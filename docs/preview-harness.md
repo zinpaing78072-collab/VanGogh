@@ -217,8 +217,9 @@ node preview/check.js --page=frontend/dist     # a staging build instead
 `cd frontend && npm run verify` runs typecheck, lint, Vitest, a fresh build and
 then this gate against the shipped output.
 
-225 assertions across 24 groups: trending render, the sidebar (four form buttons,
-inert placeholder items, section labels, collapse and card reflow, and the
+240 assertions across 25 groups: trending render, the sidebar (four form buttons,
+inert placeholder items, section labels, collapse and card reflow — the open rail
+costing the sixth card and the collapsed rail buying it back — and the
 active marker), the switcher across all four forms, search hit and miss, the AI
 toggle (off by default, `kind=recommend` when on, survives a form switch, empty
 box falls back to trending), the per-form sessions (a search survives switching
@@ -241,8 +242,9 @@ pressed by default, picking Liquid Neon repaints shell + cards + AI toggle and
 saves exactly once, reopening shows it pressed, a stored theme is painted at
 launch, an unknown stored id falls back), the responsive ladder (each step's
 column count from 1280px down to 600px, no card text escaping at any step, all
-three other card shapes at both ends of the ladder, and Liquid Neon stepping in
-lockstep with Starry Night), the
+three other card shapes at both ends of the ladder, the collapsed rail's extra
+card at 1280px and 1180px while the shared steps own everything below 900px, and
+Liquid Neon stepping in lockstep with Starry Night), the
 empty / error / no-posters / slow scenarios, and a rapid form-switch that
 exercises the supersede guard. Exit code 1 on any failure, so it can gate a
 commit.
