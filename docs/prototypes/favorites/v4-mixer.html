@@ -90,7 +90,7 @@
       <div class="page-head">
         <div>
           <h1 class="page-title">The Mixer <span class="count" id="seedCount">3 / 8</span></h1>
-          <p class="page-lede">Favorites feed the engine. Pick a handful as <strong>seeds</strong>, watch the taste profile change, then compose a brief for all four forms.</p>
+          <p class="page-lede">Favorites feed the engine. Pick a handful as <strong>seeds</strong>, then compose a brief for all four forms.</p>
         </div>
         <div class="page-actions">
           <button type="button" class="nbtn" id="surprise">
@@ -103,7 +103,7 @@
       <div class="mixer-hero">
         <section class="mixer-panel" aria-labelledby="composeTitle">
           <h1 id="composeTitle">Compose from what you keep.</h1>
-          <p class="lede">Every seed below is a real favorite. The profile on the right is what the engine would read before it writes a pick.</p>
+          <p class="lede">Every seed below is a real favorite. Whatever you keep is what the engine reads before it writes a pick.</p>
 
           <div class="seed-tray" id="seedTray" aria-label="Selected seeds"></div>
 
@@ -114,21 +114,6 @@
             </button>
             <button type="button" class="nbtn ghost small" id="clearSeeds">Clear</button>
             <span class="mixer-hint" id="seedHint">3 of 8 seeds · add up to five more</span>
-          </div>
-        </section>
-
-        <section class="mixer-panel" aria-labelledby="profileTitle">
-          <p class="section-label" id="profileTitle">Taste profile</p>
-          <div class="snapshot-score"><strong id="strength">—</strong><span>signal<br>strength</span></div>
-          <p class="snapshot-sub" id="profileSub">Reading 3 seeds…</p>
-          <div id="profileMeters"></div>
-          <div class="snapshot-block" style="margin-top:18px">
-            <p class="peek-label">Dominant vibes</p>
-            <div class="tag-cloud" id="profileTags"></div>
-          </div>
-          <div class="snapshot-block">
-            <p class="peek-label">Decade spread</p>
-            <div id="profileDecades"></div>
           </div>
         </section>
       </div>
@@ -173,11 +158,6 @@
   var pickGrid = document.getElementById("pickGrid");
   var seedCount = document.getElementById("seedCount");
   var seedHint = document.getElementById("seedHint");
-  var profileMeters = document.getElementById("profileMeters");
-  var profileTags = document.getElementById("profileTags");
-  var profileDecades = document.getElementById("profileDecades");
-  var profileSub = document.getElementById("profileSub");
-  var strength = document.getElementById("strength");
   var generate = document.getElementById("generate");
 
   function seedItems() {
@@ -237,46 +217,6 @@
     }).join("");
   }
 
-  function renderProfile() {
-    var items = seedItems();
-    var counts = VG.domainCounts(items);
-    var total = items.length || 1;
-    var tags = VG.tagCounts(items).slice(0, 8);
-    var decades = {};
-    items.forEach(function (item) {
-      var decade = Math.floor(item.year / 10) * 10;
-      decades[decade] = (decades[decade] || 0) + 1;
-    });
-    var topDecades = Object.keys(decades).map(Number).sort(function (a, b) { return decades[b] - decades[a]; }).slice(0, 3);
-    var forms = VG.DOMAIN_ORDER.filter(function (key) { return counts[key]; }).length;
-
-    strength.textContent = items.length ? Math.min(97, 48 + tags.length * 3 + forms * 5) : "—";
-    profileSub.textContent = items.length
-      ? items.length + " seeds · " + forms + " forms · " + tags.length + " vibes"
-      : "No seeds selected";
-
-    profileMeters.innerHTML = VG.DOMAIN_ORDER.map(function (key) {
-      var d = VG.DOMAINS[key];
-      var pct = Math.round((counts[key] / total) * 100);
-      return '<div class="profile-row"><span><span class="domain-dot" style="display:inline-block;margin-right:6px"></span>' +
-        d.label + '</span><span class="n">' + counts[key] + "</span></div>" +
-        '<div class="profile-meter" data-domain="' + key + '"><span style="--w:' + pct + '%"></span></div>';
-    }).join("");
-
-    profileTags.innerHTML = tags.length
-      ? tags.map(function (entry, index) {
-          return '<span class="tag' + (index === 0 ? " big" : "") + '">' + VG.esc(entry.tag) + "</span>";
-        }).join("")
-      : '<span class="tag">Pick a seed</span>';
-
-    profileDecades.innerHTML = topDecades.length
-      ? topDecades.map(function (decade) {
-          return '<div class="profile-row"><span>' + decade + 's</span><span class="n">' + decades[decade] + "</span></div>" +
-            '<div class="profile-meter"><span style="--w:' + Math.round((decades[decade] / total) * 100) + '%"></span></div>';
-        }).join("")
-      : '<p class="snapshot-sub">No decades yet.</p>';
-  }
-
   var PICK_COPY = {
     movie: {
       title: "Three films for a rainy night",
@@ -331,7 +271,6 @@
     renderTray();
     renderTabs();
     renderGrid();
-    renderProfile();
     renderPicks();
   }
 
