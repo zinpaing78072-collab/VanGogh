@@ -1,0 +1,592 @@
+/* Van Gogh — Dark Platinum (theme id: darkplatinum)
+ *
+ * A polished-metal skin built on the `darkplatinum.jpeg` backdrop: black liquid
+ * chrome with hard silver highlights. The palette is graphite with a platinum
+ * accent, so contrast comes from tone and edge rather than colour.
+ *
+ * Visual language:
+ *   - surfaces are smoked glass with a 1px silver hairline and a top highlight
+ *   - the only gradients are the platinum fills on primary controls (Search,
+ *     the AI toggle when on, pressed chips) and a soft sheen on cards
+ *   - labels are uppercase and letter-spaced; no neon, no coloured glow
+ *
+ * Loaded last by index.html, so every declaration here wins without
+ * !important. `--platinum-*` / `--graphite-*` are private to this sheet; shared
+ * sheets reference role tokens only.
+ */
+:root {
+    /* Polished platinum + graphite (private) */
+    --platinum-100: #F4F7FA;
+    --platinum-200: #E6EBF0;
+    --platinum-300: #D2D9E1;
+    --platinum-400: #B9C2CC;
+    --platinum-500: #9AA5B1;
+
+    /* Metallic glow used by icons, buttons and pressed chips. */
+    --platinum-glow: rgba(210, 217, 225, 0.42);
+    --platinum-glow-soft: rgba(210, 217, 225, 0.20);
+
+    /* Metallic gradients from design.dev's Metallic Text Effect Generator
+       (Silver preset). The specular stops give type and button fills a lit
+       metal read instead of a flat grey. */
+    --metal-text: linear-gradient(180deg,
+        #7E7E84 0%, #D9DCE1 18%, #FFFFFF 34%, #A9AEB6 50%,
+        #62666D 58%, #A9AEB6 74%, #E7EAEE 92%, #FFFFFF 100%);
+    /* A gentler sheen for small caps and card titles: the 8-stop preset's dark
+       mid-band muddies 13–15px type. */
+    --metal-text-small: linear-gradient(180deg,
+        #FFFFFF 0%, #D9DEE4 48%, #A9B2BC 100%);
+    --metal-button: linear-gradient(180deg,
+        #FFFFFF 0%, #E8EDF2 18%, #F8FBFF 34%, #C9D2DB 50%,
+        #AEB8C3 58%, #D6DEE6 74%, #EFF3F7 92%, #FFFFFF 100%);
+    --metal-button-hot: linear-gradient(180deg,
+        #FFFFFF 0%, #F2F6FA 18%, #FFFFFF 34%, #D8E0E8 50%,
+        #C2CCD6 58%, #E2E9EF 74%, #F7FAFC 92%, #FFFFFF 100%);
+
+    --graphite-0: #0D1015;
+    --graphite-1: #161B22;
+    --graphite-2: #222831;
+
+    /* Role tokens */
+    --bg: var(--graphite-0);
+    --panel: rgba(33, 38, 46, 0.58);
+    --panel-hover: rgba(52, 59, 69, 0.72);
+    --panel-inset: rgba(18, 22, 27, 0.66);
+    --panel-deep: #13171D;
+    --accent: var(--platinum-300);
+    --accent-hover: var(--platinum-100);
+    --accent-ink: #08090B;
+    --text: #F8FAFC;
+    --text-muted: #A7B2BF;
+    --text-soft: #D3DBE4;
+    --text-soft-strong: #EEF3F8;
+    --text-soft-dim: #B8C2CD;
+    --label-soft: #CAD4DE;
+    --rating: var(--platinum-200);
+    --border: rgba(203, 213, 223, 0.23);
+    --border-strong: rgba(214, 224, 234, 0.42);
+    --focus: #AAB6C2;
+    --danger: #E08C8C;
+    --placeholder-from: #272D36;
+
+    /* Firm glass for the song tiles and the Settings card. */
+    --panel-firm-a45: rgba(25, 30, 37, 0.45);
+    --panel-firm-a55: rgba(25, 30, 37, 0.55);
+    --panel-firm-a66: rgba(25, 30, 37, 0.66);
+    --panel-firm-a70: rgba(25, 30, 37, 0.70);
+    --panel-firm-a76: rgba(25, 30, 37, 0.76);
+    --accent-a05: rgba(210, 217, 225, 0.05);
+    --accent-a26: rgba(210, 217, 225, 0.26);
+    --accent-hover-a22: rgba(244, 247, 250, 0.22);
+    --accent-hover-a32: rgba(244, 247, 250, 0.32);
+    --accent-hover-a42: rgba(244, 247, 250, 0.42);
+    --accent-hover-a55: rgba(244, 247, 250, 0.55);
+    --muted-a14: rgba(167, 178, 191, 0.14);
+    --muted-a22: rgba(167, 178, 191, 0.22);
+    --panel-firm-a88: rgba(25, 30, 37, 0.88);
+    --label: rgba(170, 181, 192, 0.85);
+    --placeholder: rgba(170, 181, 192, 0.92);
+    --inset-focus: rgba(14, 17, 22, 0.85);
+    --scroll-track: rgba(14, 17, 22, 0.65);
+    --muted-a16: rgba(167, 178, 191, 0.16);
+
+    /* Accent tints for the song detail and Settings sheets. */
+    --accent-a08: rgba(210, 217, 225, 0.08);
+    --accent-a10: rgba(210, 217, 225, 0.10);
+    --accent-a12: rgba(210, 217, 225, 0.12);
+    --accent-a55: rgba(210, 217, 225, 0.55);
+    --accent-a60: rgba(210, 217, 225, 0.60);
+    --accent-a85: rgba(210, 217, 225, 0.85);
+    --accent-a90: rgba(210, 217, 225, 0.90);
+    --accent-hover-a28: rgba(244, 247, 250, 0.28);
+    --accent-hover-a30: rgba(244, 247, 250, 0.30);
+    --accent-hover-a35: rgba(244, 247, 250, 0.35);
+    --accent-hover-a40: rgba(244, 247, 250, 0.40);
+    --muted-a10: rgba(167, 178, 191, 0.10);
+    --muted-a12: rgba(167, 178, 191, 0.12);
+    --muted-a70: rgba(167, 178, 191, 0.70);
+
+    --blur-glass: blur(18px) saturate(1.08) brightness(1);
+    --radius: 10px;
+}
+
+::selection {
+    background: var(--accent);
+    color: var(--accent-ink);
+}
+
+/* Search bar offsets — same control widths as Starry, so the AI toggle keeps
+   clear of the Search button. */
+.search-input {
+    padding: 12px 148px 12px 18px;
+}
+
+.search-btn {
+    right: 10px;
+}
+
+.ai-toggle {
+    right: 104px;
+}
+
+/* Without backdrop-filter the glass cannot frost, so panels become firmer
+   graphite tints instead of turning transparent. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root {
+        --panel: rgba(30, 35, 42, 0.92);
+        --panel-inset: rgba(17, 21, 26, 0.9);
+    }
+}
+
+/* Sidebar — smoked graphite rail with a silver hairline. */
+.sidebar {
+    background-color: rgba(28, 33, 40, 0.46);
+    -webkit-backdrop-filter: blur(22px) saturate(1.05) brightness(0.98);
+    backdrop-filter: blur(22px) saturate(1.05) brightness(0.98);
+    border-right: 1px solid var(--border);
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.06), 12px 0 30px -24px #000;
+}
+
+.sidebar-head {
+    padding: 4px 4px 18px;
+    border-bottom: 1px solid rgba(210, 220, 230, 0.10);
+}
+
+.sidebar-nav {
+    padding: 14px 0 6px;
+}
+
+/* Labels read as engraved plate legends. */
+.nav-label {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--label);
+    padding: 4px 12px 10px;
+}
+
+.nav-label-spaced {
+    margin-top: 18px;
+}
+
+.nav-item {
+    border: 1px solid transparent;
+    border-radius: 8px;
+}
+
+.nav-item svg {
+    opacity: 0.78;
+    filter: drop-shadow(0 0 4px rgba(210, 217, 225, 0.12));
+    transition: opacity 0.16s ease, color 0.16s ease, filter 0.16s ease;
+}
+
+.nav-item:hover {
+    color: #fff;
+}
+
+.nav-item:hover svg {
+    opacity: 1;
+    color: var(--accent);
+    filter: drop-shadow(0 0 7px var(--platinum-glow));
+}
+
+.nav-item.active {
+    background-color: rgba(210, 217, 225, 0.08);
+    background-image: linear-gradient(90deg,
+        rgba(210, 217, 225, 0.16),
+        rgba(210, 217, 225, 0.02));
+    border-color: rgba(210, 217, 225, 0.24);
+    box-shadow: inset 2px 0 0 var(--accent), 0 0 18px rgba(210, 217, 225, 0.10);
+    color: #fff;
+}
+
+.nav-item.active svg {
+    color: var(--accent);
+    filter: drop-shadow(0 0 7px var(--platinum-glow));
+}
+
+.sidebar.collapsed .nav-item {
+    border-left-width: 0;
+    border-bottom: 2px solid transparent;
+    box-shadow: none;
+}
+
+.sidebar.collapsed .nav-item.active {
+    border-bottom-color: var(--accent);
+}
+
+/* Icon buttons — silver glyphs with a metallic glow that lifts on hover. */
+.icon-btn {
+    color: var(--text-soft);
+    box-shadow: 0 0 10px rgba(210, 217, 225, 0.06);
+    transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.icon-btn svg {
+    filter: drop-shadow(0 0 5px rgba(210, 217, 225, 0.22));
+    transition: filter 0.2s ease;
+}
+
+.icon-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    /* A brighter tint rather than an extra gradient layer: background-image
+       cannot tween, so the old hover gradient popped in while the colour
+       eased. This keeps the whole lift on the transitioned properties. */
+    background-color: rgba(210, 217, 225, 0.10);
+    box-shadow: 0 0 0 1px rgba(210, 217, 225, 0.22),
+        0 0 20px var(--platinum-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.icon-btn:hover svg {
+    filter: drop-shadow(0 0 8px rgba(235, 242, 248, 0.65));
+}
+
+.quick-actions .icon-btn.round {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 0 14px rgba(210, 217, 225, 0.08),
+        0 14px 28px -14px #000;
+}
+
+.quick-actions .icon-btn.round:hover {
+    box-shadow: 0 0 0 1px rgba(210, 217, 225, 0.22),
+        0 0 20px var(--platinum-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* Header — near-black glass with a lit hairline. */
+.app-header {
+    background-color: rgba(28, 33, 40, 0.46);
+    border-bottom: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 30px -20px #000;
+}
+
+/* Brand — engraved platinum wordmark. */
+.brand {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+.brand-mark {
+    color: var(--accent);
+    text-shadow: 0 0 14px rgba(210, 217, 225, 0.45);
+    margin-right: 0.45em;
+}
+
+/* Metallic type — design.dev's Silver preset clipped to the glyphs. Used on
+   the wordmark, section headings and the four detail titles, where the larger
+   type can carry the specular stops. */
+.brand-text,
+.section-title,
+.movie-title,
+.song-title,
+.book-title,
+.game-title {
+    background-image: var(--metal-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    text-shadow: none;
+}
+
+.section-title {
+    background-image: var(--metal-text-small);
+}
+
+.search-input {
+    caret-color: var(--accent-hover);
+}
+
+.search-input::placeholder {
+    color: var(--placeholder);
+}
+
+.search-input:focus {
+    border-color: var(--accent);
+    background-color: var(--inset-focus);
+    box-shadow: 0 0 0 3px rgba(210, 217, 225, 0.07);
+}
+
+/* Search — the one polished-platinum surface, with a dark engraved label. */
+.search-btn {
+    background-color: var(--accent);
+    background-image: var(--metal-button);
+    color: #08090B;
+    border-radius: 7px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+        0 0 16px rgba(210, 217, 225, 0.30),
+        0 6px 18px -8px #000;
+    letter-spacing: 0.02em;
+    /* The glow grows on hover; without this the shadow snapped while the
+       brightness eased. */
+    transition: filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-btn:hover {
+    filter: brightness(1.05);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.90),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+        0 0 26px rgba(210, 217, 225, 0.48),
+        0 6px 18px -8px #000;
+}
+
+/* AI toggle — a quiet silver outline when off, a platinum chip when on. */
+.ai-toggle {
+    color: var(--text-muted);
+    border-radius: 7px;
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.ai-toggle:hover {
+    color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 16px var(--platinum-glow-soft);
+}
+
+.ai-toggle[aria-pressed="true"] {
+    background-color: var(--accent);
+    background-image: var(--metal-button);
+    border-color: transparent;
+    color: #08090B;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 0 18px var(--platinum-glow),
+        0 6px 18px -8px #000;
+}
+
+.ai-toggle[aria-pressed="true"]:hover {
+    filter: brightness(1.05);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 0 26px rgba(210, 217, 225, 0.48),
+        0 6px 18px -8px #000;
+}
+
+/* Section title — an engraved heading over a hairline rule. */
+.section-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--text-soft-strong);
+    text-shadow: none;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Card — smoked glass with a brushed sheen and a lit top edge. */
+.movie-card {
+    background-color: rgba(35, 41, 49, 0.60);
+    background-image: linear-gradient(160deg,
+        rgba(255, 255, 255, 0.07) 0%,
+        rgba(255, 255, 255, 0.02) 38%,
+        rgba(0, 0, 0, 0.08) 100%);
+    border: 1px solid var(--border);
+    /* The resting list carries the hover ring at zero alpha, so the three
+       shadows interpolate instead of being swapped. */
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        0 18px 34px -24px rgba(0, 0, 0, 0.95),
+        0 0 0 1px rgba(210, 217, 225, 0);
+    /* Lift, edge, tint and glow all ease. One hovered card is a small layer,
+       so the tint/glow fade is cheap; snapping them read as a flicker next to
+       Starry's eased border. */
+    transition: transform 0.2s ease, border-color 0.2s ease,
+        background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.movie-card:hover {
+    background-color: rgba(55, 63, 73, 0.72);
+    border-color: rgba(226, 234, 242, 0.52);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 22px 40px -22px #000,
+        0 0 0 1px rgba(210, 217, 225, 0.10);
+}
+
+.card-poster,
+.card-cover {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.card-poster img,
+.card-cover img {
+    filter: saturate(0.98) contrast(1.04) brightness(1);
+    /* Scale and grade both ease; a snapping grade pops the artwork under the
+       pointer. One image per hovered card, so the filter pass stays cheap. */
+    transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.25, 1), filter 0.45s ease;
+}
+
+.movie-card:hover .card-poster img,
+.movie-card:hover .card-cover img {
+    filter: saturate(1.06) contrast(1.07) brightness(1.06);
+}
+
+.poster-placeholder {
+    background: none;
+    background-color: #1A1F26;
+    background-image: linear-gradient(150deg, #2A3038 0%, #13171D 70%);
+    color: var(--text-muted);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.poster-placeholder svg {
+    opacity: 0.42;
+    color: var(--accent);
+}
+
+.card-info {
+    border-top: 1px solid rgba(210, 217, 225, 0.12);
+}
+
+.card-meta {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.03em;
+}
+
+.movie-card:hover .card-subtitle {
+    color: var(--text-soft);
+}
+
+/* Card titles stay solid on purpose: base tweens `color` on hover, and
+   swapping in the metal gradient snapped because `background-image` cannot
+   animate. The brightened platinum tone is the hover read. */
+
+/* Detail, Settings and Profile actions — primary buttons carry the same
+   polished-platinum fill as Search; quiet buttons get a soft metallic ring. */
+.movie-action:hover,
+.book-action:hover,
+.game-action:hover,
+.song-action:hover,
+.settings-btn:hover,
+.profile-btn:hover,
+.player-btn:hover {
+    box-shadow: 0 0 16px var(--platinum-glow-soft);
+}
+
+.movie-action-primary,
+.book-action-primary,
+.game-action-primary,
+.song-action-primary,
+.settings-btn.primary,
+.profile-btn.primary {
+    background-color: var(--accent);
+    background-image: var(--metal-button);
+    color: #08090B;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 0 18px var(--platinum-glow),
+        0 12px 26px -14px #000;
+}
+
+.movie-action-primary:hover,
+.book-action-primary:hover,
+.game-action-primary:hover,
+.song-action-primary:hover,
+.settings-btn.primary:hover,
+.profile-btn.primary:hover {
+    background-image: var(--metal-button-hot);
+    color: #08090B;
+    filter: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 0 26px rgba(210, 217, 225, 0.48),
+        0 12px 26px -14px #000;
+}
+
+/* Scrollbar — brushed silver thumb. */
+::-webkit-scrollbar-thumb {
+    background: rgba(210, 217, 225, 0.30);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(244, 247, 250, 0.55);
+}
+
+/* Keyboard focus */
+button:focus-visible,
+.search-input:focus-visible,
+.nav-item:focus-visible {
+    outline: 2px solid var(--accent);
+}
+
+/* Dark Platinum backdrop — black liquid chrome under a dimming veil, so the
+   highlights read at the edges without fighting the cards. A 4px backdrop blur
+   softens the chrome just enough to sit behind the UI; the swirls stay legible. */
+.sky {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background: url("darkplatinum.jpeg") center/cover no-repeat var(--bg);
+    filter: brightness(0.88) saturate(0.98);
+}
+
+.veil {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: rgba(6, 7, 9, 0.24);
+    background-image: linear-gradient(180deg,
+        rgba(6, 7, 9, 0.16),
+        rgba(4, 5, 7, 0.42));
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.veil::before { /* cool sheen falling from the top-left */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120% 80% at 18% 0%,
+        rgba(235, 242, 248, 0.12),
+        transparent 55%);
+}
+
+.veil::after { /* chrome settling into the corners */
+    content: "";
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 170px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* Form chips — the theme picker and the AI provider presets. Base draws them
+   with the gold gradient; here the pressed chip is polished platinum. */
+.provider-chip {
+    border-radius: 7px;
+    letter-spacing: 0.06em;
+    transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease,
+        filter 0.16s ease, box-shadow 0.16s ease;
+}
+
+.provider-chip[aria-pressed="true"] {
+    background-color: var(--accent);
+    background-image: var(--metal-button);
+    border-color: transparent;
+    color: #08090B;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 0 16px var(--platinum-glow);
+}
+
+.provider-chip[aria-pressed="true"]:hover {
+    /* Brightness instead of the hot gradient: a gradient swap cannot tween. */
+    filter: brightness(1.04);
+    border-color: transparent;
+    color: #08090B;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 0 22px rgba(210, 217, 225, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* Theme sheets load after base, so their transition declarations would
+       otherwise outrank base's reduced-motion reset. */
+    .movie-card { transition: none; }
+    .card-poster img,
+    .card-cover img { transition: none; }
+    .provider-chip { transition: none; }
+}
