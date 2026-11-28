@@ -1429,6 +1429,7 @@ const TESTS = [
                 model: document.getElementById("settingsModel").value,
                 timeout: document.getElementById("settingsTimeout").value,
                 titles: document.getElementById("settingsTitles").value,
+                temperature: document.getElementById("settingsTemperature").value,
                 keyType: document.getElementById("settingsApiKey").type,
                 keyValue: document.getElementById("settingsApiKey").value,
                 keyPlaceholder: document.getElementById("settingsApiKey").placeholder,
@@ -1479,6 +1480,7 @@ const TESTS = [
             // A blank key on a second save keeps the secret the page cannot read.
             await page.evaluate(`
                 document.getElementById("settingsModel").value = "model-b";
+                document.getElementById("settingsTemperature").value = "1.4";
                 document.getElementById("settingsSave").click();
                 true`);
             await page.waitFor("window.__preview.stats().settingsSaves === 2");
@@ -1503,9 +1505,10 @@ const TESTS = [
                         && open.baseUrl === "https://openrouter.ai/api/v1"
                         && open.model === "baidu/ernie-5.5-flash-preview:free"
                         && open.timeout === "60" && open.titles === "10"
+                        && open.temperature === "0.7"
                         && open.path === "~/.van-gogh/llm.conf",
                     open.baseUrl + " / " + open.model + " / " + open.timeout + " / "
-                        + open.titles + " / " + open.path),
+                        + open.titles + " / " + open.temperature + " / " + open.path),
                 check("no stored key: empty field, nothing to reveal",
                     open.keyValue === "" && open.keyType === "password"
                         && open.revealDisabled === true
@@ -1533,12 +1536,16 @@ const TESTS = [
                     saved.keyValue + " / " + saved.keyPlaceholder),
                 check("reopening loads the saved config, still without the key",
                     reopened.baseUrl === "https://api.openai.com/v1"
+                        && reopened.temperature === "0.7"
                         && reopened.keyValue === "" && reopened.keyType === "password"
                         && /Key saved/.test(reopened.keyPlaceholder),
                     reopened.baseUrl + " / " + (reopened.keyValue === "" ? "empty" : "filled")),
                 check("a blank key on a later save keeps the stored one",
                     kept.settingsSaves === 2 && kept.settingsHasKey === true,
                     "saves " + kept.settingsSaves + " / key " + kept.settingsHasKey),
+                check("a changed temperature is saved with the rest",
+                    kept.settingsTemperature === 1.4,
+                    "temperature " + kept.settingsTemperature),
                 check("Reveal toggles the field, never the key",
                     revealed.keyType === "text" && remasked.keyType === "password"
                         && revealed.keyValue === "" && remasked.keyValue === "",

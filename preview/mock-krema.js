@@ -161,6 +161,7 @@
         model: "baidu/ernie-5.5-flash-preview:free",
         timeoutSeconds: 60,
         titles: 10,
+        temperature: 0.7,
         apiKey: null,
         loads: 0,
         saves: 0
@@ -1048,6 +1049,7 @@
             model: llm.model,
             timeoutSeconds: llm.timeoutSeconds,
             titles: llm.titles,
+            temperature: llm.temperature,
             hasApiKey: !!llm.apiKey,
             configPath: LLM_CONFIG_PATH
         };
@@ -1061,6 +1063,7 @@
             model: null,
             timeoutSeconds: 0,
             titles: 0,
+            temperature: 0,
             hasApiKey: !!llm.apiKey,
             configPath: LLM_CONFIG_PATH
         };
@@ -1125,6 +1128,7 @@
         llm.model = model;
         llm.timeoutSeconds = clamp(Number(args.timeoutSeconds) || 60, 10, 300);
         llm.titles = clamp(Number(args.titles) || 10, 1, 50);
+        llm.temperature = clampDecimal(args.temperature, 0.7, 0, 2);
         llm.saves += 1;
         console.log("[preview] settings saved, hasApiKey=" + !!llm.apiKey);
         return llmReply();
@@ -1132,6 +1136,12 @@
 
     function clamp(value, min, max) {
         return Math.max(min, Math.min(max, Math.round(value)));
+    }
+
+    function clampDecimal(value, fallback, min, max) {
+        var parsed = Number(value);
+        if (!Number.isFinite(parsed)) parsed = fallback;
+        return Math.max(min, Math.min(max, parsed));
     }
 
     window.krema = {
@@ -1246,6 +1256,7 @@
                 settingsLoads: llm.loads,
                 settingsSaves: llm.saves,
                 settingsHasKey: !!llm.apiKey,
+                settingsTemperature: llm.temperature,
                 theme: theme.id,
                 themeLoads: theme.loads,
                 themeSaves: theme.saves,

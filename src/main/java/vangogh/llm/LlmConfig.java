@@ -35,13 +35,19 @@ public record LlmConfig(
         String apiKey,
         String model,
         int timeoutSeconds,
-        int titles
+        int titles,
+        double temperature
 ) {
 
     public static final String DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
     public static final String DEFAULT_MODEL = "baidu/ernie-5.5-flash-preview:free";
     public static final int DEFAULT_TIMEOUT_SECONDS = 60;
     public static final int DEFAULT_TITLES = 10;
+
+    /** OpenAI's documented range; 0.7 is the value the engine shipped with. */
+    public static final double DEFAULT_TEMPERATURE = 0.7;
+    public static final double MIN_TEMPERATURE = 0.0;
+    public static final double MAX_TEMPERATURE = 2.0;
 
     public static final Path CONFIG_PATH =
             Path.of(System.getProperty("user.home"), ".van-gogh", "llm.conf");
@@ -53,6 +59,7 @@ public record LlmConfig(
                 + ", model=" + model
                 + ", timeoutSeconds=" + timeoutSeconds
                 + ", titles=" + titles
+                + ", temperature=" + temperature
                 + ", apiKey=" + (hasApiKey() ? "***" : "<missing>") + "]";
     }
 
@@ -73,7 +80,8 @@ public record LlmConfig(
                 firstNonBlank(values.get("apiKey")),
                 firstNonBlank(values.get("model"), DEFAULT_MODEL),
                 clamp(parseInt(values.get("timeoutSeconds"), DEFAULT_TIMEOUT_SECONDS), 10, 300),
-                clamp(parseInt(values.get("titles"), DEFAULT_TITLES), 1, 50));
+                clamp(parseInt(values.get("titles"), DEFAULT_TITLES), 1, 50),
+                clampTemperature(parseDouble(values.get("temperature"), DEFAULT_TEMPERATURE)));
     }
 
     public static Either<FetchError, LlmConfig> load() {
@@ -119,7 +127,8 @@ public record LlmConfig(
                 apiKey == null ? null : apiKey.trim(),
                 model == null ? null : model.trim(),
                 clamp(timeoutSeconds, 10, 300),
-                clamp(titles, 1, 50));
+                clamp(titles, 1, 50),
+                clampTemperature(temperature));
     }
 
     /**
@@ -154,12 +163,14 @@ public record LlmConfig(
                 model = %s
                 timeoutSeconds = %d
                 titles = %d
+                temperature = %s
                 """.formatted(
                 config.apiKey(),
                 config.baseUrl(),
                 config.model(),
                 config.timeoutSeconds(),
-                config.titles());
+                config.titles(),
+                config.temperature());
     }
 
     private static void move(Path from, Path to) throws java.io.IOException {
@@ -242,5 +253,28 @@ public record LlmConfig(
 
     private static int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    /**
+     * Temperature is a decimal in a fixed range. A malformed value falls back to
+     * the default, and NaN/Infinity are treated as malformed: {@code Math.min}
+     * and {@code Math.max} propagate NaN, so a bare clamp would store it.
+     */
+    private static double clampTemperature(double value) {
+        if (!Double.isFinite(value)) {
+            return DEFAULT_TEMPERATURE;
+        }
+        return Math.max(MIN_TEMPERATURE, Math.min(MAX_TEMPERATURE, value));
+    }
+
+    private static double parseDouble(String raw, double fallback) {
+        if (raw == null) {
+            return fallback;
+        }
+        try {
+            return Double.parseDouble(raw.trim());
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
     }
 }

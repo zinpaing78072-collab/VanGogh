@@ -2,7 +2,7 @@
  *
  * Same Starry Night glass as the rest of the shell (style.css owns the
  * tokens). One card, one column: the page is a form, so labels sit above their
- * controls and the numeric pair shares a row until the column gets narrow.
+ * controls and the numeric trio shares a row until the column gets narrow.
  * No native <select> anywhere — provider presets are plain buttons (the macOS
  * NSMenu trap, see AGENTS.md).
  */
@@ -221,7 +221,7 @@
 /* Timeout + titles: two small numeric fields share a row */
 .settings-row {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
 }
 

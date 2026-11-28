@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class RecommendationServiceTest {
 
     private static final LlmConfig CONFIG =
-            new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 5);
+            new LlmConfig("https://llm.test/v1", "k", "test-model", 10, 5, LlmConfig.DEFAULT_TEMPERATURE);
 
     /** Stub client: records the prompt and returns a canned reply. */
     static class StubLlm extends LlmClient {
@@ -230,7 +230,7 @@ class RecommendationServiceTest {
 
     @Test
     void theConfiguredTitleCountReachesThePrompt() {
-        config = () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "m", 10, 3));
+        config = () -> Either.right(new LlmConfig("https://llm.test/v1", "k", "m", 10, 3, LlmConfig.DEFAULT_TEMPERATURE));
         llm.result = Either.right("Alpha | 2000");
 
         service().recommend(Form.MUSIC, "rainy nights", resolves(movie(1, "Alpha")));

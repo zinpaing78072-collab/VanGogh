@@ -296,7 +296,8 @@ public class JcefBridge {
                 text(args, "model"),
                 text(args, "apiKey"),
                 integer(args, "timeoutSeconds", LlmConfig.DEFAULT_TIMEOUT_SECONDS),
-                integer(args, "titles", LlmConfig.DEFAULT_TITLES))));
+                integer(args, "titles", LlmConfig.DEFAULT_TITLES),
+                decimal(args, "temperature", LlmConfig.DEFAULT_TEMPERATURE))));
     }
 
     private static String text(JsonObject args, String field) {
@@ -310,6 +311,13 @@ public class JcefBridge {
         return Option.of(args.get(field))
                 .filter(json -> !json.isJsonNull())
                 .map(JsonElement::getAsInt)
+                .getOrElse(fallback);
+    }
+
+    private static double decimal(JsonObject args, String field, double fallback) {
+        return Option.of(args.get(field))
+                .filter(json -> !json.isJsonNull())
+                .map(JsonElement::getAsDouble)
                 .getOrElse(fallback);
     }
 
