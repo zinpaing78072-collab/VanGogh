@@ -29,10 +29,11 @@ class ThemeControllerTest {
         assertEquals("ok", reply.status());
         assertNull(reply.error());
         assertEquals("starry", reply.theme());
-        assertEquals(List.of("starry", "liquidneon"),
+        assertEquals(List.of("starry", "liquidneon", "darkplatinum"),
                 reply.themes().stream().map(t -> t.id()).toList());
         assertEquals("Starry Night", reply.themes().get(0).label());
         assertEquals("Liquid Neon", reply.themes().get(1).label());
+        assertEquals("Dark Platinum", reply.themes().get(2).label());
     }
 
     @Test

@@ -1659,7 +1659,7 @@ body.selecting .toast { bottom: 84px; }
 /* ------------------------------------------------------------------- mixer */
 .mixer-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
   margin-bottom: 28px;
 }
@@ -1694,12 +1694,14 @@ body.selecting .toast { bottom: 84px; }
 .mixer-panel .lede { font-size: 13.5px; color: var(--text-muted); max-width: 52ch; }
 
 .seed-tray {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  min-height: 96px;
-  padding: 10px;
-  margin: 16px 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-content: start;
+  align-items: start;
+  gap: 12px;
+  min-height: 140px;
+  padding: 14px;
+  margin: 18px 0;
   border: 1px dashed var(--border-strong);
   background-color: rgba(4, 2, 9, 0.4);
 }
@@ -1707,6 +1709,7 @@ body.selecting .toast { bottom: 84px; }
 .seed-tray.is-empty { align-content: center; }
 
 .seed-empty {
+  grid-column: 1 / -1;
   width: 100%;
   text-align: center;
   font-family: var(--mono);
@@ -1718,7 +1721,7 @@ body.selecting .toast { bottom: 84px; }
 
 .seed {
   position: relative;
-  width: 52px;
+  width: 100%;
   aspect-ratio: 2 / 3;
   background-color: var(--panel-deep);
   border: 1px solid var(--border);
@@ -1729,10 +1732,10 @@ body.selecting .toast { bottom: 84px; }
 
 .seed button {
   position: absolute;
-  top: -7px;
-  right: -7px;
-  width: 18px;
-  height: 18px;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
   background-color: var(--accent);
@@ -1742,7 +1745,7 @@ body.selecting .toast { bottom: 84px; }
   cursor: pointer;
 }
 
-.seed button svg { width: 10px; height: 10px; }
+.seed button svg { width: 11px; height: 11px; }
 
 .mixer-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
@@ -1792,39 +1795,6 @@ body.selecting .toast { bottom: 84px; }
 
 .switch[aria-pressed="true"] { border-color: var(--accent); }
 .switch[aria-pressed="true"]::after { transform: translateX(18px); background-color: var(--accent); }
-
-.profile-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 12px;
-  font-family: var(--mono);
-  font-size: 9.5px;
-  letter-spacing: 0.06em;
-  color: var(--text-soft);
-}
-
-.profile-row .n { color: var(--text-muted); }
-
-.profile-meter {
-  height: 5px;
-  margin-top: 5px;
-  background-color: var(--panel-deep);
-  border: 1px solid rgba(0, 240, 255, 0.14);
-}
-
-.profile-meter > span {
-  display: block;
-  height: 100%;
-  width: var(--w, 0%);
-  background-color: var(--dom);
-  box-shadow: 0 0 8px var(--dom-glow);
-}
-
-.tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
-.tag-cloud .tag { font-size: 9px; padding: 4px 7px; color: var(--text-soft); }
-.tag-cloud .tag.big { border-color: var(--accent); color: #fff; }
 
 .seed-picker { margin-bottom: 30px; }
 
@@ -2097,6 +2067,7 @@ body.selecting .toast { bottom: 84px; }
 @media (max-width: 1180px) {
   .card-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .seed-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .seed-tray { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .pick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .collection-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -2122,7 +2093,6 @@ body.selecting .toast { bottom: 84px; }
   }
   .log-layout { grid-template-columns: 1fr; }
   .snapshot { position: static; }
-  .mixer-hero { grid-template-columns: 1fr; }
   .note-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
@@ -2130,6 +2100,7 @@ body.selecting .toast { bottom: 84px; }
   .card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .stat-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .seed-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .seed-tray { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .gallery-grid { grid-template-columns: 1fr; }
 }
 
@@ -2145,6 +2116,7 @@ body.selecting .toast { bottom: 84px; }
   .field, .field input { width: 100%; }
   .pick-grid { grid-template-columns: 1fr; }
   .seed-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .seed-tray { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .note-grid { grid-template-columns: 1fr; }
   .fav-row { grid-template-columns: 48px minmax(0, 1fr); }
   .fav-row-art { width: 48px; }

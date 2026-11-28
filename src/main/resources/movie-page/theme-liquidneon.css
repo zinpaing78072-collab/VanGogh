@@ -145,7 +145,9 @@
 
 .nav-item svg {
     opacity: 0.78;
-    transition: opacity 0.16s ease, filter 0.16s ease;
+    /* `color` is part of the tween: the icon turns cyan on hover, and without
+       it that switch snaps while the opacity fades. */
+    transition: opacity 0.16s ease, color 0.16s ease;
 }
 
 .nav-item:hover {
@@ -312,6 +314,9 @@
 .movie-card {
     position: relative;
     background-color: rgba(18, 9, 36, 0.58);
+    /* Transform, border and tint all tween. A hovered card is one small layer,
+       so easing its alpha is cheap; snapping it read as a flicker next to
+       Starry's eased border. The bracket glow has its own transition below. */
     transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
     box-shadow: none;
 }
@@ -365,10 +370,14 @@
 
 .card-poster img {
     filter: saturate(0.94) contrast(1.06) brightness(0.94);
+    /* Scale and grade both ease; a snapping grade pops the artwork under the
+       pointer. One image per hovered card, so the filter pass stays cheap. */
+    transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.25, 1), filter 0.45s ease;
 }
 
 .card-cover img {
     filter: saturate(0.94) contrast(1.06) brightness(0.94);
+    transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.25, 1), filter 0.45s ease;
 }
 
 .movie-card:hover .card-poster img,
@@ -476,6 +485,11 @@ button:focus-visible, .search-input:focus-visible, .nav-item:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
     .brand-mark { animation: none; }
+    /* Theme sheets load after base, so their transition declarations would
+       otherwise outrank base's reduced-motion reset. */
+    .movie-card { transition: none; }
+    .card-poster img,
+    .card-cover img { transition: none; }
 }
 
 /* Form chips — the theme picker and the AI provider presets. Base draws them

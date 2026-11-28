@@ -36,7 +36,8 @@ public record ThemeConfig(String id) {
 
     public static final List<Choice> KNOWN = List.of(
             new Choice("starry", "Starry Night"),
-            new Choice("liquidneon", "Liquid Neon"));
+            new Choice("liquidneon", "Liquid Neon"),
+            new Choice("darkplatinum", "Dark Platinum"));
 
     public static final Path CONFIG_PATH =
             Path.of(System.getProperty("user.home"), ".van-gogh", "theme.conf");

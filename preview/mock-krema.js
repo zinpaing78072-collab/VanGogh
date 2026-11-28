@@ -172,7 +172,8 @@
     // must not invent a third list either.
     var THEMES = [
         { id: "starry", label: "Starry Night" },
-        { id: "liquidneon", label: "Liquid Neon" }
+        { id: "liquidneon", label: "Liquid Neon" },
+        { id: "darkplatinum", label: "Dark Platinum" }
     ];
     var theme = {
         id: new URLSearchParams(location.search).get("theme") || "starry",

@@ -1847,11 +1847,13 @@ const TESTS = [
 
             return [
                 check("the Appearance card lists one chip per known theme",
-                    starry.open && starry.chips.length === 2
+                    starry.open && starry.chips.length === 3
                         && starry.chips[0].id === "starry"
                         && starry.chips[1].id === "liquidneon"
+                        && starry.chips[2].id === "darkplatinum"
                         && starry.chips[0].label === "Starry Night"
-                        && starry.chips[1].label === "Liquid Neon",
+                        && starry.chips[1].label === "Liquid Neon"
+                        && starry.chips[2].label === "Dark Platinum",
                     JSON.stringify(starry.chips)),
                 check("Starry Night is the default and is pressed",
                     starry.theme === "starry" && starry.skin === "theme-starry.css"
@@ -1895,7 +1897,10 @@ const TESTS = [
                 sky: getComputedStyle(document.querySelector(".sky")).backgroundImage,
                 cardBorder: getComputedStyle(document.querySelector("#movieGrid .movie-card")).borderColor,
                 toggle: getComputedStyle(document.getElementById("aiToggle")).color,
-                aiToggleStyled: getComputedStyle(document.getElementById("aiToggle")).borderTopWidth
+                aiToggleStyled: getComputedStyle(document.getElementById("aiToggle")).borderTopWidth,
+                cardTween: getComputedStyle(document.querySelector("#movieGrid .movie-card")).transitionProperty,
+                artTween: getComputedStyle(document.querySelector("#movieGrid .movie-card .card-poster img")).transitionProperty,
+                navTween: getComputedStyle(document.querySelector(".nav-item svg")).transitionProperty
             })`));
 
             return [
@@ -1908,7 +1913,57 @@ const TESTS = [
                     d.cardBorder === "rgba(0, 240, 255, 0.2)"
                         && d.toggle === "rgb(0, 240, 255)"
                         && d.aiToggleStyled === "1px",
-                    d.cardBorder + " / " + d.toggle + " / border " + d.aiToggleStyled)
+                    d.cardBorder + " / " + d.toggle + " / border " + d.aiToggleStyled),
+                check("the card hover eases lift, edge and tint",
+                    d.cardTween === "transform, border-color, background-color", d.cardTween),
+                check("the poster scale and grade both tween",
+                    d.artTween === "transform, filter", d.artTween),
+                check("the nav icon's cyan turns on the tween too",
+                    d.navTween === "opacity, color", d.navTween)
+            ];
+        }
+    },
+    {
+        name: "theme: Dark Platinum paints its own backdrop and tokens",
+        path: "/movie-page/index.html?theme=darkplatinum",
+        run: async (page) => {
+            await page.settle();
+            const d = JSON.parse(await page.evaluate(`JSON.stringify({
+                theme: document.documentElement.dataset.theme,
+                skin: document.getElementById("themeSkin").getAttribute("href"),
+                sky: getComputedStyle(document.querySelector(".sky")).backgroundImage,
+                cardBorder: getComputedStyle(document.querySelector("#movieGrid .movie-card")).borderColor,
+                toggle: getComputedStyle(document.getElementById("aiToggle")).color,
+                cardTween: getComputedStyle(document.querySelector("#movieGrid .movie-card")).transitionProperty,
+                artTween: getComputedStyle(document.querySelector("#movieGrid .movie-card .card-poster img")).transitionProperty,
+                navTween: getComputedStyle(document.querySelector(".nav-item svg")).transitionProperty
+            })`));
+
+            const rgba = (s) => (s.match(/[\d.]+/g) || []).map(Number);
+            const border = rgba(d.cardBorder);
+            const toggle = rgba(d.toggle);
+
+            return [
+                check("the saved skin is the one loaded",
+                    d.theme === "darkplatinum" && d.skin === "theme-darkplatinum.css",
+                    d.theme + " / " + d.skin),
+                check("the backdrop is the Dark Platinum image",
+                    d.sky.indexOf("darkplatinum.jpeg") !== -1, d.sky),
+                check("the platinum tokens reached the cards and the AI toggle",
+                    // A visible silver hairline (cool, light, not washed out)…
+                    border[0] > 180 && border[1] > 190 && border[2] > 200
+                        && border[3] > 0.18
+                        // …and a quiet, cool grey for the resting AI label.
+                        && toggle[0] > 140 && toggle[0] < 200
+                        && Math.abs(toggle[0] - toggle[2]) < 40,
+                    d.cardBorder + " / " + d.toggle),
+                check("the card hover eases lift, edge, tint and glow",
+                    d.cardTween === "transform, border-color, background-color, box-shadow",
+                    d.cardTween),
+                check("the poster scale and grade both tween",
+                    d.artTween === "transform, filter", d.artTween),
+                check("the nav icon eases opacity, colour and glow",
+                    d.navTween === "opacity, color, filter", d.navTween)
             ];
         }
     },
